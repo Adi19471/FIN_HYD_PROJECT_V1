@@ -7,6 +7,7 @@ import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.stereotype.Service;
 
 import com.balaji.finance.dto.BusinessMemberDto;
@@ -20,6 +21,8 @@ import com.balaji.finance.util.BusinessMemersSequenceService;
 @Service
 public class BusinessMemberService {
 
+    private final AuthenticationManager authenticationManager;
+
 	@Autowired
 	private BusinessMemberRepository businessMemberRepository;
 
@@ -29,11 +32,11 @@ public class BusinessMemberService {
 	@Autowired
 	private PersonalInfoRepository personalInfoRepository;
 
-	@Value("${dailyfinance.duration}")
-	private Double dailyfinance_duration;
 
-	@Value("${dailyfinance.basicIntrest}")
-	private Double dailyfinance_basicIntrest;
+    BusinessMemberService(AuthenticationManager authenticationManager) {
+        this.authenticationManager = authenticationManager;
+    }
+
 
 	public String generateId(String type) {
 
@@ -105,25 +108,10 @@ public class BusinessMemberService {
 		businessMember.setEndDate(businessMemberDto.getEndDate());
 
 		businessMember.setAmount(businessMemberDto.getAmount());
-
-		switch (type) {
-		case "DAILY_FINANCE":
-
-			businessMember.setDuration(dailyfinance_duration);
-			businessMember.setInterest(dailyfinance_basicIntrest);
-			break;
-
-		case "MONTHLY_FINANCE":
-
-			break;
-
-		default:
-
-			break;
-		}
+		businessMember.setDuration(businessMemberDto.getDuration());
+		businessMember.setInterest(businessMemberDto.getInterest());
 
 		businessMember.setInstallment(businessMemberDto.getInstallment());
-
 		businessMember.setStatus(businessMemberDto.isStatus());
 		businessMember.setPaidInstallments(businessMemberDto.getPaidInstallments());
 		businessMember.setPartPrincipal(businessMemberDto.getPartPrincipal());
@@ -226,25 +214,24 @@ public class BusinessMemberService {
 	}
 
 	// findAll
-	public List<BusinessMemberDto> findAll(String type) {
-
-		String prefix;
-		switch (type) {
+	public List<BusinessMemberDto> findAll(String loanType) {
+		
+		String starWithString = null;
+		switch (loanType) {
 		case "DAILY_FINANCE":
-			prefix = "DF";
+			starWithString = "DF";
 			break;
 
 		case "MONTHLY_FINANCE":
-			prefix = "MF";
+			starWithString = "MF";
 			break;
 
 		default:
-			throw new IllegalArgumentException("Unknown type: " + type);
+
+			break;
 		}
 
-		
-		
-		List<BusinessMember> allBusinessMemberList = businessMemberRepository.businessMemberList("%"+prefix+"%");
+		List<BusinessMember> allBusinessMemberList = businessMemberRepository.findAllByLoanType("%"+starWithString);
 
 		List<BusinessMemberDto> toBeReturnedDtoList = new ArrayList<BusinessMemberDto>();
 
@@ -339,10 +326,12 @@ public class BusinessMemberService {
 			break;
 		}
 
-		List<BusinessMember> loanList = businessMemberRepository.businessMemberAutoComplete(keyWord);
+		List<BusinessMember> loanList = businessMemberRepository.businessMemberAutoComplete(starWithString,keyWord);
 
 		List<BusinessMemberAutoCompletePojo> pojoList = new ArrayList<BusinessMemberAutoCompletePojo>();
 		System.err.println(loanList);
+		
+		
 		for (BusinessMember bm : loanList) {
 
 			BusinessMemberAutoCompletePojo pojo = new BusinessMemberAutoCompletePojo();

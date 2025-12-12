@@ -29,77 +29,69 @@ public class LoanInstallmentPaymentService {
 	private CashBookRepo cashBookRepo;
 
 	public LoanInformation loadMFLoanPaidInfo(String id) {
-	    // 1. Find the BusinessMember safely
+
 	    Optional<BusinessMember> opt = businessMemberRepository.findById(id);
-	    if (!opt.isPresent()) {
-	        return null;
-	    }
+	    if (!opt.isPresent()) return null;
 
 	    BusinessMember bm = opt.get();
-
-	    // Defensive checks for required fields (you may decide to throw exceptions instead)
-	    if (bm.getCustomerId() == null || bm.getCustomerId().getFirstname() == null) {
-	        // Depending on your business rules, either return null or throw an exception
-	        return null; // or throw new IllegalStateException("Customer information missing");
-	    }
-	    if (bm.getStartDate() == null || bm.getEndDate() == null) {
-	        return null;
-	    }
+	    if (bm.getCustomerId() == null || bm.getCustomerId().getFirstname() == null) return null;
+	    if (bm.getStartDate() == null || bm.getEndDate() == null) return null;
 
 	    LoanInformation info = new LoanInformation();
 	    DateTimeFormatter fmt = DateTimeFormatter.ofPattern("dd-MM-yyyy HH:mm:ss");
 
-	    // Basic details - null-safe
+	    // -------------------------------
+	    // ACCOUNT DETAILS
+	    // -------------------------------
 	    String accountNo = bm.getBusinessId() + "-" +
 	                       bm.getCustomerId().getFirstname() + "-" +
 	                       (bm.getCustomerId().getId() != null ? bm.getCustomerId().getId() : "");
 	    info.setAccountNo(accountNo);
 
-	    String partnerName = "";
-	    if (bm.getPartnerId() != null) {
-	        partnerName = (bm.getPartnerId().getFirstname() != null ? bm.getPartnerId().getFirstname() : "") +
-	                      "-" +
-	                      (bm.getPartnerId().getId() != null ? bm.getPartnerId().getId() : "");
-	    }
+	    String partnerName = (bm.getPartnerId() != null)
+	            ? (bm.getPartnerId().getFirstname() != null ? bm.getPartnerId().getFirstname() : "") 
+	              + "-" + (bm.getPartnerId().getId() != null ? bm.getPartnerId().getId() : "")
+	            : "";
 	    info.setPartnerName(partnerName);
 
-	    String guarantorName = "";
-	    if (bm.getGuarantor1() != null) {
-	        guarantorName = (bm.getGuarantor1().getFirstname() != null ? bm.getGuarantor1().getFirstname() : "") +
-	                        "-" +
-	                        (bm.getGuarantor1().getId() != null ? bm.getGuarantor1().getId() : "");
-	    }
+	    String guarantorName = (bm.getGuarantor1() != null)
+	            ? (bm.getGuarantor1().getFirstname() != null ? bm.getGuarantor1().getFirstname() : "")
+	              + "-" + (bm.getGuarantor1().getId() != null ? bm.getGuarantor1().getId() : "")
+	            : "";
 	    info.setGuarantorName(guarantorName);
 
 	    info.setPeriodFrom(bm.getStartDate().format(fmt));
 	    info.setPeriodTo(bm.getEndDate().format(fmt));
-
-	    // Loan calculations
-	    double totalLoan = bm.getAmount() + (bm.getInterest() != null ? bm.getInterest() : 0.0);
-	    double installmentAmount = 0;
-		try {
-			installmentAmount = totalLoan / bm.getInstallment();
-		} catch (Exception e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-
-	    info.setLoanAmount(bm.getAmount());
-	    info.setInstallmentAmount(installmentAmount);
 	    info.setDate(LocalDateTime.now().format(fmt));
 
-	    // Paid installments from CashBook
+	    // -------------------------------
+	    // INTEREST FIX — PERCENT → AMOUNT
+	    // -------------------------------
+	  
+	    double principal = bm.getAmount();
+	    double interestPercent = bm.getInterest() != null ? bm.getInterest() : 0.0;
+	    double interestAmount = principal * (interestPercent / 100.0);
+	    double totalLoan = principal + interestAmount;
+
+	    info.setLoanAmount(principal);
+	    //info.setInterestAmount(interestAmount);    
+	   // info.setTotalLoanAmount(totalLoan);        
+
+	    // EMI fixed amount (you already store installment amount)
+	    double installmentAmount = bm.getInstallment();
+
+	    // -------------------------------
+	    // PAID INSTALLMENTS FROM CASHBOOK
+	    // -------------------------------
 	    List<CashBook> paidList = cashBookRepo.findByAccountNo(bm.getId());
-	    if (paidList == null) {
-	        paidList = new ArrayList<CashBook>();
-	    }
+	    if (paidList == null) paidList = new ArrayList<>();
 
 	    long paidInstallments = 0;
 	    double totalAmountPaid = 0.0;
-	    LocalDateTime lastPaidDate = bm.getStartDate(); // initial fallback
+	    LocalDateTime lastPaidDate = bm.getStartDate();
 
 	    for (CashBook cb : paidList) {
-	        if (cb == null) continue; // safety
+	        if (cb == null) continue;
 
 	        totalAmountPaid += (cb.getCredit() != null ? cb.getCredit() : 0.0);
 
@@ -112,15 +104,20 @@ public class LoanInstallmentPaymentService {
 	        }
 	    }
 
+	    // Extra paid or deficit
 	    double expectedPaid = paidInstallments * installmentAmount;
 	    double balanceCarry = totalAmountPaid - expectedPaid;
 
+	    // -------------------------------
+	    // NEXT PENDING INSTALLMENTS
+	    // -------------------------------
 	    List<InstallmentDetails> pending = new ArrayList<>();
 
-	    double totalInstallments = bm.getInstallment(); // assuming it's a primitive long or non-null Long
+	    Double totalInstallments = bm.getDuration(); // FIX: create installmentCount in entity
 	    LocalDateTime dueDate = lastPaidDate;
 
 	    for (long i = paidInstallments + 1; i <= totalInstallments; i++) {
+
 	        InstallmentDetails inst = new InstallmentDetails();
 	        inst.setInstallmentNumber(i);
 
@@ -129,22 +126,23 @@ public class LoanInstallmentPaymentService {
 
 	        double calcInstall = installmentAmount;
 
+	        // Extra paid → reduce next installment
 	        if (balanceCarry > 0) {
-	            // Extra paid → reduce next installment
-	            double reduced = calcInstall - balanceCarry;
-	            if (reduced < 0) {
+	          
+	        	double reduced = calcInstall - balanceCarry;
+	           
+	        	if (reduced < 0) {
 	                inst.setInstallmentAmount(0);
 	                balanceCarry = Math.abs(reduced);
 	            } else {
 	                inst.setInstallmentAmount(reduced);
 	                balanceCarry = 0;
 	            }
-	        } else if (balanceCarry < 0) {
-	            // Deficit → increase next installment
+	        	
+			} else if (balanceCarry < 0) {  // Less paid → increase next installment
 	            inst.setInstallmentAmount(calcInstall + Math.abs(balanceCarry));
 	            balanceCarry = 0;
-	        } else {
-	            // Normal case
+			} else {// Normal
 	            inst.setInstallmentAmount(calcInstall);
 	        }
 
@@ -160,6 +158,7 @@ public class LoanInstallmentPaymentService {
 
 	    return info;
 	}
+
 
 	public void saveMfLoanInstallments(LoanInformation info) {
 
@@ -189,8 +188,14 @@ public class LoanInstallmentPaymentService {
 
 		BusinessMember bm = opt.get();
 
-		double principalPerMonth = bm.getAmount() / bm.getInstallment();
-		double interestPerMonth = bm.getInterest() / bm.getInstallment();
+		
+		double principal = bm.getAmount();
+		double interestPercent = bm.getInterest() != null ? bm.getInterest() : 0.0;
+		double interestAmount = principal * (interestPercent / 100.0);
+		
+		
+		double principalPerMonth = principal / bm.getDuration();
+		double interestPerMonth = interestAmount/ bm.getDuration();
 		double paid = info.getAmountPaid();
 
 		double principalPaid = 0;

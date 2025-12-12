@@ -13,7 +13,16 @@ public interface PersonalInfoRepository extends JpaRepository<PersonalInfo, Stri
 	@Query("SELECT u FROM PersonalInfo u WHERE u.disable =:status")
 	public List<PersonalInfo> findAllActiveRecords(@Param("status") boolean status);
 
-	@Query("SELECT u FROM PersonalInfo u WHERE u.disable =:status and (u.id like :keyword or u.firstname like :keyword or u.lastname like :keyword) and category IN (:categoryList)")
+	@Query("""
+		    SELECT u FROM PersonalInfo u
+		    WHERE u.disable = :status 
+		      AND (
+		            u.id LIKE CONCAT('%', :keyword, '%')
+		         OR u.firstname LIKE CONCAT('%', :keyword, '%')
+		         OR u.lastname LIKE CONCAT('%', :keyword, '%')
+		      )
+		      AND u.category IN (:categoryList)
+		""")
 	public List<PersonalInfo> personalInfoAutoComplete(@Param("status") boolean status,
 			@Param("keyword") String keyWord, @Param("categoryList") List<String> categoryList);
 }

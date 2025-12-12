@@ -306,7 +306,6 @@ public class PersonalInfoService {
 	}
 
 	public List<PersonalInfoAutoCompletePojo> autocomplete(String keyword) {
-
 		List<PersonalInfo> allPersonalInfoList = personalInfoRepository.personalInfoAutoComplete(false, keyword,
 				Arrays.asList("CUSTOMER", "PARTNER"));
 
