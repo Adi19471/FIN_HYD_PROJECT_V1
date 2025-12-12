@@ -1,0 +1,21 @@
+.bf-footer{
+  width:100%;
+  padding:12px 16px;
+  background:transparent;
+  color:var(--text-muted, #6b7280);
+  font-size:0.9rem;
+  display:flex;
+  justify-content:center;
+}
+.bf-footer-inner{
+  max-width:1100px;
+  width:100%;
+  display:flex;
+  justify-content:center;
+  align-items:center;
+}
+
+@media (max-width:640px){
+  .bf-footer{padding:10px}
+  .bf-footer{font-size:0.85rem}
+}

@@ -1,0 +1,25 @@
+/* Foam / Neumorphic sidebar styling */
+.sidebar-foam {
+  border-radius: 0 12px 12px 0;
+  margin: 8px 0 8px 0;
+  background: linear-gradient(180deg, #ffffff 0%, #f7fbfb 100%);
+  box-shadow: 10px 12px 24px rgba(2, 6, 23, 0.06),
+    -8px -8px 20px rgba(255, 255, 255, 0.9);
+  overflow: hidden;
+}
+
+.dark .sidebar-foam {
+  background: linear-gradient(180deg, #07101a 0%, #0b1220 100%);
+  box-shadow: 8px 10px 28px rgba(0, 0, 0, 0.6),
+    -6px -6px 16px rgba(255, 255, 255, 0.02);
+}
+
+/* Make active gradient links pop slightly with soft shadow */
+.sidebar-foam .shadow-md {
+  box-shadow: 0 8px 20px rgba(6, 95, 98, 0.08) !important;
+}
+
+/* Subtle inner highlight for the header */
+.sidebar-foam > .flex.items-center.justify-between.h-16 {
+  background: transparent;
+}

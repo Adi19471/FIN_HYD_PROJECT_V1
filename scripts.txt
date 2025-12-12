@@ -1,0 +1,73 @@
+QL: Create Tables for Sequence Generation
+Run these SQL statements in your MySQL database:
+-- CUSTOMER SEQUENCE TABLE
+CREATE TABLE personal_customer_sequence_table (
+    id BIGINT NOT NULL AUTO_INCREMENT,
+    PRIMARY KEY (id)
+);
+
+-- PARTNER SEQUENCE TABLE
+CREATE TABLE personal_partner_sequence_table (
+    id BIGINT NOT NULL AUTO_INCREMENT,
+    PRIMARY KEY (id)
+);
+
+-- EMPLOYEE SEQUENCE TABLE
+CREATE TABLE personal_employee_sequence_table (
+    id BIGINT NOT NULL AUTO_INCREMENT,
+    PRIMARY KEY (id)
+);
+
+-- VENDOR SEQUENCE TABLE
+CREATE TABLE personal_vendor_sequence_table (
+    id BIGINT NOT NULL AUTO_INCREMENT,
+    PRIMARY KEY (id)
+);
+
+
+🔧 Fix in Your Java Code
+You have a typo:
+personal_Partnerr_sequence_table
+
+should be:
+personal_partner_sequence_table
+
+
+📌 Why this works
+
+
+Each table maintains its own independent AUTO_INCREMENT counter.
+
+
+When you run:
+
+
+INSERT INTO personal_customer_sequence_table VALUES ();
+
+MySQL inserts a row with a new auto-increment value.
+
+
+Calling:
+
+
+SELECT LAST_INSERT_ID();
+
+returns the generated sequence number for your connection.
+
+⭐ Optional Improvement
+You can make the code more reusable:
+private Long getNextSeqId(String tableName) {
+    jdbc.update("INSERT INTO " + tableName + " VALUES ()");
+    return jdbc.queryForObject("SELECT LAST_INSERT_ID()", Long.class);
+}
+
+Then call:
+public Long getNextCustomerSeqId() {
+    return getNextSeqId("personal_customer_sequence_table");
+}
+
+
+If you'd like, I can also help you:
+✅ write a stored procedure
+✅ use MySQL SEQUENCE objects (MySQL 8.0.17+)
+✅ create a generic Spring Boot service for sequences

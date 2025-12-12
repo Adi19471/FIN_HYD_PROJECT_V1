@@ -1,0 +1,159 @@
+.login-wrapper {
+  width: 100%;
+  height: 100vh;
+  background: #0a0e27;
+  background-image: radial-gradient(
+      circle at 20% 50%,
+      rgba(19, 83, 68, 0.1) 0%,
+      transparent 50%
+    ),
+    radial-gradient(
+      circle at 80% 80%,
+      rgba(99, 102, 241, 0.1) 0%,
+      transparent 50%
+    );
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  overflow: hidden;
+  position: relative;
+}
+
+/* Animated background particles */
+.login-wrapper::before {
+  content: "";
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  top: 0;
+  left: 0;
+  background-image: radial-gradient(circle, #ffeb3b 1px, transparent 1px),
+    radial-gradient(circle, #ff6b35 1px, transparent 1px),
+    radial-gradient(circle, #00bcd4 1px, transparent 1px),
+    radial-gradient(circle, #673ab7 1px, transparent 1px),
+    radial-gradient(circle, #e91e63 1px, transparent 1px),
+    radial-gradient(circle, #00bcd4 1px, transparent 1px),
+    radial-gradient(circle, #ff9800 1px, transparent 1px),
+    radial-gradient(circle, #f44336 1px, transparent 1px);
+  background-size: 350% 350%, 280% 280%, 420% 420%, 310% 310%, 360% 360%,
+    390% 390%, 330% 330%, 370% 370%;
+  background-position: 0% 0%, 20% 80%, 80% 20%, 50% 50%, 10% 90%, 90% 10%,
+    30% 70%, 70% 30%;
+  animation: float 30s ease-in-out infinite;
+  pointer-events: none;
+  opacity: 0.3;
+  z-index: 1;
+}
+
+@keyframes float {
+  0%,
+  100% {
+    background-position: 0% 0%, 20% 80%, 80% 20%, 50% 50%, 10% 90%, 90% 10%,
+      30% 70%, 70% 30%;
+  }
+  25% {
+    background-position: 20% 20%, 40% 60%, 60% 40%, 30% 70%, 50% 50%, 70% 30%,
+      50% 50%, 40% 60%;
+  }
+  50% {
+    background-position: 40% 40%, 60% 40%, 40% 60%, 70% 30%, 90% 10%, 50% 50%,
+      70% 30%, 60% 40%;
+  }
+  75% {
+    background-position: 20% 80%, 40% 20%, 80% 40%, 50% 50%, 30% 70%, 80% 20%,
+      30% 70%, 80% 20%;
+  }
+}
+
+.login-page10 {
+  position: relative;
+  z-index: 2;
+  --login-bg: #000000;
+  --login-color: #c4c3ca;
+  --login-inner-height: 460px;
+  --login-inner-bg: #1a1a2e;
+  --login-input: #c4c3ca;
+  --login-input-bg: #16213e;
+  --login-input-placeholder: #49475d;
+  --login-input-placeholder-active: #53e3a6;
+  --login-input-bg-hover: #0f3460;
+  --login-input-bg-focus: #1a3a52;
+  --login-input-shadow: 0 4px 20px rgba(83, 227, 166, 0.15);
+  --login-btn: #fff;
+  --login-btn-bg: #ffd700;
+  --login-btn-focus: #ffed4e;
+  --login-btn-hover: #53e3a6;
+  --login-btn-active: #1aa97d;
+  --login-footer: #ffffff99;
+  --login-icon-color: #ffeb7b;
+  --login-icon-toggle-color: #00d4ff;
+}
+
+/* Button States */
+.login-page10 section button:focus {
+  box-shadow: 0 0 0 3px rgba(255, 215, 0, 0.4);
+  outline: none;
+}
+
+.login-page10 section button:hover {
+  background-color: #53e3a6 !important;
+  transform: translateY(-3px);
+  box-shadow: 0 8px 24px rgba(83, 227, 166, 0.4);
+}
+
+.login-page10 section button:active {
+  background-color: #1aa97d !important;
+  transform: translateY(-1px);
+}
+
+/* Input Focus Effects */
+.login-page10 section input:focus {
+  box-shadow: 0 0 0 3px rgba(83, 227, 166, 0.2) !important;
+}
+
+/* Dark Mode Support */
+[data-color-mode*="dark"] .login-page10,
+.login-page10 {
+  --login-bg: #000000;
+  --login-color: #c4c3ca;
+  --login-inner-height: 460px;
+  --login-inner-bg: #1a1a2e;
+  --login-input: #c4c3ca;
+  --login-input-bg: #16213e;
+  --login-input-placeholder: #49475d;
+  --login-input-placeholder-active: #53e3a6;
+  --login-input-bg-hover: #0f3460;
+  --login-input-bg-focus: #1a3a52;
+  --login-input-shadow: 0 4px 20px rgba(83, 227, 166, 0.15);
+  --login-btn: #fff;
+  --login-btn-bg: #ffd700;
+  --login-btn-focus: #ffed4e;
+  --login-btn-hover: #53e3a6;
+  --login-btn-active: #1aa97d;
+  --login-footer: #ffffff99;
+  --login-icon-color: #ffeb7b;
+  --login-icon-toggle-color: #00d4ff;
+}
+
+/* Light Mode Support */
+[data-color-mode*="light"] .login-page10 {
+  --login-bg: #000000;
+  --login-color: #c4c3ca;
+  --login-inner-height: 460px;
+  --login-inner-bg: #1a1a2e;
+  --login-input: #c4c3ca;
+  --login-input-bg: #16213e;
+  --login-input-placeholder: #49475d;
+  --login-input-placeholder-active: #53e3a6;
+  --login-input-bg-hover: #0f3460;
+  --login-input-bg-focus: #1a3a52;
+  --login-input-shadow: 0 4px 20px rgba(83, 227, 166, 0.15);
+  --login-btn: #fff;
+  --login-btn-bg: #ffd700;
+  --login-btn-focus: #ffed4e;
+  --login-btn-hover: #53e3a6;
+  --login-btn-active: #1aa97d;
+  --login-footer: #ffffff99;
+  --login-icon-color: #ffeb7b;
+  --login-icon-toggle-color: #00d4ff;
+}

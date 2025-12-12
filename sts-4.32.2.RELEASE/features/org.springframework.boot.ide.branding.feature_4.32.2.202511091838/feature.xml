@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<feature
+	id="org.springframework.boot.ide.branding.feature"
+	label="Spring Tools for Eclipse Branding Feature"
+	version="4.32.2.202511091838"
+	provider-name="Broadcom">
+
+	<plugin
+		id="org.springframework.boot.ide.branding"
+		download-size="148"
+		install-size="156"
+		version="4.32.2.202511091838"
+		unpack="false">
+	</plugin>
+
+</feature>
