@@ -342,35 +342,31 @@ const MonthlyFinance = () => {
       field: "amount",
       headerName: "Loan Amount",
       width: 140,
-      valueFormatter: (p) =>
-        p.value ? `₹${Number(p.value).toLocaleString("en-IN")}` : "-",
+     
     },
     {
       field: "interest",
       headerName: "Interest %",
       width: 100,
-      valueFormatter: (p) => (p.value != null ? `${p.value}%` : "-"),
+      
     },
     {
       field: "installment",
       headerName: "Monthly EMI",
       width: 150,
-      valueFormatter: (p) =>
-        p.value ? `₹${Number(p.value).toLocaleString("en-IN")}` : "-",
+      
     },
     {
       field: "startDate",
       headerName: "Loan Date",
       width: 140,
-      valueFormatter: (p) =>
-        p.value ? dayjs(p.value).format("DD-MMM-YYYY") : "-",
+      
     },
     {
       field: "endDate",
       headerName: "Maturity Date",
       width: 140,
-      valueFormatter: (p) =>
-        p.value ? dayjs(p.value).format("DD-MMM-YYYY") : "-",
+      
     },
     { field: "g1Name", headerName: "Guarantor 1", width: 200 },
     { field: "g2Name", headerName: "Guarantor 2", width: 200 },

@@ -25,8 +25,8 @@ public class LoanViewController {
 	}
 
 	@PostMapping("/saveMFLoanInformation/{loanId}")
-	public ResponseEntity<String> saveMFLoanInformation(@RequestBody LoanInformation loanInformation) {
-		loanInstallmentPaymentService.saveMfLoanInstallments(loanInformation);
+	public ResponseEntity<String> saveMFLoanInformation(@PathVariable("loanId") String loanId,@RequestBody LoanInformation loanInformation) {
+		loanInstallmentPaymentService.saveMfLoanInstallments(loanId,loanInformation);
 
 		return ResponseEntity.ok().body("SuccessfullySaved");
 	}

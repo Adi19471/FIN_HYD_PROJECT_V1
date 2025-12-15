@@ -160,9 +160,9 @@ public class LoanInstallmentPaymentService {
 	}
 
 
-	public void saveMfLoanInstallments(LoanInformation info) {
+	public void saveMfLoanInstallments( String loanId, LoanInformation info) {
 
-		Optional<BusinessMember> opt = businessMemberRepository.findById(info.getAccountNo());
+		Optional<BusinessMember> opt = businessMemberRepository.findById(loanId);
 		if (opt.isEmpty())
 			return;
 		
@@ -177,7 +177,7 @@ public class LoanInstallmentPaymentService {
 
 		double currentInstallmentNumber = paidInstallments+1;
 		String dateStr = info.getDate(); 
-		DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd-MM-yyyy HH:mm:ss");
+		DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
 		LocalDateTime currentInstallmentDate = LocalDateTime.parse(dateStr, formatter);
 		String currentUser = SecurityContextHolder.getContext().getAuthentication().getName();
 
@@ -200,26 +200,37 @@ public class LoanInstallmentPaymentService {
 
 		double principalPaid = 0;
 		double interestPaid = 0;
+		
+		System.out.println("-----------paid ::"+paid);
+		System.out.println("-----------principalPerMonth ::"+principalPerMonth);
+		
 
 		if (paid <= principalPerMonth) {
-		
+
 			principalPaid = paid;
 			interestPaid = 0;
-		
-		} else {
-			principalPaid = principalPerMonth;
 
-			interestPaid = paid - principalPerMonth;
-			if (interestPaid > interestPerMonth) {
-				interestPaid = interestPerMonth; // cap interest
-			}
+		} else if (paid >= principalPerMonth + interestPerMonth) {
+
+			principalPaid = paid - interestPerMonth;
+			interestPaid = interestPerMonth;
+
+		} else {
+			
+			
+			interestPaid = paid - principalPerMonth ;
+			principalPaid = paid - interestPaid;
+			
+
 		}
+		
+		System.out.println("-----------principalPaid ::"+principalPaid);
 
 		if (principalPaid > 0) {
 			
 			
 			CashBook cbP = new CashBook();
-			cbP.setAccountNo(info.getAccountNo());
+			cbP.setAccountNo(bm.getId());
 			cbP.setCredit(principalPaid);         
 			cbP.setDebit(0.0);                   
 			cbP.setTransType("MF LOAN"); 
@@ -236,11 +247,14 @@ public class LoanInstallmentPaymentService {
 			cashBookRepo.save(cbP);
 			
 		}
+		
+		System.out.println("-----------interestPaid ::"+interestPaid);
+
 
 		if (interestPaid > 0) {
 			
 			CashBook cbI = new CashBook();
-			cbI.setAccountNo(info.getAccountNo());
+			cbI.setAccountNo(bm.getId());
 			cbI.setCredit(interestPaid);           
 			cbI.setDebit(0.0);
 			cbI.setTransType("MF-LOAN-INTEREST");

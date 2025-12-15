@@ -22,9 +22,11 @@ public interface BusinessMemberRepository extends JpaRepository<BusinessMember, 
 	List<BusinessMember> businessMemberAutoComplete(@Param("starWithString") String starWithString,
 			@Param("keyword") String keyword);
 	
-	@Query("SELECT u FROM BusinessMember u " 
-			 + "         WHERE "
-			 + "              u.id LIKE :starWithString")
+	@Query(""" 
+			SELECT u FROM BusinessMember u 
+			          WHERE 
+			              u.id LIKE CONCAT(:starWithString, '%')
+		   """)
 		List<BusinessMember> findAllByLoanType(@Param("starWithString") String starWithString);
 
 

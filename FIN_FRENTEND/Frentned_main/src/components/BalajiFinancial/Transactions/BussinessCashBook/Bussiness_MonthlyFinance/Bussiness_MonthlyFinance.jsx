@@ -6,8 +6,6 @@ import {
   Typography,
   TextField,
   Button,
-  Checkbox,
-  FormControlLabel,
   Table,
   TableRow,
   TableCell,
@@ -17,8 +15,10 @@ import {
   Divider,
   Autocomplete,
   CircularProgress,
+  FormControlLabel,
+  Checkbox,
 } from "@mui/material";
-import { DatePicker } from "@mui/x-date-pickers/DatePicker";
+import { DateTimePicker } from "@mui/x-date-pickers/DateTimePicker"; // Changed to DateTimePicker
 import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
 import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
 import dayjs from "dayjs";
@@ -37,7 +37,7 @@ const Business_MonthlyFinance = () => {
   const [searchInput, setSearchInput] = useState("");
   const [selectedLoanId, setSelectedLoanId] = useState(null);
   const [printReceipt, setPrintReceipt] = useState(false);
-  const [selectedInstallments, setSelectedInstallments] = useState([]);
+  const [loading, setLoading] = useState(false);
 
   const [form, setForm] = useState({
     accountNo: "",
@@ -47,21 +47,18 @@ const Business_MonthlyFinance = () => {
     installmentAmount: 0,
     periodFrom: "",
     periodTo: "",
-    date: dayjs(),
-    paid: false,
+    date: dayjs(), // Now includes date + time (default: now)
     balance: 0,
     amountPaid: "",
-    lateFee: 0,
     pendingLateFee: 0,
-    dueAmount: 0,
     installmentDetailsList: [],
   });
 
-  // Fetch accounts with live search
+  // Fetch accounts for autocomplete
   const fetchAccounts = useCallback(async (query = "") => {
     setLoadingAccounts(true);
     try {
-      const loanType = "MONTHLY";
+      const loanType = "MONTHLY_FINANCE";
       const res = await axios.get(
         `${API_BASE}/BusinessMember/loanDetailsAutoComplete/${loanType}`,
         {
@@ -78,12 +75,10 @@ const Business_MonthlyFinance = () => {
     }
   }, []);
 
-  // Initial load
   useEffect(() => {
     fetchAccounts();
   }, [fetchAccounts]);
 
-  // Debounced search on input change
   useEffect(() => {
     const timer = setTimeout(() => {
       fetchAccounts(searchInput);
@@ -91,15 +86,17 @@ const Business_MonthlyFinance = () => {
     return () => clearTimeout(timer);
   }, [searchInput, fetchAccounts]);
 
-  // Load loan information
+  // Load loan details when user selects an account
   const loadLoanInfo = async (loanId) => {
     if (!loanId) return;
 
+    setLoading(true);
     try {
-      const res = await axios.get(`${API_BASE}/loadMFLoanInformation/${loanId}`,{headers});
+      const res = await axios.get(`${API_BASE}/loadMFLoanInformation/${loanId}`, { headers });
       const data = res.data;
 
       setSelectedLoanId(loanId);
+
       setForm({
         accountNo: data.accountNo || "",
         partnerName: data.partnerName || "",
@@ -108,103 +105,66 @@ const Business_MonthlyFinance = () => {
         installmentAmount: data.installmentAmount || 0,
         periodFrom: data.periodFrom || "",
         periodTo: data.periodTo || "",
-        date: data.date ? dayjs(data.date) : dayjs(),
-        paid: !!data.paid,
+        date: dayjs(), // Always reset to current date & time when loading
         balance: data.balance || 0,
         amountPaid: "",
-        lateFee: data.lateFee || 0,
         pendingLateFee: data.pendingLateFee || 0,
-        dueAmount: 0,
         installmentDetailsList: (data.installmentDetailsList || []).map((inst) => ({
           ...inst,
           paid: !!inst.paid,
         })),
       });
 
-      setSelectedInstallments([]);
       successToast("Loan details loaded successfully");
     } catch (err) {
       errorToast("Failed to load loan information");
       console.error(err);
+    } finally {
+      setLoading(false);
     }
   };
 
-  // Toggle single installment
-  const toggleInstallment = (index) => {
-    setSelectedInstallments((prev) =>
-      prev.includes(index) ? prev.filter((i) => i !== index) : [...prev, index]
-    );
-  };
-
-  // Select all unpaid installments
-  const toggleSelectAll = () => {
-    const unpaidIndices = form.installmentDetailsList
-      .map((inst, idx) => (inst.paid ? null : idx))
-      .filter((idx) => idx !== null);
-
-    if (selectedInstallments.length === unpaidIndices.length) {
-      setSelectedInstallments([]);
-    } else {
-      setSelectedInstallments(unpaidIndices);
-    }
-  };
-
-  // Auto-calculate due amount
-  useEffect(() => {
-    const total = selectedInstallments.reduce((sum, idx) => {
-      const inst = form.installmentDetailsList[idx];
-      return sum + (Number(inst?.installmentAmount) || 0) + (Number(inst?.lateFee) || 0);
-    }, 0);
-    setForm((prev) => ({ ...prev, dueAmount: total }));
-  }, [selectedInstallments, form.installmentDetailsList]);
-
-  // Handle Pay
-  const handlePay = () => {
-    if (selectedInstallments.length === 0) {
-      errorToast("Please select at least one installment");
-      return;
-    }
-
-    const paidAmt = Number(form.amountPaid) || 0;
-    if (paidAmt < form.dueAmount) {
-      errorToast(`Paid amount ₹${paidAmt} is less than due ₹${form.dueAmount}`);
-      return;
-    }
-
-    const updatedList = [...form.installmentDetailsList];
-    selectedInstallments.forEach((idx) => {
-      updatedList[idx] = { ...updatedList[idx], paid: true };
-    });
-
-    setForm((prev) => ({
-      ...prev,
-      installmentDetailsList: updatedList,
-      balance: prev.balance - form.dueAmount,
-      amountPaid: "",
-      dueAmount: 0,
-    }));
-
-    setSelectedInstallments([]);
-    successToast(`Payment of ₹${form.dueAmount} applied successfully!`);
-
-    if (printReceipt) {
-      successToast("Receipt printing triggered...");
-    }
-  };
-
-  // Save loan info
-  const saveLoanInfo = async () => {
+  // Handle Pay Now
+  const handlePay = async () => {
     if (!selectedLoanId) {
-      errorToast("No loan selected");
+      errorToast("Please select a loan account first");
       return;
     }
 
+    const amount = Number(form.amountPaid);
+    if (!amount || amount <= 0) {
+      errorToast("Please enter a valid amount to pay");
+      return;
+    }
+
+    if (!form.date?.isValid()) {
+      errorToast("Please select a valid date and time");
+      return;
+    }
+
+    setLoading(true);
     try {
       const payload = {
-        ...form,
-        date: form.date.format("YYYY-MM-DD"),
+        accountNo: form.accountNo,
+        partnerName: form.partnerName,
+        guarantorName: form.guarantorName,
+        loanAmount: form.loanAmount,
+        installmentAmount: form.installmentAmount,
+        periodFrom: form.periodFrom,
+        periodTo: form.periodTo,
+        date: form.date.format("YYYY-MM-DD HH:mm:ss"), // Full datetime sent to backend
+        balance: form.balance,
+        amountPaid: amount,
+        pendingLateFee: form.pendingLateFee,
+        lateFee: 0,
+        dueAmount: 0,
         installmentDetailsList: form.installmentDetailsList.map((inst) => ({
-          ...inst,
+          installmentNumber: inst.installmentNumber,
+          dueDate: inst.dueDate,
+          lateFeeDate: inst.lateFeeDate,
+          installmentAmount: inst.installmentAmount,
+          lateFee: inst.lateFee || 0,
+          total: (inst.installmentAmount || 0) + (inst.lateFee || 0),
           paid: inst.paid ? 1 : 0,
         })),
       };
@@ -215,10 +175,19 @@ const Business_MonthlyFinance = () => {
         { headers }
       );
 
-      successToast("Loan information saved successfully!");
+      successToast(`Payment of ₹${amount} recorded successfully!`);
+
+      if (printReceipt) {
+        successToast("Receipt printing triggered...");
+      }
+
+      setForm(prev => ({ ...prev, amountPaid: "" }));
+      await loadLoanInfo(selectedLoanId); // Reload fresh data
     } catch (err) {
-      errorToast("Save failed");
+      errorToast("Payment failed. Please try again.");
       console.error(err);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -231,10 +200,10 @@ const Business_MonthlyFinance = () => {
               Monthly Finance - Payment Collection
             </Typography>
 
-            {/* Search & Account No */}
+            {/* Search Account */}
             <Grid container spacing={3} mb={4}>
-              <Grid item xs={12} md={8}>
-                <Autocomplete sx={{width:"225px"}}
+              <Grid item xs={12} md={6}>
+                <Autocomplete
                   options={accountList}
                   getOptionLabel={(option) => option.displayString || ""}
                   inputValue={searchInput}
@@ -250,12 +219,12 @@ const Business_MonthlyFinance = () => {
                     }
                   }}
                   loading={loadingAccounts}
-                  noOptionsText="Type to search accounts..."
+                  noOptionsText="Type to search customer or account..."
                   renderInput={(params) => (
                     <TextField
                       {...params}
-                      label="Search Customer / Account Number"
-                      placeholder="Type name or account no..."
+                      label="Search Customer / Account"
+                      placeholder="Name or Account No"
                       size="small"
                       fullWidth
                       InputProps={{
@@ -271,72 +240,84 @@ const Business_MonthlyFinance = () => {
                   )}
                 />
               </Grid>
-              <Grid item xs={12} md={4}>
+              <Grid item xs={12} md={6}>
                 <TextField
                   label="Account No"
                   value={form.accountNo}
                   fullWidth
                   size="small"
                   InputProps={{ readOnly: true }}
-                  variant="outlined"
                 />
               </Grid>
             </Grid>
 
-            {/* Customer & Loan Details - No disabled, just read-only where needed */}
+            {/* Loan & Customer Details */}
             <Grid container spacing={3} mb={4}>
-              <Grid item xs={12} sm={6} md={4}>
+              <Grid item xs={12} sm={6} md={3}>
                 <TextField label="Partner Name" value={form.partnerName} fullWidth size="small" InputProps={{ readOnly: true }} />
               </Grid>
-              <Grid item xs={12} sm={6} md={4}>
+              <Grid item xs={12} sm={6} md={3}>
                 <TextField label="Guarantor Name" value={form.guarantorName} fullWidth size="small" InputProps={{ readOnly: true }} />
               </Grid>
-              <Grid item xs={12} sm={6} md={4}>
+              <Grid item xs={12} sm={6} md={3}>
                 <TextField label="Loan Amount" value={form.loanAmount} fullWidth size="small" InputProps={{ readOnly: true }} />
               </Grid>
-              <Grid item xs={12} sm={6} md={4}>
+              <Grid item xs={12} sm={6} md={3}>
                 <TextField label="Installment Amount" value={form.installmentAmount} fullWidth size="small" InputProps={{ readOnly: true }} />
               </Grid>
-              <Grid item xs={12} sm={6} md={4}>
+              <Grid item xs={12} sm={6} md={3}>
                 <TextField label="Period From" value={form.periodFrom} fullWidth size="small" InputProps={{ readOnly: true }} />
               </Grid>
-              <Grid item xs={12} sm={6} md={4}>
+              <Grid item xs={12} sm={6} md={3}>
                 <TextField label="Period To" value={form.periodTo} fullWidth size="small" InputProps={{ readOnly: true }} />
               </Grid>
-              <Grid item xs={12} sm={6} md={4}>
+              <Grid item xs={12} sm={6} md={3}>
                 <TextField label="Pending Late Fee" value={form.pendingLateFee} fullWidth size="small" InputProps={{ readOnly: true }} />
+              </Grid>
+              <Grid item xs={12} sm={6} md={3}>
+                <TextField label="Current Balance" value={form.balance} fullWidth size="small" InputProps={{ readOnly: true }} />
               </Grid>
             </Grid>
 
             <Divider sx={{ my: 4 }} />
 
-            {/* Payment Section */}
-            <Typography variant="h6" mb={2}>Payment Details</Typography>
+            {/* Payment Input Section */}
+            <Typography variant="h6" mb={2}>Record Payment</Typography>
             <Grid container spacing={3} mb={3}>
-              <Grid item xs={12} sm={6} md={3}>
-                <DatePicker
-                  label="Payment Date"
+              <Grid item xs={12} sm={6} md={4}>
+                <DateTimePicker
+                  label="Payment Date & Time"
                   value={form.date}
-                  onChange={(date) => setForm({ ...form, date })}
+                  onChange={(newDate) => setForm(prev => ({ ...prev, date: newDate }))}
                   slotProps={{ textField: { size: "small", fullWidth: true } }}
+                  ampm={false} // Optional: use 24-hour format
                 />
               </Grid>
-              <Grid item xs={12} sm={6} md={3}>
+
+              {/* Display selected date & time */}
+              <Grid item xs={12} sm={6} md={4}>
+                <TextField
+                  label="Selected Payment Date & Time"
+                  value={form.date?.isValid() ? form.date.format("DD-MM-YYYY HH:mm") : "-"}
+                  fullWidth
+                  size="small"
+                  InputProps={{ readOnly: true }}
+                />
+              </Grid>
+
+              <Grid item xs={12} sm={6} md={4}>
                 <TextField
                   label="Amount Paid"
                   value={form.amountPaid}
-                  onChange={(e) => setForm({ ...form, amountPaid: e.target.value.replace(/[^0-9.]/g, "") })}
+                  onChange={(e) => setForm(prev => ({
+                    ...prev,
+                    amountPaid: e.target.value.replace(/[^0-9]/g, "")
+                  }))}
                   fullWidth
                   size="small"
-                  type="number"
+                  placeholder="Enter payment amount"
                   inputProps={{ min: 0 }}
                 />
-              </Grid>
-              <Grid item xs={12} sm={6} md={3}>
-                <TextField label="Current Balance" value={form.balance} fullWidth size="small" InputProps={{ readOnly: true }} />
-              </Grid>
-              <Grid item xs={12} sm={6} md={3}>
-                <TextField label="Due Amount" value={form.dueAmount} fullWidth size="small" InputProps={{ readOnly: true }} />
               </Grid>
             </Grid>
 
@@ -345,8 +326,14 @@ const Business_MonthlyFinance = () => {
                 control={<Checkbox checked={printReceipt} onChange={(e) => setPrintReceipt(e.target.checked)} />}
                 label="Print Receipt"
               />
-              <Button variant="contained" color="primary" size="large" onClick={handlePay}>
-                Pay Now
+              <Button
+                variant="contained"
+                color="primary"
+                size="large"
+                onClick={handlePay}
+                disabled={loading || !form.amountPaid || !form.date?.isValid()}
+              >
+                {loading ? "Processing..." : "Pay Now"}
               </Button>
             </Box>
 
@@ -355,13 +342,6 @@ const Business_MonthlyFinance = () => {
               <Table size="small">
                 <TableHead sx={{ backgroundColor: "#e3f2fd" }}>
                   <TableRow>
-                    <TableCell padding="checkbox">
-                      <Checkbox
-                        checked={selectedInstallments.length > 0 && selectedInstallments.length === form.installmentDetailsList.filter((i) => !i.paid).length}
-                        indeterminate={selectedInstallments.length > 0 && selectedInstallments.length < form.installmentDetailsList.filter((i) => !i.paid).length}
-                        onChange={toggleSelectAll}
-                      />
-                    </TableCell>
                     <TableCell><strong>Inst. No</strong></TableCell>
                     <TableCell><strong>Due Date</strong></TableCell>
                     <TableCell><strong>Late Fee Date</strong></TableCell>
@@ -373,16 +353,9 @@ const Business_MonthlyFinance = () => {
                 </TableHead>
                 <TableBody>
                   {form.installmentDetailsList.map((row, idx) => {
-                    const total = (Number(row.installmentAmount) || 0) + (Number(row.lateFee) || 0);
+                    const total = (row.installmentAmount || 0) + (row.lateFee || 0);
                     return (
                       <TableRow key={idx} hover>
-                        <TableCell padding="checkbox">
-                          <Checkbox
-                            checked={selectedInstallments.includes(idx)}
-                            onChange={() => toggleInstallment(idx)}
-                            disabled={row.paid}
-                          />
-                        </TableCell>
                         <TableCell>{row.installmentNumber}</TableCell>
                         <TableCell>{row.dueDate || "-"}</TableCell>
                         <TableCell>{row.lateFeeDate || "-"}</TableCell>
@@ -400,18 +373,6 @@ const Business_MonthlyFinance = () => {
                 </TableBody>
               </Table>
             </TableContainer>
-
-            <Box mt={5} textAlign="right">
-              <Button
-                variant="contained"
-                color="success"
-                size="large"
-                onClick={saveLoanInfo}
-                disabled={!selectedLoanId}
-              >
-                Save Loan Information
-              </Button>
-            </Box>
           </Paper>
         </Box>
       </Box>

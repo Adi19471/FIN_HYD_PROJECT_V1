@@ -231,7 +231,7 @@ public class BusinessMemberService {
 			break;
 		}
 
-		List<BusinessMember> allBusinessMemberList = businessMemberRepository.findAllByLoanType("%"+starWithString);
+		List<BusinessMember> allBusinessMemberList = businessMemberRepository.findAllByLoanType(starWithString);
 
 		List<BusinessMemberDto> toBeReturnedDtoList = new ArrayList<BusinessMemberDto>();
 

@@ -1,0 +1,23 @@
+Manifest-Version: 1.0
+Created-By: Maven Archiver 3.6.3
+Build-Jdk-Spec: 21
+Bundle-ManifestVersion: 2
+Bundle-Name: %pluginName
+Bundle-SymbolicName: org.springframework.boot.ide.branding;singleton:=tr
+ ue
+Bundle-Version: 4.32.2.202511091838
+Bundle-Vendor: %providerName
+Require-Bundle: org.eclipse.ui,org.eclipse.equinox.p2.ui,org.eclipse.equ
+ inox.p2.ui.sdk,org.springsource.ide.eclipse.commons.core,org.eclipse.eq
+ uinox.p2.engine,org.eclipse.equinox.app,org.eclipse.ui.ide.application,
+ org.objectweb.asm
+Bundle-Localization: plugin
+Bundle-ActivationPolicy: lazy
+Import-Package: org.eclipse.core.runtime,org.eclipse.osgi.service.datalo
+ cation,org.osgi.framework,org.osgi.framework.hooks.weaving
+Eclipse-BundleShape: dir
+Export-Package: org.springframework.boot.ide.branding
+Bundle-License: Eclipse Public License v1.0;link="https://www.eclipse.or
+ g/legal/epl-v10.html"
+Require-Capability: osgi.ee;filter:="(&(osgi.ee=JavaSE)(version=21))"
+
