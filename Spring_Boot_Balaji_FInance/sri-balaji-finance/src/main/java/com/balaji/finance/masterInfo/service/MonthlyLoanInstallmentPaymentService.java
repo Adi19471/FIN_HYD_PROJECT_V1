@@ -179,12 +179,11 @@ public class MonthlyLoanInstallmentPaymentService {
 
 		
 		double principal = bm.getAmount();
-		double interestPercent = bm.getInterest() != null ? bm.getInterest() : 0.0;
-		double interestAmount = principal * (interestPercent / 100.0);
+		double installmentPerMonth = bm.getInstallment();
 		
 		
 		double principalPerMonth = principal / bm.getDuration();
-		double interestPerMonth = interestAmount/ bm.getDuration();
+		double interestPerMonth = installmentPerMonth - principalPerMonth;
 		
 		
 		double currentlyPaidAmount = info.getAmountPaid();
