@@ -68,22 +68,10 @@ public class MonthlyLoanInstallmentPaymentService {
 	    info.setPeriodTo(bm.getEndDate().format(fmt));
 	    info.setDate(LocalDateTime.now().format(fmt));
 
-	   
-	    
-	    
-	  
-	    double principal = bm.getAmount();
-	    double interestPercent = bm.getInterest() != null ? bm.getInterest() : 0.0;
-	    double interestAmount = principal * (interestPercent / 100.0);
-	    double totalLoan = principal + interestAmount;
+		info.setLoanAmount(bm.getAmount());
+		double installmentAmount = bm.getInstallment();
+		info.setInstallmentAmount(installmentAmount);
 
-	    info.setLoanAmount(principal);
-	   
-	    double installmentAmount = bm.getInstallment();
-
-	   
-	    
-	   
 		List<CashBook> paidList = cashBookRepo.findByAccountNo(bm.getId());
 		if (paidList == null) {
 			paidList = new ArrayList<>();

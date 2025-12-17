@@ -51,11 +51,12 @@ const MonthlyFinance = () => {
     startDate: dayjs(),
     endDate: dayjs().add(FIXED_DURATION_MONTHS, "month"),
     amount: "",
-    interest: "",
+    interestRate: "",
+    interestAmount: "",
     installment: "",
     processingFee: "",
     security: "",
-    duration:FIXED_DURATION_MONTHS
+    duration: FIXED_DURATION_MONTHS,
   });
 
   const [options, setOptions] = useState([]);
@@ -110,7 +111,7 @@ const MonthlyFinance = () => {
         customerName:
           memberMap[loan.customerId] || `ID: ${loan.customerId || "N/A"}`,
         amount: loan.amount || 0,
-        interest: loan.interest || 0,
+        interestRate: loan.interestRate || 0,
         installment: loan.installment || 0,
         startDate: loan.startDate || null,
         endDate: loan.endDate || null,
@@ -150,27 +151,25 @@ const MonthlyFinance = () => {
 
   // Auto calculate monthly EMI (Flat Interest Method)
   useEffect(() => {
-    if (!formData.amount || !formData.interest) {
+    if (!formData.amount || !formData.interestRate) {
       setFormData((prev) => ({ ...prev, installment: "" }));
       return;
     }
 
     const principal = Number(formData.amount);
-    const annualRate = Number(formData.interest);
+    const intrestRate = Number(formData.interestRate);
 
-    // Total interest = Principal × Rate × Time (in years)
-    const totalInterest =
-      principal * (annualRate / 100) * (FIXED_DURATION_MONTHS / 12);
-    const totalPayable = principal + totalInterest;
+    const interestAmount = principal * TOTAL_INSTALLMENTS * (intrestRate / 100); 
+    const totalPayable = principal + interestAmount;
 
-    // Monthly EMI (rounded to nearest rupee)
     const monthlyEMI = Math.round(totalPayable / TOTAL_INSTALLMENTS);
 
     setFormData((prev) => ({
       ...prev,
       installment: monthlyEMI.toString(),
+      interestAmount: interestAmount.toFixed(2), 
     }));
-  }, [formData.amount, formData.interest]);
+  }, [formData.amount, formData.interestRate]);
 
   const searchMembers = useCallback(
     async (query) => {
@@ -211,7 +210,7 @@ const MonthlyFinance = () => {
       startDate: dayjs(),
       endDate: dayjs().add(FIXED_DURATION_MONTHS, "month"),
       amount: "",
-      interest: "",
+      interestRate: "",
       installment: "",
       processingFee: "",
       security: "",
@@ -236,7 +235,7 @@ const MonthlyFinance = () => {
         startDate: dayjs(l.startDate),
         endDate: dayjs(l.endDate),
         amount: l.amount?.toString(),
-        interest: l.interest?.toString(),
+        interestRate: l.interestRate?.toString(),
         installment: l.installment?.toString() || "",
         processingFee: l.processingFee?.toString() || "",
         security: l.security || "",
@@ -275,7 +274,7 @@ const MonthlyFinance = () => {
       startDate: formData.startDate.format("YYYY-MM-DD HH:mm:ss"),
       endDate: formData.endDate.format("YYYY-MM-DD HH:mm:ss"),
       amount: Number(formData.amount),
-      interest: Number(formData.interest),
+      interestRate: Number(formData.interestRate),
       installment: Number(formData.installment), // Send calculated EMI
       processingFee: Number(formData.processingFee) || 0,
       security: formData.security,
@@ -300,7 +299,7 @@ const MonthlyFinance = () => {
       }
       handleClose();
       fetchData();
-      console.log("fetchData",fetchData)
+      console.log("fetchData", fetchData);
     } catch (err) {
       errorToast(err.response?.data?.message || "Save failed");
     }
@@ -342,32 +341,35 @@ const MonthlyFinance = () => {
       field: "amount",
       headerName: "Loan Amount",
       width: 140,
-     
     },
     {
-      field: "interest",
+      field: "interestRate",
       headerName: "Interest %",
       width: 100,
-      
     },
     {
       field: "installment",
       headerName: "Monthly EMI",
       width: 150,
-      
     },
+
+    {
+      field: "intrestAmount",
+      headerName: "Interest Amount",
+      width: 150,
+    },
+
     {
       field: "startDate",
       headerName: "Loan Date",
       width: 140,
-      
     },
     {
       field: "endDate",
       headerName: "Maturity Date",
       width: 140,
-      
     },
+
     { field: "g1Name", headerName: "Guarantor 1", width: 200 },
     { field: "g2Name", headerName: "Guarantor 2", width: 200 },
     { field: "g3Name", headerName: "Guarantor 3", width: 200 },
@@ -516,10 +518,20 @@ const MonthlyFinance = () => {
                 label="Interest %"
                 type="number"
                 variant="outlined"
-                value={formData.interest}
+                value={formData.interestRate}
                 onChange={(e) =>
-                  setFormData((p) => ({ ...p, interest: e.target.value }))
+                  setFormData((p) => ({ ...p, interestRate: e.target.value }))
                 }
+              />
+            </Grid>
+            <Grid item xs={12} sm={6}>
+              <TextField
+                fullWidth
+                label="Interest Amount"
+                 InputLabelProps={{ shrink: true }}
+                variant="outlined"
+                value={formData.interestAmount}
+                InputProps={{ readOnly: true }}
               />
             </Grid>
             <Grid item xs={12} sm={6}>
