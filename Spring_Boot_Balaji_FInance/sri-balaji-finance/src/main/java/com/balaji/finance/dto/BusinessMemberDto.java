@@ -31,9 +31,10 @@ public class BusinessMemberDto {
 	private Integer paidInstallments;
 	private Integer partPrincipal;
 	private Integer partInterest;
-	private Integer unpaidLateFee;
+	private Double unpaidLateFee;
 	private boolean chequeReminder;
 	private String businessId;
+	private Double processingFee;
 
 	public String getId() {
 		return id;
@@ -171,11 +172,11 @@ public class BusinessMemberDto {
 		this.partInterest = partInterest;
 	}
 
-	public Integer getUnpaidLateFee() {
+	public Double getUnpaidLateFee() {
 		return unpaidLateFee;
 	}
 
-	public void setUnpaidLateFee(Integer unpaidLateFee) {
+	public void setUnpaidLateFee(Double unpaidLateFee) {
 		this.unpaidLateFee = unpaidLateFee;
 	}
 
@@ -193,6 +194,14 @@ public class BusinessMemberDto {
 
 	public void setBusinessId(String businessId) {
 		this.businessId = businessId;
+	}
+
+	public Double getProcessingFee() {
+		return processingFee;
+	}
+
+	public void setProcessingFee(Double processingFee) {
+		this.processingFee = processingFee;
 	}
 
 }

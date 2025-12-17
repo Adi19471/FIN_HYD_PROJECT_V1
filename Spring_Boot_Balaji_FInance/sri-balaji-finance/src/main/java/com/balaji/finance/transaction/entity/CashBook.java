@@ -21,7 +21,7 @@ public class CashBook {
 	private Double id;
 
 	@Column(name = "LINENO")
-	private Double lineNo;
+	private Integer lineNo;
 
 	@Temporal(TemporalType.TIMESTAMP)
 	@Column(name = "TRANSDate")
@@ -68,11 +68,11 @@ public class CashBook {
 		this.id = id;
 	}
 
-	public Double getLineNo() {
+	public Integer getLineNo() {
 		return lineNo;
 	}
 
-	public void setLineNo(Double lineNo) {
+	public void setLineNo(Integer lineNo) {
 		this.lineNo = lineNo;
 	}
 

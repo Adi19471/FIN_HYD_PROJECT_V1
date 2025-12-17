@@ -1,13 +1,13 @@
 package com.balaji.finance.masterInfo.service;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
 import com.balaji.finance.dto.BusinessMemberDto;
@@ -16,12 +16,12 @@ import com.balaji.finance.masterInfo.entity.PersonalInfo;
 import com.balaji.finance.masterInfo.repo.BusinessMemberRepository;
 import com.balaji.finance.masterInfo.repo.PersonalInfoRepository;
 import com.balaji.finance.pojo.BusinessMemberAutoCompletePojo;
+import com.balaji.finance.transaction.entity.CashBook;
+import com.balaji.finance.transaction.entity.CashBookRepo;
 import com.balaji.finance.util.BusinessMemersSequenceService;
 
 @Service
 public class BusinessMemberService {
-
-    private final AuthenticationManager authenticationManager;
 
 	@Autowired
 	private BusinessMemberRepository businessMemberRepository;
@@ -32,11 +32,8 @@ public class BusinessMemberService {
 	@Autowired
 	private PersonalInfoRepository personalInfoRepository;
 
-
-    BusinessMemberService(AuthenticationManager authenticationManager) {
-        this.authenticationManager = authenticationManager;
-    }
-
+	@Autowired
+	private CashBookRepo cashBookRepo;
 
 	public String generateId(String type) {
 
@@ -62,7 +59,10 @@ public class BusinessMemberService {
 		return prefix + year + "-" + seq;
 	}
 
-	// create
+	
+	
+	
+	//Creating Loan Account
 	public String saveBusinessMember(BusinessMemberDto businessMemberDto, String type) {
 
 		BusinessMember businessMember = new BusinessMember();
@@ -109,18 +109,145 @@ public class BusinessMemberService {
 
 		businessMember.setAmount(businessMemberDto.getAmount());
 		businessMember.setDuration(businessMemberDto.getDuration());
-		businessMember.setInterest(businessMemberDto.getInterest());
+		businessMember.setInterest(businessMemberDto.getInterest()); 
 
-		businessMember.setInstallment(businessMemberDto.getInstallment());
+		businessMember.setInstallment(businessMemberDto.getInstallment()); 
 		businessMember.setStatus(businessMemberDto.isStatus());
-		businessMember.setPaidInstallments(businessMemberDto.getPaidInstallments());
+		
 		businessMember.setPartPrincipal(businessMemberDto.getPartPrincipal());
-		businessMember.setUnpaidLateFee(businessMemberDto.getUnpaidLateFee());
+		businessMember.setPartInterest(businessMemberDto.getPartInterest());
+		
+		
 		businessMember.setChequeReminder(businessMemberDto.isChequeReminder());
 		businessMember.setBusinessId(businessMemberDto.getBusinessId());
 		businessMember.setSecurity(businessMemberDto.getSecurity());
-
+		
+		businessMember.setPaidInstallments(0);
+		businessMember.setUnpaidLateFee(0.0);
+		
+		
 		businessMemberRepository.save(businessMember);
+		
+		
+		String currentUser = SecurityContextHolder.getContext().getAuthentication().getName();
+		LocalDateTime currentDate = LocalDateTime.now();
+		
+		switch (type) {
+		case "DAILY_FINANCE":
+			
+			CashBook dfLoanCashBook = new CashBook();
+			dfLoanCashBook.setAccountNo(businessMember.getId());
+			dfLoanCashBook.setCredit(0.0);         
+			dfLoanCashBook.setDebit(businessMember.getAmount());                   
+			dfLoanCashBook.setTransType("DF LOAN"); 
+			dfLoanCashBook.setParticulars("DF LOAN");
+			dfLoanCashBook.setBmRemarks("");
+			dfLoanCashBook.setReceiptRemarks("");
+
+			dfLoanCashBook.setLineNo(1);                    
+			dfLoanCashBook.setUser(currentUser);          
+
+			dfLoanCashBook.setTransDate(currentDate); 
+			dfLoanCashBook.setSysDate(currentDate);   
+
+			cashBookRepo.save(dfLoanCashBook);
+			
+			if(businessMemberDto.getProcessingFee() != null
+					&& businessMemberDto.getProcessingFee() > 0) {
+				
+				CashBook dfProcessingFeeCashBook = new CashBook();
+				dfProcessingFeeCashBook.setAccountNo(businessMember.getId());
+				dfProcessingFeeCashBook.setCredit(businessMemberDto.getProcessingFee());         
+				dfProcessingFeeCashBook.setDebit(0.0);                   
+				dfProcessingFeeCashBook.setTransType("DF DOC CHARGES"); 
+				dfProcessingFeeCashBook.setParticulars("DF DOC CHARGES");
+				dfProcessingFeeCashBook.setBmRemarks("");
+				dfProcessingFeeCashBook.setReceiptRemarks("");
+
+				dfProcessingFeeCashBook.setLineNo(2);                    
+				dfProcessingFeeCashBook.setUser(currentUser);          
+
+				dfProcessingFeeCashBook.setTransDate(currentDate); 
+				dfProcessingFeeCashBook.setSysDate(currentDate);   
+
+				cashBookRepo.save(dfProcessingFeeCashBook);
+				
+				
+			}
+			
+			double interestAmount = businessMember.getAmount() * (businessMember.getInterest() / 100.0);
+			
+			if(interestAmount > 0) {
+				
+				CashBook dfIntrestCashBook = new CashBook();
+				dfIntrestCashBook.setAccountNo(businessMember.getId());
+				dfIntrestCashBook.setCredit(interestAmount);
+				dfIntrestCashBook.setDebit(0.0);
+				dfIntrestCashBook.setTransType("DF INTEREST");
+				dfIntrestCashBook.setParticulars("DF INTEREST");
+				dfIntrestCashBook.setBmRemarks("");
+				dfIntrestCashBook.setReceiptRemarks("");
+
+				dfIntrestCashBook.setLineNo(3);
+				dfIntrestCashBook.setUser(currentUser);
+
+				dfIntrestCashBook.setTransDate(currentDate);
+				dfIntrestCashBook.setSysDate(currentDate);
+
+				cashBookRepo.save(dfIntrestCashBook);
+			}
+
+			
+		
+			break;
+
+		case "MONTHLY_FINANCE":
+			
+			CashBook mFLoanCashBook = new CashBook();
+			mFLoanCashBook.setAccountNo(businessMember.getId());
+			mFLoanCashBook.setCredit(0.0);         
+			mFLoanCashBook.setDebit(businessMember.getAmount());                   
+			mFLoanCashBook.setTransType("MF LOAN"); 
+			mFLoanCashBook.setParticulars("MF LOAN");
+			mFLoanCashBook.setBmRemarks("");
+			mFLoanCashBook.setReceiptRemarks("");
+
+			mFLoanCashBook.setLineNo(1);                    
+			mFLoanCashBook.setUser(currentUser);          
+
+			mFLoanCashBook.setTransDate(currentDate); 
+			mFLoanCashBook.setSysDate(currentDate);   
+
+			cashBookRepo.save(mFLoanCashBook);
+			
+			if(businessMemberDto.getProcessingFee() != null
+					&& businessMemberDto.getProcessingFee() > 0) {
+				
+				CashBook dfProcessingFeeCashBook = new CashBook();
+				dfProcessingFeeCashBook.setAccountNo(businessMember.getId());
+				dfProcessingFeeCashBook.setCredit(businessMemberDto.getProcessingFee());         
+				dfProcessingFeeCashBook.setDebit(0.0);                   
+				dfProcessingFeeCashBook.setTransType("MF DOC CHARGES"); 
+				dfProcessingFeeCashBook.setParticulars("MF DOC CHARGES");
+				dfProcessingFeeCashBook.setBmRemarks("");
+				dfProcessingFeeCashBook.setReceiptRemarks("");
+
+				dfProcessingFeeCashBook.setLineNo(2);                    
+				dfProcessingFeeCashBook.setUser(currentUser);          
+
+				dfProcessingFeeCashBook.setTransDate(currentDate); 
+				dfProcessingFeeCashBook.setSysDate(currentDate);   
+
+				cashBookRepo.save(dfProcessingFeeCashBook);
+				
+				
+			}
+			
+			break;
+
+		default:
+			break;
+		}
 
 		return "Sucessfully Saved ";
 	}
@@ -173,7 +300,6 @@ public class BusinessMemberService {
 			businessMember.setInstallment(businessMemberDto.getInstallment());
 
 			businessMember.setStatus(businessMemberDto.isStatus());
-			businessMember.setPaidInstallments(businessMemberDto.getPaidInstallments());
 			businessMember.setPartPrincipal(businessMemberDto.getPartPrincipal());
 			businessMember.setUnpaidLateFee(businessMemberDto.getUnpaidLateFee());
 			businessMember.setChequeReminder(businessMemberDto.isChequeReminder());

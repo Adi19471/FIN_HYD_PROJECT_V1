@@ -17,32 +17,36 @@ import com.balaji.finance.pojo.LoanInformation;
 import com.balaji.finance.transaction.entity.CashBook;
 import com.balaji.finance.transaction.entity.CashBookRepo;
 
-import io.jsonwebtoken.lang.Collections;
-
 @Service
-public class LoanInstallmentPaymentService {
+public class MonthlyLoanInstallmentPaymentService {
 
 	@Autowired
 	private BusinessMemberRepository businessMemberRepository;
 
 	@Autowired
 	private CashBookRepo cashBookRepo;
-
+	
+	
 	public LoanInformation loadMFLoanPaidInfo(String id) {
 
-	    Optional<BusinessMember> opt = businessMemberRepository.findById(id);
-	    if (!opt.isPresent()) return null;
+		Optional<BusinessMember> opt = businessMemberRepository.findById(id);
+		if (!opt.isPresent()) {
+			return null;
+		}
 
-	    BusinessMember bm = opt.get();
-	    if (bm.getCustomerId() == null || bm.getCustomerId().getFirstname() == null) return null;
-	    if (bm.getStartDate() == null || bm.getEndDate() == null) return null;
+		BusinessMember bm = opt.get();
+		if (bm.getCustomerId() == null || bm.getCustomerId().getFirstname() == null) {
+			return null;
+		}
 
-	    LoanInformation info = new LoanInformation();
+		if (bm.getStartDate() == null || bm.getEndDate() == null) {
+			return null;
+		}
+
+		LoanInformation info = new LoanInformation();
 	    DateTimeFormatter fmt = DateTimeFormatter.ofPattern("dd-MM-yyyy HH:mm:ss");
 
-	    // -------------------------------
 	    // ACCOUNT DETAILS
-	    // -------------------------------
 	    String accountNo = bm.getBusinessId() + "-" +
 	                       bm.getCustomerId().getFirstname() + "-" +
 	                       (bm.getCustomerId().getId() != null ? bm.getCustomerId().getId() : "");
@@ -64,9 +68,9 @@ public class LoanInstallmentPaymentService {
 	    info.setPeriodTo(bm.getEndDate().format(fmt));
 	    info.setDate(LocalDateTime.now().format(fmt));
 
-	    // -------------------------------
-	    // INTEREST FIX — PERCENT → AMOUNT
-	    // -------------------------------
+	   
+	    
+	    
 	  
 	    double principal = bm.getAmount();
 	    double interestPercent = bm.getInterest() != null ? bm.getInterest() : 0.0;
@@ -74,40 +78,42 @@ public class LoanInstallmentPaymentService {
 	    double totalLoan = principal + interestAmount;
 
 	    info.setLoanAmount(principal);
-	    //info.setInterestAmount(interestAmount);    
-	   // info.setTotalLoanAmount(totalLoan);        
-
-	    // EMI fixed amount (you already store installment amount)
+	   
 	    double installmentAmount = bm.getInstallment();
 
-	    // -------------------------------
-	    // PAID INSTALLMENTS FROM CASHBOOK
-	    // -------------------------------
-	    List<CashBook> paidList = cashBookRepo.findByAccountNo(bm.getId());
-	    if (paidList == null) paidList = new ArrayList<>();
+	   
+	    
+	   
+		List<CashBook> paidList = cashBookRepo.findByAccountNo(bm.getId());
+		if (paidList == null) {
+			paidList = new ArrayList<>();
+		}
 
-	    long paidInstallments = 0;
+	    long paidInstallments = bm.getPaidInstallments();
 	    double totalAmountPaid = 0.0;
 	    LocalDateTime lastPaidDate = bm.getStartDate();
 
-	    for (CashBook cb : paidList) {
-	        if (cb == null) continue;
+		for (CashBook cb : paidList) {
 
-	        totalAmountPaid += (cb.getCredit() != null ? cb.getCredit() : 0.0);
+			if (cb.getParticulars().equalsIgnoreCase("MF LOAN INSTALLMENT")
+					|| cb.getParticulars().equalsIgnoreCase("MF INTEREST")) {
 
-	        if ("MF LOAN".equalsIgnoreCase(cb.getTransType())) {
-	            paidInstallments++;
-	        }
+				totalAmountPaid += (cb.getCredit() != null ? cb.getCredit() : 0.0);
 
-	        if (cb.getTransDate() != null && cb.getTransDate().isAfter(lastPaidDate)) {
-	            lastPaidDate = cb.getTransDate();
-	        }
-	    }
+			}
+
+			if (cb.getTransDate() != null 
+					&& cb.getTransDate().isAfter(lastPaidDate)) {
+				lastPaidDate = cb.getTransDate();
+			}
+		}
 
 	    // Extra paid or deficit
 	    double expectedPaid = paidInstallments * installmentAmount;
 	    double balanceCarry = totalAmountPaid - expectedPaid;
 
+	   
+	    
 	    // -------------------------------
 	    // NEXT PENDING INSTALLMENTS
 	    // -------------------------------
@@ -126,24 +132,32 @@ public class LoanInstallmentPaymentService {
 
 	        double calcInstall = installmentAmount;
 
-	        // Extra paid → reduce next installment
+	        // Extra paid -> reduce next installment
 	        if (balanceCarry > 0) {
 	          
 	        	double reduced = calcInstall - balanceCarry;
 	           
 	        	if (reduced < 0) {
-	                inst.setInstallmentAmount(0);
+	               
+	        		inst.setInstallmentAmount(0);
 	                balanceCarry = Math.abs(reduced);
-	            } else {
-	                inst.setInstallmentAmount(reduced);
+	          
+	        	} else {
+	              
+	        		inst.setInstallmentAmount(reduced);
 	                balanceCarry = 0;
+	                
 	            }
 	        	
 			} else if (balanceCarry < 0) {  // Less paid → increase next installment
-	            inst.setInstallmentAmount(calcInstall + Math.abs(balanceCarry));
+	            
+				inst.setInstallmentAmount(calcInstall + Math.abs(balanceCarry));
 	            balanceCarry = 0;
+	            
 			} else {// Normal
-	            inst.setInstallmentAmount(calcInstall);
+	           
+				inst.setInstallmentAmount(calcInstall);
+				
 	        }
 
 	        inst.setLateFee(0);
@@ -165,26 +179,13 @@ public class LoanInstallmentPaymentService {
 		Optional<BusinessMember> opt = businessMemberRepository.findById(loanId);
 		if (opt.isEmpty())
 			return;
-		
-		
-		List<CashBook> paidList = cashBookRepo.findByAccountNo(info.getAccountNo());
-		double paidInstallments = 0d;
-		for (CashBook cb : paidList) {
-			if ("MF LOAN".equalsIgnoreCase(cb.getTransType())) {
-				paidInstallments++;
-			}
-		}
 
-		double currentInstallmentNumber = paidInstallments+1;
+		
 		String dateStr = info.getDate(); 
 		DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
 		LocalDateTime currentInstallmentDate = LocalDateTime.parse(dateStr, formatter);
 		String currentUser = SecurityContextHolder.getContext().getAuthentication().getName();
 
-		
-		
-		
-		
 
 		BusinessMember bm = opt.get();
 
@@ -196,30 +197,32 @@ public class LoanInstallmentPaymentService {
 		
 		double principalPerMonth = principal / bm.getDuration();
 		double interestPerMonth = interestAmount/ bm.getDuration();
-		double paid = info.getAmountPaid();
+		
+		
+		double currentlyPaidAmount = info.getAmountPaid();
 
 		double principalPaid = 0;
 		double interestPaid = 0;
 		
-		System.out.println("-----------paid ::"+paid);
+		System.out.println("-----------currentlyPaidAmount ::"+currentlyPaidAmount);
 		System.out.println("-----------principalPerMonth ::"+principalPerMonth);
 		
 
-		if (paid <= principalPerMonth) {
+		if (currentlyPaidAmount <= principalPerMonth) {
 
-			principalPaid = paid;
+			principalPaid = currentlyPaidAmount;
 			interestPaid = 0;
 
-		} else if (paid >= principalPerMonth + interestPerMonth) {
+		} else if (currentlyPaidAmount >= principalPerMonth + interestPerMonth) {
 
-			principalPaid = paid - interestPerMonth;
+			principalPaid = currentlyPaidAmount - interestPerMonth;
 			interestPaid = interestPerMonth;
 
 		} else {
 			
 			
-			interestPaid = paid - principalPerMonth ;
-			principalPaid = paid - interestPaid;
+			interestPaid = currentlyPaidAmount - principalPerMonth ;
+			principalPaid = currentlyPaidAmount - interestPaid;
 			
 
 		}
@@ -229,22 +232,23 @@ public class LoanInstallmentPaymentService {
 		if (principalPaid > 0) {
 			
 			
-			CashBook cbP = new CashBook();
-			cbP.setAccountNo(bm.getId());
-			cbP.setCredit(principalPaid);         
-			cbP.setDebit(0.0);                   
-			cbP.setTransType("MF LOAN"); 
-			cbP.setParticulars("");
-			cbP.setBmRemarks("");
-			cbP.setReceiptRemarks("");
+			CashBook cashBookForPrinciplePaid = new CashBook();
+			cashBookForPrinciplePaid.setAccountNo(bm.getId());
+			cashBookForPrinciplePaid.setCredit(principalPaid);         
+			cashBookForPrinciplePaid.setDebit(0.0);                   
+			cashBookForPrinciplePaid.setTransType("MF LOAN"); 
+			cashBookForPrinciplePaid.setParticulars("MF LOAN INSTALLMENT");
+			
+			cashBookForPrinciplePaid.setBmRemarks(""); //doubt
+			cashBookForPrinciplePaid.setReceiptRemarks(""); //doubt
 
-			cbP.setLineNo(currentInstallmentNumber);                    
-			cbP.setUser(currentUser);          
+			cashBookForPrinciplePaid.setLineNo(1);                    
+			cashBookForPrinciplePaid.setUser(currentUser);          
 
-			cbP.setTransDate(currentInstallmentDate); 
-			cbP.setSysDate(LocalDateTime.now());   
+			cashBookForPrinciplePaid.setTransDate(currentInstallmentDate); 
+			cashBookForPrinciplePaid.setSysDate(LocalDateTime.now());   
 
-			cashBookRepo.save(cbP);
+			cashBookRepo.save(cashBookForPrinciplePaid);
 			
 		}
 		
@@ -253,28 +257,53 @@ public class LoanInstallmentPaymentService {
 
 		if (interestPaid > 0) {
 			
-			CashBook cbI = new CashBook();
-			cbI.setAccountNo(bm.getId());
-			cbI.setCredit(interestPaid);           
-			cbI.setDebit(0.0);
-			cbI.setTransType("MF-LOAN-INTEREST");
-			cbI.setParticulars("");
-			cbI.setBmRemarks("");
-			cbI.setReceiptRemarks("");
-
-			cbI.setLineNo(currentInstallmentNumber);                     
-			cbI.setUser(currentUser);
-
-			cbI.setTransDate(currentInstallmentDate);
-			cbI.setSysDate(LocalDateTime.now());
-
-			cashBookRepo.save(cbI);
-
+			CashBook cashBookForIntrestPaid = new CashBook();
+			cashBookForIntrestPaid.setAccountNo(bm.getId());
+			cashBookForIntrestPaid.setCredit(interestPaid);           
+			cashBookForIntrestPaid.setDebit(0.0);
+			cashBookForIntrestPaid.setTransType("MF INTEREST");
+			cashBookForIntrestPaid.setParticulars("MF INTEREST");
 			
+			cashBookForIntrestPaid.setBmRemarks(""); //doubt
+			cashBookForIntrestPaid.setReceiptRemarks(""); //doubt
+
+			cashBookForIntrestPaid.setLineNo(2);                     
+			cashBookForIntrestPaid.setUser(currentUser);
+
+			cashBookForIntrestPaid.setTransDate(currentInstallmentDate);
+			cashBookForIntrestPaid.setSysDate(LocalDateTime.now());
+
+			cashBookRepo.save(cashBookForIntrestPaid);
 			
 		}
+		
+		if(info.getLateFee() != null
+				&& info.getLateFee() > 0) {
+			
+			
+			CashBook cashBookForLatefeePaid = new CashBook();
+			cashBookForLatefeePaid.setAccountNo(bm.getId());
+			cashBookForLatefeePaid.setCredit(info.getLateFee());           
+			cashBookForLatefeePaid.setDebit(0.0);
+			cashBookForLatefeePaid.setTransType("MF LATE FEE");
+			cashBookForLatefeePaid.setParticulars("MF LATE FEE");
+			
+			cashBookForLatefeePaid.setBmRemarks(""); //doubt
+			cashBookForLatefeePaid.setReceiptRemarks(""); //doubt
+
+			cashBookForLatefeePaid.setLineNo(3);                     
+			cashBookForLatefeePaid.setUser(currentUser);
+
+			cashBookForLatefeePaid.setTransDate(currentInstallmentDate);
+			cashBookForLatefeePaid.setSysDate(LocalDateTime.now());
+
+			cashBookRepo.save(cashBookForLatefeePaid);
+			
+		}
+		
+
+		bm.setPaidInstallments(bm.getPaidInstallments() != null ? bm.getPaidInstallments() + 1 : 0);
+		businessMemberRepository.save(bm);
 	}
-
-
 
 }
