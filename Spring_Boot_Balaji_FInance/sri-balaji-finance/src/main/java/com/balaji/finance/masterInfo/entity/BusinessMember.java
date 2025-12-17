@@ -25,7 +25,7 @@ public class BusinessMember {
 	private Integer paidInstallments;
 	private Integer partPrincipal;
 	private Integer partInterest;
-	private Integer unpaidLateFee;
+	private Double unpaidLateFee;
 	private boolean chequeReminder;
 	private String businessId;
 
@@ -189,11 +189,11 @@ public class BusinessMember {
 	}
 
 	@Column(name = "UNPAIDLATEFEE")
-	public Integer getUnpaidLateFee() {
+	public Double getUnpaidLateFee() {
 		return unpaidLateFee;
 	}
 
-	public void setUnpaidLateFee(Integer unpaidLateFee) {
+	public void setUnpaidLateFee(Double unpaidLateFee) {
 		this.unpaidLateFee = unpaidLateFee;
 	}
 
