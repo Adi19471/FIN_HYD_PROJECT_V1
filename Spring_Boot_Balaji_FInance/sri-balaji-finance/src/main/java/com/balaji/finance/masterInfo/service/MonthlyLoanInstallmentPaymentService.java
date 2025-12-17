@@ -157,6 +157,12 @@ public class MonthlyLoanInstallmentPaymentService {
 	    }
 
 	    info.setInstallmentDetailsList(pending);
+	   
+	    
+	    double totalLoanAmount = installmentAmount  * bm.getDuration();
+	    
+	    info.setPaid(totalAmountPaid);
+	    info.setBalance(totalLoanAmount - totalAmountPaid);
 
 	    return info;
 	}
