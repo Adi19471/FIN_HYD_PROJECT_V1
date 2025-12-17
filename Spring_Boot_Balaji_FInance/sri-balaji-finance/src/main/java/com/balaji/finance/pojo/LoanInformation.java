@@ -16,7 +16,7 @@ public class LoanInformation {
 	private String periodTo;
 
 	private String date;
-	private Boolean paid;
+	private Double paid;
 	private Double balance;
 	private Double amountPaid;
 	private Double lateFee;
@@ -92,11 +92,11 @@ public class LoanInformation {
 		this.date = date;
 	}
 
-	public Boolean getPaid() {
+	public Double getPaid() {
 		return paid;
 	}
 
-	public void setPaid(Boolean paid) {
+	public void setPaid(Double paid) {
 		this.paid = paid;
 	}
 
