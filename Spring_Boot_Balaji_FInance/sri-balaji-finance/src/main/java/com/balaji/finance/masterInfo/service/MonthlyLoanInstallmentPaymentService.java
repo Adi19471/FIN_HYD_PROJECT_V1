@@ -183,7 +183,7 @@ public class MonthlyLoanInstallmentPaymentService {
 		
 		
 		double principalPerMonth = principal / bm.getDuration();
-		double interestPerMonth = installmentPerMonth - principalPerMonth;
+		double interestPerMonth = installmentPerMonth - principalPerMonth; 
 		
 		
 		double currentlyPaidAmount = info.getAmountPaid();
