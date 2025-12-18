@@ -55,11 +55,11 @@ const DailyFinance = () => {
     startDate: dayjs(),
     endDate: dayjs().add(FIXED_DURATION_DAYS, "day"),
     amount: "",
-    interest: "3", // DEFAULT INTEREST
+    interestRatePerMonth: "3",
+    interestAmountForAllDays: 0,
     installment: "",
     processingFee: "",
     security: "",
-    emptyPercent: "",
   });
 
   const [options, setOptions] = useState([]);
@@ -73,17 +73,21 @@ const DailyFinance = () => {
   const fetchData = async () => {
     setLoading(true);
     try {
-      
-      const res = await axios.get(`${API_BASE}/BusinessMember/findAll/${LOAN_TYPE.DAILY_FINANCE}`, {
-        headers,
-      });
+      const res = await axios.get(
+        `${API_BASE}/BusinessMember/findAll/${LOAN_TYPE.DAILY_FINANCE}`,
+        {
+          headers,
+        }
+      );
       const loans = Array.isArray(res.data) ? res.data : [];
 
       // Collect all member IDs
       const memberIds = new Set();
       loans.forEach((l) => {
         if (l.customerId) memberIds.add(l.customerId);
-        [l.guarantor1, l.guarantor2, l.guarantor3].forEach((g) => g && memberIds.add(g));
+        [l.guarantor1, l.guarantor2, l.guarantor3].forEach(
+          (g) => g && memberIds.add(g)
+        );
       });
 
       // Fetch member names
@@ -96,7 +100,8 @@ const DailyFinance = () => {
           });
           mRes.data.forEach((m) => {
             memberMap[m.id] =
-              `${m.firstname || ""} ${m.lastname || ""}`.trim() || `ID: ${m.id}`;
+              `${m.firstname || ""} ${m.lastname || ""}`.trim() ||
+              `ID: ${m.id}`;
           });
         } catch (e) {
           console.warn("Name fetch failed", e);
@@ -108,7 +113,7 @@ const DailyFinance = () => {
         customerName:
           memberMap[loan.customerId] || `ID: ${loan.customerId || "N/A"}`,
         amount: loan.amount || 0,
-        interest: loan.interest || 0,
+        interestRatePerMonth: loan.interest || 0,
         installment: loan.installment || 0,
         startDate: loan.startDate,
         endDate: loan.endDate,
@@ -144,26 +149,34 @@ const DailyFinance = () => {
     }));
   }, [formData.startDate]);
 
-  // AUTO INSTALLMENT CALCULATION
   useEffect(() => {
-    if (!formData.amount || !formData.interest) {
-      setFormData((prev) => ({ ...prev, installment: "" }));
+    // Reset fields if required inputs are missing
+    if (!formData.amount || !formData.interestRatePerMonth) {
+      setFormData((prev) => ({
+        ...prev,
+        installment: "",
+        interestAmountForAllDays: "",
+      }));
       return;
     }
 
     const principal = Number(formData.amount);
-    const rate = Number(formData.interest) / 100;
+    const monthlyInterestRate = Number(formData.interestRatePerMonth) / 100;
+    const dailyInterestRate = monthlyInterestRate / 30;
 
-    const totalInterest = principal * rate;
-    const totalPayable = principal + totalInterest;
-
-    const installment = Math.round(totalPayable / FIXED_DURATION_DAYS);
-
+   
+    const totalInterest = principal * dailyInterestRate * FIXED_DURATION_DAYS;
+    const dailyInstallment = Math.round(principal / FIXED_DURATION_DAYS);
+    
     setFormData((prev) => ({
       ...prev,
-      installment: installment.toString(),
+      installment: dailyInstallment.toString(),
+      interestAmountForAllDays: totalInterest.toFixed(2), 
     }));
-  }, [formData.amount, formData.interest]);
+  }, [formData.amount, formData.interestRatePerMonth]);
+
+
+
 
   // MEMBER AUTOCOMPLETE SEARCH
   const searchMembers = useCallback(
@@ -207,11 +220,11 @@ const DailyFinance = () => {
       startDate: dayjs(),
       endDate: dayjs().add(FIXED_DURATION_DAYS, "day"),
       amount: "",
-      interest: "3",
+      interestRatePerMonth: "3",
+      interestAmountForAllDays: 0,
       installment: "",
       processingFee: "",
       security: "",
-      emptyPercent: "",
     });
     setIsEditMode(false);
     setCurrentLoanId(null);
@@ -219,69 +232,69 @@ const DailyFinance = () => {
 
   // EDIT LOAN
   const handleEdit = async (id) => {
-  try {
-    const res = await axios.get(`${API_BASE}/BusinessMember/findById/${id}`, {
-      headers,
-    });
-
-    const l = res.data;
-
-    // Fetch labels for customer & guarantors
-    const idsToFetch = [
-      l.customerId,
-      l.guarantor1,
-      l.guarantor2,
-      l.guarantor3,
-    ].filter(Boolean);
-
-    const map = {};
-    if (idsToFetch.length > 0) {
-      const mRes = await axios.get(`${API_BASE}/PersonalInfo/byIds`, {
+    try {
+      const res = await axios.get(`${API_BASE}/BusinessMember/findById/${id}`, {
         headers,
-        params: { ids: idsToFetch.join(",") },
       });
 
-      mRes.data.forEach((m) => {
-        map[m.id] = {
-          id: m.id,
-          label: `${m.firstname || ""} ${m.lastname || ""} - ${
-            m.mobile || ""
-          }`,
-        };
+      const l = res.data;
+
+      // Fetch labels for customer & guarantors
+      const idsToFetch = [
+        l.customerId,
+        l.guarantor1,
+        l.guarantor2,
+        l.guarantor3,
+      ].filter(Boolean);
+
+      const map = {};
+      if (idsToFetch.length > 0) {
+        const mRes = await axios.get(`${API_BASE}/PersonalInfo/byIds`, {
+          headers,
+          params: { ids: idsToFetch.join(",") },
+        });
+
+        mRes.data.forEach((m) => {
+          map[m.id] = {
+            id: m.id,
+            label: `${m.firstname || ""} ${m.lastname || ""} - ${
+              m.mobile || ""
+            }`,
+          };
+        });
+      }
+
+      setFormData({
+        customerId: map[l.customerId] || null,
+        guarantor1: map[l.guarantor1] || null,
+        guarantor2: map[l.guarantor2] || null,
+        guarantor3: map[l.guarantor3] || null,
+        partnerId: l.partnerId,
+        startDate: dayjs(l.startDate),
+        endDate: dayjs(l.endDate),
+        amount: l.amount.toString(),
+        interestRatePerMonth: l.interest.toString(),
+        installment: l.installment?.toString() || "",
+        processingFee: l.processingFee?.toString() || "",
+        security: l.security || "",
       });
+
+      setCurrentLoanId(id);
+      setIsEditMode(true);
+      setOpen(true);
+    } catch (err) {
+      errorToast("Failed to load loan");
     }
-
-    setFormData({
-      customerId: map[l.customerId] || null,
-      guarantor1: map[l.guarantor1] || null,
-      guarantor2: map[l.guarantor2] || null,
-      guarantor3: map[l.guarantor3] || null,
-      partnerId: l.partnerId,
-      startDate: dayjs(l.startDate),
-      endDate: dayjs(l.endDate),
-      amount: l.amount.toString(),
-      interest: l.interest.toString(),
-      installment: l.installment?.toString() || "",
-      processingFee: l.processingFee?.toString() || "",
-      security: l.security || "",
-      emptyPercent: l.emptyPercent || "",
-    });
-
-    setCurrentLoanId(id);
-    setIsEditMode(true);
-    setOpen(true);
-  } catch (err) {
-    errorToast("Failed to load loan");
-  }
-};
-
+  };
 
   // DELETE LOAN
   const handleDelete = async (id) => {
     if (!window.confirm("Delete this loan permanently?")) return;
 
     try {
-      await axios.delete(`${API_BASE}/BusinessMember/delete/${id}`, { headers });
+      await axios.delete(`${API_BASE}/BusinessMember/delete/${id}`, {
+        headers,
+      });
       successToast("Loan deleted!");
       fetchData();
     } catch (err) {
@@ -302,11 +315,10 @@ const DailyFinance = () => {
       startDate: formData.startDate.format("YYYY-MM-DD HH:mm:ss"),
       endDate: formData.endDate.format("YYYY-MM-DD HH:mm:ss"),
       amount: Number(formData.amount),
-      interest: Number(formData.interest),
+      interest: Number(formData.interestRatePerMonth),
       processingFee: Number(formData.processingFee) || 0,
       security: formData.security,
       duration: FIXED_DURATION_DAYS,
-      emptyPercent: formData.emptyPercent,
     };
 
     try {
@@ -347,10 +359,18 @@ const DailyFinance = () => {
       width: 110,
       renderCell: (params) => (
         <Box sx={{ display: "flex", gap: 1 }}>
-          <IconButton size="small" color="primary" onClick={() => handleEdit(params.row.id)}>
+          <IconButton
+            size="small"
+            color="primary"
+            onClick={() => handleEdit(params.row.id)}
+          >
             <EditIcon fontSize="small" />
           </IconButton>
-          <IconButton size="small" color="error" onClick={() => handleDelete(params.row.id)}>
+          <IconButton
+            size="small"
+            color="error"
+            onClick={() => handleDelete(params.row.id)}
+          >
             <DeleteIcon fontSize="small" />
           </IconButton>
         </Box>
@@ -362,10 +382,9 @@ const DailyFinance = () => {
       field: "amount",
       headerName: "Amount",
       width: 140,
-      valueFormatter: (v) => `₹${Number(v.value).toLocaleString("en-IN")}`,
     },
     {
-      field: "interest",
+      field: "interestRatePerMonth",
       headerName: "Interest %",
       width: 100,
     },
@@ -373,7 +392,6 @@ const DailyFinance = () => {
       field: "installment",
       headerName: "Installment",
       width: 150,
-      valueFormatter: (v) => `₹${Number(v.value).toLocaleString("en-IN")}`,
     },
     {
       field: "startDate",
@@ -413,7 +431,13 @@ const DailyFinance = () => {
           </Button>
         </Box>
 
-        <DataGrid rows={rows} columns={columns} loading={loading} autoHeight getRowId={(r) => r.id} />
+        <DataGrid
+          rows={rows}
+          columns={columns}
+          loading={loading}
+          autoHeight
+          getRowId={(r) => r.id}
+        />
       </Box>
 
       {/* DIALOG MODAL */}
@@ -434,14 +458,19 @@ const DailyFinance = () => {
           <Grid container spacing={2}>
             <Grid item xs={12} md={6}>
               <Autocomplete
-                fullWidth sx={{width:"230px"}}
+                fullWidth
+                sx={{ width: "230px" }}
                 options={options}
                 loading={loadingSearch}
                 value={formData.customerId}
                 onInputChange={(e, v) => searchMembers(v)}
-                onChange={(e, v) => setFormData((p) => ({ ...p, customerId: v }))}
+                onChange={(e, v) =>
+                  setFormData((p) => ({ ...p, customerId: v }))
+                }
                 getOptionLabel={(o) => o?.label || ""}
-                renderInput={(params) => <TextField {...params} label="Customer *" />}
+                renderInput={(params) => (
+                  <TextField {...params} label="Customer *" />
+                )}
               />
             </Grid>
 
@@ -468,14 +497,15 @@ const DailyFinance = () => {
           <Chip label="LOAN DETAILS" sx={{ mt: 3, mb: 2 }} />
 
           <Grid container spacing={2}>
-
             <Grid item xs={12} md={6}>
               <TextField
                 fullWidth
                 label="Amount *"
                 type="number"
                 value={formData.amount}
-                onChange={(e) => setFormData((p) => ({ ...p, amount: e.target.value }))}
+                onChange={(e) =>
+                  setFormData((p) => ({ ...p, amount: e.target.value }))
+                }
               />
             </Grid>
 
@@ -484,18 +514,29 @@ const DailyFinance = () => {
                 fullWidth
                 label="Interest %"
                 type="number"
-                value={formData.interest}
-                onChange={(e) => setFormData((p) => ({ ...p, interest: e.target.value }))}
+                value={formData.interestRatePerMonth}
+                onChange={(e) =>
+                  setFormData((p) => ({
+                    ...p,
+                    interestRatePerMonth: e.target.value,
+                  }))
+                }
               />
             </Grid>
 
             <Grid item xs={12} md={6}>
               <TextField
                 fullWidth
-                label="Empty %"
+                label="Intrest Amount %"
                 type="number"
-                value={formData.emptyPercent}
-                onChange={(e) => setFormData((p) => ({ ...p, emptyPercent: e.target.value }))}
+                value={formData.interestAmountForAllDays}
+                onChange={(e) =>
+                  setFormData((p) => ({
+                    ...p,
+                    interestAmountForAllDays: e.target.value,
+                  }))
+                }
+                InputProps={{ readOnly: true }}
               />
             </Grid>
 
@@ -513,7 +554,12 @@ const DailyFinance = () => {
             </Grid>
 
             <Grid item xs={12} md={6}>
-              <TextField fullWidth label="Duration" value="100 Days Fixed" InputProps={{ readOnly: true }} />
+              <TextField
+                fullWidth
+                label="Duration"
+                value="100 Days Fixed"
+                InputProps={{ readOnly: true }}
+              />
             </Grid>
 
             <Grid item xs={12} md={6}>
@@ -547,14 +593,20 @@ const DailyFinance = () => {
             {["guarantor1", "guarantor2", "guarantor3"].map((field, idx) => (
               <Grid item xs={12} key={field}>
                 <Autocomplete
-                  fullWidth sx={{width:"230px"}}
+                  fullWidth
+                  sx={{ width: "230px" }}
                   options={options}
                   value={formData[field]}
                   onInputChange={(e, v) => searchMembers(v)}
-                  onChange={(e, v) => setFormData((p) => ({ ...p, [field]: v }))}
+                  onChange={(e, v) =>
+                    setFormData((p) => ({ ...p, [field]: v }))
+                  }
                   getOptionLabel={(o) => o?.label || ""}
                   renderInput={(params) => (
-                    <TextField {...params} label={`Guarantor ${idx + 1}${idx === 0 ? " *" : ""}`} />
+                    <TextField
+                      {...params}
+                      label={`Guarantor ${idx + 1}${idx === 0 ? " *" : ""}`}
+                    />
                   )}
                 />
               </Grid>
@@ -566,7 +618,9 @@ const DailyFinance = () => {
             label="Partner / Agent"
             sx={{ mt: 3 }}
             value={formData.partnerId}
-            onChange={(e) => setFormData((p) => ({ ...p, partnerId: e.target.value }))}
+            onChange={(e) =>
+              setFormData((p) => ({ ...p, partnerId: e.target.value }))
+            }
           />
         </DialogContent>
 

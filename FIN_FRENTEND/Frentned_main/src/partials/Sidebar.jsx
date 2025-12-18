@@ -178,8 +178,7 @@ function Sidebar({ sidebarOpen, setSidebarOpen }) {
                         label: "Personal Info",
                       },
                       { to: "/Loan", icon: MonetizationOn, label: "Loans" },
-                      { to: "/guarantor", icon: Handshake, label: "Guarantor" },
-                      { to: "/branch", icon: Business, label: "Branch" },
+              
                     ].map(({ to, icon: Icon, label }) => (
                       <li key={to}>
                         <NavLink
@@ -252,7 +251,7 @@ function Sidebar({ sidebarOpen, setSidebarOpen }) {
                         }
                       >
                         <AccountBalanceWallet className="w-4 h-4" />
-                        <span>Business Cash Book</span>
+                        <span>BusinessCashBook</span>
                       </NavLink>
                     </li>
                     {/* Add more transaction links here later */}

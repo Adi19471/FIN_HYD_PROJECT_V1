@@ -54,9 +54,10 @@ const Business_MonthlyFinance = () => {
     periodTo: "",
     date: dayjs(),
     balance: 0,
+    paid: "",
     amountPaid: "", // Principal / Installment paid
     lateFeePaid: "", // Late fee collected now
-    pendingLateFee: 0, // Outstanding late fee (read-only)
+
     installmentDetailsList: [],
   });
 
@@ -105,9 +106,12 @@ const Business_MonthlyFinance = () => {
 
     setLoading(true);
     try {
-      const res = await axios.get(`${API_BASE}/loadMFLoanInformation/${loanId}`, {
-        headers,
-      });
+      const res = await axios.get(
+        `${API_BASE}/loadMFLoanInformation/${loanId}`,
+        {
+          headers,
+        }
+      );
       const data = res.data;
 
       setSelectedLoanId(loanId);
@@ -122,13 +126,16 @@ const Business_MonthlyFinance = () => {
         periodTo: data.periodTo || "",
         date: dayjs(), // Current date & time
         balance: data.balance || 0,
+        paid: data.paid || "",
         amountPaid: "",
         lateFeePaid: "",
-        pendingLateFee: data.pendingLateFee || 0,
-        installmentDetailsList: (data.installmentDetailsList || []).map((inst) => ({
-          ...inst,
-          paid: !!inst.paid,
-        })),
+
+        installmentDetailsList: (data.installmentDetailsList || []).map(
+          (inst) => ({
+            ...inst,
+            paid: !!inst.paid,
+          })
+        ),
       });
 
       successToast("Loan details loaded successfully");
@@ -142,7 +149,8 @@ const Business_MonthlyFinance = () => {
         partnerName: "",
         guarantorName: "",
         balance: 0,
-        pendingLateFee: 0,
+        paid: "",
+
         installmentDetailsList: [],
       }));
     } finally {
@@ -183,8 +191,9 @@ const Business_MonthlyFinance = () => {
         periodTo: form.periodTo,
         date: form.date.format("YYYY-MM-DD HH:mm:ss"),
         balance: form.balance,
+        paid: form.paid,
         amountPaid: principalAmount,
-        pendingLateFee: lateFeeAmount, // Late fee paid now
+
         lateFee: lateFeeAmount, // Backup field (common in backends)
         dueAmount: 0,
         installmentDetailsList: form.installmentDetailsList.map((inst) => ({
@@ -235,17 +244,18 @@ const Business_MonthlyFinance = () => {
   return (
     <LocalizationProvider dateAdapter={AdapterDayjs}>
       <Box display="flex" height="100vh" bgcolor="#f5f5f5">
-        <Box flexGrow={1} p={3} sx={{ overflowY: "auto" }}>
-          <Paper elevation={6} sx={{ p: 4, borderRadius: 3 }}>
-            <Typography variant="h5" fontWeight="bold" mb={4}>
-              Monthly Finance - Payment Collection
+        <Box flexGrow={1}>
+          <Paper elevation={6} sx={{ p: 3, borderRadius: 1 }}>
+            <Typography variant="h6" fontWeight="bold" color="info" mb={1}>
+             MONTHLY Custmer
             </Typography>
 
             {/* Search Account */}
             <Grid container spacing={3} mb={4}>
-              <Grid item xs={12} md={6}>
+              <Grid item xs={12} sm={6} md={3}>
                 <Autocomplete
-                  options={accountList} sx={{width:"223px"}}
+                  options={accountList}
+                  sx={{ width: "223px" }}
                   getOptionLabel={(option) => option.displayString || ""}
                   inputValue={searchInput}
                   onInputChange={(e, value, reason) => {
@@ -265,7 +275,7 @@ const Business_MonthlyFinance = () => {
                         partnerName: "",
                         guarantorName: "",
                         balance: 0,
-                        pendingLateFee: 0,
+
                         installmentDetailsList: [],
                       }));
                     }
@@ -283,7 +293,9 @@ const Business_MonthlyFinance = () => {
                         ...params.InputProps,
                         endAdornment: (
                           <>
-                            {loadingAccounts && <CircularProgress color="inherit" size={20} />}
+                            {loadingAccounts && (
+                              <CircularProgress color="inherit" size={20} />
+                            )}
                             {params.InputProps.endAdornment}
                           </>
                         ),
@@ -292,10 +304,29 @@ const Business_MonthlyFinance = () => {
                   )}
                 />
               </Grid>
-              <Grid item xs={12} md={6}>
+              <Grid item xs={12} sm={6} md={3}>
                 <TextField
                   label="Account No"
                   value={form.accountNo}
+                  fullWidth
+                  size="small"
+                  InputProps={{ readOnly: true }}
+                />
+              </Grid>
+
+              <Grid item xs={12} sm={6} md={3}>
+                <TextField
+                  label="Partner Name"
+                  value={form.partnerName}
+                  fullWidth
+                  size="small"
+                  InputProps={{ readOnly: true }}
+                />
+              </Grid>
+              <Grid item xs={12} sm={6} md={3}>
+                <TextField
+                  label="Guarantor Name"
+                  value={form.guarantorName}
                   fullWidth
                   size="small"
                   InputProps={{ readOnly: true }}
@@ -306,48 +337,57 @@ const Business_MonthlyFinance = () => {
             {/* Loan Details */}
             <Grid container spacing={3} mb={4}>
               <Grid item xs={12} sm={6} md={3}>
-                <TextField label="Partner Name" value={form.partnerName} fullWidth size="small" InputProps={{ readOnly: true }} />
-              </Grid>
-              <Grid item xs={12} sm={6} md={3}>
-                <TextField label="Guarantor Name" value={form.guarantorName} fullWidth size="small" InputProps={{ readOnly: true }} />
-              </Grid>
-              <Grid item xs={12} sm={6} md={3}>
-                <TextField label="Loan Amount" value={form.loanAmount} fullWidth size="small" InputProps={{ readOnly: true }} />
-              </Grid>
-              <Grid item xs={12} sm={6} md={3}>
-                <TextField label="Installment Amount" value={form.installmentAmount} fullWidth size="small" InputProps={{ readOnly: true }} />
-              </Grid>
-              <Grid item xs={12} sm={6} md={3}>
-                <TextField label="Period From" value={form.periodFrom} fullWidth size="small" InputProps={{ readOnly: true }} />
-              </Grid>
-              <Grid item xs={12} sm={6} md={3}>
-                <TextField label="Period To" value={form.periodTo} fullWidth size="small" InputProps={{ readOnly: true }} />
-              </Grid>
-              <Grid item xs={12} sm={6} md={3}>
                 <TextField
-                  label="Outstanding Late Fee"
-                  value={form.pendingLateFee}
+                  label="Loan Amount"
+                  value={form.loanAmount}
                   fullWidth
                   size="small"
                   InputProps={{ readOnly: true }}
-                  helperText="Total pending late fee"
                 />
               </Grid>
               <Grid item xs={12} sm={6} md={3}>
-                <TextField label="Current Balance" value={form.balance} fullWidth size="small" InputProps={{ readOnly: true }} />
+                <TextField
+                  label="Installment "
+                  value={form.installmentAmount}
+                  fullWidth
+                  size="small"
+                  InputProps={{ readOnly: true }}
+                />
               </Grid>
+              <Grid item xs={12} sm={6} md={3}>
+                <TextField
+                  label="Period From"
+                  value={form.periodFrom}
+                  fullWidth
+                  size="small"
+                  InputProps={{ readOnly: true }}
+                />
+              </Grid>
+              <Grid item xs={12} sm={6} md={3}>
+                <TextField
+                  label="Period To"
+                  value={form.periodTo}
+                  fullWidth
+                  size="small"
+                  InputProps={{ readOnly: true }}
+                />
+              </Grid>
+
+              <Divider sx={{ my: 1 }} />
             </Grid>
 
-            <Divider sx={{ my: 4 }} />
-
             {/* Payment Section */}
-            <Typography variant="h6" mb={2}>Record Payment</Typography>
+            <Typography variant="h6" fontWeight="bold" color="info" mb={1}>
+              Loan
+            </Typography>
             <Grid container spacing={3} mb={3}>
               <Grid item xs={12} md={4}>
                 <DateTimePicker
                   label="Payment Date & Time"
                   value={form.date}
-                  onChange={(newDate) => setForm((prev) => ({ ...prev, date: newDate }))}
+                  onChange={(newDate) =>
+                    setForm((prev) => ({ ...prev, date: newDate }))
+                  }
                   slotProps={{ textField: { size: "small", fullWidth: true } }}
                   ampm={false}
                 />
@@ -355,15 +395,40 @@ const Business_MonthlyFinance = () => {
               <Grid item xs={12} md={4}>
                 <TextField
                   label="Selected Date & Time"
-                  value={form.date?.isValid() ? form.date.format("DD-MM-YYYY HH:mm") : "-"}
+                  value={
+                    form.date?.isValid()
+                      ? form.date.format("DD-MM-YYYY HH:mm")
+                      : "-"
+                  }
                   fullWidth
                   size="small"
                   InputProps={{ readOnly: true }}
                 />
               </Grid>
+
+              <Grid item xs={12} sm={6} md={3}>
+                <TextField
+                  label="Paid"
+                  value={form.paid}
+                  fullWidth
+                  size="small"
+                  InputProps={{ readOnly: true }}
+                />
+              </Grid>
+
+              <Grid item xs={12} sm={6} md={3}>
+                <TextField
+                  label="Current Balance"
+                  value={form.balance}
+                  fullWidth
+                  size="small"
+                  InputProps={{ readOnly: true }}
+                />
+              </Grid>
+
               <Grid item xs={12} md={4}>
                 <TextField
-                  label="Installment Amount Paid"
+                  label=" Amount Paid"
                   value={form.amountPaid}
                   onChange={(e) =>
                     setForm((prev) => ({
@@ -374,12 +439,12 @@ const Business_MonthlyFinance = () => {
                   fullWidth
                   size="small"
                   placeholder="0"
-                  helperText="Regular monthly payment"
                 />
               </Grid>
+
               <Grid item xs={12} md={4}>
                 <TextField
-                  label="Late Fee Paid Now"
+                  label="Late Fee"
                   value={form.lateFeePaid}
                   onChange={(e) =>
                     setForm((prev) => ({
@@ -390,14 +455,18 @@ const Business_MonthlyFinance = () => {
                   fullWidth
                   size="small"
                   placeholder="0"
-                  helperText="Extra late fee collected today"
                 />
               </Grid>
             </Grid>
 
             <Box display="flex" alignItems="center" gap={3} mb={4}>
               <FormControlLabel
-                control={<Checkbox checked={printReceipt} onChange={(e) => setPrintReceipt(e.target.checked)} />}
+                control={
+                  <Checkbox
+                    checked={printReceipt}
+                    onChange={(e) => setPrintReceipt(e.target.checked)}
+                  />
+                }
                 label="Print Receipt"
               />
               <Button
@@ -421,18 +490,33 @@ const Business_MonthlyFinance = () => {
               <Table size="small">
                 <TableHead sx={{ backgroundColor: "#e3f2fd" }}>
                   <TableRow>
-                    <TableCell><strong>Inst. No</strong></TableCell>
-                    <TableCell><strong>Due Date</strong></TableCell>
-                    <TableCell><strong>Late Fee Date</strong></TableCell>
-                    <TableCell><strong>Installment</strong></TableCell>
-                    <TableCell><strong>Late Fee</strong></TableCell>
-                    <TableCell><strong>Total</strong></TableCell>
-                    <TableCell><strong>Status</strong></TableCell>
+                    <TableCell>
+                      <strong>Inst. No</strong>
+                    </TableCell>
+                    <TableCell>
+                      <strong>Due Date</strong>
+                    </TableCell>
+                    <TableCell>
+                      <strong>Late Fee Date</strong>
+                    </TableCell>
+                    <TableCell>
+                      <strong>Installment</strong>
+                    </TableCell>
+                    <TableCell>
+                      <strong>Late Fee</strong>
+                    </TableCell>
+                    <TableCell>
+                      <strong>Total</strong>
+                    </TableCell>
+                    <TableCell>
+                      <strong>Status</strong>
+                    </TableCell>
                   </TableRow>
                 </TableHead>
                 <TableBody>
                   {form.installmentDetailsList.map((row, idx) => {
-                    const total = (row.installmentAmount || 0) + (row.lateFee || 0);
+                    const total =
+                      (row.installmentAmount || 0) + (row.lateFee || 0);
                     return (
                       <TableRow key={idx} hover>
                         <TableCell>{row.installmentNumber}</TableCell>
@@ -440,9 +524,14 @@ const Business_MonthlyFinance = () => {
                         <TableCell>{row.lateFeeDate || "-"}</TableCell>
                         <TableCell>₹{row.installmentAmount || 0}</TableCell>
                         <TableCell>₹{row.lateFee || 0}</TableCell>
-                        <TableCell><strong>₹{total}</strong></TableCell>
                         <TableCell>
-                          <Typography color={row.paid ? "success.main" : "error.main"} fontWeight="medium">
+                          <strong>₹{total}</strong>
+                        </TableCell>
+                        <TableCell>
+                          <Typography
+                            color={row.paid ? "success.main" : "error.main"}
+                            fontWeight="medium"
+                          >
                             {row.paid ? "Paid" : "Pending"}
                           </Typography>
                         </TableCell>
