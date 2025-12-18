@@ -3,18 +3,23 @@ title FINANCE APP START
 color 0A
 
 REM ================================
-REM  SET APP DIRECTORY
+REM  SET ROOT DIRECTORY
 REM ================================
-set APP_DIR=%~dp0
-set APP_DIR=%APP_DIR:~0,-1%
+set ROOT_DIR=%~dp0
+set ROOT_DIR=%ROOT_DIR:~0,-1%
+
+set BACKEND_DIR=%ROOT_DIR%
+set FRONTEND_DIR=%ROOT_DIR%\FIN_FRENTEND\Frentned_main
 
 cls
 echo ======================================
 echo        SRI BALAJI FINANCE APP
 echo ======================================
 echo.
-echo Working Directory:
-echo %APP_DIR%
+echo Backend Dir:
+echo %BACKEND_DIR%
+echo Frontend Dir:
+echo %FRONTEND_DIR%
 echo.
 
 REM ================================
@@ -23,7 +28,6 @@ REM ================================
 echo [1/3] Starting XAMPP...
 start "" "C:\xampp\xampp-control.exe"
 
-REM Short delay only
 timeout /t 3 >nul
 
 REM ================================
@@ -31,17 +35,16 @@ REM  START BACKEND (SPRING BOOT)
 REM ================================
 echo [2/3] Starting Backend Service...
 start "FINANCE-BACKEND" cmd /k ^
-"cd /d \"%APP_DIR%\" && java -jar sri-balaji-finance-0.0.1-SNAPSHOT.jar"
+"cd /d \"%BACKEND_DIR%\" && java -jar sri-balaji-finance-0.0.1-SNAPSHOT.jar"
 
-REM Very small delay
 timeout /t 2 >nul
 
 REM ================================
-REM  START FRONTEND (NPM)
+REM  START FRONTEND (VITE / REACT)
 REM ================================
-echo [3/3] Starting Frontend (Vite / React)...
+echo [3/3] Starting Frontend...
 start "FINANCE-FRONTEND" cmd /k ^
-"cd /d \"%APP_DIR%\" && npm run dev"
+"cd /d \"%FRONTEND_DIR%\" && npm run dev"
 
 echo.
 echo ======================================
