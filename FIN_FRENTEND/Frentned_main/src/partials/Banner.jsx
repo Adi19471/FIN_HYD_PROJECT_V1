@@ -12,7 +12,7 @@ function Banner() {
 
   return (
     <>
-    { bannerOpen && (
+    {/* { bannerOpen && (
       <div className="fixed bottom-0 right-0 w-full md:bottom-8 md:right-12 md:w-auto z-50">
         <div className="bg-gray-800 border border-transparent dark:border-gray-700/60 text-gray-50 text-sm p-3 md:rounded-sm shadow-lg flex justify-between">
           <div className='text-gray-500 inline-flex'><a className="font-medium hover:underline text-gray-50" href={liteLink} target="_blank" rel="noreferrer">SRI <span className="hidden sm:inline"> BALAJI</span></a> <span className="italic px-1.5"></span> <a className="font-medium hover:underline text-emerald-400" href="" target="_blank" rel="noreferrer">FINANCE</a></div>
@@ -24,7 +24,7 @@ function Banner() {
           </button>
         </div>
       </div>
-    )}
+    )} */}
     </>
   );
 }

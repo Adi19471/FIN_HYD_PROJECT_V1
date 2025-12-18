@@ -13,7 +13,7 @@
     "@fontsource-variable/inter": "^5.2.8",
     "@mui/icons-material": "^7.3.5",
     "@mui/material": "^7.3.5",
-    "@mui/x-data-grid": "^8.19.0",
+    "@mui/x-data-grid": "^8.22.0",
     "@mui/x-date-pickers": "^8.19.0",
     "@radix-ui/react-popover": "^1.1.2",
     "@react-login-page/page10": "^1.0.6",

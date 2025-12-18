@@ -85,7 +85,7 @@ const BussinessCashbook_Main = () => {
       </Paper>
 
       {/* CONTENT */}
-      <Box sx={{ mt: 3 }}>
+      <Box sx={{ mt: 1 }}>
         {value === 0 && <BussinessDailyFinance />}
         {value === 1 && <BussinessMonthlyFinance />}
       </Box>
