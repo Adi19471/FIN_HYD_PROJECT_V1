@@ -196,8 +196,7 @@ public class BusinessMemberService {
 			}
 
 			break;
-			
-
+		
 		case "MONTHLY_FINANCE":
 
 			CashBook mFLoanCashBook = new CashBook();
