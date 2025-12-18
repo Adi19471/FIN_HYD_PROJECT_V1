@@ -166,6 +166,7 @@ public class BusinessMemberService {
 				cashBookRepo.save(dfProcessingFeeCashBook);
 
 			}
+			
 
 			double principal = businessMember.getAmount();
 			double ratePerMonth = businessMember.getInterest() / 100.0;
@@ -195,6 +196,7 @@ public class BusinessMemberService {
 			}
 
 			break;
+			
 
 		case "MONTHLY_FINANCE":
 
