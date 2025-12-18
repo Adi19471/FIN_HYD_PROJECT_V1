@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useCallback } from "react";
+import React, { useEffect, useState, useCallback, useMemo } from "react";
 import {
   Box,
   Paper,
@@ -18,7 +18,7 @@ import {
   FormControlLabel,
   Checkbox,
 } from "@mui/material";
-import { DateTimePicker } from "@mui/x-date-pickers/DateTimePicker"; // Changed to DateTimePicker
+import { DateTimePicker } from "@mui/x-date-pickers/DateTimePicker";
 import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
 import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
 import dayjs from "dayjs";
@@ -28,9 +28,14 @@ import { API_BASE } from "lib/config";
 import { getSession } from "src/utils/session";
 
 const Business_MonthlyFinance = () => {
-  const headers = {
-    Authorization: `Bearer ${getSession("token") || ""}`,
-  };
+  // Stable headers using useMemo
+  const token = getSession("token");
+  const headers = useMemo(
+    () => ({
+      Authorization: `Bearer ${token || ""}`,
+    }),
+    [token]
+  );
 
   const [accountList, setAccountList] = useState([]);
   const [loadingAccounts, setLoadingAccounts] = useState(false);
@@ -47,52 +52,62 @@ const Business_MonthlyFinance = () => {
     installmentAmount: 0,
     periodFrom: "",
     periodTo: "",
-    date: dayjs(), // Now includes date + time (default: now)
+    date: dayjs(),
     balance: 0,
-    amountPaid: "",
-    pendingLateFee: 0,
+    amountPaid: "", // Principal / Installment paid
+    lateFeePaid: "", // Late fee collected now
+    pendingLateFee: 0, // Outstanding late fee (read-only)
     installmentDetailsList: [],
   });
 
-  // Fetch accounts for autocomplete
-  const fetchAccounts = useCallback(async (query = "") => {
-    setLoadingAccounts(true);
-    try {
-      const loanType = "MONTHLY_FINANCE";
-      const res = await axios.get(
-        `${API_BASE}/BusinessMember/loanDetailsAutoComplete/${loanType}`,
-        {
-          headers,
-          params: { q: query },
-        }
-      );
-      setAccountList(res.data || []);
-    } catch (err) {
-      errorToast("Failed to load accounts");
-      console.error(err);
-    } finally {
-      setLoadingAccounts(false);
-    }
-  }, []);
+  // Stable fetchAccounts with proper dependencies
+  const fetchAccounts = useCallback(
+    async (query = "") => {
+      setLoadingAccounts(true);
+      try {
+        const loanType = "MONTHLY_FINANCE";
+        const res = await axios.get(
+          `${API_BASE}/BusinessMember/loanDetailsAutoComplete/${loanType}`,
+          {
+            headers,
+            params: { q: query },
+          }
+        );
+        setAccountList(res.data || []);
+      } catch (err) {
+        errorToast("Failed to load accounts");
+        console.error(err);
+        setAccountList([]);
+      } finally {
+        setLoadingAccounts(false);
+      }
+    },
+    [headers]
+  );
 
+  // Initial load
   useEffect(() => {
     fetchAccounts();
-  }, [fetchAccounts]);
+  }, []); // Only once on mount
 
+  // Debounced search - NO fetchAccounts in deps to prevent loop
   useEffect(() => {
     const timer = setTimeout(() => {
       fetchAccounts(searchInput);
     }, 400);
-    return () => clearTimeout(timer);
-  }, [searchInput, fetchAccounts]);
 
-  // Load loan details when user selects an account
+    return () => clearTimeout(timer);
+  }, [searchInput]); // Only searchInput triggers debounce
+
+  // Load loan details
   const loadLoanInfo = async (loanId) => {
     if (!loanId) return;
 
     setLoading(true);
     try {
-      const res = await axios.get(`${API_BASE}/loadMFLoanInformation/${loanId}`, { headers });
+      const res = await axios.get(`${API_BASE}/loadMFLoanInformation/${loanId}`, {
+        headers,
+      });
       const data = res.data;
 
       setSelectedLoanId(loanId);
@@ -105,9 +120,10 @@ const Business_MonthlyFinance = () => {
         installmentAmount: data.installmentAmount || 0,
         periodFrom: data.periodFrom || "",
         periodTo: data.periodTo || "",
-        date: dayjs(), // Always reset to current date & time when loading
+        date: dayjs(), // Current date & time
         balance: data.balance || 0,
         amountPaid: "",
+        lateFeePaid: "",
         pendingLateFee: data.pendingLateFee || 0,
         installmentDetailsList: (data.installmentDetailsList || []).map((inst) => ({
           ...inst,
@@ -119,21 +135,34 @@ const Business_MonthlyFinance = () => {
     } catch (err) {
       errorToast("Failed to load loan information");
       console.error(err);
+      setSelectedLoanId(null);
+      setForm((prev) => ({
+        ...prev,
+        accountNo: "",
+        partnerName: "",
+        guarantorName: "",
+        balance: 0,
+        pendingLateFee: 0,
+        installmentDetailsList: [],
+      }));
     } finally {
       setLoading(false);
     }
   };
 
-  // Handle Pay Now
+  // Handle Payment
   const handlePay = async () => {
     if (!selectedLoanId) {
       errorToast("Please select a loan account first");
       return;
     }
 
-    const amount = Number(form.amountPaid);
-    if (!amount || amount <= 0) {
-      errorToast("Please enter a valid amount to pay");
+    const principalAmount = Number(form.amountPaid) || 0;
+    const lateFeeAmount = Number(form.lateFeePaid) || 0;
+    const totalPaid = principalAmount + lateFeeAmount;
+
+    if (totalPaid <= 0) {
+      errorToast("Please enter at least one payment amount");
       return;
     }
 
@@ -152,11 +181,11 @@ const Business_MonthlyFinance = () => {
         installmentAmount: form.installmentAmount,
         periodFrom: form.periodFrom,
         periodTo: form.periodTo,
-        date: form.date.format("YYYY-MM-DD HH:mm:ss"), // Full datetime sent to backend
+        date: form.date.format("YYYY-MM-DD HH:mm:ss"),
         balance: form.balance,
-        amountPaid: amount,
-        pendingLateFee: form.pendingLateFee,
-        lateFee: 0,
+        amountPaid: principalAmount,
+        pendingLateFee: lateFeeAmount, // Late fee paid now
+        lateFee: lateFeeAmount, // Backup field (common in backends)
         dueAmount: 0,
         installmentDetailsList: form.installmentDetailsList.map((inst) => ({
           installmentNumber: inst.installmentNumber,
@@ -175,14 +204,26 @@ const Business_MonthlyFinance = () => {
         { headers }
       );
 
-      successToast(`Payment of ₹${amount} recorded successfully!`);
+      let message = `Payment recorded: ₹${totalPaid}`;
+      if (principalAmount > 0 && lateFeeAmount > 0) {
+        message = `₹${principalAmount} (installment) + ₹${lateFeeAmount} (late fee) = ₹${totalPaid}`;
+      } else if (lateFeeAmount > 0) {
+        message = `Late fee collected: ₹${lateFeeAmount}`;
+      } else {
+        message = `Installment paid: ₹${principalAmount}`;
+      }
+
+      successToast(message);
 
       if (printReceipt) {
         successToast("Receipt printing triggered...");
       }
 
-      setForm(prev => ({ ...prev, amountPaid: "" }));
-      await loadLoanInfo(selectedLoanId); // Reload fresh data
+      // Clear inputs
+      setForm((prev) => ({ ...prev, amountPaid: "", lateFeePaid: "" }));
+
+      // Reload fresh data
+      await loadLoanInfo(selectedLoanId);
     } catch (err) {
       errorToast("Payment failed. Please try again.");
       console.error(err);
@@ -204,7 +245,7 @@ const Business_MonthlyFinance = () => {
             <Grid container spacing={3} mb={4}>
               <Grid item xs={12} md={6}>
                 <Autocomplete
-                  options={accountList}
+                  options={accountList} sx={{width:"223px"}}
                   getOptionLabel={(option) => option.displayString || ""}
                   inputValue={searchInput}
                   onInputChange={(e, value, reason) => {
@@ -216,6 +257,17 @@ const Business_MonthlyFinance = () => {
                     if (value) {
                       loadLoanInfo(value.loanId);
                       setSearchInput(value.displayString || "");
+                    } else {
+                      setSelectedLoanId(null);
+                      setForm((prev) => ({
+                        ...prev,
+                        accountNo: "",
+                        partnerName: "",
+                        guarantorName: "",
+                        balance: 0,
+                        pendingLateFee: 0,
+                        installmentDetailsList: [],
+                      }));
                     }
                   }}
                   loading={loadingAccounts}
@@ -251,7 +303,7 @@ const Business_MonthlyFinance = () => {
               </Grid>
             </Grid>
 
-            {/* Loan & Customer Details */}
+            {/* Loan Details */}
             <Grid container spacing={3} mb={4}>
               <Grid item xs={12} sm={6} md={3}>
                 <TextField label="Partner Name" value={form.partnerName} fullWidth size="small" InputProps={{ readOnly: true }} />
@@ -272,7 +324,14 @@ const Business_MonthlyFinance = () => {
                 <TextField label="Period To" value={form.periodTo} fullWidth size="small" InputProps={{ readOnly: true }} />
               </Grid>
               <Grid item xs={12} sm={6} md={3}>
-                <TextField label="Pending Late Fee" value={form.pendingLateFee} fullWidth size="small" InputProps={{ readOnly: true }} />
+                <TextField
+                  label="Outstanding Late Fee"
+                  value={form.pendingLateFee}
+                  fullWidth
+                  size="small"
+                  InputProps={{ readOnly: true }}
+                  helperText="Total pending late fee"
+                />
               </Grid>
               <Grid item xs={12} sm={6} md={3}>
                 <TextField label="Current Balance" value={form.balance} fullWidth size="small" InputProps={{ readOnly: true }} />
@@ -281,42 +340,57 @@ const Business_MonthlyFinance = () => {
 
             <Divider sx={{ my: 4 }} />
 
-            {/* Payment Input Section */}
+            {/* Payment Section */}
             <Typography variant="h6" mb={2}>Record Payment</Typography>
             <Grid container spacing={3} mb={3}>
-              <Grid item xs={12} sm={6} md={4}>
+              <Grid item xs={12} md={4}>
                 <DateTimePicker
                   label="Payment Date & Time"
                   value={form.date}
-                  onChange={(newDate) => setForm(prev => ({ ...prev, date: newDate }))}
+                  onChange={(newDate) => setForm((prev) => ({ ...prev, date: newDate }))}
                   slotProps={{ textField: { size: "small", fullWidth: true } }}
-                  ampm={false} // Optional: use 24-hour format
+                  ampm={false}
                 />
               </Grid>
-
-              {/* Display selected date & time */}
-              <Grid item xs={12} sm={6} md={4}>
+              <Grid item xs={12} md={4}>
                 <TextField
-                  label="Selected Payment Date & Time"
+                  label="Selected Date & Time"
                   value={form.date?.isValid() ? form.date.format("DD-MM-YYYY HH:mm") : "-"}
                   fullWidth
                   size="small"
                   InputProps={{ readOnly: true }}
                 />
               </Grid>
-
-              <Grid item xs={12} sm={6} md={4}>
+              <Grid item xs={12} md={4}>
                 <TextField
-                  label="Amount Paid"
+                  label="Installment Amount Paid"
                   value={form.amountPaid}
-                  onChange={(e) => setForm(prev => ({
-                    ...prev,
-                    amountPaid: e.target.value.replace(/[^0-9]/g, "")
-                  }))}
+                  onChange={(e) =>
+                    setForm((prev) => ({
+                      ...prev,
+                      amountPaid: e.target.value.replace(/[^0-9]/g, ""),
+                    }))
+                  }
                   fullWidth
                   size="small"
-                  placeholder="Enter payment amount"
-                  inputProps={{ min: 0 }}
+                  placeholder="0"
+                  helperText="Regular monthly payment"
+                />
+              </Grid>
+              <Grid item xs={12} md={4}>
+                <TextField
+                  label="Late Fee Paid Now"
+                  value={form.lateFeePaid}
+                  onChange={(e) =>
+                    setForm((prev) => ({
+                      ...prev,
+                      lateFeePaid: e.target.value.replace(/[^0-9]/g, ""),
+                    }))
+                  }
+                  fullWidth
+                  size="small"
+                  placeholder="0"
+                  helperText="Extra late fee collected today"
                 />
               </Grid>
             </Grid>
@@ -331,9 +405,14 @@ const Business_MonthlyFinance = () => {
                 color="primary"
                 size="large"
                 onClick={handlePay}
-                disabled={loading || !form.amountPaid || !form.date?.isValid()}
+                disabled={
+                  loading ||
+                  (!form.amountPaid && !form.lateFeePaid) ||
+                  !form.date?.isValid() ||
+                  !selectedLoanId
+                }
               >
-                {loading ? "Processing..." : "Pay Now"}
+                {loading ? "Processing..." : "Record Payment"}
               </Button>
             </Box>
 
@@ -359,7 +438,7 @@ const Business_MonthlyFinance = () => {
                         <TableCell>{row.installmentNumber}</TableCell>
                         <TableCell>{row.dueDate || "-"}</TableCell>
                         <TableCell>{row.lateFeeDate || "-"}</TableCell>
-                        <TableCell>₹{row.installmentAmount}</TableCell>
+                        <TableCell>₹{row.installmentAmount || 0}</TableCell>
                         <TableCell>₹{row.lateFee || 0}</TableCell>
                         <TableCell><strong>₹{total}</strong></TableCell>
                         <TableCell>
