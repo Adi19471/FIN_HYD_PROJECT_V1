@@ -59,10 +59,7 @@ public class BusinessMemberService {
 		return prefix + year + "-" + seq;
 	}
 
-	
-	
-	
-	//Creating Loan Account
+	// Creating Loan Account
 	public String saveBusinessMember(BusinessMemberDto businessMemberDto, String type) {
 
 		BusinessMember businessMember = new BusinessMember();
@@ -109,76 +106,76 @@ public class BusinessMemberService {
 
 		businessMember.setAmount(businessMemberDto.getAmount());
 		businessMember.setDuration(businessMemberDto.getDuration());
-		businessMember.setInterest(businessMemberDto.getInterest()); 
+		businessMember.setInterest(businessMemberDto.getInterest());
 
-		businessMember.setInstallment(businessMemberDto.getInstallment()); 
+		businessMember.setInstallment(businessMemberDto.getInstallment());
 		businessMember.setStatus(businessMemberDto.isStatus());
-		
+
 		businessMember.setPartPrincipal(businessMemberDto.getPartPrincipal());
 		businessMember.setPartInterest(businessMemberDto.getPartInterest());
-		
-		
+
 		businessMember.setChequeReminder(businessMemberDto.isChequeReminder());
 		businessMember.setBusinessId(businessMemberDto.getBusinessId());
 		businessMember.setSecurity(businessMemberDto.getSecurity());
-		
+
 		businessMember.setPaidInstallments(0);
 		businessMember.setUnpaidLateFee(0.0);
-		
-		
+
 		businessMemberRepository.save(businessMember);
-		
-		
+
 		String currentUser = SecurityContextHolder.getContext().getAuthentication().getName();
 		LocalDateTime currentDate = LocalDateTime.now();
-		
+
 		switch (type) {
 		case "DAILY_FINANCE":
-			
+
 			CashBook dfLoanCashBook = new CashBook();
 			dfLoanCashBook.setAccountNo(businessMember.getId());
-			dfLoanCashBook.setCredit(0.0);         
-			dfLoanCashBook.setDebit(businessMember.getAmount());                   
-			dfLoanCashBook.setTransType("DF LOAN"); 
+			dfLoanCashBook.setCredit(0.0);
+			dfLoanCashBook.setDebit(businessMember.getAmount());
+			dfLoanCashBook.setTransType("DF LOAN");
 			dfLoanCashBook.setParticulars("DF LOAN");
 			dfLoanCashBook.setBmRemarks("");
 			dfLoanCashBook.setReceiptRemarks("");
 
-			dfLoanCashBook.setLineNo(1);                    
-			dfLoanCashBook.setUser(currentUser);          
+			dfLoanCashBook.setLineNo(1);
+			dfLoanCashBook.setUser(currentUser);
 
-			dfLoanCashBook.setTransDate(currentDate); 
-			dfLoanCashBook.setSysDate(currentDate);   
+			dfLoanCashBook.setTransDate(currentDate);
+			dfLoanCashBook.setSysDate(currentDate);
 
 			cashBookRepo.save(dfLoanCashBook);
-			
-			if(businessMemberDto.getProcessingFee() != null
-					&& businessMemberDto.getProcessingFee() > 0) {
-				
+
+			if (businessMemberDto.getProcessingFee() != null && businessMemberDto.getProcessingFee() > 0) {
+
 				CashBook dfProcessingFeeCashBook = new CashBook();
 				dfProcessingFeeCashBook.setAccountNo(businessMember.getId());
-				dfProcessingFeeCashBook.setCredit(businessMemberDto.getProcessingFee());         
-				dfProcessingFeeCashBook.setDebit(0.0);                   
-				dfProcessingFeeCashBook.setTransType("DF DOC CHARGES"); 
+				dfProcessingFeeCashBook.setCredit(businessMemberDto.getProcessingFee());
+				dfProcessingFeeCashBook.setDebit(0.0);
+				dfProcessingFeeCashBook.setTransType("DF DOC CHARGES");
 				dfProcessingFeeCashBook.setParticulars("DF DOC CHARGES");
 				dfProcessingFeeCashBook.setBmRemarks("");
 				dfProcessingFeeCashBook.setReceiptRemarks("");
 
-				dfProcessingFeeCashBook.setLineNo(2);                    
-				dfProcessingFeeCashBook.setUser(currentUser);          
+				dfProcessingFeeCashBook.setLineNo(2);
+				dfProcessingFeeCashBook.setUser(currentUser);
 
-				dfProcessingFeeCashBook.setTransDate(currentDate); 
-				dfProcessingFeeCashBook.setSysDate(currentDate);   
+				dfProcessingFeeCashBook.setTransDate(currentDate);
+				dfProcessingFeeCashBook.setSysDate(currentDate);
 
 				cashBookRepo.save(dfProcessingFeeCashBook);
-				
-				
+
 			}
-			
-			double interestAmount = businessMember.getAmount() * (businessMember.getInterest() / 100.0);
-			
-			if(interestAmount > 0) {
-				
+
+			double principal = businessMember.getAmount();
+			double ratePerMonth = businessMember.getInterest() / 100.0;
+			double days = businessMember.getDuration();
+
+			double timeInMonths = days / 30.0;
+			double interestAmount = principal * ratePerMonth * timeInMonths;
+
+			if (interestAmount > 0) {
+
 				CashBook dfIntrestCashBook = new CashBook();
 				dfIntrestCashBook.setAccountNo(businessMember.getId());
 				dfIntrestCashBook.setCredit(interestAmount);
@@ -197,52 +194,48 @@ public class BusinessMemberService {
 				cashBookRepo.save(dfIntrestCashBook);
 			}
 
-			
-		
 			break;
 
 		case "MONTHLY_FINANCE":
-			
+
 			CashBook mFLoanCashBook = new CashBook();
 			mFLoanCashBook.setAccountNo(businessMember.getId());
-			mFLoanCashBook.setCredit(0.0);         
-			mFLoanCashBook.setDebit(businessMember.getAmount());                   
-			mFLoanCashBook.setTransType("MF LOAN"); 
+			mFLoanCashBook.setCredit(0.0);
+			mFLoanCashBook.setDebit(businessMember.getAmount());
+			mFLoanCashBook.setTransType("MF LOAN");
 			mFLoanCashBook.setParticulars("MF LOAN");
 			mFLoanCashBook.setBmRemarks("");
 			mFLoanCashBook.setReceiptRemarks("");
 
-			mFLoanCashBook.setLineNo(1);                    
-			mFLoanCashBook.setUser(currentUser);          
+			mFLoanCashBook.setLineNo(1);
+			mFLoanCashBook.setUser(currentUser);
 
-			mFLoanCashBook.setTransDate(currentDate); 
-			mFLoanCashBook.setSysDate(currentDate);   
+			mFLoanCashBook.setTransDate(currentDate);
+			mFLoanCashBook.setSysDate(currentDate);
 
 			cashBookRepo.save(mFLoanCashBook);
-			
-			if(businessMemberDto.getProcessingFee() != null
-					&& businessMemberDto.getProcessingFee() > 0) {
-				
+
+			if (businessMemberDto.getProcessingFee() != null && businessMemberDto.getProcessingFee() > 0) {
+
 				CashBook dfProcessingFeeCashBook = new CashBook();
 				dfProcessingFeeCashBook.setAccountNo(businessMember.getId());
-				dfProcessingFeeCashBook.setCredit(businessMemberDto.getProcessingFee());         
-				dfProcessingFeeCashBook.setDebit(0.0);                   
-				dfProcessingFeeCashBook.setTransType("MF DOC CHARGES"); 
+				dfProcessingFeeCashBook.setCredit(businessMemberDto.getProcessingFee());
+				dfProcessingFeeCashBook.setDebit(0.0);
+				dfProcessingFeeCashBook.setTransType("MF DOC CHARGES");
 				dfProcessingFeeCashBook.setParticulars("MF DOC CHARGES");
 				dfProcessingFeeCashBook.setBmRemarks("");
 				dfProcessingFeeCashBook.setReceiptRemarks("");
 
-				dfProcessingFeeCashBook.setLineNo(2);                    
-				dfProcessingFeeCashBook.setUser(currentUser);          
+				dfProcessingFeeCashBook.setLineNo(2);
+				dfProcessingFeeCashBook.setUser(currentUser);
 
-				dfProcessingFeeCashBook.setTransDate(currentDate); 
-				dfProcessingFeeCashBook.setSysDate(currentDate);   
+				dfProcessingFeeCashBook.setTransDate(currentDate);
+				dfProcessingFeeCashBook.setSysDate(currentDate);
 
 				cashBookRepo.save(dfProcessingFeeCashBook);
-				
-				
+
 			}
-			
+
 			break;
 
 		default:
@@ -341,7 +334,7 @@ public class BusinessMemberService {
 
 	// findAll
 	public List<BusinessMemberDto> findAll(String loanType) {
-		
+
 		String starWithString = null;
 		switch (loanType) {
 		case "DAILY_FINANCE":
@@ -452,12 +445,11 @@ public class BusinessMemberService {
 			break;
 		}
 
-		List<BusinessMember> loanList = businessMemberRepository.businessMemberAutoComplete(starWithString,keyWord);
+		List<BusinessMember> loanList = businessMemberRepository.businessMemberAutoComplete(starWithString, keyWord);
 
 		List<BusinessMemberAutoCompletePojo> pojoList = new ArrayList<BusinessMemberAutoCompletePojo>();
 		System.err.println(loanList);
-		
-		
+
 		for (BusinessMember bm : loanList) {
 
 			BusinessMemberAutoCompletePojo pojo = new BusinessMemberAutoCompletePojo();
