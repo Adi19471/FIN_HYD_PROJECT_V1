@@ -3,8 +3,7 @@ import react from "@vitejs/plugin-react";
 import path from "path";
 
 export default defineConfig({
-  // Only expose specific environment variables to the client bundle.
-  // Avoid passing the entire `process.env` object which can leak secrets.
+  base: "./",
   define: {
     "process.env.NODE_ENV": JSON.stringify(process.env.NODE_ENV),
     "process.env.VITE_API_BASE": JSON.stringify(process.env.VITE_API_BASE),
@@ -18,7 +17,7 @@ export default defineConfig({
   resolve: {
     alias: {
       "@": path.resolve(__dirname, "src"),
-      "src": path.resolve(__dirname, "src"),
+      src: path.resolve(__dirname, "src"),
       toastify: path.resolve(__dirname, "src/toastify.js"),
       lib: path.resolve(__dirname, "src/lib"),
       // Add more aliases here if needed
