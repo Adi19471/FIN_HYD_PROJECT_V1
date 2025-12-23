@@ -46,6 +46,16 @@ const BussinessCashBook = lazy(() =>
 
 
 
+const Quick_Cash_Book = lazy(() =>
+  import(
+    "./components/BalajiFinancial/Transactions/Quick_Cash_Book/Quick_Cash_Book"
+  )
+);
+
+
+
+
+
 
 const routes = [
 
@@ -69,7 +79,8 @@ const routes = [
   { path: "/Daily-Finace", element: DailyFinance },
 
   // BussinessCashBook
-  { path: "/BussinessCashBook_Main", element: BussinessCashBook }
+  { path: "/BussinessCashBook_Main", element: BussinessCashBook },
+  { path: "/Transactions/Quick_Cash_Book", element: Quick_Cash_Book },
 ];
 
 export default routes;

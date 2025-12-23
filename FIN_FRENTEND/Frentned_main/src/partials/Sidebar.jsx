@@ -254,6 +254,24 @@ function Sidebar({ sidebarOpen, setSidebarOpen }) {
                         <span>BusinessCashBook</span>
                       </NavLink>
                     </li>
+ <li>
+                      <NavLink
+                        to="/Transactions/Quick_Cash_Book"
+                        className={({ isActive }) =>
+                          `flex items-center space-x-3 px-3 py-2 rounded-md text-sm transition-all ${
+                            isActive
+                              ? "bg-gradient-to-r from-teal-500 to-cyan-500 text-white dark:from-gray-700 dark:to-gray-900 dark:text-white font-medium"
+                              : "text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800"
+                          }`
+                        }
+                      >
+                        <AccountBalanceWallet className="w-4 h-4" />
+                        <span>Quick Cash book </span>
+                      </NavLink>
+                    </li>
+
+                   
+
                     {/* Add more transaction links here later */}
                   </ul>
                 </div>
