@@ -3,6 +3,7 @@ package com.balaji.finance.masterInfo.service;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 import java.util.Optional;
 
@@ -14,10 +15,9 @@ import com.balaji.finance.masterInfo.entity.BusinessMember;
 import com.balaji.finance.masterInfo.repo.BusinessMemberRepository;
 import com.balaji.finance.pojo.InstallmentDetails;
 import com.balaji.finance.pojo.LoanInformation;
+import com.balaji.finance.pojo.QuickCashBookRow;
 import com.balaji.finance.transaction.entity.CashBook;
 import com.balaji.finance.transaction.entity.CashBookRepo;
-
-import io.jsonwebtoken.lang.Collections;
 
 @Service
 public class DailyLoanInstallmentPaymentService {
@@ -166,7 +166,7 @@ public class DailyLoanInstallmentPaymentService {
 	}
 
 
-	public void saveDFLoanInstallments( String loanId, LoanInformation info) {
+	public void saveDFLoanInstallments(String loanId, LoanInformation info) {
 
 		Optional<BusinessMember> opt = businessMemberRepository.findById(loanId);
 		if (opt.isEmpty())
@@ -233,6 +233,75 @@ public class DailyLoanInstallmentPaymentService {
 		}
 
 		bm.setPaidInstallments(bm.getPaidInstallments() != null ? bm.getPaidInstallments() + 1 : 0);
+		businessMemberRepository.save(bm);
+	}
+	
+	
+	public void saveDFLoanInstallmentFromQuickCashBook(String loanId, QuickCashBookRow quickCashBookRow,LocalDateTime transactionDate) {
+
+		Optional<BusinessMember> opt = businessMemberRepository.findById(loanId);
+		if (opt.isEmpty())
+			return;
+
+		
+		String currentUser = SecurityContextHolder.getContext().getAuthentication().getName();
+
+
+		BusinessMember bm = opt.get();
+		Double currentlyPaidAmount = quickCashBookRow.getPaidAmount();
+		Double lateFee = quickCashBookRow.getLateFee();
+		
+		System.out.println("-----------currentlyPaidAmount ::"+currentlyPaidAmount);
+
+		if (currentlyPaidAmount > 0) {
+			
+			
+			CashBook cashBookForPrinciplePaid = new CashBook();
+			cashBookForPrinciplePaid.setAccountNo(bm.getId());
+			cashBookForPrinciplePaid.setCredit(currentlyPaidAmount);         
+			cashBookForPrinciplePaid.setDebit(0.0);                   
+			cashBookForPrinciplePaid.setTransType("DF LOAN"); 
+			cashBookForPrinciplePaid.setParticulars("DF LOAN INSTALLMENT");
+			
+			cashBookForPrinciplePaid.setBmRemarks(""); //doubt
+			cashBookForPrinciplePaid.setReceiptRemarks(""); //doubt
+
+			cashBookForPrinciplePaid.setLineNo(1);                    
+			cashBookForPrinciplePaid.setUser(currentUser);          
+
+			cashBookForPrinciplePaid.setTransDate(transactionDate); 
+			cashBookForPrinciplePaid.setSysDate(LocalDateTime.now());   
+
+			cashBookRepo.save(cashBookForPrinciplePaid);
+			
+		}
+		
+		if(lateFee != null
+				&& lateFee > 0) {
+			
+			
+			CashBook cashBookForLatefeePaid = new CashBook();
+			cashBookForLatefeePaid.setAccountNo(bm.getId());
+			cashBookForLatefeePaid.setCredit(lateFee);           
+			cashBookForLatefeePaid.setDebit(0.0);
+			cashBookForLatefeePaid.setTransType("DF LATE FEE");
+			cashBookForLatefeePaid.setParticulars("DF LATE FEE");
+			
+			cashBookForLatefeePaid.setBmRemarks(""); //doubt
+			cashBookForLatefeePaid.setReceiptRemarks(""); //doubt
+
+			cashBookForLatefeePaid.setLineNo(2);                     
+			cashBookForLatefeePaid.setUser(currentUser);
+
+			cashBookForLatefeePaid.setTransDate(transactionDate);
+			cashBookForLatefeePaid.setSysDate(LocalDateTime.now());
+
+			cashBookRepo.save(cashBookForLatefeePaid);
+			
+		}
+
+		bm.setPaidInstallments(bm.getPaidInstallments() != null ? bm.getPaidInstallments() + 1 : 0);
+		
 		businessMemberRepository.save(bm);
 	}
 

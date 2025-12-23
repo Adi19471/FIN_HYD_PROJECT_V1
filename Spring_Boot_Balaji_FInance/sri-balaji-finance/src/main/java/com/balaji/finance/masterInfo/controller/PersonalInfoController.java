@@ -25,8 +25,7 @@ public class PersonalInfoController {
 	private PersonalInfoService personalInfoService;
 
 	@GetMapping("/createNewPersonalInfoTemplate/{personType}")
-	public ResponseEntity<PersonalInfoDto> createNewPersonalInfoTemplate(
-			@PathVariable("personType") String personType) {
+	public ResponseEntity<PersonalInfoDto> createNewPersonalInfoTemplate(String personType) {
 
 		PersonalInfoDto personalInfoDto = personalInfoService.createPersonalInfoDto(personType);
 
@@ -35,7 +34,7 @@ public class PersonalInfoController {
 
 	@PostMapping("/updatePersonalInfo/{personType}")
 	public ResponseEntity<String> updatePersonalInfoTemplate(@RequestBody PersonalInfoDto personalInfoDto,
-			@PathVariable("personType") String personType) {
+			String personType) {
 
 		String response = null;
 
@@ -49,7 +48,7 @@ public class PersonalInfoController {
 	}
 
 	@DeleteMapping("/deletePersonalInfo/{id}")
-	public ResponseEntity<String> deletePersonalInfoTemplate(@PathVariable("id") String id) {
+	public ResponseEntity<String> deletePersonalInfoTemplate(String id) {
 
 		String response = personalInfoService.deletePersonalInfoDto(id);
 
@@ -57,7 +56,7 @@ public class PersonalInfoController {
 	}
 
 	@GetMapping("/findPersonalInfoById/{id}")
-	public ResponseEntity<PersonalInfoDto> findPersonalInfoById(@PathVariable("id") String id) {
+	public ResponseEntity<PersonalInfoDto> findPersonalInfoById(String id) {
 
 		PersonalInfoDto personalInfoDto = personalInfoService.findById(id);
 

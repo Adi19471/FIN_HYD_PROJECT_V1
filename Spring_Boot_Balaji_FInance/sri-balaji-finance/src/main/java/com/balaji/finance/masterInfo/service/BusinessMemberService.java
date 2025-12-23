@@ -429,7 +429,7 @@ public class BusinessMemberService {
 
 	}
 
-	public List<BusinessMemberAutoCompletePojo> businessMemberAutoComplete(String keyWord, String loanType) {
+	public List<BusinessMemberAutoCompletePojo> businessMemberAutoCompletebyLoanType(String keyWord, String loanType) {
 
 		String starWithString = null;
 		switch (loanType) {
@@ -446,7 +446,7 @@ public class BusinessMemberService {
 			break;
 		}
 
-		List<BusinessMember> loanList = businessMemberRepository.businessMemberAutoComplete(starWithString, keyWord);
+		List<BusinessMember> loanList = businessMemberRepository.businessMemberAutoCompletebyLoanType(starWithString, keyWord);
 
 		List<BusinessMemberAutoCompletePojo> pojoList = new ArrayList<BusinessMemberAutoCompletePojo>();
 		System.err.println(loanList);
@@ -464,4 +464,23 @@ public class BusinessMemberService {
 		return pojoList;
 	}
 
+	
+	public List<BusinessMemberAutoCompletePojo> allbusinessMemberAutoComplete(String keyWord) {
+
+		List<BusinessMember> loanList = businessMemberRepository.allbusinessMemberAutoComplete(keyWord);
+
+		List<BusinessMemberAutoCompletePojo> pojoList = new ArrayList<BusinessMemberAutoCompletePojo>();
+
+		for (BusinessMember bm : loanList) {
+
+			BusinessMemberAutoCompletePojo pojo = new BusinessMemberAutoCompletePojo();
+			pojo.setLoanId(bm.getId());
+			pojo.setCustomerId(bm.getCustomerId().getId());
+			pojo.setCustomerName(bm.getCustomerId().getFirstname());
+
+			pojoList.add(pojo);
+		}
+
+		return pojoList;
+	}
 }

@@ -26,7 +26,7 @@ public class BusinessMemberController {
 
 	@PostMapping("/update/{loanType}")
 	public ResponseEntity<String> update(@RequestBody BusinessMemberDto businessMemberDto,
-			@PathVariable("loanType") String loanType) {
+			@PathVariable String loanType) {
 
 		String response = null;
 
@@ -40,7 +40,7 @@ public class BusinessMemberController {
 	}
 
 	@DeleteMapping("/delete/{id}")
-	public ResponseEntity<String> delete(@PathVariable("id") String id) {
+	public ResponseEntity<String> delete(@PathVariable String id) {
 
 		String response = businessMemberService.deleteBusinessMember(id);
 
@@ -48,7 +48,7 @@ public class BusinessMemberController {
 	}
 
 	@GetMapping("/findById/{id}")
-	public ResponseEntity<BusinessMemberDto> findById(@PathVariable("id") String id) {
+	public ResponseEntity<BusinessMemberDto> findById(@PathVariable String id) {
 
 		BusinessMemberDto businessMemberDto = businessMemberService.findById(id);
 
@@ -56,7 +56,7 @@ public class BusinessMemberController {
 	}
 
 	@GetMapping("/findAll/{loanType}")
-	public ResponseEntity<List<BusinessMemberDto>> findAll(@PathVariable("loanType") String loanType) {
+	public ResponseEntity<List<BusinessMemberDto>> findAll(@PathVariable String loanType) {
 
 		List<BusinessMemberDto> all = businessMemberService.findAll(loanType);
 
@@ -67,7 +67,17 @@ public class BusinessMemberController {
 	public ResponseEntity<List<BusinessMemberAutoCompletePojo>> loanDetailsAutoComplete(@RequestParam String q,
 			@PathVariable("loanType") String loanType) {
 
-		List<BusinessMemberAutoCompletePojo> all = businessMemberService.businessMemberAutoComplete(q, loanType);
+		List<BusinessMemberAutoCompletePojo> all = businessMemberService.businessMemberAutoCompletebyLoanType(q,
+				loanType);
+
+		return ResponseEntity.ok().body(all);
+
+	}
+
+	@GetMapping("/allLoanDetailsAutoComplete")
+	public ResponseEntity<List<BusinessMemberAutoCompletePojo>> allLoanDetailsAutoComplete(@RequestParam String q) {
+
+		List<BusinessMemberAutoCompletePojo> all = businessMemberService.allbusinessMemberAutoComplete(q);
 
 		return ResponseEntity.ok().body(all);
 

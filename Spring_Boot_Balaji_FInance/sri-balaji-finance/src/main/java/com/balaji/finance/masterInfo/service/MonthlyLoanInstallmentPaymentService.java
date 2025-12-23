@@ -14,6 +14,7 @@ import com.balaji.finance.masterInfo.entity.BusinessMember;
 import com.balaji.finance.masterInfo.repo.BusinessMemberRepository;
 import com.balaji.finance.pojo.InstallmentDetails;
 import com.balaji.finance.pojo.LoanInformation;
+import com.balaji.finance.pojo.QuickCashBookRow;
 import com.balaji.finance.transaction.entity.CashBook;
 import com.balaji.finance.transaction.entity.CashBookRepo;
 
@@ -288,6 +289,135 @@ public class MonthlyLoanInstallmentPaymentService {
 			cashBookForLatefeePaid.setUser(currentUser);
 
 			cashBookForLatefeePaid.setTransDate(currentInstallmentDate);
+			cashBookForLatefeePaid.setSysDate(LocalDateTime.now());
+
+			cashBookRepo.save(cashBookForLatefeePaid);
+			
+		}
+		
+
+		bm.setPaidInstallments(bm.getPaidInstallments() != null ? bm.getPaidInstallments() + 1 : 0);
+		businessMemberRepository.save(bm);
+	}
+
+	public void saveMFLoanInstallmentFromQuickCashBook(String loanId, QuickCashBookRow quickCashBookRow,
+			LocalDateTime transactionDate) {
+
+		Optional<BusinessMember> opt = businessMemberRepository.findById(loanId);
+		if (opt.isEmpty())
+			return;
+
+
+		String currentUser = SecurityContextHolder.getContext().getAuthentication().getName();
+
+
+		BusinessMember bm = opt.get();
+
+		
+		double principal = bm.getAmount();
+		double installmentPerMonth = bm.getInstallment();
+		
+		
+		double principalPerMonth = principal / bm.getDuration();
+		double interestPerMonth = installmentPerMonth - principalPerMonth; 
+		
+		
+		double currentlyPaidAmount = quickCashBookRow.getPaidAmount();
+
+		double principalPaid = 0;
+		double interestPaid = 0;
+		
+		System.out.println("-----------currentlyPaidAmount ::"+currentlyPaidAmount);
+		System.out.println("-----------principalPerMonth ::"+principalPerMonth);
+		
+
+		if (currentlyPaidAmount <= principalPerMonth) {
+
+			principalPaid = currentlyPaidAmount;
+			interestPaid = 0;
+
+		} else if (currentlyPaidAmount >= principalPerMonth + interestPerMonth) {
+
+			principalPaid = currentlyPaidAmount - interestPerMonth;
+			interestPaid = interestPerMonth;
+
+		} else {
+			
+			
+			interestPaid = currentlyPaidAmount - principalPerMonth ;
+			principalPaid = currentlyPaidAmount - interestPaid;
+			
+
+		}
+		
+		System.out.println("-----------principalPaid ::"+principalPaid);
+
+		if (principalPaid > 0) {
+			
+			
+			CashBook cashBookForPrinciplePaid = new CashBook();
+			cashBookForPrinciplePaid.setAccountNo(bm.getId());
+			cashBookForPrinciplePaid.setCredit(principalPaid);         
+			cashBookForPrinciplePaid.setDebit(0.0);                   
+			cashBookForPrinciplePaid.setTransType("MF LOAN"); 
+			cashBookForPrinciplePaid.setParticulars("MF LOAN INSTALLMENT");
+			
+			cashBookForPrinciplePaid.setBmRemarks(""); //doubt
+			cashBookForPrinciplePaid.setReceiptRemarks(""); //doubt
+
+			cashBookForPrinciplePaid.setLineNo(1);                    
+			cashBookForPrinciplePaid.setUser(currentUser);          
+
+			cashBookForPrinciplePaid.setTransDate(transactionDate); 
+			cashBookForPrinciplePaid.setSysDate(LocalDateTime.now());   
+
+			cashBookRepo.save(cashBookForPrinciplePaid);
+			
+		}
+		
+		System.out.println("-----------interestPaid ::"+interestPaid);
+
+
+		if (interestPaid > 0) {
+			
+			CashBook cashBookForIntrestPaid = new CashBook();
+			cashBookForIntrestPaid.setAccountNo(bm.getId());
+			cashBookForIntrestPaid.setCredit(interestPaid);           
+			cashBookForIntrestPaid.setDebit(0.0);
+			cashBookForIntrestPaid.setTransType("MF INTEREST");
+			cashBookForIntrestPaid.setParticulars("MF INTEREST");
+			
+			cashBookForIntrestPaid.setBmRemarks(""); //doubt
+			cashBookForIntrestPaid.setReceiptRemarks(""); //doubt
+
+			cashBookForIntrestPaid.setLineNo(2);                     
+			cashBookForIntrestPaid.setUser(currentUser);
+
+			cashBookForIntrestPaid.setTransDate(transactionDate);
+			cashBookForIntrestPaid.setSysDate(LocalDateTime.now());
+
+			cashBookRepo.save(cashBookForIntrestPaid);
+			
+		}
+		
+		if(quickCashBookRow.getLateFee() != null
+				&& quickCashBookRow.getLateFee() > 0) {
+			
+			
+			CashBook cashBookForLatefeePaid = new CashBook();
+			cashBookForLatefeePaid.setAccountNo(bm.getId());
+			cashBookForLatefeePaid.setCredit(quickCashBookRow.getLateFee());           
+			cashBookForLatefeePaid.setDebit(0.0);
+			cashBookForLatefeePaid.setTransType("MF LATE FEE");
+			cashBookForLatefeePaid.setParticulars("MF LATE FEE");
+			
+			cashBookForLatefeePaid.setBmRemarks(""); //doubt
+			cashBookForLatefeePaid.setReceiptRemarks(""); //doubt
+
+			cashBookForLatefeePaid.setLineNo(3);                     
+			cashBookForLatefeePaid.setUser(currentUser);
+
+			cashBookForLatefeePaid.setTransDate(transactionDate);
 			cashBookForLatefeePaid.setSysDate(LocalDateTime.now());
 
 			cashBookRepo.save(cashBookForLatefeePaid);
