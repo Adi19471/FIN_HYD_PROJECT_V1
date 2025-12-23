@@ -151,6 +151,7 @@ public class DailyLoanInstallmentPaymentService {
 				inst.setInstallmentAmount(calcInstall);
 				
 	        }
+	        
 
 	        inst.setLateFee(0);
 	        inst.setPaid(0);
