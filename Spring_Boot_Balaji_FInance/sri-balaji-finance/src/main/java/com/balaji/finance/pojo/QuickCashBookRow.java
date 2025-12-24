@@ -1,13 +1,29 @@
 package com.balaji.finance.pojo;
 
+import jakarta.validation.constraints.DecimalMin;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
+
 public class QuickCashBookRow {
 
+	@NotBlank(message = "Account number is required")
 	private String accountNo;
+
+	@NotBlank(message = "Customer name is required")
 	private String name;
+
+	@NotNull(message = "Installment amount is required")
 	private Double installment;
+
 	private Double dueAmount;
 	private Double lateFee;
+
+	@NotNull(message = "Paid amount is required")
+	@DecimalMin(value = "0.0", inclusive = true, message = "Paid amount cannot be negative")
 	private Double paidAmount;
+
+	@NotNull(message = "Paid late fee is required")
+	@DecimalMin(value = "0.0", inclusive = true, message = "Paid late fee cannot be negative")
 	private Double paidLateFee;
 
 	public String getAccountNo() {
@@ -64,6 +80,13 @@ public class QuickCashBookRow {
 
 	public void setPaidLateFee(Double paidLateFee) {
 		this.paidLateFee = paidLateFee;
+	}
+
+	@Override
+	public String toString() {
+		return "QuickCashBookRow [accountNo=" + accountNo + ", name=" + name + ", installment=" + installment
+				+ ", dueAmount=" + dueAmount + ", lateFee=" + lateFee + ", paidAmount=" + paidAmount + ", paidLateFee="
+				+ paidLateFee + "]";
 	}
 
 }
