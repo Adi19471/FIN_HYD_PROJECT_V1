@@ -11,11 +11,11 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
 import com.balaji.finance.masterInfo.entity.BusinessMember;
+import com.balaji.finance.masterInfo.entity.CashBook;
 import com.balaji.finance.masterInfo.repo.BusinessMemberRepository;
 import com.balaji.finance.pojo.InstallmentDetails;
 import com.balaji.finance.pojo.LoanInformation;
 import com.balaji.finance.pojo.QuickCashBookRow;
-import com.balaji.finance.transaction.entity.CashBook;
 import com.balaji.finance.transaction.entity.CashBookRepo;
 
 @Service
@@ -241,7 +241,9 @@ public class MonthlyLoanInstallmentPaymentService {
 
 			cashBookForPrinciplePaid.setTransDate(currentInstallmentDate); 
 			cashBookForPrinciplePaid.setSysDate(LocalDateTime.now());   
-
+			cashBookForPrinciplePaid.setCustomerId(bm.getCustomerId().getId());
+			
+			
 			cashBookRepo.save(cashBookForPrinciplePaid);
 			
 		}
@@ -266,7 +268,8 @@ public class MonthlyLoanInstallmentPaymentService {
 
 			cashBookForIntrestPaid.setTransDate(currentInstallmentDate);
 			cashBookForIntrestPaid.setSysDate(LocalDateTime.now());
-
+			cashBookForIntrestPaid.setCustomerId(bm.getCustomerId().getId());
+			
 			cashBookRepo.save(cashBookForIntrestPaid);
 			
 		}
@@ -290,7 +293,9 @@ public class MonthlyLoanInstallmentPaymentService {
 
 			cashBookForLatefeePaid.setTransDate(currentInstallmentDate);
 			cashBookForLatefeePaid.setSysDate(LocalDateTime.now());
-
+			cashBookForLatefeePaid.setCustomerId(bm.getCustomerId().getId());
+			
+			
 			cashBookRepo.save(cashBookForLatefeePaid);
 			
 		}
@@ -370,7 +375,8 @@ public class MonthlyLoanInstallmentPaymentService {
 
 			cashBookForPrinciplePaid.setTransDate(transactionDate); 
 			cashBookForPrinciplePaid.setSysDate(LocalDateTime.now());   
-
+			cashBookForPrinciplePaid.setCustomerId(bm.getCustomerId().getId());
+			
 			cashBookRepo.save(cashBookForPrinciplePaid);
 			
 		}
@@ -395,7 +401,10 @@ public class MonthlyLoanInstallmentPaymentService {
 
 			cashBookForIntrestPaid.setTransDate(transactionDate);
 			cashBookForIntrestPaid.setSysDate(LocalDateTime.now());
-
+			cashBookForIntrestPaid.setCustomerId(bm.getCustomerId().getId());
+			
+			
+			
 			cashBookRepo.save(cashBookForIntrestPaid);
 			
 		}
@@ -419,7 +428,8 @@ public class MonthlyLoanInstallmentPaymentService {
 
 			cashBookForLatefeePaid.setTransDate(transactionDate);
 			cashBookForLatefeePaid.setSysDate(LocalDateTime.now());
-
+			cashBookForLatefeePaid.setCustomerId(bm.getCustomerId().getId());
+			
 			cashBookRepo.save(cashBookForLatefeePaid);
 			
 		}

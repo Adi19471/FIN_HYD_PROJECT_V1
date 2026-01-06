@@ -3,7 +3,6 @@ package com.balaji.finance.masterInfo.service;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
 import java.util.Optional;
 
@@ -12,11 +11,11 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
 import com.balaji.finance.masterInfo.entity.BusinessMember;
+import com.balaji.finance.masterInfo.entity.CashBook;
 import com.balaji.finance.masterInfo.repo.BusinessMemberRepository;
 import com.balaji.finance.pojo.InstallmentDetails;
 import com.balaji.finance.pojo.LoanInformation;
 import com.balaji.finance.pojo.QuickCashBookRow;
-import com.balaji.finance.transaction.entity.CashBook;
 import com.balaji.finance.transaction.entity.CashBookRepo;
 
 @Service
@@ -204,6 +203,7 @@ public class DailyLoanInstallmentPaymentService {
 
 			cashBookForPrinciplePaid.setTransDate(currentInstallmentDate); 
 			cashBookForPrinciplePaid.setSysDate(LocalDateTime.now());   
+			cashBookForPrinciplePaid.setCustomerId(bm.getCustomerId().getId());
 
 			cashBookRepo.save(cashBookForPrinciplePaid);
 			
@@ -228,7 +228,8 @@ public class DailyLoanInstallmentPaymentService {
 
 			cashBookForLatefeePaid.setTransDate(currentInstallmentDate);
 			cashBookForLatefeePaid.setSysDate(LocalDateTime.now());
-
+			cashBookForLatefeePaid.setCustomerId(bm.getCustomerId().getId());
+			
 			cashBookRepo.save(cashBookForLatefeePaid);
 			
 		}
@@ -272,7 +273,8 @@ public class DailyLoanInstallmentPaymentService {
 
 			cashBookForPrinciplePaid.setTransDate(transactionDate); 
 			cashBookForPrinciplePaid.setSysDate(LocalDateTime.now());   
-
+			cashBookForPrinciplePaid.setCustomerId(bm.getCustomerId().getId());
+			
 			cashBookRepo.save(cashBookForPrinciplePaid);
 			
 		}
@@ -296,6 +298,7 @@ public class DailyLoanInstallmentPaymentService {
 
 			cashBookForLatefeePaid.setTransDate(transactionDate);
 			cashBookForLatefeePaid.setSysDate(LocalDateTime.now());
+			cashBookForLatefeePaid.setCustomerId(bm.getCustomerId().getId());
 
 			cashBookRepo.save(cashBookForLatefeePaid);
 			

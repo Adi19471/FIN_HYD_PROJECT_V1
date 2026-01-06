@@ -1,33 +1,22 @@
-package com.balaji.finance.transaction.entity;
+package com.balaji.finance.masterInfo.entity;
 
+import jakarta.persistence.*;
 import java.time.LocalDateTime;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.Table;
-import jakarta.persistence.Temporal;
-import jakarta.persistence.TemporalType;
-
 @Entity
-@Table(name = "cashbook")
-public class CashBook {
+@Table(name = "CashBookBK")
+public class CashBookBK {
 
 	@Id
 	@Column(name = "ID")
-	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	private Double id;
 
-	@Column(name = "LINENO")
+	@Column(name = "LineNo")
 	private Integer lineNo;
 
-	@Temporal(TemporalType.TIMESTAMP)
 	@Column(name = "TRANSDate")
 	private LocalDateTime transDate;
 
-	@Temporal(TemporalType.TIMESTAMP)
 	@Column(name = "SYSDATE")
 	private LocalDateTime sysDate;
 
@@ -58,7 +47,14 @@ public class CashBook {
 	@Column(name = "BMREMARKS")
 	private String bmRemarks;
 
-	// Getters and Setters
+	@Column(name = "DELETEDDATE")
+	private LocalDateTime deletedDate;
+
+	@Column(name = "DELETEDBY")
+	private String deletedBy;
+
+	@Column(name = "COMMENTS")
+	private String comments;
 
 	public Double getId() {
 		return id;
@@ -163,4 +159,29 @@ public class CashBook {
 	public void setBmRemarks(String bmRemarks) {
 		this.bmRemarks = bmRemarks;
 	}
+
+	public LocalDateTime getDeletedDate() {
+		return deletedDate;
+	}
+
+	public void setDeletedDate(LocalDateTime deletedDate) {
+		this.deletedDate = deletedDate;
+	}
+
+	public String getDeletedBy() {
+		return deletedBy;
+	}
+
+	public void setDeletedBy(String deletedBy) {
+		this.deletedBy = deletedBy;
+	}
+
+	public String getComments() {
+		return comments;
+	}
+
+	public void setComments(String comments) {
+		this.comments = comments;
+	}
+
 }
