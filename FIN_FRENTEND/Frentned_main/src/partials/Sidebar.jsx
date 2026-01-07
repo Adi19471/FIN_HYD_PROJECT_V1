@@ -6,20 +6,20 @@ import {
   FolderShared,
   AccountCircle,
   Login,
-  HowToReg,
+  PersonAdd,
   RestartAlt,
   ChevronRight,
   ExpandMore,
   Person,
   MonetizationOn,
-  Handshake,
-  Business,
-  AccountBalanceWallet, // Better icon for transactions
+  AccountBalanceWallet,
+  ReceiptLong,
+  DeleteForever,Paid,
 } from "@mui/icons-material";
 
-import SidebarLinkGroup from "./SidebarLinkGroup";
-import logoSrc from "../images/shri-balaji-finance.png";
 
+
+import SidebarLinkGroup from "./SidebarLinkGroup";
 import { useThemeProvider } from "../utils/ThemeContext";
 import ThemeToggle from "../components/ThemeToggle";
 import "./Sidebar.css";
@@ -27,7 +27,6 @@ import "./Sidebar.css";
 function Sidebar({ sidebarOpen, setSidebarOpen }) {
   const location = useLocation();
   const { pathname } = location;
-
   const { currentTheme } = useThemeProvider();
 
   const trigger = useRef(null);
@@ -38,7 +37,10 @@ function Sidebar({ sidebarOpen, setSidebarOpen }) {
     storedSidebarExpanded === null ? true : storedSidebarExpanded === "true"
   );
 
-  // Close on click outside
+  // Track which dropdown group is currently open
+  const [openGroup, setOpenGroup] = useState(null);
+
+  // Close sidebar on outside click (mobile)
   useEffect(() => {
     const clickHandler = ({ target }) => {
       if (!sidebar.current || !trigger.current) return;
@@ -52,9 +54,9 @@ function Sidebar({ sidebarOpen, setSidebarOpen }) {
     };
     document.addEventListener("click", clickHandler);
     return () => document.removeEventListener("click", clickHandler);
-  }, [sidebarOpen]);
+  }, [sidebarOpen, setSidebarOpen]);
 
-  // Close if the Esc key is pressed
+  // Close on ESC key
   useEffect(() => {
     const keyHandler = ({ keyCode }) => {
       if (!sidebarOpen || keyCode !== 27) return;
@@ -62,43 +64,76 @@ function Sidebar({ sidebarOpen, setSidebarOpen }) {
     };
     document.addEventListener("keydown", keyHandler);
     return () => document.removeEventListener("keydown", keyHandler);
-  }, [sidebarOpen]);
+  }, [sidebarOpen, setSidebarOpen]);
 
+  // Persist sidebar expanded state in localStorage
   useEffect(() => {
     localStorage.setItem("sidebar-expanded", sidebarExpanded);
-    if (sidebarExpanded) {
-      document.body.classList.add("sidebar-expanded");
-    } else {
-      document.body.classList.remove("sidebar-expanded");
-    }
+    document.body.classList.toggle("sidebar-expanded", sidebarExpanded);
   }, [sidebarExpanded]);
+
+  // Auto-open relevant group when route changes
+  useEffect(() => {
+    if (pathname === "/") {
+      setOpenGroup(null);
+      return;
+    }
+
+    if (
+      pathname.includes("/master") ||
+      ["/Main_personal_file", "/Loan", "/guarantor", "/branch"].some((p) =>
+        pathname.startsWith(p)
+      )
+    ) {
+      setOpenGroup("master");
+    } else if (
+      pathname.includes("/transaction") ||
+      pathname.startsWith("/BussinessCashBook_Main") ||
+      pathname.startsWith("/Transactions/")
+    ) {
+      setOpenGroup("transactions");
+    } else if (
+      ["/login", "/signup", "/reset-password"].some((p) => pathname.startsWith(p))
+    ) {
+      setOpenGroup("auth");
+    }
+  }, [pathname]);
+
+  const handleGroupToggle = (groupName) => {
+    setOpenGroup((prev) => (prev === groupName ? null : groupName));
+    // Auto-expand sidebar on mobile/small screens when opening a group
+    if (!sidebarExpanded) setSidebarExpanded(true);
+  };
+
   return (
     <div className="min-w-fit">
-      {/* Backdrop */}
+      {/* Mobile Backdrop */}
       <div
-        className={`fixed inset-0 bg-black/50 z-40 lg:hidden transition-opacity duration-200 ${
+        className={`fixed inset-0 bg-black/50 backdrop-blur-sm z-40 lg:hidden transition-opacity duration-300 ${
           sidebarOpen ? "opacity-100" : "opacity-0 pointer-events-none"
         }`}
         aria-hidden="true"
       />
 
-      {/* Sidebar */}
+      {/* Sidebar Container */}
       <div
         id="sidebar"
         ref={sidebar}
-        className={`flex flex-col absolute z-50 left-0 top-0 lg:static lg:left-auto lg:top-auto lg:translate-x-0 h-screen overflow-y-auto no-scrollbar w-64 lg:w-20 lg:sidebar-expanded:w-64 2xl:!w-64 shrink-0 bg-white dark:bg-black border-r border-gray-200 dark:border-gray-800 transition-all duration-300 ease-in-out sidebar-foam ${
-          sidebarOpen ? "translate-x-0" : "-translate-x-64"
-        }`}
+        className={`flex flex-col absolute z-50 left-0 top-0 lg:static lg:left-auto lg:top-auto lg:translate-x-0 
+          h-screen overflow-y-auto no-scrollbar
+          w-64 lg:w-20 lg:sidebar-expanded:w-64 2xl:!w-64 
+          shrink-0 bg-white dark:bg-gray-950 border-r border-gray-200 dark:border-gray-800 
+          transition-all duration-300 ease-in-out
+          ${sidebarOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"}`}
       >
         {/* Header */}
         <div className="flex items-center justify-between h-16 px-4 border-b border-gray-200 dark:border-gray-800">
           <div className="flex items-center space-x-3">
-            {/* Uncomment when logo is ready */}
-            {/* <img src={logoSrc} alt="Logo" width={40} height={40} className="rounded-full" /> */}
-            <span className="hidden lg:sidebar-expanded:block 2xl:block text-xl font-bold text-black dark:text-white">
-              {/* SHRI BALAJI FINANCE  */} BALAJI FINANCE
+            <span className="hidden lg:sidebar-expanded:block 2xl:block text-xl font-bold text-gray-900 dark:text-white tracking-tight">
+              BALAJI FINANCE
             </span>
           </div>
+
           <div className="hidden lg:flex items-center space-x-2">
             <ThemeToggle />
           </div>
@@ -106,280 +141,251 @@ function Sidebar({ sidebarOpen, setSidebarOpen }) {
           <button
             ref={trigger}
             onClick={() => setSidebarOpen(!sidebarOpen)}
-            aria-label="Close sidebar"
-            className="lg:hidden text-gray-600 hover:text-black dark:text-gray-400 dark:hover:text-white"
+            className="lg:hidden p-1 text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white rounded-full transition-colors"
           >
             <Close className="w-6 h-6" />
           </button>
         </div>
 
-        {/* Links */}
-        <nav className="flex-1 px-3 py-6 space-y-2">
+        {/* Navigation Links */}
+        <nav className="flex-1 px-3 py-5 space-y-1.5">
           {/* Dashboard */}
           <NavLink
             to="/"
             className={({ isActive }) =>
-              `flex items-center space-x-3 px-3 py-3 rounded-lg transition-all ${
+              `flex items-center gap-3 px-3 py-3 rounded-xl transition-all duration-200 font-medium ${
                 isActive
-                  ? "bg-gradient-to-r from-teal-500 to-cyan-500 text-white dark:from-gray-700 dark:to-gray-900 dark:text-white font-semibold shadow-md"
-                  : "text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-900"
+                  ? "bg-gradient-to-r from-teal-600 to-cyan-600 text-white shadow-md"
+                  : "text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800"
               }`
             }
           >
-            <Dashboard className="w-5 h-5" />
-            <span className="text-sm font-medium lg:opacity-0 lg:sidebar-expanded:opacity-100 2xl:opacity-100 duration-200">
+            <Dashboard className="w-5 h-5 min-w-[20px]" />
+            <span className="text-sm lg:opacity-0 lg:sidebar-expanded:opacity-100 2xl:opacity-100 transition-opacity duration-200">
               Dashboard
             </span>
           </NavLink>
 
           {/* Master Info */}
-          <SidebarLinkGroup
-            activeCondition={
-              pathname.includes("/master") ||
-              ["/Main_personal_file", "/Loan", "/guarantor", "/branch"].some(
-                (p) => pathname.startsWith(p)
-              )
-            }
+          <div
+            className={`flex items-center justify-between px-3 py-3 rounded-xl cursor-pointer transition-all duration-200 font-medium ${
+              openGroup === "master" ? "bg-gray-100 dark:bg-gray-800" : "hover:bg-gray-100 dark:hover:bg-gray-800"
+            }`}
+            onClick={() => handleGroupToggle("master")}
           >
-            {(handleClick, open) => (
-              <>
-                <a
-                  href="#0"
-                  onClick={(e) => {
-                    e.preventDefault();
-                    sidebarExpanded || setSidebarExpanded(true);
-                    handleClick();
-                  }}
-                  className={`flex items-center justify-between px-3 py-3 rounded-lg cursor-pointer transition-all ${
-                    open
-                      ? "bg-gray-100 dark:bg-gray-900"
-                      : "hover:bg-gray-100 dark:hover:bg-gray-900"
-                  }`}
+            <div className="flex items-center gap-3">
+              <FolderShared className="w-5 h-5 text-gray-600 dark:text-gray-400" />
+              <span className="text-sm lg:opacity-0 lg:sidebar-expanded:opacity-100 2xl:opacity-100 transition-opacity duration-200">
+                Master Info
+              </span>
+            </div>
+            <ExpandMore
+              className={`w-5 h-5 transition-transform duration-300 ${
+                openGroup === "master" ? "rotate-180" : ""
+              }`}
+            />
+          </div>
+
+          {openGroup === "master" && (
+            <ul className="pl-11 mt-1 space-y-1">
+              <li>
+                <NavLink
+                  to="/Main_personal_file"
+                  className={({ isActive }) =>
+                    `flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-all duration-200 ${
+                      isActive
+                        ? "bg-gradient-to-r from-teal-600 to-cyan-600 text-white shadow-sm"
+                        : "text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800"
+                    }`
+                  }
                 >
-                  <div className="flex items-center space-x-3">
-                    <FolderShared className="w-5 h-5 text-gray-600 dark:text-gray-400" />
-                    <span className="text-sm font-medium text-gray-800 dark:text-gray-200 lg:opacity-0 lg:sidebar-expanded:opacity-100 2xl:opacity-100 duration-200">
-                      Master Info
-                    </span>
-                  </div>
-                  <ExpandMore
-                    className={`w-4 h-4 transition-transform ${
-                      open ? "rotate-180" : ""
-                    }`}
-                  />
-                </a>
+                  <Person className="w-4 h-4" />
+                  <span>Personal Info</span>
+                </NavLink>
+              </li>
+              <li>
+                <NavLink
+                  to="/Loan"
+                  className={({ isActive }) =>
+                    `flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-all duration-200 ${
+                      isActive
+                        ? "bg-gradient-to-r from-teal-600 to-cyan-600 text-white shadow-sm"
+                        : "text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800"
+                    }`
+                  }
+                >
+                  <MonetizationOn className="w-4 h-4" />
+                  <span>Loans</span>
+                </NavLink>
+              </li>
+            </ul>
+          )}
 
-                <div className="lg:hidden lg:sidebar-expanded:block 2xl:block">
-                  <ul className={`pl-10 mt-1 space-y-1 ${!open && "hidden"}`}>
-                    {[
-                      {
-                        to: "/Main_personal_file",
-                        icon: Person,
-                        label: "Personal Info",
-                      },
-                      { to: "/Loan", icon: MonetizationOn, label: "Loans" },
-              
-                    ].map(({ to, icon: Icon, label }) => (
-                      <li key={to}>
-                        <NavLink
-                          to={to}
-                          className={({ isActive }) =>
-                            `flex items-center space-x-3 px-3 py-2 rounded-md text-sm transition-all ${
-                              isActive
-                                ? "bg-gradient-to-r from-teal-500 to-cyan-500 text-white dark:from-gray-700 dark:to-gray-900 dark:text-white font-medium shadow-sm"
-                                : "text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800"
-                            }`
-                          }
-                        >
-                          <Icon className="w-4 h-4" />
-                          <span>{label}</span>
-                        </NavLink>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              </>
-            )}
-          </SidebarLinkGroup>
-
-          {/* Business Transactions */}
-          <SidebarLinkGroup
-            activeCondition={
-              pathname.includes("/transaction") ||
-              pathname.startsWith("/BussinessCashBook_Main")
-            }
+          {/* Transactions */}
+          <div
+            className={`flex items-center justify-between px-3 py-3 rounded-xl cursor-pointer transition-all duration-200 font-medium ${
+              openGroup === "transactions" ? "bg-gray-100 dark:bg-gray-800" : "hover:bg-gray-100 dark:hover:bg-gray-800"
+            }`}
+            onClick={() => handleGroupToggle("transactions")}
           >
-            {(handleClick, open) => (
-              <>
-                <a
-                  href="#0"
-                  onClick={(e) => {
-                    e.preventDefault();
-                    sidebarExpanded || setSidebarExpanded(true);
-                    handleClick();
-                  }}
-                  className={`flex items-center justify-between px-3 py-3 rounded-lg cursor-pointer transition-all ${
-                    open
-                      ? "bg-gray-100 dark:bg-gray-900"
-                      : "hover:bg-gray-100 dark:hover:bg-gray-900"
-                  }`}
+            <div className="flex items-center gap-3">
+              <Paid className="w-5 h-5 text-gray-600 dark:text-gray-400" />
+              <span className="text-sm lg:opacity-0 lg:sidebar-expanded:opacity-100 2xl:opacity-100 transition-opacity duration-200">
+                Transactions
+              </span>
+            </div>
+            <ExpandMore
+              className={`w-5 h-5 transition-transform duration-300 ${
+                openGroup === "transactions" ? "rotate-180" : ""
+              }`}
+            />
+          </div>
+
+          {openGroup === "transactions" && (
+            <ul className="pl-11 mt-1 space-y-1">
+              <li>
+                <NavLink
+                  to="/BussinessCashBook_Main"
+                  className={({ isActive }) =>
+                    `flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-all duration-200 ${
+                      isActive
+                        ? "bg-gradient-to-r from-teal-600 to-cyan-600 text-white shadow-sm"
+                        : "text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800"
+                    }`
+                  }
                 >
-                  <div className="flex items-center space-x-3">
-                    <AccountBalanceWallet className="w-5 h-5 text-gray-600 dark:text-gray-400" />
-                    <span className="text-sm font-medium text-gray-800 dark:text-gray-200 lg:opacity-0 lg:sidebar-expanded:opacity-100 2xl:opacity-100 duration-200">
-                      Transactions
-                    </span>
-                  </div>
-                  <ExpandMore
-                    className={`w-4 h-4 transition-transform ${
-                      open ? "rotate-180" : ""
-                    }`}
-                  />
-                </a>
+                  <AccountBalanceWallet className="w-4 h-4" />
+                  <span>Business Cash Book</span>
+                </NavLink>
+              </li>
+              <li>
+                <NavLink
+                  to="/Transactions/Quick_Cash_Book"
+                  className={({ isActive }) =>
+                    `flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-all duration-200 ${
+                      isActive
+                        ? "bg-gradient-to-r from-teal-600 to-cyan-600 text-white shadow-sm"
+                        : "text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800"
+                    }`
+                  }
+                >
+                  <ReceiptLong className="w-4 h-4" />
+                  <span>Quick Cash Book</span>
+                </NavLink>
+              </li>
+              <li>
+                <NavLink
+                  to="/Transactions/Deleete_Transaction"
+                  className={({ isActive }) =>
+                    `flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-all duration-200 text-red-600 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300 ${
+                      isActive ? "bg-red-50 dark:bg-red-950/50" : ""
+                    }`
+                  }
+                >
+                  <DeleteForever className="w-4 h-4" />
+                  <span>Delete Transaction</span>
+                </NavLink>
+              </li>
 
-                <div className="lg:hidden lg:sidebar-expanded:block 2xl:block">
-                  <ul className={`pl-10 mt-1 space-y-1 ${!open && "hidden"}`}>
-                    <li>
-                      <NavLink
-                        to="/BussinessCashBook_Main"
-                        className={({ isActive }) =>
-                          `flex items-center space-x-3 px-3 py-2 rounded-md text-sm transition-all ${
-                            isActive
-                              ? "bg-gradient-to-r from-teal-500 to-cyan-500 text-white dark:from-gray-700 dark:to-gray-900 dark:text-white font-medium"
-                              : "text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800"
-                          }`
-                        }
-                      >
-                        <AccountBalanceWallet className="w-4 h-4" />
-                        <span>BusinessCashBook</span>
-                      </NavLink>
-                    </li>
- <li>
-                      <NavLink
-                        to="/Transactions/Quick_Cash_Book"
-                        className={({ isActive }) =>
-                          `flex items-center space-x-3 px-3 py-2 rounded-md text-sm transition-all ${
-                            isActive
-                              ? "bg-gradient-to-r from-teal-500 to-cyan-500 text-white dark:from-gray-700 dark:to-gray-900 dark:text-white font-medium"
-                              : "text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800"
-                          }`
-                        }
-                      >
-                        <AccountBalanceWallet className="w-4 h-4" />
-                        <span>Quick Cash book </span>
-                      </NavLink>
-                    </li>
 
-                   
+              <li>
+  <NavLink
+    to="/Transactions/cashbook"
+    className={({ isActive }) =>
+      `flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-all duration-200 ${
+        isActive
+          ? "bg-teal-50 text-teal-700 dark:bg-teal-950/50 dark:text-teal-300"
+          : "text-gray-600 hover:text-teal-600 dark:text-gray-400 dark:hover:text-teal-300"
+      }`
+    }
+  >
+    <AccountBalanceWallet className="w-4 h-4" />
+    <span>Cashbook</span>
+  </NavLink>
+</li>
+            </ul>
+          )}
 
-                    {/* Add more transaction links here later */}
-                  </ul>
-                </div>
-              </>
-            )}
-          </SidebarLinkGroup>
-
-          {/* Authentication (only show if not logged in?) - optional */}
-          {/* You may want to hide this when user is authenticated */}
-          <SidebarLinkGroup
-            activeCondition={
-              pathname.includes("/auth") ||
-              ["/login", "/signup", "/reset-password"].some((p) =>
-                pathname.startsWith(p)
-              )
-            }
+          {/* Authentication */}
+          <div
+            className={`flex items-center justify-between px-3 py-3 rounded-xl cursor-pointer transition-all duration-200 font-medium ${
+              openGroup === "auth" ? "bg-gray-100 dark:bg-gray-800" : "hover:bg-gray-100 dark:hover:bg-gray-800"
+            }`}
+            onClick={() => handleGroupToggle("auth")}
           >
-            {(handleClick, open) => (
-              <>
-                <a
-                  href="#0"
-                  onClick={(e) => {
-                    e.preventDefault();
-                    sidebarExpanded || setSidebarExpanded(true);
-                    handleClick();
-                  }}
-                  className={`flex items-center justify-between px-3 py-3 rounded-lg cursor-pointer transition-all ${
-                    open
-                      ? "bg-gray-100 dark:bg-gray-900"
-                      : "hover:bg-gray-100 dark:hover:bg-gray-900"
-                  }`}
-                >
-                  <div className="flex items-center space-x-3">
-                    <AccountCircle className="w-5 h-5 text-gray-600 dark:text-gray-400" />
-                    <span className="text-sm font-medium text-gray-800 dark:text-gray-200 lg:opacity-0 lg:sidebar-expanded:opacity-100 2xl:opacity-100 duration-200">
-                      Authentication
-                    </span>
-                  </div>
-                  <ExpandMore
-                    className={`w-4 h-4 transition-transform ${
-                      open ? "rotate-180" : ""
-                    }`}
-                  />
-                </a>
+            <div className="flex items-center gap-3">
+              <AccountCircle className="w-5 h-5 text-gray-600 dark:text-gray-400" />
+              <span className="text-sm lg:opacity-0 lg:sidebar-expanded:opacity-100 2xl:opacity-100 transition-opacity duration-200">
+                Authentication
+              </span>
+            </div>
+            <ExpandMore
+              className={`w-5 h-5 transition-transform duration-300 ${
+                openGroup === "auth" ? "rotate-180" : ""
+              }`}
+            />
+          </div>
 
-                <div className="lg:hidden lg:sidebar-expanded:block 2xl:block">
-                  <ul className={`pl-10 mt-1 space-y-1 ${!open && "hidden"}`}>
-                    <li>
-                      <NavLink
-                        to="/login"
-                        className={({ isActive }) =>
-                          `flex items-center space-x-3 px-3 py-2 rounded-md text-sm ${
-                            isActive
-                              ? "bg-black text-white dark:bg-white dark:text-black"
-                              : "text-gray-600 hover:bg-gray-100"
-                          }`
-                        }
-                      >
-                        <Login className="w-4 h-4" />
-                        <span>Sign In</span>
-                      </NavLink>
-                    </li>
-                    <li>
-                      <NavLink
-                        to="/signup"
-                        className={({ isActive }) =>
-                          `flex items-center space-x-3 px-3 py-2 rounded-md text-sm ${
-                            isActive
-                              ? "bg-black text-white dark:bg-white dark:text-black"
-                              : "text-gray-600 hover:bg-gray-100"
-                          }`
-                        }
-                      >
-                        <HowToReg className="w-4 h-4" />
-                        <span>Sign Up</span>
-                      </NavLink>
-                    </li>
-                    <li>
-                      <NavLink
-                        to="/reset-password"
-                        className={({ isActive }) =>
-                          `flex items-center space-x-3 px-3 py-2 rounded-md text-sm ${
-                            isActive
-                              ? "bg-black text-white dark:bg-white dark:text-black"
-                              : "text-gray-600 hover:bg-gray-100"
-                          }`
-                        }
-                      >
-                        <RestartAlt className="w-4 h-4" />
-                        <span>Reset Password</span>
-                      </NavLink>
-                    </li>
-                  </ul>
-                </div>
-              </>
-            )}
-          </SidebarLinkGroup>
+          {openGroup === "auth" && (
+            <ul className="pl-11 mt-1 space-y-1">
+              <li>
+                <NavLink
+                  to="/login"
+                  className={({ isActive }) =>
+                    `flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-all duration-200 ${
+                      isActive
+                        ? "bg-gray-900 text-white dark:bg-white dark:text-gray-900 shadow-sm"
+                        : "text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800"
+                    }`
+                  }
+                >
+                  <Login className="w-4 h-4" />
+                  <span>Sign In</span>
+                </NavLink>
+              </li>
+              <li>
+                <NavLink
+                  to="/signup"
+                  className={({ isActive }) =>
+                    `flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-all duration-200 ${
+                      isActive
+                        ? "bg-gray-900 text-white dark:bg-white dark:text-gray-900 shadow-sm"
+                        : "text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800"
+                    }`
+                  }
+                >
+                  <PersonAdd className="w-4 h-4" />
+                  <span>Sign Up</span>
+                </NavLink>
+              </li>
+              <li>
+                <NavLink
+                  to="/reset-password"
+                  className={({ isActive }) =>
+                    `flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-all duration-200 ${
+                      isActive
+                        ? "bg-gray-900 text-white dark:bg-white dark:text-gray-900 shadow-sm"
+                        : "text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800"
+                    }`
+                  }
+                >
+                  <RestartAlt className="w-4 h-4" />
+                  <span>Reset Password</span>
+                </NavLink>
+              </li>
+            </ul>
+          )}
         </nav>
 
-        {/* Expand / Collapse Button */}
+        {/* Collapse/Expand Button (Desktop only) */}
         <div className="hidden lg:flex items-center justify-center py-4 border-t border-gray-200 dark:border-gray-800">
           <button
             onClick={() => setSidebarExpanded(!sidebarExpanded)}
-            className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-900 transition-all"
+            className="p-2.5 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
             aria-label={sidebarExpanded ? "Collapse sidebar" : "Expand sidebar"}
           >
             <ChevronRight
-              className={`w-5 h-5 text-gray-600 dark:text-gray-400 transition-transform duration-300 ${
+              className={`w-6 h-6 text-gray-600 dark:text-gray-400 transition-transform duration-300 ${
                 sidebarExpanded ? "rotate-180" : ""
               }`}
             />

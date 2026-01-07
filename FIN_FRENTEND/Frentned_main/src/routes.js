@@ -54,6 +54,17 @@ const Quick_Cash_Book = lazy(() =>
 
 
 
+const Deleete_Transaction = lazy(() =>  import(
+  "./components/BalajiFinancial/Transactions/Delete_transaction/Deleete_Transaction"
+));
+
+
+const Cashbook = lazy(() =>
+  import(
+    "./components/BalajiFinancial/Transactions/Cashbook/Cashbook"
+  )
+);
+
 
 
 
@@ -81,6 +92,9 @@ const routes = [
   // BussinessCashBook
   { path: "/BussinessCashBook_Main", element: BussinessCashBook },
   { path: "/Transactions/Quick_Cash_Book", element: Quick_Cash_Book },
+  { path: "/Transactions/Deleete_Transaction", element: Deleete_Transaction },
+  { path: "/Transactions/Deleete_Transaction", element: Deleete_Transaction },
+  { path: "/Transactions/Cashbook", element: Cashbook },
 ];
 
 export default routes;
