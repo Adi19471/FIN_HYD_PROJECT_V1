@@ -5,13 +5,14 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.balaji.finance.masterInfo.service.QuickCashBookService;
 import com.balaji.finance.pojo.QuickCashBookRow;
 import com.balaji.finance.pojo.QuickCashBookSaveRequest;
 
-import io.swagger.v3.oas.annotations.parameters.RequestBody;
+import jakarta.validation.Valid;
 
 @RestController
 public class QuickCashBookController {
@@ -29,19 +30,13 @@ public class QuickCashBookController {
 
 	@PostMapping("/saveQuickCashBookRecords")
 	public ResponseEntity<String> saveQuickCashBookRecords(
-			@RequestBody QuickCashBookSaveRequest quickCashBookSaveRequest) {
+			@Valid @RequestBody QuickCashBookSaveRequest quickCashBookSaveRequest) {
 
-		try {
-			
-			quickCashBookService.saveQuickCashBookRecords(quickCashBookSaveRequest);
-			return ResponseEntity.ok().body("Successfully Saved");
-		
-		} catch (Exception e) {
-			
-			e.printStackTrace();
-			return ResponseEntity.internalServerError().build();
-			
-		}
+		System.out.println(quickCashBookSaveRequest);
+
+		quickCashBookService.saveQuickCashBookRecords(quickCashBookSaveRequest);
+		return ResponseEntity.ok().body("Successfully Saved");
+
 	}
 
 }

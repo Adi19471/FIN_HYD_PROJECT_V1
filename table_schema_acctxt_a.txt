@@ -1,0 +1,297 @@
+
+=== TABLE LIST ===
+ - AccountMaster
+ - AssignedRoles
+ - BusinessMembers
+ - BusinessMembersBackUp
+ - BusinessMembersBK
+ - BusinessMembersJn
+ - CashBook
+ - CashBookBackUp
+ - CashBookBK
+ - Configs
+ - DBBackUp
+ - LoanCommitments
+ - LOANTYPES
+ - Log
+ - PersonalInfo
+ - PersonalInfoBackUp
+ - PersonalInfoJn
+ - RemindersList
+ - Roles
+ - Users
+
+=== FULL SCHEMA (All Tables) ===
+
+TABLE: AccountMaster
+--------------------
+  Type                       Type: VARCHAR          Size: 255
+  MasterCode                 Type: VARCHAR          Size: 255
+  Code                       Type: VARCHAR          Size: 255
+  Visibility                 Type: BIT              Size: 1
+  MasterIcon                 Type: VARCHAR          Size: 255
+  PersonType                 Type: VARCHAR          Size: 255
+  TransType                  Type: VARCHAR          Size: 255
+
+
+TABLE: AssignedRoles
+--------------------
+  USERNAME                   Type: VARCHAR          Size: 255
+  ROLEID                     Type: INTEGER          Size: 10
+  SYSDATE                    Type: DATETIME         Size: 19
+
+
+TABLE: BusinessMembers
+----------------------
+  ID                         Type: VARCHAR          Size: 255
+  CUSTOMERID                 Type: VARCHAR          Size: 255
+  BUSINESSID                 Type: VARCHAR          Size: 255
+  STARTDATE                  Type: DATETIME         Size: 19
+  ENDDATE                    Type: DATETIME         Size: 19
+  AMOUNT                     Type: DOUBLE           Size: 53
+  DURATION                   Type: DOUBLE           Size: 53
+  INTEREST                   Type: DOUBLE           Size: 53
+  PARTNERID                  Type: VARCHAR          Size: 255
+  INSTALLMENT                Type: DOUBLE           Size: 53
+  SECURITY                   Type: VARCHAR          Size: 255
+  GUARANTOR1                 Type: VARCHAR          Size: 255
+  GUARANTOR2                 Type: VARCHAR          Size: 255
+  GUARANTOR3                 Type: VARCHAR          Size: 255
+  STATUS                     Type: BIT              Size: 1
+  PAIDINSTALLMENTS           Type: INTEGER          Size: 10
+  PARTPRINCIPAL              Type: INTEGER          Size: 10
+  PARTINTEREST               Type: INTEGER          Size: 10
+  UNPAIDLATEFEE              Type: INTEGER          Size: 10
+  CHEQUEREMINDER             Type: BIT              Size: 1
+
+
+TABLE: BusinessMembersBackUp
+----------------------------
+  OBJECTID                   Type: COUNTER          Size: 10
+  ID                         Type: VARCHAR          Size: 255
+  CUSTOMERID                 Type: VARCHAR          Size: 255
+  BUSINESSID                 Type: VARCHAR          Size: 255
+  STARTDATE                  Type: DATETIME         Size: 19
+  ENDDATE                    Type: DATETIME         Size: 19
+  AMOUNT                     Type: DOUBLE           Size: 53
+  DURATION                   Type: DOUBLE           Size: 53
+  INTEREST                   Type: DOUBLE           Size: 53
+  PARTNERID                  Type: VARCHAR          Size: 255
+  INSTALLMENT                Type: DOUBLE           Size: 53
+  SECURITY                   Type: VARCHAR          Size: 255
+  GUARANTOR1                 Type: VARCHAR          Size: 255
+  GUARANTOR2                 Type: VARCHAR          Size: 255
+  GUARANTOR3                 Type: VARCHAR          Size: 255
+  STATUS                     Type: BIT              Size: 1
+
+
+TABLE: BusinessMembersBK
+------------------------
+  ID                         Type: VARCHAR          Size: 255
+  CUSTOMERID                 Type: VARCHAR          Size: 255
+  BUSINESSID                 Type: VARCHAR          Size: 255
+  STARTDATE                  Type: DATETIME         Size: 19
+  ENDDATE                    Type: DATETIME         Size: 19
+  AMOUNT                     Type: DOUBLE           Size: 53
+  DURATION                   Type: DOUBLE           Size: 53
+  INTEREST                   Type: DOUBLE           Size: 53
+  PARTNERID                  Type: VARCHAR          Size: 255
+  INSTALLMENT                Type: DOUBLE           Size: 53
+  SECURITY                   Type: VARCHAR          Size: 255
+  GUARANTOR1                 Type: VARCHAR          Size: 255
+  GUARANTOR2                 Type: VARCHAR          Size: 255
+  GUARANTOR3                 Type: VARCHAR          Size: 255
+  STATUS                     Type: BIT              Size: 1
+  PAIDINSTALLMENTS           Type: INTEGER          Size: 10
+  PARTPRINCIPAL              Type: INTEGER          Size: 10
+  PARTINTEREST               Type: INTEGER          Size: 10
+  ADVANCEMODE                Type: VARCHAR          Size: 255
+  UNPAIDLATEFEE              Type: INTEGER          Size: 10
+  UPDATEDDATE                Type: DATETIME         Size: 19
+  UPDATEDBY                  Type: VARCHAR          Size: 255
+  USERCOMMENTS               Type: VARCHAR          Size: 255
+  SYSTEMCOMMENTS             Type: VARCHAR          Size: 255
+  CHEQUEREMINDER             Type: BIT              Size: 1
+
+
+TABLE: BusinessMembersJn
+------------------------
+  ID                         Type: COUNTER          Size: 10
+  ACCOUNTNO                  Type: VARCHAR          Size: 255
+  FILE                       Type: LONGBINARY       Size: 1073741823
+
+
+TABLE: CashBook
+---------------
+  ID                         Type: DOUBLE           Size: 53
+  LineNo                     Type: DOUBLE           Size: 53
+  TRANSDate                  Type: DATETIME         Size: 19
+  SYSDATE                    Type: DATETIME         Size: 19
+  ACCOUNTNO                  Type: VARCHAR          Size: 255
+  TRANSTYPE                  Type: VARCHAR          Size: 255
+  CUSTOMERID                 Type: VARCHAR          Size: 255
+  PARTICULARS                Type: VARCHAR          Size: 255
+  CREDIT                     Type: DOUBLE           Size: 53
+  DEBIT                      Type: DOUBLE           Size: 53
+  USER                       Type: VARCHAR          Size: 255
+  RECEIPTREMARKS             Type: VARCHAR          Size: 255
+  BMREMARKS                  Type: VARCHAR          Size: 255
+
+
+TABLE: CashBookBackUp
+---------------------
+  BACKUPID                   Type: COUNTER          Size: 10
+  ID                         Type: DOUBLE           Size: 53
+  LineNo                     Type: DOUBLE           Size: 53
+  TRANSDate                  Type: DATETIME         Size: 19
+  SYSDATE                    Type: DATETIME         Size: 19
+  ACCOUNTNO                  Type: VARCHAR          Size: 255
+  TRANSTYPE                  Type: VARCHAR          Size: 255
+  CUSTOMERID                 Type: VARCHAR          Size: 255
+  PARTICULARS                Type: VARCHAR          Size: 255
+  CREDIT                     Type: DOUBLE           Size: 53
+  DEBIT                      Type: DOUBLE           Size: 53
+  USER                       Type: VARCHAR          Size: 255
+
+
+TABLE: CashBookBK
+-----------------
+  ID                         Type: DOUBLE           Size: 53
+  LineNo                     Type: DOUBLE           Size: 53
+  TRANSDate                  Type: DATETIME         Size: 19
+  SYSDATE                    Type: DATETIME         Size: 19
+  ACCOUNTNO                  Type: VARCHAR          Size: 255
+  TRANSTYPE                  Type: VARCHAR          Size: 255
+  CUSTOMERID                 Type: VARCHAR          Size: 255
+  PARTICULARS                Type: VARCHAR          Size: 255
+  CREDIT                     Type: DOUBLE           Size: 53
+  DEBIT                      Type: DOUBLE           Size: 53
+  USER                       Type: VARCHAR          Size: 255
+  RECEIPTREMARKS             Type: VARCHAR          Size: 255
+  BMREMARKS                  Type: VARCHAR          Size: 255
+  DELETEDDATE                Type: DATETIME         Size: 19
+  DELETEDBY                  Type: VARCHAR          Size: 255
+  COMMENTS                   Type: VARCHAR          Size: 255
+
+
+TABLE: Configs
+--------------
+  ID                         Type: COUNTER          Size: 10
+  Category                   Type: VARCHAR          Size: 255
+  Data                       Type: VARCHAR          Size: 255
+
+
+TABLE: DBBackUp
+---------------
+  ID                         Type: COUNTER          Size: 10
+  CreatedDate                Type: DATETIME         Size: 19
+  Status                     Type: VARCHAR          Size: 255
+
+
+TABLE: LoanCommitments
+----------------------
+  ID                         Type: COUNTER          Size: 10
+  ACCOUNTNO                  Type: VARCHAR          Size: 255
+  CDATE                      Type: DATETIME         Size: 19
+  COMMENTS                   Type: VARCHAR          Size: 255
+  CALLDATE                   Type: DATETIME         Size: 19
+  AMOUNT                     Type: INTEGER          Size: 10
+
+
+TABLE: LOANTYPES
+----------------
+  ID                         Type: VARCHAR          Size: 255
+  Description                Type: VARCHAR          Size: 255
+  Visibility                 Type: BIT              Size: 1
+  ImagePath                  Type: VARCHAR          Size: 255
+
+
+TABLE: Log
+----------
+  ID                         Type: COUNTER          Size: 10
+  UserName                   Type: VARCHAR          Size: 255
+  LoginDate                  Type: DATETIME         Size: 19
+
+
+TABLE: PersonalInfo
+-------------------
+  ID                         Type: VARCHAR          Size: 255
+  FIRSTNAME                  Type: VARCHAR          Size: 255
+  LASTNAME                   Type: VARCHAR          Size: 255
+  GENDER                     Type: VARCHAR          Size: 255
+  FATHERNAME                 Type: VARCHAR          Size: 255
+  ADDRESS                    Type: VARCHAR          Size: 255
+  MOBILE                     Type: VARCHAR          Size: 255
+  PHONE                      Type: VARCHAR          Size: 255
+  CATEGORY                   Type: VARCHAR          Size: 255
+  REFERENCE                  Type: VARCHAR          Size: 255
+  IDPROOF                    Type: VARCHAR          Size: 255
+  DISABLE                    Type: BIT              Size: 1
+  SHARES                     Type: DOUBLE           Size: 53
+  LOANLIMIT                  Type: DOUBLE           Size: 53
+  ADDRESS2                   Type: VARCHAR          Size: 255
+  MOBILE2                    Type: VARCHAR          Size: 255
+  PHONE2                     Type: VARCHAR          Size: 255
+  OLDID                      Type: VARCHAR          Size: 255
+  AGE                        Type: VARCHAR          Size: 255
+  OCCUPATION                 Type: VARCHAR          Size: 255
+  SPOUSE                     Type: VARCHAR          Size: 255
+  BUSSINESSEXEMPTION         Type: BIT              Size: 1
+  INTRONAME                  Type: VARCHAR          Size: 255
+
+
+TABLE: PersonalInfoBackUp
+-------------------------
+  OBJECTID                   Type: COUNTER          Size: 10
+  ID                         Type: VARCHAR          Size: 255
+  FIRSTNAME                  Type: VARCHAR          Size: 255
+  LASTNAME                   Type: VARCHAR          Size: 255
+  INTRONAME                  Type: VARCHAR          Size: 255
+  GENDER                     Type: VARCHAR          Size: 255
+  FATHERNAME                 Type: VARCHAR          Size: 255
+  ADDRESS                    Type: VARCHAR          Size: 255
+  MOBILE                     Type: VARCHAR          Size: 255
+  PHONE                      Type: VARCHAR          Size: 255
+  CATEGORY                   Type: VARCHAR          Size: 255
+  REFERENCE                  Type: VARCHAR          Size: 255
+  IMAGE                      Type: LONGBINARY       Size: 1073741823
+  IDPROOF                    Type: VARCHAR          Size: 255
+  CreatedDate                Type: DATETIME         Size: 19
+  DISABLE                    Type: BIT              Size: 1
+  SHARES                     Type: DOUBLE           Size: 53
+  LOANLIMIT                  Type: DOUBLE           Size: 53
+  ADDRESS2                   Type: VARCHAR          Size: 255
+  MOBILE2                    Type: VARCHAR          Size: 255
+  PHONE2                     Type: VARCHAR          Size: 255
+
+
+TABLE: PersonalInfoJn
+---------------------
+  CUSTOMERID                 Type: VARCHAR          Size: 255
+  IMAGE                      Type: LONGBINARY       Size: 1073741823
+
+
+TABLE: RemindersList
+--------------------
+  ID                         Type: COUNTER          Size: 10
+  DUEDATE                    Type: DATETIME         Size: 19
+  ACCOUNTNO                  Type: VARCHAR          Size: 255
+  NAME                       Type: VARCHAR          Size: 255
+  MOBILE                     Type: VARCHAR          Size: 255
+  STATUS                     Type: VARCHAR          Size: 255
+  AMOUNT                     Type: INTEGER          Size: 10
+
+
+TABLE: Roles
+------------
+  ID                         Type: COUNTER          Size: 10
+  MENU                       Type: VARCHAR          Size: 255
+  SUBMENU                    Type: VARCHAR          Size: 255
+  CELL                       Type: VARCHAR          Size: 255
+
+
+TABLE: Users
+------------
+  Name                       Type: VARCHAR          Size: 255
+  Password                   Type: VARCHAR          Size: 255
+  Role                       Type: VARCHAR          Size: 255
