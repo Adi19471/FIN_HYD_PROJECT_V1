@@ -51,9 +51,9 @@ public class CashBookController {
 	public ResponseEntity<List<CashBookDeletedViewPojo>> loadAllDayWiseDeletedTransactions(
 			@PathVariable String transactionDate) {
 
-		DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+		DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
 
-		LocalDateTime localDateTime = LocalDateTime.parse(transactionDate, formatter);
+		LocalDate localDateTime = LocalDate.parse(transactionDate, formatter);
 
 		List<CashBookDeletedViewPojo> allCashBookDetailsByTransactionDate = cashBookService
 				.loadAllDayWiseDeletedTransactions(localDateTime);

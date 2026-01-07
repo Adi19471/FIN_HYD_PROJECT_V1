@@ -32,7 +32,7 @@ const DeleteTransactions = () => {
   const [date, setDate] = useState('2026-01-07');
   const [showDeleted, setShowDeleted] = useState(false);
   const [search, setSearch] = useState('');
-  const [selected, setSelected] = useState([]); // Will store transactionId (numbers)
+  const [selected, setSelected] = useState([]); // array of transactionIds (numbers)
   const [comments, setComments] = useState('');
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
@@ -50,20 +50,28 @@ const DeleteTransactions = () => {
     [token]
   );
 
-  // Fetch transactions
+  // Fetch transactions based on showDeleted flag
   const fetchTransactions = async () => {
     if (!date) return;
-
     setLoading(true);
     setError('');
     setSuccess('');
+    setSelected([]); // Clear selection when switching views/date
+
     try {
-      const res = await axios.get(
-        `${API_BASE}/loadAllDayWiseTransactions/${date}`,
-        { headers }
-      );
-      // Ensure we always have an array
-      setTransactions(Array.isArray(res.data) ? res.data : []);
+      let endpoint;
+      if (showDeleted) {
+        endpoint = `${API_BASE}/loadAllDayWiseDeletedTransactions/${date}`;
+      } else {
+        endpoint = `${API_BASE}/loadAllDayWiseTransactions/${date}`;
+      }
+
+      const res = await axios.get(endpoint, { headers });
+      const data = res.data;
+
+      // Ensure we always set an array
+      const txList = Array.isArray(data) ? data : [];
+      setTransactions(txList);
     } catch (err) {
       setError('Failed to load transactions. Please try again.');
       console.error(err);
@@ -73,33 +81,29 @@ const DeleteTransactions = () => {
     }
   };
 
+  // Fetch on date change OR when showDeleted toggles
   useEffect(() => {
     fetchTransactions();
-  }, [date]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [date, showDeleted]);
 
-  // Client-side filtering
+  // Client-side search filter
   const filteredTransactions = transactions.filter((tx) => {
     const searchLower = search.toLowerCase();
-    const matchesSearch =
-      tx.name?.toLowerCase().includes(searchLower) ||
-      tx.transactionId?.toString().includes(search) ||
-      tx.accountNumber?.toLowerCase().includes(searchLower) ||
-      tx.transactionType?.toLowerCase().includes(searchLower) ||
-      tx.particulars?.toLowerCase().includes(searchLower);
-
-    // If backend doesn't send 'deleted' flag, assume all are active
-    // Or add it later when backend supports soft delete
-    const isDeleted = tx.deleted || false;
-    const matchesDeleted = showDeleted || !isDeleted;
-
-    return matchesSearch && matchesDeleted;
+    return (
+      (tx.name?.toLowerCase().includes(searchLower) ?? false) ||
+      (tx.transactionId?.toString().includes(search) ?? false) ||
+      (tx.accountNumber?.toLowerCase().includes(searchLower) ?? false) ||
+      (tx.transactionType?.toLowerCase().includes(searchLower) ?? false) ||
+      (tx.particulars?.toLowerCase().includes(searchLower) ?? false)
+    );
   });
 
-  // Selection handlers - using transactionId as unique key
+  // Selection handlers
   const handleSelectAll = (event) => {
     if (event.target.checked) {
       const newSelected = filteredTransactions
-        .filter((tx) => !(tx.deleted || false)) // not deleted
+        .filter((tx) => !tx.deleted) // Only allow selecting non-deleted
         .map((tx) => tx.transactionId);
       setSelected(newSelected);
     } else {
@@ -108,13 +112,11 @@ const DeleteTransactions = () => {
   };
 
   const handleSelect = (transactionId) => {
-    setSelected((prev) => {
-      if (prev.includes(transactionId)) {
-        return prev.filter((id) => id !== transactionId);
-      } else {
-        return [...prev, transactionId];
-      }
-    });
+    setSelected((prev) =>
+      prev.includes(transactionId)
+        ? prev.filter((id) => id !== transactionId)
+        : [...prev, transactionId]
+    );
   };
 
   const isSelected = (transactionId) => selected.includes(transactionId);
@@ -129,8 +131,7 @@ const DeleteTransactions = () => {
       setError('Comments are required for deletion');
       return;
     }
-
-    if (!window.confirm(`Delete ${selected.length} selected transaction(s)?`)) {
+    if (!window.confirm(`Permanently delete ${selected.length} transaction(s)?`)) {
       return;
     }
 
@@ -142,7 +143,7 @@ const DeleteTransactions = () => {
       await axios.post(
         `${API_BASE}/deleteCashBookRecords`,
         {
-          transactionId: selected, // Already numbers, no need to map again
+          transactionId: selected,
           comments: comments.trim(),
         },
         { headers }
@@ -151,7 +152,7 @@ const DeleteTransactions = () => {
       setSuccess(`Successfully deleted ${selected.length} transaction(s).`);
       setSelected([]);
       setComments('');
-      fetchTransactions(); // Refresh data
+      fetchTransactions(); // Refresh list
     } catch (err) {
       setError('Failed to delete transactions. Please try again.');
       console.error(err);
@@ -179,27 +180,6 @@ const DeleteTransactions = () => {
             sx={{ minWidth: 200 }}
           />
 
-          <Box sx={{ display: 'flex', gap: 2 }}>
-            <Button
-              variant="contained"
-              color="primary"
-              startIcon={<ViewIcon />}
-              onClick={fetchTransactions}
-              disabled={loading}
-            >
-              View
-            </Button>
-            <Button
-              variant="contained"
-              color="error"
-              startIcon={<DeleteIcon />}
-              onClick={handleDelete}
-              disabled={selected.length === 0 || loading}
-            >
-              Delete ({selected.length})
-            </Button>
-          </Box>
-
           <FormControlLabel
             control={
               <Checkbox
@@ -209,6 +189,28 @@ const DeleteTransactions = () => {
             }
             label="Show Deleted Transactions"
           />
+
+          <Button
+            variant="contained"
+            color="primary"
+            startIcon={<ViewIcon />}
+            onClick={fetchTransactions}
+            disabled={loading}
+          >
+            Refresh
+          </Button>
+
+          {!showDeleted && (
+            <Button
+              variant="contained"
+              color="error"
+              startIcon={<DeleteIcon />}
+              onClick={handleDelete}
+              disabled={selected.length === 0 || loading}
+            >
+              Delete ({selected.length})
+            </Button>
+          )}
         </Box>
 
         <Box sx={{ mt: 3, display: 'flex', flexDirection: 'column', gap: 2 }}>
@@ -227,17 +229,19 @@ const DeleteTransactions = () => {
             }}
           />
 
-          <TextField
-            fullWidth
-            label="Comments (Required for Deletion)"
-            multiline
-            rows={2}
-            value={comments}
-            onChange={(e) => setComments(e.target.value)}
-            placeholder="Enter reason for deletion..."
-            error={!!error && error.includes('Comments')}
-            helperText={error.includes('Comments') ? error : ''}
-          />
+          {!showDeleted && (
+            <TextField
+              fullWidth
+              label="Comments (Required for Deletion)"
+              multiline
+              rows={2}
+              value={comments}
+              onChange={(e) => setComments(e.target.value)}
+              placeholder="Enter reason for deletion..."
+              error={!!error && error.includes('Comments')}
+              helperText={error.includes('Comments') ? error : ''}
+            />
+          )}
         </Box>
       </Paper>
 
@@ -255,19 +259,21 @@ const DeleteTransactions = () => {
               <Table stickyHeader size="small">
                 <TableHead>
                   <TableRow>
-                    <TableCell padding="checkbox">
-                      <Checkbox
-                        indeterminate={
-                          selected.length > 0 &&
-                          selected.length < filteredTransactions.filter(t => !(t.deleted || false)).length
-                        }
-                        checked={
-                          filteredTransactions.length > 0 &&
-                          selected.length === filteredTransactions.filter(t => !(t.deleted || false)).length
-                        }
-                        onChange={handleSelectAll}
-                      />
-                    </TableCell>
+                    {!showDeleted && (
+                      <TableCell padding="checkbox">
+                        <Checkbox
+                          indeterminate={
+                            selected.length > 0 &&
+                            selected.length < filteredTransactions.filter((t) => !t.deleted).length
+                          }
+                          checked={
+                            filteredTransactions.length > 0 &&
+                            selected.length === filteredTransactions.filter((t) => !t.deleted).length
+                          }
+                          onChange={handleSelectAll}
+                        />
+                      </TableCell>
+                    )}
                     <TableCell><strong>Trans ID</strong></TableCell>
                     <TableCell><strong>Account No</strong></TableCell>
                     <TableCell><strong>Name</strong></TableCell>
@@ -276,6 +282,12 @@ const DeleteTransactions = () => {
                     <TableCell align="right"><strong>Credit</strong></TableCell>
                     <TableCell align="right"><strong>Debit</strong></TableCell>
                     <TableCell><strong>Status</strong></TableCell>
+                    {showDeleted && (
+                      <>
+                        <TableCell><strong>Deleted On</strong></TableCell>
+                        <TableCell><strong>Deleted By</strong></TableCell>
+                      </>
+                    )}
                   </TableRow>
                 </TableHead>
                 <TableBody>
@@ -283,25 +295,28 @@ const DeleteTransactions = () => {
                     .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
                     .map((row) => {
                       const isItemSelected = isSelected(row.transactionId);
+                      const isDeleted = !!row.deleted;
 
                       return (
                         <TableRow
                           key={row.transactionId}
-                          hover
+                          hover={!isDeleted}
                           selected={isItemSelected}
                           sx={{
-                            opacity: row.deleted ? 0.6 : 1,
-                            textDecoration: row.deleted ? 'line-through' : 'none',
-                            bgcolor: row.deleted ? 'action.disabledBackground' : 'inherit',
+                            opacity: isDeleted ? 0.6 : 1,
+                            textDecoration: isDeleted ? 'line-through' : 'none',
+                            bgcolor: isDeleted ? 'action.disabledBackground' : 'inherit',
                           }}
                         >
-                          <TableCell padding="checkbox">
-                            <Checkbox
-                              checked={isItemSelected}
-                              onChange={() => handleSelect(row.transactionId)}
-                              disabled={!!row.deleted || loading}
-                            />
-                          </TableCell>
+                          {!showDeleted && (
+                            <TableCell padding="checkbox">
+                              <Checkbox
+                                checked={isItemSelected}
+                                onChange={() => handleSelect(row.transactionId)}
+                                disabled={isDeleted || loading}
+                              />
+                            </TableCell>
+                          )}
                           <TableCell>{row.transactionId}</TableCell>
                           <TableCell>{row.accountNumber}</TableCell>
                           <TableCell>{row.name}</TableCell>
@@ -314,12 +329,18 @@ const DeleteTransactions = () => {
                             {row.debit > 0 ? row.debit.toLocaleString('en-IN') : '-'}
                           </TableCell>
                           <TableCell>
-                            {row.deleted ? (
-                              <Chip label="Deleted" color="error" size="small" />
-                            ) : (
-                              <Chip label="Active" color="success" size="small" />
-                            )}
+                            <Chip
+                              label={isDeleted ? 'Deleted' : 'Active'}
+                              color={isDeleted ? 'error' : 'success'}
+                              size="small"
+                            />
                           </TableCell>
+                          {showDeleted && (
+                            <>
+                              <TableCell>{row.deletedDate || '-'}</TableCell>
+                              <TableCell>{row.deletedByUser || '-'}</TableCell>
+                            </>
+                          )}
                         </TableRow>
                       );
                     })}
@@ -345,7 +366,9 @@ const DeleteTransactions = () => {
 
       {!loading && filteredTransactions.length === 0 && (
         <Alert severity="info" sx={{ mt: 3 }}>
-          No transactions found for the selected date.
+          {showDeleted
+            ? 'No deleted transactions found for the selected date.'
+            : 'No transactions found for the selected date.'}
         </Alert>
       )}
     </Box>

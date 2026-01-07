@@ -68,9 +68,9 @@ public class CashBookService {
 	}
 	
 	
-	public List<CashBookDeletedViewPojo> loadAllDayWiseDeletedTransactions(LocalDateTime transactionDate) {
+	public List<CashBookDeletedViewPojo> loadAllDayWiseDeletedTransactions(LocalDate transactionDate) {
 
-		List<CashBookBK> byTransDate = cashBookBkRepo.findByTransDate(transactionDate);
+		List<CashBookBK> byTransDate = cashBookBkRepo.findByTransactionDate(transactionDate);
 
 		List<CashBookDeletedViewPojo> cashBookDeleteViewPojoList = new ArrayList<CashBookDeletedViewPojo>();
 		DateTimeFormatter fmt = DateTimeFormatter.ofPattern("dd-MM-yyyy HH:mm:ss");
@@ -113,8 +113,6 @@ public class CashBookService {
 			if (byId.isPresent()) {
 				
 				CashBook cashBook = byId.get();
-				cashBookRepo.delete(cashBook);
-				
 				
 				String currentUser = SecurityContextHolder.getContext().getAuthentication().getName();
 
@@ -139,6 +137,10 @@ public class CashBookService {
 				cashBookBk.setDeletedDate(LocalDateTime.now());
 
 				cashBookBkRepo.save(cashBookBk);
+				
+				
+				cashBookRepo.delete(cashBook);
+				
 
 			} else {
 				errorIds.add(transactionId);

@@ -8,11 +8,10 @@ import java.time.LocalDateTime;
 public class CashBookBK {
 
 	@Id
-	@GeneratedValue(strategy = GenerationType.IDENTITY)
-	@Column(name = "ID")
+//	@Column(name = "ID")
 	private Double id; // Changed from Double to Long
 
-	@Column(name = "LineNo")
+	@Column(name = "LINE_NO")
 	private Integer lineNo;
 
 	@Column(name = "TRANSDate")
@@ -58,24 +57,16 @@ public class CashBookBK {
 	@Column(name = "COMMENTS", length = 255)
 	private String comments;
 
-	// Helper method to check if record is soft-deleted
-	@Transient // Not persisted in DB
-	public boolean isDeleted() {
-		return deletedDate != null;
-	}
-
-	// === Getters and Setters (All Fixed) ===
-
-	public Integer getLineNo() {
-		return lineNo;
-	}
-
 	public Double getId() {
 		return id;
 	}
 
 	public void setId(Double id) {
 		this.id = id;
+	}
+
+	public Integer getLineNo() {
+		return lineNo;
 	}
 
 	public void setLineNo(Integer lineNo) {
@@ -193,4 +184,9 @@ public class CashBookBK {
 	public void setComments(String comments) {
 		this.comments = comments;
 	}
+
+	
+
+
+	
 }
