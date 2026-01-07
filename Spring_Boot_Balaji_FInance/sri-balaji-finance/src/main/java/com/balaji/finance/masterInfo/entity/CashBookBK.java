@@ -4,12 +4,13 @@ import jakarta.persistence.*;
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "CashBookBK")
+@Table(name = "cashbookbk")
 public class CashBookBK {
 
 	@Id
+	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	@Column(name = "ID")
-	private Double id;
+	private Double id; // Changed from Double to Long
 
 	@Column(name = "LineNo")
 	private Integer lineNo;
@@ -20,16 +21,16 @@ public class CashBookBK {
 	@Column(name = "SYSDATE")
 	private LocalDateTime sysDate;
 
-	@Column(name = "ACCOUNTNO")
+	@Column(name = "ACCOUNTNO", length = 255)
 	private String accountNo;
 
-	@Column(name = "TRANSTYPE")
+	@Column(name = "TRANSTYPE", length = 255)
 	private String transType;
 
-	@Column(name = "CUSTOMERID")
+	@Column(name = "CUSTOMERID", length = 255)
 	private String customerId;
 
-	@Column(name = "PARTICULARS")
+	@Column(name = "PARTICULARS", length = 255)
 	private String particulars;
 
 	@Column(name = "CREDIT")
@@ -38,23 +39,36 @@ public class CashBookBK {
 	@Column(name = "DEBIT")
 	private Double debit;
 
-	@Column(name = "USER")
+	@Column(name = "USER", length = 255)
 	private String user;
 
-	@Column(name = "RECEIPTREMARKS")
+	@Column(name = "RECEIPTREMARKS", length = 255)
 	private String receiptRemarks;
 
-	@Column(name = "BMREMARKS")
+	@Column(name = "BMREMARKS", length = 255)
 	private String bmRemarks;
 
+	// Soft Delete Fields
 	@Column(name = "DELETEDDATE")
 	private LocalDateTime deletedDate;
 
-	@Column(name = "DELETEDBY")
+	@Column(name = "DELETEDBY", length = 255)
 	private String deletedBy;
 
-	@Column(name = "COMMENTS")
+	@Column(name = "COMMENTS", length = 255)
 	private String comments;
+
+	// Helper method to check if record is soft-deleted
+	@Transient // Not persisted in DB
+	public boolean isDeleted() {
+		return deletedDate != null;
+	}
+
+	// === Getters and Setters (All Fixed) ===
+
+	public Integer getLineNo() {
+		return lineNo;
+	}
 
 	public Double getId() {
 		return id;
@@ -62,10 +76,6 @@ public class CashBookBK {
 
 	public void setId(Double id) {
 		this.id = id;
-	}
-
-	public Integer getLineNo() {
-		return lineNo;
 	}
 
 	public void setLineNo(Integer lineNo) {
@@ -183,5 +193,4 @@ public class CashBookBK {
 	public void setComments(String comments) {
 		this.comments = comments;
 	}
-
 }

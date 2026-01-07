@@ -1,5 +1,6 @@
 package com.balaji.finance.masterInfo.service;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
@@ -35,9 +36,9 @@ public class CashBookService {
 	@Autowired
 	private PersonalInfoRepository personalInfoRepository;
 
-	public List<CashBookViewPojo> loadAllCashBookDetailsByTransactionDate(LocalDateTime transactionDate) {
+	public List<CashBookViewPojo> loadAllCashBookDetailsByTransactionDate(LocalDate transactionDate) {
 
-		List<CashBook> byTransDate = cashBookRepo.findByTransDate(transactionDate);
+		List<CashBook> byTransDate = cashBookRepo.findByTransactionDate(transactionDate);
 
 		List<CashBookViewPojo> cashBookViewPojoList = new ArrayList<CashBookViewPojo>();
 
@@ -154,9 +155,9 @@ public class CashBookService {
 	}
 	
 	
-	public DayWiseTransactionsSummary loadAllDayWiseTransactionsSummary(LocalDateTime transactionDate) {
+	public DayWiseTransactionsSummary loadAllDayWiseTransactionsSummary(LocalDate transactionDate) {
 
-		List<CashBook> byTransDate = cashBookRepo.findByTransDate(transactionDate);
+		List<CashBook> byTransDate = cashBookRepo.findByTransactionDate(transactionDate);
 
 		List<CashBookSumaryViewPojo> cashBookViewPojoList = new ArrayList<CashBookSumaryViewPojo>();
 

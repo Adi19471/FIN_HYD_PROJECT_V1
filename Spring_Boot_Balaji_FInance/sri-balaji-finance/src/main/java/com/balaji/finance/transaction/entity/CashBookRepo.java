@@ -24,14 +24,16 @@ public interface CashBookRepo extends JpaRepository<CashBook, Double> {
 	
 	
 	
-	public List<CashBook> findByTransDate(LocalDateTime transDate);
+	
+	@Query("SELECT c FROM CashBook c WHERE DATE(c.transDate) = :date")
+    List<CashBook> findByTransactionDate(@Param("date") LocalDate date);
 	
 	
 	@Query(value = """
 			SELECT COALESCE(SUM(DEBIT),0) - COALESCE(SUM(CREDIT),0)
 			FROM cashbook
-			WHERE TRANSDate < :todayDate
+			WHERE DATE(TRANSDate) < :todayDate
 			""", nativeQuery = true)
-	Double findOpeningBalanceForToday(@Param("todayDate") LocalDateTime todayDate);
+	Double findOpeningBalanceForToday(@Param("todayDate") LocalDate todayDate);
 
 }
