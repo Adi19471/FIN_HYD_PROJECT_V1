@@ -14,6 +14,7 @@ import org.springframework.web.bind.annotation.RestController;
 import com.balaji.finance.masterInfo.service.CashBookService;
 import com.balaji.finance.pojo.CashBookDeletedViewPojo;
 import com.balaji.finance.pojo.CashBookViewPojo;
+import com.balaji.finance.pojo.DayWiseTransactionsSummary;
 import com.balaji.finance.pojo.DeleteCashBookReq;
 
 import io.swagger.v3.oas.annotations.parameters.RequestBody;
@@ -58,6 +59,21 @@ public class CashBookController {
 				.loadAllDayWiseDeletedTransactions(localDateTime);
 
 		return ResponseEntity.ok().body(allCashBookDetailsByTransactionDate);
+	}
+	
+	
+	
+	@GetMapping("/loadAllDayWiseTransactionsSummary/{transactionDate}")
+	public ResponseEntity<DayWiseTransactionsSummary> loadAllDayWiseTransactionsSummary(@PathVariable String transactionDate) {
+
+		DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+
+		LocalDateTime localDateTime = LocalDateTime.parse(transactionDate, formatter);
+
+		DayWiseTransactionsSummary dayWiseTransactionsSummary = cashBookService
+				.loadAllDayWiseTransactionsSummary(localDateTime);
+
+		return ResponseEntity.ok().body(dayWiseTransactionsSummary);
 	}
 
 }

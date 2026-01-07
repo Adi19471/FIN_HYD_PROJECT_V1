@@ -15,7 +15,9 @@ import com.balaji.finance.masterInfo.entity.CashBookBK;
 import com.balaji.finance.masterInfo.entity.PersonalInfo;
 import com.balaji.finance.masterInfo.repo.PersonalInfoRepository;
 import com.balaji.finance.pojo.CashBookDeletedViewPojo;
+import com.balaji.finance.pojo.CashBookSumaryViewPojo;
 import com.balaji.finance.pojo.CashBookViewPojo;
+import com.balaji.finance.pojo.DayWiseTransactionsSummary;
 import com.balaji.finance.transaction.entity.CashBookBkRepo;
 import com.balaji.finance.transaction.entity.CashBookRepo;
 
@@ -151,5 +153,43 @@ public class CashBookService {
 
 	}
 	
+	
+	public DayWiseTransactionsSummary loadAllDayWiseTransactionsSummary(LocalDateTime transactionDate) {
+
+		List<CashBook> byTransDate = cashBookRepo.findByTransDate(transactionDate);
+
+		List<CashBookSumaryViewPojo> cashBookViewPojoList = new ArrayList<CashBookSumaryViewPojo>();
+
+		for (CashBook cashBook : byTransDate) {
+
+			PersonalInfo customer = null;
+			if (cashBook.getCustomerId() != null) {
+				Optional<PersonalInfo> byId = personalInfoRepository.findById(cashBook.getCustomerId());
+				customer = byId.get();
+			}
+
+			CashBookSumaryViewPojo cashBookViewPojo = new CashBookSumaryViewPojo();
+			cashBookViewPojo.setTransactionId(cashBook.getId());
+			cashBookViewPojo.setAccountNumber(cashBook.getAccountNo());
+			cashBookViewPojo.setName(customer != null ? customer.getId() + " - " + customer.getFirstname() : "");
+			cashBookViewPojo.setParticulars(cashBook.getParticulars());
+			cashBookViewPojo.setTransactionType(cashBook.getTransType());
+			cashBookViewPojo.setCredit(cashBook.getCredit());
+			cashBookViewPojo.setDebit(cashBook.getDebit());
+			cashBookViewPojo.setUser(cashBook.getUser());
+
+			cashBookViewPojoList.add(cashBookViewPojo);
+
+		}
+		
+		Double openingBalanceForToday = cashBookRepo.findOpeningBalanceForToday(transactionDate);
+		
+		DayWiseTransactionsSummary dayWiseTransactionsSummary = new DayWiseTransactionsSummary();
+		dayWiseTransactionsSummary.setCashBookSumaryViewPojoList(cashBookViewPojoList);
+		dayWiseTransactionsSummary.setOpeningBalance(openingBalanceForToday);
+
+		return dayWiseTransactionsSummary;
+
+	}
 
 }

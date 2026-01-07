@@ -1,5 +1,6 @@
 package com.balaji.finance.transaction.entity;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -24,5 +25,13 @@ public interface CashBookRepo extends JpaRepository<CashBook, Double> {
 	
 	
 	public List<CashBook> findByTransDate(LocalDateTime transDate);
+	
+	
+	@Query(value = """
+			SELECT COALESCE(SUM(DEBIT),0) - COALESCE(SUM(CREDIT),0)
+			FROM cashbook
+			WHERE TRANSDate < :todayDate
+			""", nativeQuery = true)
+	Double findOpeningBalanceForToday(@Param("todayDate") LocalDateTime todayDate);
 
 }
