@@ -67,6 +67,13 @@ const Cashbook = lazy(() =>
 
 
 
+const Daily_Book = lazy(() =>
+  import(
+    "./components/BalajiFinancial/Loans/DailBook/Daily_Book"
+  )
+);
+
+
 
 const routes = [
 
@@ -95,6 +102,10 @@ const routes = [
   { path: "/Transactions/Deleete_Transaction", element: Deleete_Transaction },
   { path: "/Transactions/Deleete_Transaction", element: Deleete_Transaction },
   { path: "/Transactions/Cashbook", element: Cashbook },
+
+
+  // Daily Book
+  { path: "/Loans/Daily_Book", element: Daily_Book },
 ];
 
 export default routes;

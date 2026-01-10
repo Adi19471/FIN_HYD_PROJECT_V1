@@ -14,12 +14,10 @@ import {
   MonetizationOn,
   AccountBalanceWallet,
   ReceiptLong,
-  DeleteForever,Paid,
+  DeleteForever,
+  Paid,
 } from "@mui/icons-material";
 
-
-
-import SidebarLinkGroup from "./SidebarLinkGroup";
 import { useThemeProvider } from "../utils/ThemeContext";
 import ThemeToggle from "../components/ThemeToggle";
 import "./Sidebar.css";
@@ -66,13 +64,13 @@ function Sidebar({ sidebarOpen, setSidebarOpen }) {
     return () => document.removeEventListener("keydown", keyHandler);
   }, [sidebarOpen, setSidebarOpen]);
 
-  // Persist sidebar expanded state in localStorage
+  // Persist sidebar expanded state
   useEffect(() => {
     localStorage.setItem("sidebar-expanded", sidebarExpanded);
     document.body.classList.toggle("sidebar-expanded", sidebarExpanded);
   }, [sidebarExpanded]);
 
-  // Auto-open relevant group when route changes
+  // Auto-open relevant group based on current route
   useEffect(() => {
     if (pathname === "/") {
       setOpenGroup(null);
@@ -92,8 +90,12 @@ function Sidebar({ sidebarOpen, setSidebarOpen }) {
       pathname.startsWith("/Transactions/")
     ) {
       setOpenGroup("transactions");
+    } else if (pathname.startsWith("/Loans/")) {
+      setOpenGroup("accounts"); // New: open Accounts group for Daily Book etc.
     } else if (
-      ["/login", "/signup", "/reset-password"].some((p) => pathname.startsWith(p))
+      ["/login", "/signup", "/reset-password"].some((p) =>
+        pathname.startsWith(p)
+      )
     ) {
       setOpenGroup("auth");
     }
@@ -101,7 +103,6 @@ function Sidebar({ sidebarOpen, setSidebarOpen }) {
 
   const handleGroupToggle = (groupName) => {
     setOpenGroup((prev) => (prev === groupName ? null : groupName));
-    // Auto-expand sidebar on mobile/small screens when opening a group
     if (!sidebarExpanded) setSidebarExpanded(true);
   };
 
@@ -124,7 +125,9 @@ function Sidebar({ sidebarOpen, setSidebarOpen }) {
           w-64 lg:w-20 lg:sidebar-expanded:w-64 2xl:!w-64 
           shrink-0 bg-white dark:bg-gray-950 border-r border-gray-200 dark:border-gray-800 
           transition-all duration-300 ease-in-out
-          ${sidebarOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"}`}
+          ${
+            sidebarOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"
+          }`}
       >
         {/* Header */}
         <div className="flex items-center justify-between h-16 px-4 border-b border-gray-200 dark:border-gray-800">
@@ -169,7 +172,9 @@ function Sidebar({ sidebarOpen, setSidebarOpen }) {
           {/* Master Info */}
           <div
             className={`flex items-center justify-between px-3 py-3 rounded-xl cursor-pointer transition-all duration-200 font-medium ${
-              openGroup === "master" ? "bg-gray-100 dark:bg-gray-800" : "hover:bg-gray-100 dark:hover:bg-gray-800"
+              openGroup === "master"
+                ? "bg-gray-100 dark:bg-gray-800"
+                : "hover:bg-gray-100 dark:hover:bg-gray-800"
             }`}
             onClick={() => handleGroupToggle("master")}
           >
@@ -224,7 +229,9 @@ function Sidebar({ sidebarOpen, setSidebarOpen }) {
           {/* Transactions */}
           <div
             className={`flex items-center justify-between px-3 py-3 rounded-xl cursor-pointer transition-all duration-200 font-medium ${
-              openGroup === "transactions" ? "bg-gray-100 dark:bg-gray-800" : "hover:bg-gray-100 dark:hover:bg-gray-800"
+              openGroup === "transactions"
+                ? "bg-gray-100 dark:bg-gray-800"
+                : "hover:bg-gray-100 dark:hover:bg-gray-800"
             }`}
             onClick={() => handleGroupToggle("transactions")}
           >
@@ -286,30 +293,73 @@ function Sidebar({ sidebarOpen, setSidebarOpen }) {
                   <span>Delete Transaction</span>
                 </NavLink>
               </li>
-
-
               <li>
-  <NavLink
-    to="/Transactions/cashbook"
-    className={({ isActive }) =>
-      `flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-all duration-200 ${
-        isActive
-          ? "bg-teal-50 text-teal-700 dark:bg-teal-950/50 dark:text-teal-300"
-          : "text-gray-600 hover:text-teal-600 dark:text-gray-400 dark:hover:text-teal-300"
-      }`
-    }
-  >
-    <AccountBalanceWallet className="w-4 h-4" />
-    <span>Cashbook</span>
-  </NavLink>
-</li>
+                <NavLink
+                  to="/Transactions/cashbook"
+                  className={({ isActive }) =>
+                    `flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-all duration-200 ${
+                      isActive
+                        ? "bg-teal-50 text-teal-700 dark:bg-teal-950/50 dark:text-teal-300"
+                        : "text-gray-600 hover:text-teal-600 dark:text-gray-400 dark:hover:text-teal-300"
+                    }`
+                  }
+                >
+                  <AccountBalanceWallet className="w-4 h-4" />
+                  <span>Cashbook</span>
+                </NavLink>
+              </li>
+            </ul>
+          )}
+
+          {/* NEW: Accounts Section */}
+          <div
+            className={`flex items-center justify-between px-3 py-3 rounded-xl cursor-pointer transition-all duration-200 font-medium ${
+              openGroup === "accounts"
+                ? "bg-gray-100 dark:bg-gray-800"
+                : "hover:bg-gray-100 dark:hover:bg-gray-800"
+            }`}
+            onClick={() => handleGroupToggle("accounts")}
+          >
+            <div className="flex items-center gap-3">
+              <AccountBalanceWallet className="w-5 h-5 text-gray-600 dark:text-gray-400" />
+              <span className="text-sm lg:opacity-0 lg:sidebar-expanded:opacity-100 2xl:opacity-100 transition-opacity duration-200">
+                Accounts
+              </span>
+            </div>
+            <ExpandMore
+              className={`w-5 h-5 transition-transform duration-300 ${
+                openGroup === "accounts" ? "rotate-180" : ""
+              }`}
+            />
+          </div>
+
+          {openGroup === "accounts" && (
+            <ul className="pl-11 mt-1 space-y-1">
+              <li>
+                <NavLink
+                  to="/Loans/Daily_Book"
+                  className={({ isActive }) =>
+                    `flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-all duration-200 ${
+                      isActive
+                        ? "bg-teal-50 text-teal-700 dark:bg-teal-950/50 dark:text-teal-300"
+                        : "text-gray-600 hover:text-teal-600 dark:text-gray-400 dark:hover:text-teal-300"
+                    }`
+                  }
+                >
+                  <AccountBalanceWallet className="w-4 h-4" />
+                  <span>Daily Book</span>
+                </NavLink>
+              </li>
+              {/* You can add more account-related links here in the future */}
             </ul>
           )}
 
           {/* Authentication */}
           <div
             className={`flex items-center justify-between px-3 py-3 rounded-xl cursor-pointer transition-all duration-200 font-medium ${
-              openGroup === "auth" ? "bg-gray-100 dark:bg-gray-800" : "hover:bg-gray-100 dark:hover:bg-gray-800"
+              openGroup === "auth"
+                ? "bg-gray-100 dark:bg-gray-800"
+                : "hover:bg-gray-100 dark:hover:bg-gray-800"
             }`}
             onClick={() => handleGroupToggle("auth")}
           >
