@@ -38,7 +38,7 @@ public class AccountMasterUsageController {
 		return ResponseEntity.ok().body(toBeReturnedList);
 	}
 
-	@GetMapping("/findTransactionTypeBy/{masterCode}")
+	@GetMapping("/findTransactionTypeBy")
 	public ResponseEntity<List<String>> findAllCodesByMasterCode(@RequestBody AccountUsage reuestBody) {
 
 		String transacTypeByMasterCodeAndCode = accountMasterService
