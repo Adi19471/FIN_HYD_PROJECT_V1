@@ -1,15 +1,11 @@
 package com.balaji.finance.masterInfo.service;
 
-import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import com.balaji.finance.masterInfo.entity.AccountMaster;
 import com.balaji.finance.masterInfo.repo.AccountMasterRepo;
-import com.balaji.finance.pojo.AccountMasterSaveReqPojo;
 
 @Service
 public class AccountMasterUsageService {
@@ -23,6 +19,10 @@ public class AccountMasterUsageService {
 
 	public List<String> findAllCodesByMasterCode(String masterCode) {
 		return accountMasterRepo.findAllCodesByMasterCode(masterCode);
+	}
+
+	public String findTransacTypeByMasterCodeAndCode(String masterCode, String code) {
+		return accountMasterRepo.findTransacTypeByMasterCodeAndCode(masterCode, code);
 	}
 
 }

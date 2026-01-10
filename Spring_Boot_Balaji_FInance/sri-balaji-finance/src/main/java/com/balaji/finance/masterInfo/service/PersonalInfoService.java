@@ -334,7 +334,7 @@ public class PersonalInfoService {
 	public List<PersonalInfoAutoCompletePojo> personInfoAutoCompleteByCodeAndMasterCode(String keyword,
 			String masterCode, String code) {
 
-		String personTypes = accountMasterRepo.findByMasterCodeAndCode(masterCode, code);
+		String personTypes = accountMasterRepo.findPersonTypeByMasterCodeAndCode(masterCode, code);
 		
 		List<String> personTypesList = new ArrayList<String>();
 

@@ -10,19 +10,22 @@ import com.balaji.finance.masterInfo.entity.AccountMaster;
 
 public interface AccountMasterRepo extends JpaRepository<AccountMaster, Long> {
 
-	
 	@Query("SELECT DISTINCT a.masterCode FROM AccountMaster a where a.visibility=:visibility")
 	List<String> findAllMasterCodes(@Param("visibility") boolean visibility);
 
-	
-	
 	@Query("""
 			SELECT DISTINCT a.code FROM AccountMaster a where a.masterCode=:masterCode
 			""")
 	List<String> findAllCodesByMasterCode(@Param("masterCode") String masterCode);
 
-	
-	
-	String findByMasterCodeAndCode(String masterCode, String code);
+	@Query("""
+			SELECT DISTINCT a.transType FROM AccountMaster a where a.masterCode=:masterCode and a.code=:code
+			""")
+	String findTransacTypeByMasterCodeAndCode(@Param("masterCode") String masterCode, @Param("code") String code);
+
+	@Query("""
+			SELECT DISTINCT a.personType FROM AccountMaster a where a.masterCode=:masterCode and a.code=:code
+			""")
+	String findPersonTypeByMasterCodeAndCode(@Param("masterCode") String masterCode, @Param("code") String code);
 
 }

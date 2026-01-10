@@ -1,6 +1,6 @@
 package com.balaji.finance.pojo;
 
-public class PersonalInfoAutocompleteReq {
+public class AccountUsage {
 
 	private String masterCode;
 	private String code;
