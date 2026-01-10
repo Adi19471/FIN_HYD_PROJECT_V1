@@ -3,32 +3,33 @@ package com.balaji.finance.masterInfo.entity;
 import jakarta.persistence.*;
 
 @Entity
-@Table(name = "AccountMaster")
+@Table(name = "accountmaster")
 public class AccountMaster {
 
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
+	@Column(name = "ID")
 	private Long id;
 
-	@Column(name = "Type", nullable = false)
+	@Column(name = "TYPE")
 	private String type;
 
-	@Column(name = "MasterCode", nullable = false)
+	@Column(name = "MASTER_CODE")
 	private String masterCode;
 
-	@Column(name = "Code", nullable = false)
+	@Column(name = "code")
 	private String code;
 
-	@Column(name = "Visibility")
+	@Column(name = "VISIBILITY")
 	private Boolean visibility;
 
-	@Column(name = "MasterIcon")
+	@Column(name = "MASTER_ICON")
 	private String masterIcon;
 
-	@Column(name = "PersonType")
+	@Column(name = "PERSON_TYPE")
 	private String personType;
 
-	@Column(name = "TransType")
+	@Column(name = "TRANS_TYPE")
 	private String transType;
 
 	public AccountMaster() {
@@ -97,6 +98,5 @@ public class AccountMaster {
 	public void setTransType(String transType) {
 		this.transType = transType;
 	}
-	
-	
+
 }

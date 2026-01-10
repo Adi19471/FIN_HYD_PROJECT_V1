@@ -7,13 +7,13 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.balaji.finance.masterInfo.service.AccountMasterSetUpService;
 import com.balaji.finance.pojo.AccountMasterSaveReqPojo;
 
-import io.swagger.v3.oas.annotations.parameters.RequestBody;
 
 @RestController
 @RequestMapping("/account-master-setup")
@@ -51,6 +51,8 @@ public class AccountMasterSetUpController {
 
 	@PostMapping("/saveAccountMaster")
 	private ResponseEntity<String> saveAccountMaster(@RequestBody AccountMasterSaveReqPojo accountMasterSaveReqPojo) {
+		
+		System.err.println(accountMasterSaveReqPojo);
 		
 		accountMasterService.saveAccountMaster(accountMasterSaveReqPojo);
 

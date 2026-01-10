@@ -1,5 +1,4 @@
-// src/pages/AccountMasterSetup/Account_Master_Setup.jsx
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from "react";
 import {
   Box,
   Button,
@@ -13,266 +12,182 @@ import {
   Switch,
   Typography,
   Paper,
-  Chip,
   Tooltip,
   Grid,
-  Card,
-  CardMedia,
-  CardContent,
-  CircularProgress,MenuItem 
-} from '@mui/material';
+  MenuItem,
+  CircularProgress,
+  Select,
+  Checkbox,
+  ListItemText,
+  Chip,
+  InputLabel,
+  FormControl,
+} from "@mui/material";
+
 import {
   Add as AddIcon,
   Edit as EditIcon,
   Delete as DeleteIcon,
-  Visibility as VisibilityIcon,
-  VisibilityOff as VisibilityOffIcon,
-  CloudUpload as UploadIcon,
-} from '@mui/icons-material';
-import { DataGrid, GridToolbar } from '@mui/x-data-grid';
-import axios from 'axios';
-import { toast } from 'react-toastify';
+  Save as SaveIcon,
+  Close as CloseIcon,
+} from "@mui/icons-material";
 
-import { API_BASE } from 'lib/config';
-import { getSession } from 'src/utils/session';
+import { DataGrid, GridToolbar } from "@mui/x-data-grid";
+import axios from "axios";
+import { toast } from "react-toastify";
+
+import { API_BASE } from "lib/config";
+import { getSession } from "src/utils/session";
+
+/* ---------------- CONSTANTS ---------------- */
+const PERSON_TYPES = ["CUSTOMER", "PARTNER", "EMPLOYEE", "VENDOR"];
+const TRANS_TYPES = ["CREDIT", "DEBIT"];
 
 const AccountMasterSetup = () => {
-  const [rows, setRows] = useState([]);
+  const [accounts, setAccounts] = useState([]);
   const [loading, setLoading] = useState(false);
   const [openDialog, setOpenDialog] = useState(false);
-  const [isEditMode, setIsEditMode] = useState(false);
-  const [uploading, setUploading] = useState(false);
+  const [isEdit, setIsEdit] = useState(false);
 
-  const [currentItem, setCurrentItem] = useState({
-    id: null,
-    type: '',
-    masterCode: '',
-    code: '',
+  const [form, setForm] = useState({
+    id: 0,
+    type: "",
+    masterCode: "",
+    code: "",
     visibility: true,
-    masterIcon: '', // will store relative path e.g. /uploads/icons/xxx.png
-    personType: '',
-    transType: '',
+    masterIcon: "",
+    personType: [],
+    transType: [],
   });
 
-  const [previewImage, setPreviewImage] = useState(null); // for preview in form
+  /* ---------------- HEADERS ---------------- */
+  const getHeaders = () => ({
+    headers: {
+      Authorization: `Bearer ${
+        getSession()?.token || getSession("token") || ""
+      }`,
+      "Content-Type": "application/json",
+    },
+  });
 
-  const token = getSession('token') || '';
-  const headers = {
-    Authorization: `Bearer ${token}`,
-    'Content-Type': 'application/json',
-  };
-
-  // Fetch all records
-  const fetchAccountMasters = async () => {
+  /* ---------------- FETCH DATA ---------------- */
+  const fetchData = async () => {
+    setLoading(true);
     try {
-      setLoading(true);
-      // Assuming you have a GET endpoint for list
-      const response = await axios.get(`${API_BASE}/api/account-master-setup/list`, { headers });
-      setRows(response.data || []);
-    } catch (error) {
-      console.error(error);
-      toast.error('Failed to load account masters');
+      const res = await axios.get(
+        `${API_BASE}/account-master-setup/findAll`,
+        getHeaders()
+      );
+      setAccounts(res.data || []);
+    } catch {
+      toast.error("Failed to load account masters");
     } finally {
       setLoading(false);
     }
   };
 
   useEffect(() => {
-    fetchAccountMasters();
+    fetchData();
   }, []);
 
-  const handleOpenDialog = (item = null) => {
-    if (item) {
-      setIsEditMode(true);
-      setCurrentItem(item);
-      setPreviewImage(item.masterIcon ? `${API_BASE}${item.masterIcon}` : null);
-    } else {
-      setIsEditMode(false);
-      setCurrentItem({
-        id: null,
-        type: '',
-        masterCode: '',
-        code: '',
-        visibility: true,
-        masterIcon: '',
-        personType: '',
-        transType: '',
+  /* ---------------- OPEN / CLOSE ---------------- */
+  const handleOpen = (row = null) => {
+    if (row) {
+      setIsEdit(true);
+      setForm({
+        ...row,
+        personType: row.personType?.split(",") || [],
+        transType: row.transType?.split(",") || [],
       });
-      setPreviewImage(null);
+    } else {
+      setIsEdit(false);
+      setForm({
+        id: 0,
+        type: "",
+        masterCode: "",
+        code: "",
+        visibility: true,
+        masterIcon: "",
+        personType: [],
+        transType: [],
+      });
     }
     setOpenDialog(true);
   };
 
-  const handleCloseDialog = () => {
-    setOpenDialog(false);
-    setIsEditMode(false);
-    setPreviewImage(null);
+  const handleClose = () => setOpenDialog(false);
+
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setForm((p) => ({ ...p, [name]: value }));
   };
 
-  const handleInputChange = (e) => {
-    const { name, value, checked, type } = e.target;
-    setCurrentItem((prev) => ({
-      ...prev,
-      [name]: type === 'checkbox' ? checked : value,
-    }));
-  };
+  /* ---------------- SAVE ---------------- */
+  const handleSubmit = async () => {
+    if (!form.type || !form.masterCode || !form.code) {
+      toast.warn("Type, Master Code and Code are required");
+      return;
+    }
 
-  // Handle image selection + preview
-  const handleImageChange = (e) => {
-    const file = e.target.files[0];
-    if (!file) return;
-
-    // Show preview
-    const reader = new FileReader();
-    reader.onloadend = () => {
-      setPreviewImage(reader.result);
+    const payload = {
+      ...form,
+      personType: form.personType.join(","),
+      transType: form.transType.join(","),
     };
-    reader.readAsDataURL(file);
 
-    // Store file for upload
-    setCurrentItem((prev) => ({ ...prev, iconFile: file }));
-  };
-
-  // Upload icon and get path
-  const uploadIcon = async (file) => {
-    if (!file) return null;
-
-    setUploading(true);
     try {
-      const formData = new FormData();
-      formData.append('icon', file);
+      const url = isEdit
+        ? "/account-master-setup/UpdateAccountMaster"
+        : "/account-master-setup/saveAccountMaster";
 
-      const res = await axios.post(
-        `${API_BASE}/api/account-master/upload-icon`,
-        formData,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-            'Content-Type': 'multipart/form-data',
-          },
-        }
-      );
-
-      // Backend should return { path: "/uploads/icons/xxx.png" }
-      return res.data.path;
-    } catch (err) {
-      console.error('Icon upload failed:', err);
-      toast.error('Failed to upload icon');
-      return null;
-    } finally {
-      setUploading(false);
+      await axios.post(`${API_BASE}${url}`, payload, getHeaders());
+      toast.success(isEdit ? "Updated successfully" : "Created successfully");
+      handleClose();
+      fetchData();
+    } catch {
+      toast.error("Save failed");
     }
   };
 
-  const handleSave = async () => {
-    try {
-      let iconPath = currentItem.masterIcon;
-
-      // Upload new icon if selected
-      if (currentItem.iconFile) {
-        const uploadedPath = await uploadIcon(currentItem.iconFile);
-        if (uploadedPath) {
-          iconPath = uploadedPath;
-        } else {
-          throw new Error('Icon upload failed');
-        }
-      }
-
-      const payload = {
-        ...currentItem,
-        masterIcon: iconPath,
-      };
-      delete payload.iconFile; // cleanup
-
-      if (isEditMode) {
-        await axios.post(
-          `${API_BASE}/api/account-master/UpdateAccountMaster`,
-          payload,
-          { headers }
-        );
-        toast.success('Account Master updated successfully');
-      } else {
-        await axios.post(
-          `${API_BASE}/api/account-master/saveAccountMaster`,
-          payload,
-          { headers }
-        );
-        toast.success('Account Master created successfully');
-      }
-
-      handleCloseDialog();
-      fetchAccountMasters();
-    } catch (error) {
-      console.error(error);
-      toast.error(error.response?.data?.message || 'Failed to save');
-    }
-  };
-
+  /* ---------------- DELETE ---------------- */
   const handleDelete = async (id) => {
-    if (!window.confirm('Are you sure you want to delete this record?')) return;
-
+    if (!window.confirm("Delete this record?")) return;
     try {
-      await axios.get(`${API_BASE}/api/account-master/deleteAccountMasterById/${id}`, { headers });
-      toast.success('Deleted successfully');
-      fetchAccountMasters();
-    } catch (err) {
-      toast.error('Failed to delete');
+      await axios.get(
+        `${API_BASE}/account-master-setup/deleteAccountMasterById/${id}`,
+        getHeaders()
+      );
+      toast.success("Deleted successfully");
+      fetchData();
+    } catch {
+      toast.error("Delete failed");
     }
   };
 
+  /* ---------------- GRID ---------------- */
   const columns = [
-    { field: 'id', headerName: 'ID', width: 70 },
-    { field: 'type', headerName: 'Type', width: 130 },
-    { field: 'masterCode', headerName: 'Master Code', width: 160 },
-    { field: 'code', headerName: 'Code/Name', flex: 1, minWidth: 180 },
+    { field: "id", headerName: "ID", width: 70, align: "center", headerAlign: "center" },
+    { field: "type", headerName: "Type", flex: 1 },
+    { field: "masterCode", headerName: "Master Code", width: 150 },
+    { field: "code", headerName: "Code", width: 120 },
+    { field: "personType", headerName: "Person Type", width: 220 },
+    { field: "transType", headerName: "Transaction", width: 160 },
     {
-      field: 'masterIcon',
-      headerName: 'Icon',
-      width: 100,
-      renderCell: (params) =>
-        params.value ? (
-          <img
-            src={`${API_BASE}${params.value}`}
-            alt="icon"
-            style={{ width: 36, height: 36, objectFit: 'contain', borderRadius: 4 }}
-          />
-        ) : (
-          '-'
-        ),
-    },
-    {
-      field: 'visibility',
-      headerName: 'Visible',
+      field: "visibility",
+      headerName: "Visible",
       width: 90,
-      renderCell: (params) =>
-        params.value ? <VisibilityIcon color="success" /> : <VisibilityOffIcon color="error" />,
+      align: "center",
+      headerAlign: "center",
+      renderCell: ({ value }) => (value ? "Yes" : "No"),
     },
     {
-      field: 'personType',
-      headerName: 'Person Types',
-      width: 220,
-      renderCell: (params) => (
-        <Box sx={{ display: 'flex', gap: 0.5, flexWrap: 'wrap' }}>
-          {params.value?.split(',').map((t, i) => (
-            <Chip key={i} label={t.trim()} size="small" color="primary" variant="outlined" />
-          ))}
-        </Box>
-      ),
-    },
-    {
-      field: 'transType',
-      headerName: 'Trans Type',
-      width: 130,
-    },
-    {
-      field: 'actions',
-      headerName: 'Actions',
-      width: 140,
-      sortable: false,
+      field: "actions",
+      headerName: "Actions",
+      width: 120,
       renderCell: ({ row }) => (
         <>
           <Tooltip title="Edit">
-            <IconButton color="primary" onClick={() => handleOpenDialog(row)}>
+            <IconButton onClick={() => handleOpen(row)}>
               <EditIcon />
             </IconButton>
           </Tooltip>
@@ -286,185 +201,141 @@ const AccountMasterSetup = () => {
     },
   ];
 
+  /* ---------------- UI ---------------- */
   return (
-    <Box sx={{ p: 3 }}>
-      <Paper elevation={3} sx={{ p: 3 }}>
-        <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 3 }}>
-          <Typography variant="h5" fontWeight="bold">
-            Account Master Setup
-          </Typography>
-          <Button variant="contained" startIcon={<AddIcon />} onClick={() => handleOpenDialog()}>
+    <Box p={3}>
+      <Paper sx={{ p: 2, mb: 2 }}>
+        <Box display="flex" justifyContent="space-between">
+          <Typography variant="h5">Account Master Setup</Typography>
+          <Button startIcon={<AddIcon />} variant="contained" onClick={() => handleOpen()}>
             Add New
           </Button>
         </Box>
-
-        <div style={{ height: 600, width: '100%' }}>
-          <DataGrid
-            rows={rows}
-            columns={columns}
-            loading={loading}
-            pageSizeOptions={[10, 25, 50]}
-            initialState={{ pagination: { paginationModel: { pageSize: 15 } } }}
-            slots={{ toolbar: GridToolbar }}
-            slotProps={{
-              toolbar: { showQuickFilter: true, quickFilterProps: { debounceMs: 500 } },
-            }}
-          />
-        </div>
       </Paper>
 
-      {/* Create / Edit Dialog */}
-      <Dialog open={openDialog} onClose={handleCloseDialog} maxWidth="md" fullWidth>
-        <DialogTitle>{isEditMode ? 'Edit Account Master' : 'Create Account Master'}</DialogTitle>
+      <Paper sx={{ height: 600 }}>
+        {loading ? (
+          <Box height="100%" display="flex" justifyContent="center" alignItems="center">
+            <CircularProgress />
+          </Box>
+        ) : (
+          <DataGrid
+            rows={accounts}
+            columns={columns}
+            getRowId={(r) => r.id}
+            slots={{ toolbar: GridToolbar }}
+          />
+        )}
+      </Paper>
+
+      {/* ---------------- DIALOG ---------------- */}
+      <Dialog open={openDialog} onClose={handleClose} maxWidth="md" fullWidth>
+        <DialogTitle sx={{ pr: 5 }}>
+          {isEdit ? "Edit Account Master" : "Create Account Master"}
+          <IconButton
+            onClick={handleClose}
+            sx={{ position: "absolute", right: 8, top: 8 }}
+          >
+            <CloseIcon />
+          </IconButton>
+        </DialogTitle>
 
         <DialogContent dividers>
-          <Grid container spacing={3}>
-            {/* Left column - main fields */}
-            <Grid item xs={12} md={7}>
-              <Box sx={{ display: 'grid', gap: 2.5 }}>
-                <TextField
-                  select
-                  label="Type"
-                  name="type"
-                  value={currentItem.type}
-                  onChange={handleInputChange}
-                  fullWidth
-                  required
-                >
-                  {['ASSETS', 'LIABILITIES', 'EXPENSES', 'REVENUES'].map((t) => (
-                    <MenuItem key={t} value={t}>
-                      {t}
-                    </MenuItem>
-                  ))}
-                </TextField>
-
-                <TextField
-                  label="Master Code"
-                  name="masterCode"
-                  value={currentItem.masterCode}
-                  onChange={handleInputChange}
-                  fullWidth
-                  required
-                />
-
-                <TextField
-                  label="Code / Name"
-                  name="code"
-                  value={currentItem.code}
-                  onChange={handleInputChange}
-                  fullWidth
-                  required
-                />
-
-                <TextField
-                  label="Person Types (comma separated)"
-                  name="personType"
-                  value={currentItem.personType}
-                  onChange={handleInputChange}
-                  fullWidth
-                  placeholder="Employee,Vendor,Customer,Partner"
-                />
-
-                <TextField
-                  select
-                  label="Transaction Type"
-                  name="transType"
-                  value={currentItem.transType}
-                  onChange={handleInputChange}
-                  fullWidth
-                >
-                  <MenuItem value="DEBIT">DEBIT</MenuItem>
-                  <MenuItem value="CREDIT">CREDIT</MenuItem>
-                  <MenuItem value="BOTH">BOTH</MenuItem>
-                </TextField>
-
-                <FormControlLabel
-                  control={
-                    <Switch
-                      checked={currentItem.visibility}
-                      onChange={handleInputChange}
-                      name="visibility"
-                    />
-                  }
-                  label="Visible in Application"
-                />
-              </Box>
+          <Grid container spacing={2}>
+            <Grid item xs={12} sm={6}>
+              <TextField fullWidth label="Type" name="type" value={form.type} onChange={handleChange} />
             </Grid>
 
-            {/* Right column - Icon upload & preview */}
-            <Grid item xs={12} md={5}>
-              <Typography variant="subtitle1" gutterBottom>
-                Master Icon
-              </Typography>
+            <Grid item xs={12} sm={6}>
+              <TextField fullWidth label="Master Code" name="masterCode" value={form.masterCode} onChange={handleChange} />
+            </Grid>
 
-              <Box sx={{ textAlign: 'center', mb: 2 }}>
-                {previewImage ? (
-                  <Card variant="outlined">
-                    <CardMedia
-                      component="img"
-                      height="140"
-                      image={previewImage}
-                      alt="Icon preview"
-                      sx={{ objectFit: 'contain', p: 2 }}
-                    />
-                    <CardContent>
-                      <Typography variant="caption" color="text.secondary">
-                        Current / Selected Icon
-                      </Typography>
-                    </CardContent>
-                  </Card>
-                ) : (
-                  <Box
-                    sx={{
-                      height: 140,
-                      border: '2px dashed #ccc',
-                      borderRadius: 2,
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      bgcolor: 'action.hover',
-                    }}
-                  >
-                    <Typography color="text.secondary">No icon selected</Typography>
-                  </Box>
-                )}
-              </Box>
+            <Grid item xs={12} sm={6}>
+              <TextField fullWidth label="Code" name="code" value={form.code} onChange={handleChange} />
+            </Grid>
 
-              <Button
-                component="label"
-                variant="outlined"
-                startIcon={uploading ? <CircularProgress size={20} /> : <UploadIcon />}
-                disabled={uploading}
-                fullWidth
-              >
-                {uploading ? 'Uploading...' : 'Upload Icon'}
-                <input
-                  type="file"
-                  hidden
-                  accept="image/png,image/jpeg,image/svg+xml"
-                  onChange={handleImageChange}
-                />
-              </Button>
-              <Typography variant="caption" color="text.secondary" sx={{ mt: 1, display: 'block' }}>
-                Recommended: 64×64 or 128×128 px PNG / SVG
-              </Typography>
+            {/* PERSON TYPE */}
+            <Grid item xs={12} sm={6}>
+              <FormControl fullWidth>
+                <InputLabel>Person Type</InputLabel>
+                <Select
+                  multiple
+                  value={form.personType}
+                  label="Person Type"
+                  onChange={(e) =>
+                    setForm((p) => ({ ...p, personType: e.target.value }))
+                  }
+                  renderValue={(selected) => (
+                    <Box sx={{ display: "flex", flexWrap: "wrap", gap: 0.5 }}>
+                      {selected.map((v) => (
+                        <Chip key={v} label={v} size="small" />
+                      ))}
+                    </Box>
+                  )}
+                >
+                  {PERSON_TYPES.map((p) => (
+                    <MenuItem key={p} value={p}>
+                      <Checkbox checked={form.personType.includes(p)} />
+                      <ListItemText primary={p} />
+                    </MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
+            </Grid>
+
+            {/* TRANSACTION TYPE */}
+            <Grid item xs={12} sm={6}>
+              <FormControl fullWidth>
+                <InputLabel>Transaction Type</InputLabel>
+                <Select
+                  multiple
+                  value={form.transType}
+                  label="Transaction Type"
+                  onChange={(e) =>
+                    setForm((p) => ({ ...p, transType: e.target.value }))
+                  }
+                  renderValue={(selected) => (
+                    <Box sx={{ display: "flex", flexWrap: "wrap", gap: 0.5 }}>
+                      {selected.map((v) => (
+                        <Chip key={v} label={v} size="small" color="primary" />
+                      ))}
+                    </Box>
+                  )}
+                >
+                  {TRANS_TYPES.map((t) => (
+                    <MenuItem key={t} value={t}>
+                      <Checkbox checked={form.transType.includes(t)} />
+                      <ListItemText primary={t} />
+                    </MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
+            </Grid>
+
+            <Grid item xs={12} sm={6}>
+              <TextField fullWidth label="Master Icon" name="masterIcon" value={form.masterIcon} onChange={handleChange} />
+            </Grid>
+
+            <Grid item xs={12}>
+              <FormControlLabel
+                control={
+                  <Switch
+                    checked={form.visibility}
+                    onChange={(e) =>
+                      setForm((p) => ({ ...p, visibility: e.target.checked }))
+                    }
+                  />
+                }
+                label="Visible"
+              />
             </Grid>
           </Grid>
         </DialogContent>
 
         <DialogActions>
-          <Button onClick={handleCloseDialog}>Cancel</Button>
-          <Button
-            variant="contained"
-            onClick={handleSave}
-            disabled={
-              uploading ||
-              !currentItem.type ||
-              !currentItem.masterCode ||
-              !currentItem.code
-            }
-          >
-            {isEditMode ? 'Update' : 'Create'}
+          <Button onClick={handleClose}>Cancel</Button>
+          <Button startIcon={<SaveIcon />} variant="contained" onClick={handleSubmit}>
+            {isEdit ? "Update" : "Save"}
           </Button>
         </DialogActions>
       </Dialog>

@@ -75,4 +75,12 @@ public class AccountMasterSaveReqPojo {
 		this.transType = transType;
 	}
 
+	@Override
+	public String toString() {
+		return "AccountMasterSaveReqPojo [id=" + id + ", type=" + type + ", masterCode=" + masterCode + ", code=" + code
+				+ ", visibility=" + visibility + ", masterIcon=" + masterIcon + ", personType=" + personType
+				+ ", transType=" + transType + "]";
+	}
+
+	
 }
