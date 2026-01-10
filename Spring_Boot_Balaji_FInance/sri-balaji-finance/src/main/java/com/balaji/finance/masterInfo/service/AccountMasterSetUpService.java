@@ -1,5 +1,7 @@
 package com.balaji.finance.masterInfo.service;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -38,6 +40,30 @@ public class AccountMasterSetUpService {
 		}
 
 		return null;
+	}
+	
+	public List<AccountMasterSaveReqPojo> findAll() {
+
+		List<AccountMaster> totalList = accountMasterRepo.findAll();
+
+		List<AccountMasterSaveReqPojo> toBeReturnedList = new ArrayList<AccountMasterSaveReqPojo>();
+
+		for (AccountMaster accountMaster : totalList) {
+
+			AccountMasterSaveReqPojo accountMasterSaveReqPojo = new AccountMasterSaveReqPojo();
+			accountMasterSaveReqPojo.setId(accountMaster.getId());
+			accountMasterSaveReqPojo.setCode(accountMaster.getCode());
+			accountMasterSaveReqPojo.setMasterCode(accountMaster.getMasterCode());
+			accountMasterSaveReqPojo.setMasterIcon(accountMaster.getMasterIcon());
+			accountMasterSaveReqPojo.setPersonType(accountMaster.getPersonType());
+			accountMasterSaveReqPojo.setTransType(accountMaster.getTransType());
+			accountMasterSaveReqPojo.setType(accountMaster.getType());
+			accountMasterSaveReqPojo.setVisibility(accountMaster.getVisibility());
+
+			toBeReturnedList.add(accountMasterSaveReqPojo);
+		}
+
+		return toBeReturnedList;
 	}
 
 	public void saveAccountMaster(AccountMasterSaveReqPojo accountMasterSaveReqPojo) {

@@ -1,5 +1,7 @@
 package com.balaji.finance.masterInfo.controller;
 
+import java.util.List;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -19,7 +21,18 @@ public class AccountMasterSetUpController {
 
 	@Autowired
 	private AccountMasterSetUpService accountMasterService;
+	
+	
+	
+	@GetMapping("/findAll")
+	private ResponseEntity<List<AccountMasterSaveReqPojo>> findAll() {
 
+		List<AccountMasterSaveReqPojo> toBeReturnedList = accountMasterService.findAll();
+
+		return ResponseEntity.ok().body(toBeReturnedList);
+	}
+
+	
 	@GetMapping("/findAccountMasterById/{id}")
 	private ResponseEntity<AccountMasterSaveReqPojo> findAccountMasterById(@PathVariable Long id) {
 
