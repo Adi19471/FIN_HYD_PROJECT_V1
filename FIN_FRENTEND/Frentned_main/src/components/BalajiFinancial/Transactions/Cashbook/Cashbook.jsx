@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from "react";
 import {
   Box,
   Paper,
@@ -18,33 +18,36 @@ import {
   CircularProgress,
   Autocomplete,
   InputAdornment,
-} from '@mui/material';
-import { CalendarToday as CalendarIcon, Payments as PaymentsIcon } from '@mui/icons-material';
-import axios from 'axios';
+} from "@mui/material";
+import {
+  CalendarToday as CalendarIcon,
+  Payments as PaymentsIcon,
+} from "@mui/icons-material";
+import axios from "axios";
 import { successToast, errorToast } from "toastify";
 import { API_BASE } from "lib/config";
 import { getSession } from "src/utils/session";
 
 const Cashbook = () => {
-  // Current date + time in "yyyy-MM-dd HH:mm:ss" format
   const getCurrentDateTime = () => {
     const now = new Date();
     const year = now.getFullYear();
-    const month = String(now.getMonth() + 1).padStart(2, '0');
-    const day = String(now.getDate()).padStart(2, '0');
-    const hours = String(now.getHours()).padStart(2, '0');
-    const minutes = String(now.getMinutes()).padStart(2, '0');
-    const seconds = String(now.getSeconds()).padStart(2, '0');
+    const month = String(now.getMonth() + 1).padStart(2, "0");
+    const day = String(now.getDate()).padStart(2, "0");
+    const hours = String(now.getHours()).padStart(2, "0");
+    const minutes = String(now.getMinutes()).padStart(2, "0");
+    const seconds = String(now.getSeconds()).padStart(2, "0");
     return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
   };
 
   const [transactionDate, setTransactionDate] = useState(getCurrentDateTime());
-  const [masterCode, setMasterCode] = useState('');
-  const [code, setCode] = useState('');
-  const [name, setName] = useState('');
-  const [particulars, setParticulars] = useState('');
-  const [transactionType, setTransactionType] = useState('');
-  const [amount, setAmount] = useState('');
+  const [masterCode, setMasterCode] = useState("");
+  const [code, setCode] = useState("");
+  const [name, setName] = useState("");
+  const [selectedPerson, setSelectedPerson] = useState(null); // ← New: stores full person object
+  const [particulars, setParticulars] = useState("");
+  const [transactionType, setTransactionType] = useState("");
+  const [amount, setAmount] = useState("");
 
   const [masterCodes, setMasterCodes] = useState([]);
   const [codes, setCodes] = useState([]);
@@ -67,9 +70,12 @@ const Cashbook = () => {
     const fetchMasterCodes = async () => {
       setLoadingMaster(true);
       try {
-        const res = await axios.get(`${API_BASE}/account-master-usage/findAllMasterCodes`, {
-          headers: getAuthHeader(),
-        });
+        const res = await axios.get(
+          `${API_BASE}/account-master-usage/findAllMasterCodes`,
+          {
+            headers: getAuthHeader(),
+          }
+        );
         const data = res.data || [];
         setMasterCodes(data);
         if (data.length > 0) setMasterCode(data[0]);
@@ -86,10 +92,10 @@ const Cashbook = () => {
   useEffect(() => {
     if (!masterCode) {
       setCodes([]);
-      setCode('');
+      setCode("");
       setPersonOptions([]);
       setTransactionTypes([]);
-      setTransactionType('');
+      setTransactionType("");
       return;
     }
 
@@ -97,7 +103,9 @@ const Cashbook = () => {
       setLoadingCodes(true);
       try {
         const res = await axios.get(
-          `${API_BASE}/account-master-usage/findAllCodesByMasterCode/${encodeURIComponent(masterCode)}`,
+          `${API_BASE}/account-master-usage/findAllCodesByMasterCode/${encodeURIComponent(
+            masterCode
+          )}`,
           { headers: getAuthHeader() }
         );
         const data = res.data || [];
@@ -116,7 +124,7 @@ const Cashbook = () => {
   useEffect(() => {
     if (!masterCode || !code) {
       setTransactionTypes([]);
-      setTransactionType('');
+      setTransactionType("");
       return;
     }
 
@@ -151,19 +159,22 @@ const Cashbook = () => {
       setLoadingPersons(true);
       try {
         const res = await axios.post(
-          `${API_BASE}/PersonalInfo/personInfoAutoCompleteByCodeAndMasterCode?q=${encodeURIComponent(name.trim())}`,
+          `${API_BASE}/PersonalInfo/personInfoAutoCompleteByCodeAndMasterCode?q=${encodeURIComponent(
+            name.trim()
+          )}`,
           { masterCode, code },
           { headers: getAuthHeader() }
         );
 
         const options = res.data.map((p) => ({
-          label: `${p.firstname || ''} ${p.lastname || ''}`.trim(),
-          value: `${p.firstname || ''} ${p.lastname || ''}`.trim(),
+          label: `${p.firstname || ""} ${p.lastname || ""}`.trim(),
+          value: `${p.firstname || ""} ${p.lastname || ""}`.trim(),
+          data: p, // ← store full person object (including id)
         }));
 
         setPersonOptions(options);
       } catch (err) {
-        console.error('Person search failed:', err);
+        console.error("Person search failed:", err);
       } finally {
         setLoadingPersons(false);
       }
@@ -172,45 +183,46 @@ const Cashbook = () => {
     fetchPersons();
   }, [name, masterCode, code]);
 
-  // Handle form submission
+  // Save Transaction
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    if (!masterCode || !code) return errorToast("Please select Account Group and Code");
+    if (!masterCode || !code)
+      return errorToast("Please select Account Group and Code");
     if (!name.trim()) return errorToast("Please enter Name");
     if (!transactionType) return errorToast("Please select Transaction Type");
-    if (!amount || isNaN(amount) || Number(amount) <= 0) return errorToast("Please enter valid amount");
+    if (!amount || isNaN(amount) || Number(amount) <= 0)
+      return errorToast("Please enter valid amount");
 
     setSubmitting(true);
 
     const payload = {
-      transactionDate: transactionDate,           // already in "yyyy-MM-dd HH:mm:ss"
+      transactionDate: transactionDate, // already in "yyyy-MM-dd HH:mm:ss"
       accountCode: code,
-      customerId: name.trim(),                    // using name as customerId (change if needed)
+      customerId: selectedPerson?.id || name.trim(), // ← Use id if selected, fallback to name
       particulars: particulars.trim() || "Other Payment",
       transaction: transactionType,
       amount: Number(amount),
     };
 
     try {
-      await axios.post(
-        `${API_BASE}/saveOtherPayments`,
-        payload,
-        { headers: getAuthHeader() }
-      );
+      await axios.post(`${API_BASE}/saveOtherPayments`, payload, {
+        headers: getAuthHeader(),
+      });
 
       successToast("Transaction recorded successfully!");
 
-      // Reset form with current time
+      // Reset form
       setTransactionDate(getCurrentDateTime());
-      setMasterCode('');
-      setCode('');
-      setName('');
+      setMasterCode("");
+      setCode("");
+      setName("");
+      setSelectedPerson(null);
       setPersonOptions([]);
       setTransactionTypes([]);
-      setTransactionType('');
-      setParticulars('');
-      setAmount('');
+      setTransactionType("");
+      setParticulars("");
+      setAmount("");
     } catch (err) {
       console.error("Save failed:", err);
       errorToast(err.response?.data?.message || "Failed to save transaction");
@@ -220,19 +232,35 @@ const Cashbook = () => {
   };
 
   return (
-    <Box sx={{ width: '100%', minHeight: '100vh', bgcolor: 'grey.50', p: { xs: 2, md: 4 } }}>
-      <Typography variant="h4" component="h1" fontWeight="bold" color="primary.dark" gutterBottom>
+    <Box
+      sx={{
+        width: "100%",
+        minHeight: "100vh",
+        bgcolor: "grey.50",
+        p: { xs: 2, md: 4 },
+      }}
+    >
+      <Typography
+        variant="h4"
+        component="h1"
+        fontWeight="bold"
+        color="primary.dark"
+        gutterBottom
+      >
         Cash Book Entry
       </Typography>
 
-      <Paper elevation={4} sx={{ p: { xs: 3, md: 5 }, maxWidth: 960, mx: 'auto', borderRadius: 3 }}>
+      <Paper
+        elevation={4}
+        sx={{ p: { xs: 3, md: 5 }, maxWidth: 960, mx: "auto", borderRadius: 3 }}
+      >
         <Typography variant="h5" color="primary" gutterBottom sx={{ mb: 4 }}>
           New Transaction / Payment
         </Typography>
 
         <form onSubmit={handleSubmit}>
           <Grid container spacing={3}>
-            {/* Date & Time - Manual input in yyyy-MM-dd HH:mm:ss format */}
+            {/* Date & Time */}
             <Grid item xs={12} sm={6}>
               <TextField
                 fullWidth
@@ -263,10 +291,16 @@ const Cashbook = () => {
                   label="Account Group"
                   onChange={(e) => setMasterCode(e.target.value)}
                   disabled={loadingMaster || submitting}
-                  endAdornment={loadingMaster ? <CircularProgress size={20} sx={{ mr: 2 }} /> : null}
+                  endAdornment={
+                    loadingMaster ? (
+                      <CircularProgress size={20} sx={{ mr: 2 }} />
+                    ) : null
+                  }
                 >
                   {masterCodes.map((group) => (
-                    <MenuItem key={group} value={group}>{group}</MenuItem>
+                    <MenuItem key={group} value={group}>
+                      {group}
+                    </MenuItem>
                   ))}
                 </Select>
               </FormControl>
@@ -281,26 +315,47 @@ const Cashbook = () => {
                   label="Account Code"
                   onChange={(e) => setCode(e.target.value)}
                   disabled={loadingCodes || !masterCode || submitting}
-                  endAdornment={loadingCodes ? <CircularProgress size={20} sx={{ mr: 2 }} /> : null}
+                  endAdornment={
+                    loadingCodes ? (
+                      <CircularProgress size={20} sx={{ mr: 2 }} />
+                    ) : null
+                  }
                 >
                   {codes.map((accCode) => (
-                    <MenuItem key={accCode} value={accCode}>{accCode}</MenuItem>
+                    <MenuItem key={accCode} value={accCode}>
+                      {accCode}
+                    </MenuItem>
                   ))}
                 </Select>
               </FormControl>
             </Grid>
 
-            {/* Name Autocomplete */}
+            {/* Name Autocomplete - now saves id */}
             <Grid item xs={12}>
               <Autocomplete
+                fullWidth
                 freeSolo
                 disableClearable
                 value={name}
-                onChange={(e, newValue) => setName(typeof newValue === 'string' ? newValue : newValue?.value || '')}
+                onChange={(event, newValue) => {
+                  if (typeof newValue === "string") {
+                    setName(newValue);
+                    setSelectedPerson(null);
+                  } else {
+                    setName(newValue?.label || "");
+                    setSelectedPerson(newValue?.data || null);
+                  }
+                }}
                 inputValue={name}
-                onInputChange={(e, newInput) => setName(newInput)}
+                onInputChange={(event, newInputValue) => {
+                  setName(newInputValue);
+                  // If user types manually, clear selected person
+                  if (newInputValue !== name) setSelectedPerson(null);
+                }}
                 options={personOptions}
-                getOptionLabel={(opt) => (typeof opt === 'string' ? opt : opt.label || '')}
+                getOptionLabel={(option) =>
+                  typeof option === "string" ? option : option.label || ""
+                }
                 loading={loadingPersons}
                 disabled={submitting || !masterCode || !code}
                 renderInput={(params) => (
@@ -315,7 +370,9 @@ const Cashbook = () => {
                       ...params.InputProps,
                       endAdornment: (
                         <>
-                          {loadingPersons ? <CircularProgress color="inherit" size={20} /> : null}
+                          {loadingPersons ? (
+                            <CircularProgress color="inherit" size={20} />
+                          ) : null}
                           {params.InputProps.endAdornment}
                         </>
                       ),
@@ -341,9 +398,17 @@ const Cashbook = () => {
 
             {/* Transaction Type */}
             <Grid item xs={12}>
-              <FormControl component="fieldset" disabled={loadingTypes || submitting || transactionTypes.length === 0}>
+              <FormControl
+                component="fieldset"
+                disabled={
+                  loadingTypes || submitting || transactionTypes.length === 0
+                }
+              >
                 <FormLabel component="legend" sx={{ mb: 1 }}>
-                  Transaction Type {loadingTypes && <CircularProgress size={16} sx={{ ml: 2 }} />}
+                  Transaction Type{" "}
+                  {loadingTypes && (
+                    <CircularProgress size={16} sx={{ ml: 2 }} />
+                  )}
                 </FormLabel>
 
                 {transactionTypes.length === 0 && !loadingTypes ? (
@@ -362,7 +427,11 @@ const Cashbook = () => {
                         value={type}
                         control={
                           <Radio
-                            color={type.toLowerCase().includes('credit') ? 'success' : 'error'}
+                            color={
+                              type.toLowerCase().includes("credit")
+                                ? "success"
+                                : "error"
+                            }
                           />
                         }
                         label={type}
@@ -387,7 +456,12 @@ const Cashbook = () => {
                 InputProps={{
                   startAdornment: (
                     <InputAdornment position="start">
-                      <Typography color="text.secondary" sx={{ fontWeight: 500 }}>₹</Typography>
+                      <Typography
+                        color="text.secondary"
+                        sx={{ fontWeight: 500 }}
+                      >
+                        ₹
+                      </Typography>
                     </InputAdornment>
                   ),
                 }}
@@ -397,17 +471,28 @@ const Cashbook = () => {
             {/* Submit Button */}
             <Grid item xs={12} sx={{ mt: 5 }}>
               <Divider sx={{ mb: 4 }} />
-              <Box sx={{ display: 'flex', justifyContent: { xs: 'center', sm: 'flex-end' } }}>
+              <Box
+                sx={{
+                  display: "flex",
+                  justifyContent: { xs: "center", sm: "flex-end" },
+                }}
+              >
                 <Button
                   type="submit"
                   variant="contained"
                   color="primary"
                   size="large"
                   disabled={submitting}
-                  startIcon={submitting ? <CircularProgress size={24} /> : <PaymentsIcon />}
-                  sx={{ px: 6, py: 1.8, minWidth: { xs: '100%', sm: 300 } }}
+                  startIcon={
+                    submitting ? (
+                      <CircularProgress size={24} />
+                    ) : (
+                      <PaymentsIcon />
+                    )
+                  }
+                  sx={{ px: 6, py: 1.8, minWidth: { xs: "100%", sm: 300 } }}
                 >
-                  {submitting ? 'Saving...' : 'Record Transaction'}
+                  {submitting ? "Saving..." : "Record Transaction"}
                 </Button>
               </Box>
             </Grid>
