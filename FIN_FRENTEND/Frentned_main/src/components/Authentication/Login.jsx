@@ -18,9 +18,9 @@ import {
   Lock as LockIcon,
 } from "@mui/icons-material";
 import { createTheme, ThemeProvider } from "@mui/material/styles";
-import { successToast, errorToast } from "../../toastify";
-import { API_BASE } from "../../lib/config";
-import { setSession } from "../../utils/session";
+import { successToast, errorToast } from "toastify";
+import { API_BASE } from "lib/config";
+import { setSession } from "src/utils/session";
 
 // Optional: Keep your images or remove if using pure animated bg
 import LoginBg from "@react-login-page/page10/bg.png";
