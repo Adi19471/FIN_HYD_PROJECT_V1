@@ -27,11 +27,15 @@ public class AccountMasterUsageController {
 	}
 
 	@GetMapping("/findAllCodesByMasterCode/{masterCode}")
-	private ResponseEntity<List<String>> findAllCodesByMasterCode(@PathVariable String masterCode) {
+	public ResponseEntity<List<String>> findAllCodesByMasterCode(@PathVariable String masterCode) {
 
 		List<String> toBeReturnedList = accountMasterService.findAllCodesByMasterCode(masterCode);
 
 		return ResponseEntity.ok().body(toBeReturnedList);
 	}
 
+	
+	
+	
+	
 }

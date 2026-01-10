@@ -27,7 +27,7 @@ public class AccountMasterSetUpController {
 	
 	 
 	@GetMapping("/findAll")
-	private ResponseEntity<List<AccountMasterSaveReqPojo>> findAll() {
+	public ResponseEntity<List<AccountMasterSaveReqPojo>> findAll() {
 
 		List<AccountMasterSaveReqPojo> toBeReturnedList = accountMasterService.findAll();
 
@@ -36,7 +36,7 @@ public class AccountMasterSetUpController {
 
 	
 	@GetMapping("/findAccountMasterById/{id}")
-	private ResponseEntity<AccountMasterSaveReqPojo> findAccountMasterById(@PathVariable Long id) {
+	public ResponseEntity<AccountMasterSaveReqPojo> findAccountMasterById(@PathVariable Long id) {
 
 		AccountMasterSaveReqPojo accountMasterSaveReqPojo = accountMasterService.findById(id);
 
@@ -44,7 +44,7 @@ public class AccountMasterSetUpController {
 	}
 
 	@GetMapping("/deleteAccountMasterById/{id}")
-	private ResponseEntity<String> deleteAccountMasterById(@PathVariable Long id) {
+	public ResponseEntity<String> deleteAccountMasterById(@PathVariable Long id) {
 
 		accountMasterService.deleteById(id);
 
@@ -52,7 +52,7 @@ public class AccountMasterSetUpController {
 	}
 
 	@PostMapping("/saveAccountMaster")
-	private ResponseEntity<String> saveAccountMaster(@RequestBody AccountMasterSaveReqPojo accountMasterSaveReqPojo) {
+	public ResponseEntity<String> saveAccountMaster(@RequestBody AccountMasterSaveReqPojo accountMasterSaveReqPojo) {
 		
 		System.err.println(accountMasterSaveReqPojo);
 		
@@ -62,7 +62,7 @@ public class AccountMasterSetUpController {
 	}
 
 	@PostMapping("/UpdateAccountMaster")
-	private ResponseEntity<String> updateAccountMaster(@RequestBody AccountMasterSaveReqPojo accountMasterSaveReqPojo) {
+	public ResponseEntity<String> updateAccountMaster(@RequestBody AccountMasterSaveReqPojo accountMasterSaveReqPojo) {
 		
 		accountMasterService.updateAccountMaster(accountMasterSaveReqPojo);
 
