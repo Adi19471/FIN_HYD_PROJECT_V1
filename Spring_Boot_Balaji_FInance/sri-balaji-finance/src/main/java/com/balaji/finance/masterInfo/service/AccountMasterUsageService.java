@@ -5,6 +5,7 @@ import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import com.balaji.finance.masterInfo.entity.AccountMaster;
 import com.balaji.finance.masterInfo.repo.AccountMasterRepo;
 
 @Service
@@ -22,7 +23,7 @@ public class AccountMasterUsageService {
 	}
 
 	public String findTransacTypeByMasterCodeAndCode(String masterCode, String code) {
-		return accountMasterRepo.findTransacTypeByMasterCodeAndCode(masterCode, code);
+		return accountMasterRepo.findTransactionTypeByMasterCodeAndCode(masterCode, code);
 	}
 
 }
