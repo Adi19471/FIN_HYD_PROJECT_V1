@@ -16,7 +16,7 @@ import com.balaji.finance.pojo.AccountMasterSaveReqPojo;
 
 
 @RestController
-@RequestMapping("/account-master-setup")
+@RequestMapping("/account-master-usage")
 public class AccountMasterUsageController {
 
 	@Autowired
