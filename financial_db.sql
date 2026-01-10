@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Dec 31, 2025 at 08:38 AM
+-- Generation Time: Jan 10, 2026 at 09:25 AM
 -- Server version: 10.4.32-MariaDB
 -- PHP Version: 8.0.30
 
@@ -28,22 +28,15 @@ SET time_zone = "+00:00";
 --
 
 CREATE TABLE `accountmaster` (
-  `Type` varchar(255) DEFAULT NULL,
-  `MasterCode` varchar(255) DEFAULT NULL,
-  `Code` varchar(255) DEFAULT NULL,
-  `Visibility` tinyint(1) DEFAULT NULL,
-  `MasterIcon` varchar(255) DEFAULT NULL,
-  `PersonType` varchar(255) DEFAULT NULL,
-  `TransType` varchar(255) DEFAULT NULL
+  `ID` bigint(20) NOT NULL,
+  `TYPE` varchar(255) NOT NULL,
+  `MASTER_CODE` varchar(255) NOT NULL,
+  `code` varchar(255) NOT NULL,
+  `VISIBILITY` tinyint(1) DEFAULT NULL,
+  `MASTER_ICON` varchar(255) DEFAULT NULL,
+  `PERSON_TYPE` varchar(255) DEFAULT NULL,
+  `TRANS_TYPE` varchar(255) DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
-
---
--- Dumping data for table `accountmaster`
---
-
-INSERT INTO `accountmaster` (`Type`, `MasterCode`, `Code`, `Visibility`, `MasterIcon`, `PersonType`, `TransType`) VALUES
-('LOAN', 'MC001', 'C001', 1, 'loan.png', 'CUSTOMER', 'DEBIT'),
-('SAVING', 'MC002', 'C002', 1, 'save.png', 'CUSTOMER', 'CREDIT');
 
 -- --------------------------------------------------------
 
@@ -774,6 +767,12 @@ INSERT INTO `users` (`Name`, `Password`, `Role`, `id`) VALUES
 --
 
 --
+-- Indexes for table `accountmaster`
+--
+ALTER TABLE `accountmaster`
+  ADD PRIMARY KEY (`ID`);
+
+--
 -- Indexes for table `businessmembers`
 --
 ALTER TABLE `businessmembers`
@@ -901,6 +900,12 @@ ALTER TABLE `users`
 --
 -- AUTO_INCREMENT for dumped tables
 --
+
+--
+-- AUTO_INCREMENT for table `accountmaster`
+--
+ALTER TABLE `accountmaster`
+  MODIFY `ID` bigint(20) NOT NULL AUTO_INCREMENT;
 
 --
 -- AUTO_INCREMENT for table `businessmembersbackup`
