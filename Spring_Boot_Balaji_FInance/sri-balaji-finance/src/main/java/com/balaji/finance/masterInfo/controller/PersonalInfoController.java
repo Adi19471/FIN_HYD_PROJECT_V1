@@ -1,5 +1,7 @@
 package com.balaji.finance.masterInfo.controller;
 
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -15,6 +17,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.balaji.finance.dto.PersonalInfoAutoCompletePojo;
 import com.balaji.finance.dto.PersonalInfoDto;
+import com.balaji.finance.masterInfo.entity.PersonalInfo;
 import com.balaji.finance.masterInfo.service.PersonalInfoService;
 
 @RestController
@@ -79,5 +82,16 @@ public class PersonalInfoController {
 		return ResponseEntity.ok().body(all);
 
 	}
+
+	@GetMapping("/personInfoAutoCompleteByCodeAndMasterCode/{masterCode}/{code}")
+	public List<PersonalInfoAutoCompletePojo> personInfoAutoCompleteByCodeAndMasterCode(@RequestParam String q,
+			@PathVariable String masterCode, @PathVariable String code) {
+
+		List<PersonalInfoAutoCompletePojo> toBeReturnedDtoList = personalInfoService
+				.personInfoAutoCompleteByCodeAndMasterCode(q, masterCode, code);
+
+		return toBeReturnedDtoList;
+	}
+	
 
 }

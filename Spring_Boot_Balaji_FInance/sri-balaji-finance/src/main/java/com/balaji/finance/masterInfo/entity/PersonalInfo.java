@@ -126,7 +126,6 @@ public class PersonalInfo {
 		this.reference = reference;
 	}
 
-	
 	public String getIdproof() {
 		return idproof;
 	}

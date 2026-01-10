@@ -11,6 +11,7 @@ import org.springframework.stereotype.Service;
 import com.balaji.finance.dto.PersonalInfoAutoCompletePojo;
 import com.balaji.finance.dto.PersonalInfoDto;
 import com.balaji.finance.masterInfo.entity.PersonalInfo;
+import com.balaji.finance.masterInfo.repo.AccountMasterRepo;
 import com.balaji.finance.masterInfo.repo.PersonalInfoRepository;
 import com.balaji.finance.util.PersonalSequenceService;
 
@@ -22,7 +23,11 @@ public class PersonalInfoService {
 
 	@Autowired
 	private PersonalSequenceService personalSequenceService;
-
+	
+	@Autowired
+	private AccountMasterRepo accountMasterRepo;
+	
+	
 	public String generateId(String type) {
 
 		String prefix;
@@ -104,7 +109,6 @@ public class PersonalInfoService {
 		personalInfo.setOldid(personalInfoDto.getOldid());
 		personalInfo.setCategory(personalInfoDto.getCategory());
 		personalInfo.setDisable(personalInfoDto.isDisable());
-		
 		
 		personalInfoRepository.save(personalInfo);
 
@@ -326,4 +330,37 @@ public class PersonalInfoService {
 
 		return toBeReturnedDtoList;
 	}
+
+	public List<PersonalInfoAutoCompletePojo> personInfoAutoCompleteByCodeAndMasterCode(String keyword,
+			String masterCode, String code) {
+
+		String personTypes = accountMasterRepo.findByMasterCodeAndCode(masterCode, code);
+		
+		List<String> personTypesList = new ArrayList<String>();
+
+		if (personTypes != null) {
+			personTypesList = Arrays.asList(personTypes.split(","));
+		}
+
+		List<PersonalInfo> allPersonalInfoList = personalInfoRepository.personalInfoAutoComplete(false, keyword,
+				personTypesList);
+
+		List<PersonalInfoAutoCompletePojo> toBeReturnedDtoList = new ArrayList<PersonalInfoAutoCompletePojo>();
+
+		allPersonalInfoList.stream().forEach(p -> {
+
+			PersonalInfoAutoCompletePojo personalInfoAutoCompletePojo = new PersonalInfoAutoCompletePojo();
+			personalInfoAutoCompletePojo.setId(p.getId());
+
+			personalInfoAutoCompletePojo.setFirstname(p.getFirstname());
+			personalInfoAutoCompletePojo.setLastname(p.getLastname());
+			personalInfoAutoCompletePojo.setGender(p.getGender());
+
+			toBeReturnedDtoList.add(personalInfoAutoCompletePojo);
+
+		});
+
+		return toBeReturnedDtoList;
+	}
+
 }
