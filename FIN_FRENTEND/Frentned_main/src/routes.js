@@ -73,6 +73,11 @@ const Daily_Book = lazy(() =>
   )
 );
 
+const Account_Master_Setup = lazy(() =>
+  import(
+    "./components/BalajiFinancial/AccountMasterSetup/Account_Master_Setup"
+  )
+);
 
 
 const routes = [
@@ -106,6 +111,8 @@ const routes = [
 
   // Daily Book
   { path: "/Loans/Daily_Book", element: Daily_Book },
+  // Account Master Setup
+  { path: "/AccountMasterSetup/Account_Master_Setup", element: Account_Master_Setup },
 ];
 
 export default routes;
