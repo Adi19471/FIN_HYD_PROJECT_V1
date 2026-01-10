@@ -23,7 +23,7 @@ public class AccountMasterSetUpController {
 	private AccountMasterSetUpService accountMasterService;
 	
 	
-	
+	 
 	@GetMapping("/findAll")
 	private ResponseEntity<List<AccountMasterSaveReqPojo>> findAll() {
 
