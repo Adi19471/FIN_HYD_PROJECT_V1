@@ -12,7 +12,7 @@ public interface AccountMasterRepo extends JpaRepository<AccountMaster, Long> {
 
 	
 	@Query("SELECT DISTINCT a.masterCode FROM AccountMaster a where a.visibility=:visibility")
-	List<String> findAllMasterCodes(@Param("visibility") String visibility);
+	List<String> findAllMasterCodes(@Param("visibility") boolean visibility);
 
 	
 	

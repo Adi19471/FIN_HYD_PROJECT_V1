@@ -41,7 +41,7 @@ public class AccountMasterSetUpService {
 
 		return null;
 	}
-	
+
 	public List<AccountMasterSaveReqPojo> findAll() {
 
 		List<AccountMaster> totalList = accountMasterRepo.findAll();

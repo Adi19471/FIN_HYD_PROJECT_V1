@@ -6,65 +6,32 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.balaji.finance.masterInfo.service.AccountMasterSetUpService;
-import com.balaji.finance.pojo.AccountMasterSaveReqPojo;
-
+import com.balaji.finance.masterInfo.service.AccountMasterUsageService;
 
 @RestController
-@RequestMapping("/account-master-setup")
+@RequestMapping("/account-master-usage")
 public class AccountMasterSetUpController {
 
 	@Autowired
-	private AccountMasterSetUpService accountMasterService;
-	
-	
-	 
-	@GetMapping("/findAll")
-	private ResponseEntity<List<AccountMasterSaveReqPojo>> findAll() {
+	private AccountMasterUsageService accountMasterService;
 
-		List<AccountMasterSaveReqPojo> toBeReturnedList = accountMasterService.findAll();
+	@GetMapping("/findAllMasterCodes")
+	private ResponseEntity<List<String>> findAllMasterCodes() {
+
+		List<String> toBeReturnedList = accountMasterService.findAllMasterCodes();
 
 		return ResponseEntity.ok().body(toBeReturnedList);
 	}
 
-	
-	@GetMapping("/findAccountMasterById/{id}")
-	private ResponseEntity<AccountMasterSaveReqPojo> findAccountMasterById(@PathVariable Long id) {
+	@GetMapping("/findAllCodesByMasterCode/{masterCode}")
+	private ResponseEntity<List<String>> findAllCodesByMasterCode(@PathVariable String masterCode) {
 
-		AccountMasterSaveReqPojo accountMasterSaveReqPojo = accountMasterService.findById(id);
+		List<String> toBeReturnedList = accountMasterService.findAllCodesByMasterCode(masterCode);
 
-		return ResponseEntity.ok().body(accountMasterSaveReqPojo);
-	}
-
-	@GetMapping("/deleteAccountMasterById/{id}")
-	private ResponseEntity<String> deleteAccountMasterById(@PathVariable Long id) {
-
-		accountMasterService.deleteById(id);
-
-		return ResponseEntity.ok().body("Successfully Deleted");
-	}
-
-	@PostMapping("/saveAccountMaster")
-	private ResponseEntity<String> saveAccountMaster(@RequestBody AccountMasterSaveReqPojo accountMasterSaveReqPojo) {
-		
-		System.err.println(accountMasterSaveReqPojo);
-		
-		accountMasterService.saveAccountMaster(accountMasterSaveReqPojo);
-
-		return ResponseEntity.ok().body("Successfully Saved");
-	}
-
-	@PostMapping("/UpdateAccountMaster")
-	private ResponseEntity<String> updateAccountMaster(@RequestBody AccountMasterSaveReqPojo accountMasterSaveReqPojo) {
-		
-		accountMasterService.updateAccountMaster(accountMasterSaveReqPojo);
-
-		return ResponseEntity.ok().body("Successfully Updated");
+		return ResponseEntity.ok().body(toBeReturnedList);
 	}
 
 }
