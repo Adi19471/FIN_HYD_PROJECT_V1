@@ -14,13 +14,13 @@ import org.springframework.stereotype.Service;
 import com.balaji.finance.masterInfo.entity.CashBook;
 import com.balaji.finance.masterInfo.entity.CashBookBK;
 import com.balaji.finance.masterInfo.entity.PersonalInfo;
+import com.balaji.finance.masterInfo.repo.CashBookBkRepo;
+import com.balaji.finance.masterInfo.repo.CashBookRepo;
 import com.balaji.finance.masterInfo.repo.PersonalInfoRepository;
 import com.balaji.finance.pojo.CashBookDeletedViewPojo;
 import com.balaji.finance.pojo.CashBookSumaryViewPojo;
 import com.balaji.finance.pojo.CashBookViewPojo;
 import com.balaji.finance.pojo.DayWiseTransactionsSummary;
-import com.balaji.finance.transaction.entity.CashBookBkRepo;
-import com.balaji.finance.transaction.entity.CashBookRepo;
 
 @Service
 public class CashBookService {

@@ -1,4 +1,4 @@
-package com.balaji.finance.transaction.entity;
+package com.balaji.finance.masterInfo.repo;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;

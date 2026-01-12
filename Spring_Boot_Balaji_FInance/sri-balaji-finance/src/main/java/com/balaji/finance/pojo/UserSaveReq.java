@@ -1,31 +1,11 @@
-package com.balaji.finance.masterInfo.entity;
+package com.balaji.finance.pojo;
 
-import jakarta.persistence.*;
-import jakarta.validation.constraints.NotBlank;
+public class UserSaveReq {
 
-@Entity
-@Table(name = "users", uniqueConstraints = { @UniqueConstraint(columnNames = "name") })
-public class Users {
-
-	@Id
-	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	private Integer id;
-
-	@NotBlank
-	@Column(nullable = false, unique = true, length = 100)
 	private String name;
-
-	@NotBlank
-	@Column(nullable = false)
 	private String password;
-
-	/*
-	 * @NotBlank
-	 * 
-	 * @Column(nullable = false, length = 50)
-	 */
 	private String role;
-
 
 	public Integer getId() {
 		return id;
@@ -58,4 +38,5 @@ public class Users {
 	public void setRole(String role) {
 		this.role = role;
 	}
+
 }

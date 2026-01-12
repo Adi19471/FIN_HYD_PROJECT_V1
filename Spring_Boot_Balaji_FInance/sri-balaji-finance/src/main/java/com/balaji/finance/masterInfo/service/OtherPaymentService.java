@@ -9,8 +9,8 @@ import org.springframework.stereotype.Service;
 
 import com.balaji.finance.masterInfo.entity.CashBook;
 import com.balaji.finance.masterInfo.repo.BusinessMemberRepository;
+import com.balaji.finance.masterInfo.repo.CashBookRepo;
 import com.balaji.finance.pojo.OtherPaymentSaveReq;
-import com.balaji.finance.transaction.entity.CashBookRepo;
 
 @Service
 public class OtherPaymentService {

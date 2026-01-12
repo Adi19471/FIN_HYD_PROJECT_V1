@@ -15,9 +15,9 @@ import com.balaji.finance.masterInfo.entity.BusinessMember;
 import com.balaji.finance.masterInfo.entity.CashBook;
 import com.balaji.finance.masterInfo.entity.PersonalInfo;
 import com.balaji.finance.masterInfo.repo.BusinessMemberRepository;
+import com.balaji.finance.masterInfo.repo.CashBookRepo;
 import com.balaji.finance.masterInfo.repo.PersonalInfoRepository;
 import com.balaji.finance.pojo.BusinessMemberAutoCompletePojo;
-import com.balaji.finance.transaction.entity.CashBookRepo;
 import com.balaji.finance.util.BusinessMemersSequenceService;
 
 @Service

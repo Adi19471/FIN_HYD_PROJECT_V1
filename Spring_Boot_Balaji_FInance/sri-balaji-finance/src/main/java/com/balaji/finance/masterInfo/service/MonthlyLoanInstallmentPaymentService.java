@@ -13,10 +13,10 @@ import org.springframework.stereotype.Service;
 import com.balaji.finance.masterInfo.entity.BusinessMember;
 import com.balaji.finance.masterInfo.entity.CashBook;
 import com.balaji.finance.masterInfo.repo.BusinessMemberRepository;
+import com.balaji.finance.masterInfo.repo.CashBookRepo;
 import com.balaji.finance.pojo.InstallmentDetails;
 import com.balaji.finance.pojo.LoanInformation;
 import com.balaji.finance.pojo.QuickCashBookRow;
-import com.balaji.finance.transaction.entity.CashBookRepo;
 
 @Service
 public class MonthlyLoanInstallmentPaymentService {
