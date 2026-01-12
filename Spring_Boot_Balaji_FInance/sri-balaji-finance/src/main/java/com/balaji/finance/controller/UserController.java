@@ -1,65 +1,44 @@
 package com.balaji.finance.controller;
 
-import java.util.List;
+import jakarta.validation.Valid;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.balaji.finance.dto.PersonalInfoDto;
-import com.balaji.finance.masterInfo.entity.Users;
-import com.balaji.finance.masterInfo.service.UsersService;
-import com.balaji.finance.pojo.AddUserReqPojo;
-import com.balaji.finance.pojo.ErrorResponse;
+import com.balaji.finance.pojo.UserSaveReq;
+import com.balaji.finance.service.UserService;
 
 @RestController
 public class UserController {
 
 	@Autowired
-	private UsersService usersService;
+	private UserService userService;
 
-	@PostMapping("/addUser")
-	public ResponseEntity<?> addUser(@RequestBody  AddUserReqPojo addUserReqPojo) {
+	@PostMapping("/users")
+	public ResponseEntity<String> saveUser(@Valid @RequestBody UserSaveReq userSaveReq) {
 
-		try {
-			String message = usersService.addUser(addUserReqPojo);
-
-			if (message.equalsIgnoreCase("UserName Alredy Exists")) {
-				return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-						.body(new ErrorResponse("UserName Alredy Exists"));
-			} else {
-				return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Successfully Registered");
-			}
-
-		} catch (Exception e) {
-			e.printStackTrace();
-			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(new ErrorResponse("User Added Failed"));
-		}
-
-	}
-	
-	
-	@DeleteMapping("/deleteUser/{id}")
-	public ResponseEntity<String> deletePersonalInfoTemplate(@PathVariable("id") Integer id) {
-
-		String response = usersService.deletePersonalInfoDto(id);
-
-		return ResponseEntity.ok().body(response);
+		userService.saveUser(userSaveReq);
+		return ResponseEntity.status(HttpStatus.CREATED).body("User saved successfully");
 	}
 
-	
-	@GetMapping("/findAllUsers")
-	public ResponseEntity<List<Users>> findAll() {
+	@PutMapping("/users")
+	public ResponseEntity<String> updateUser(@Valid @RequestBody UserSaveReq userSaveReq) {
 
-		List<Users> all = usersService.findAll();
-
-		return ResponseEntity.ok().body(all);
+		userService.updateUser(userSaveReq);
+		return ResponseEntity.ok("User updated successfully");
 	}
 
+	@DeleteMapping("/users")
+	public ResponseEntity<String> deleteUser(@RequestParam Integer id) {
+
+		userService.deleteUser(id);
+		return ResponseEntity.ok("User deleted successfully");
+	}
 }
