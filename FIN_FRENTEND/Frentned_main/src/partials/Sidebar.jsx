@@ -392,9 +392,29 @@ function Sidebar({ sidebarOpen, setSidebarOpen }) {
                   <span>Account Master Setup</span>
                 </NavLink>
               </li>
+
+              <li>
+                <NavLink
+                  to="/AccountMasterSetup/Registraion_creation"
+                  className={({ isActive }) =>
+                    `flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-all duration-200 ${
+                      isActive
+                        ? "bg-teal-50 text-teal-700 dark:bg-teal-950/50 dark:text-teal-300 shadow-sm"
+                        : "text-gray-600 hover:text-teal-600 dark:text-gray-400 dark:hover:text-teal-300"
+                    }`
+                  }
+                >
+                  <AccountBalanceWallet className="w-4 h-4" />
+                  <span>Users Registration</span>
+                </NavLink>
+              </li>
               {/* You can add more items here later */}
             </ul>
           )}
+
+
+
+
 
           {/* Authentication */}
           <div

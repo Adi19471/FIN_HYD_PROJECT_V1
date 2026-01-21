@@ -79,6 +79,11 @@ const Account_Master_Setup = lazy(() =>
   )
 );
 
+const Registraion_creation = lazy(() =>
+  import(
+    "./components/BalajiFinancial/AccountMasterSetup/Registraion_creation"
+  )
+);
 
 const routes = [
 
@@ -113,6 +118,7 @@ const routes = [
   { path: "/Loans/Daily_Book", element: Daily_Book },
   // Account Master Setup
   { path: "/AccountMasterSetup/Account_Master_Setup", element: Account_Master_Setup },
+  { path: "/AccountMasterSetup/Registraion_creation", element: Registraion_creation },
 ];
 
 export default routes;
