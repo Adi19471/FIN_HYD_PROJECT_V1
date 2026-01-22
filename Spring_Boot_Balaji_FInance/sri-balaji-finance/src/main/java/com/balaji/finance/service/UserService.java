@@ -1,6 +1,7 @@
 package com.balaji.finance.service;
 
-import java.util.Objects;
+import java.util.ArrayList;
+import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -89,5 +90,23 @@ public class UserService {
 		 * if (Objects.isNull(userSaveReq.getRole())) { throw new
 		 * IllegalArgumentException("Role must not be null"); }
 		 */
+	}
+
+	public List<UserSaveReq> loadAllUsers() {
+		List<Users> all = userRepo.findAll();
+
+		List<UserSaveReq> allUsers = new ArrayList<UserSaveReq>();
+
+		for (Users user : all) {
+
+			UserSaveReq userSaveReq = new UserSaveReq();
+			userSaveReq.setId(user.getId());
+			userSaveReq.setName(user.getName());
+			userSaveReq.setRole(user.getRole());
+
+			allUsers.add(userSaveReq);
+		}
+
+		return allUsers;
 	}
 }

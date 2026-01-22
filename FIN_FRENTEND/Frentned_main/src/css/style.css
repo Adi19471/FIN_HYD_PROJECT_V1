@@ -7,11 +7,7 @@
   strategy: base;
 }
 
-/* Accessibility note: removing default focus rings can harm keyboard users.
-   These rules soften the visual focus for this admin UI per user request.
-   If you want accessible focus back, remove these overrides. */
 
-/* Remove heavy browser outlines and MUI focused box-shadows for inputs */
 input:focus,
 textarea:focus,
 select:focus,

@@ -34,19 +34,13 @@ public class SecurityConfig {
                 .csrf(csrf -> csrf.disable())
                 .headers(headers -> headers.frameOptions(frame -> frame.disable()))
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-                .authorizeHttpRequests(auth -> auth
-                        .requestMatchers(
-                                "/auth/**",
-                                "/addUser",
-                                "/v3/api-docs/**",
-                                "/swagger-ui/**",
-                                "/swagger-ui.html",
-                                "/swagger-resources/**",
-                                "/webjars/**",
-                                "/h2-console/**"
-                        ).permitAll()
-                        .anyRequest().authenticated()
-                )
+				/*
+				 * .authorizeHttpRequests(auth -> auth .requestMatchers( "/auth/**", "/addUser",
+				 * "/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html",
+				 * "/swagger-resources/**", "/webjars/**", "/h2-console/**" ).permitAll()
+				 * .anyRequest().authenticated() )
+				 */
+				.authorizeHttpRequests(auth -> auth.anyRequest().permitAll())
                 .formLogin(form -> form.disable())
                 .httpBasic(httpBasic -> httpBasic.disable());
 

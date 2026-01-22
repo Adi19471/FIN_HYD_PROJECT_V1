@@ -1,5 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
+import { Card, CardContent, Typography, Box, Chip } from '@mui/material';
 import LineChart from '../../charts/LineChart01';
 import { chartAreaGradient } from '../../charts/ChartjsConfig';
 import EditMenu from '../../components/DropdownEditMenu';
@@ -50,7 +51,7 @@ function DashboardCard01() {
             { stop: 0, color: adjustColorOpacity(getCssVariable('--color-violet-500'), 0) },
             { stop: 1, color: adjustColorOpacity(getCssVariable('--color-violet-500'), 0.2) }
           ]);
-        },            
+        },
         borderColor: getCssVariable('--color-violet-500'),
         borderWidth: 2,
         pointRadius: 0,
@@ -80,10 +81,12 @@ function DashboardCard01() {
   };
 
   return (
-    <div className="flex flex-col col-span-full sm:col-span-6 xl:col-span-4 bg-white dark:bg-gray-800 shadow-xs rounded-xl">
-      <div className="px-5 pt-5">
-        <header className="flex justify-between items-start mb-2">
-          <h2 className="text-lg font-semibold text-gray-800 dark:text-gray-100 mb-2">Acme Plus</h2>
+    <Card sx={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
+      <CardContent sx={{ flexGrow: 1, p: 3 }}>
+        <Box display="flex" justifyContent="space-between" alignItems="flex-start" mb={2}>
+          <Typography variant="h6" component="h2" fontWeight="bold" mb={2}>
+            Acme Plus
+          </Typography>
           {/* Menu button */}
           <EditMenu align="right" className="relative inline-flex">
             <li>
@@ -102,19 +105,23 @@ function DashboardCard01() {
               </Link>
             </li>
           </EditMenu>
-        </header>
-        <div className="text-xs font-semibold text-gray-400 dark:text-gray-500 uppercase mb-1">Sales</div>
-        <div className="flex items-start">
-          <div className="text-3xl font-bold text-gray-800 dark:text-gray-100 mr-2">$24,780</div>
-          <div className="text-sm font-medium text-green-700 px-1.5 bg-green-500/20 rounded-full">+49%</div>
-        </div>
-      </div>
-      {/* Chart built with Chart.js 3 */}
-      <div className="grow max-sm:max-h-[128px] xl:max-h-[128px]">
-        {/* Change the height attribute to adjust the chart height */}
-        <LineChart data={chartData} width={389} height={128} />
-      </div>
-    </div>
+        </Box>
+        <Typography variant="caption" color="text.secondary" fontWeight="bold" textTransform="uppercase" mb={1}>
+          Sales
+        </Typography>
+        <Box display="flex" alignItems="center" mb={2}>
+          <Typography variant="h4" fontWeight="bold" mr={1}>
+            $24,780
+          </Typography>
+          <Chip label="+49%" color="success" size="small" variant="filled" />
+        </Box>
+        {/* Chart built with Chart.js 3 */}
+        <Box sx={{ flexGrow: 1, maxHeight: { xs: 128, xl: 128 } }}>
+          {/* Change the height attribute to adjust the chart height */}
+          <LineChart data={chartData} width={389} height={128} />
+        </Box>
+      </CardContent>
+    </Card>
   );
 }
 

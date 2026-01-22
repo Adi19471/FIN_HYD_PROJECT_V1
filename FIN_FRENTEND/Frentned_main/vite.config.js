@@ -27,6 +27,9 @@ export default defineConfig({
   assetsInclude: ["**/*.png", "**/*.jpg", "**/*.jpeg", "**/*.svg"],
 
   server: {
+     watch: {
+      usePolling: true,
+    },
     proxy: {
       "/balaji-finance": {
         target: process.env.VITE_API_BASE || "http://localhost:8881",
