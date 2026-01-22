@@ -20,7 +20,7 @@ import com.balaji.finance.pojo.DeleteCashBookReq;
 import com.balaji.finance.service.CashBookService;
 
 @RestController
-public class DailyCashBook {
+public class DailyCashBookController {
 
 	@Autowired
 	private CashBookService cashBookService;
