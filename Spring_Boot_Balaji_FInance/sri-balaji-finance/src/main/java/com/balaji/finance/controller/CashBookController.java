@@ -61,18 +61,4 @@ public class CashBookController {
 		return ResponseEntity.ok().body(allCashBookDetailsByTransactionDate);
 	}
 
-	@GetMapping("/loadAllDayWiseTransactionsSummary/{transactionDate}")
-	public ResponseEntity<DayWiseTransactionsSummary> loadAllDayWiseTransactionsSummary(
-			@PathVariable String transactionDate) {
-
-		DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
-
-		LocalDate localDateTime = LocalDate.parse(transactionDate, formatter);
-
-		DayWiseTransactionsSummary dayWiseTransactionsSummary = cashBookService
-				.loadAllDayWiseTransactionsSummary(localDateTime);
-
-		return ResponseEntity.ok().body(dayWiseTransactionsSummary);
-	}
-
 }
