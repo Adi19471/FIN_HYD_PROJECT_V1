@@ -23,11 +23,9 @@ public class CashBook {
 	@Column(name = "LINENO")
 	private Integer lineNo;
 
-	@Temporal(TemporalType.TIMESTAMP)
 	@Column(name = "TRANSDate")
 	private LocalDateTime transDate;
 
-	@Temporal(TemporalType.TIMESTAMP)
 	@Column(name = "SYSDATE")
 	private LocalDateTime sysDate;
 

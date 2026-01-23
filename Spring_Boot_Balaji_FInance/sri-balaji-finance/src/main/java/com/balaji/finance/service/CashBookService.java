@@ -1,5 +1,6 @@
 package com.balaji.finance.service;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -15,6 +16,7 @@ import com.balaji.finance.entity.CashBook;
 import com.balaji.finance.entity.CashBookBK;
 import com.balaji.finance.entity.PersonalInfo;
 import com.balaji.finance.pojo.CashBookDeletedViewPojo;
+import com.balaji.finance.pojo.CashBookLedgerPojo;
 import com.balaji.finance.pojo.CashBookSumaryViewPojo;
 import com.balaji.finance.pojo.CashBookViewPojo;
 import com.balaji.finance.pojo.DayWiseTransactionsSummary;
@@ -185,7 +187,7 @@ public class CashBookService {
 
 		}
 		
-		Double openingBalanceForToday = cashBookRepo.findOpeningBalanceForToday(transactionDate);
+		Double openingBalanceForToday = cashBookRepo.findOpeningBalanceForDate(transactionDate);
 		
 		DayWiseTransactionsSummary dayWiseTransactionsSummary = new DayWiseTransactionsSummary();
 		dayWiseTransactionsSummary.setCashBookSumaryViewPojoList(cashBookViewPojoList);
@@ -194,5 +196,34 @@ public class CashBookService {
 		return dayWiseTransactionsSummary;
 
 	}
+	
+	public List<CashBookLedgerPojo> getCashBookLedger(LocalDate fromDate, LocalDate toDate) {
+
+        LocalDateTime from = fromDate.atStartOfDay();
+        LocalDateTime to = toDate.atTime(23, 59, 59);
+
+        List<Object[]> rows = cashBookRepo.getDateWiseCashBook(from, to);
+
+        List<CashBookLedgerPojo> result = new ArrayList<>();
+
+        long i = 0;
+        
+        Double openingBalanceForToday = cashBookRepo.findOpeningBalanceForDate(fromDate);
+
+		for (Object[] r : rows) {
+
+			CashBookLedgerPojo cashBookLedger = new CashBookLedgerPojo();
+			cashBookLedger.setSno(++i);
+			cashBookLedger.setDate(((java.sql.Date) r[0]).toLocalDate());
+			cashBookLedger.setCredit((BigDecimal) r[1]);
+			cashBookLedger.setDebit((BigDecimal) r[2]);
+			cashBookLedger.setBalance((BigDecimal) r[3]);
+			cashBookLedger.setClosingBalance(((BigDecimal) r[3]).add(new BigDecimal(openingBalanceForToday)));
+
+			result.add(cashBookLedger);
+		}
+		
+		return result;
+    }
 
 }
