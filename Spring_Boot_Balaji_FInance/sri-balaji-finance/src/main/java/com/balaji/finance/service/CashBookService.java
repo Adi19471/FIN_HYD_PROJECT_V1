@@ -15,6 +15,7 @@ import org.springframework.stereotype.Service;
 import com.balaji.finance.entity.CashBook;
 import com.balaji.finance.entity.CashBookBK;
 import com.balaji.finance.entity.PersonalInfo;
+import com.balaji.finance.pojo.AccountsLedgerPojo;
 import com.balaji.finance.pojo.CashBookDeletedViewPojo;
 import com.balaji.finance.pojo.CashBookLedgerCollectionsPojo;
 import com.balaji.finance.pojo.CashBookLedgerPojo;
@@ -258,5 +259,44 @@ public class CashBookService {
 
 		return result;
 	}
+	
+	
+	public List<AccountsLedgerPojo> getAccountsLedgerData(LocalDate fromDate, LocalDate toDate) {
+
+		List<Object[]> rows = new ArrayList<Object[]>();
+
+		if (fromDate == null && toDate == null) {
+
+			rows = cashBookRepo.getSummaryByParticulars();
+
+		} else {
+
+			LocalDateTime from = fromDate.atStartOfDay();
+			LocalDateTime to = toDate.atTime(23, 59, 59);
+
+			rows = cashBookRepo.getSummaryByParticulars(from, to);
+
+		}
+
+		List<AccountsLedgerPojo> result = new ArrayList<>();
+
+		long i = 0;
+
+		for (Object[] r : rows) {
+
+			AccountsLedgerPojo accountsLedger = new AccountsLedgerPojo();
+			accountsLedger.setSno(++i);
+			accountsLedger.setCredit((BigDecimal) r[1]);
+			accountsLedger.setDebit((BigDecimal) r[2]);
+			accountsLedger.setBalance((BigDecimal) r[3]);
+
+			result.add(accountsLedger);
+		}
+
+		return result;
+	}
+	
+	
+	
 
 }
