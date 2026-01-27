@@ -15,8 +15,7 @@ import com.balaji.finance.repo.CashBookRepo;
 @Service
 public class OtherPaymentService {
 
-	@Autowired
-	private BusinessMemberRepository businessMemberRepository;
+	
 
 	@Autowired
 	private CashBookRepo cashBookRepo;

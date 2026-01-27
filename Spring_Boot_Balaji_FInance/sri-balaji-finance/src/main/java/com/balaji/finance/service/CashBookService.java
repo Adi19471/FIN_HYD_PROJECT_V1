@@ -16,6 +16,7 @@ import com.balaji.finance.entity.CashBook;
 import com.balaji.finance.entity.CashBookBK;
 import com.balaji.finance.entity.PersonalInfo;
 import com.balaji.finance.pojo.CashBookDeletedViewPojo;
+import com.balaji.finance.pojo.CashBookLedgerCollectionsPojo;
 import com.balaji.finance.pojo.CashBookLedgerPojo;
 import com.balaji.finance.pojo.CashBookSumaryViewPojo;
 import com.balaji.finance.pojo.CashBookViewPojo;
@@ -26,6 +27,8 @@ import com.balaji.finance.repo.PersonalInfoRepository;
 
 @Service
 public class CashBookService {
+
+    private final MonthlyLoanInstallmentPaymentService monthlyLoanInstallmentPaymentService;
 	
 	@Autowired
 	private CashBookRepo cashBookRepo;
@@ -37,6 +40,10 @@ public class CashBookService {
 
 	@Autowired
 	private PersonalInfoRepository personalInfoRepository;
+
+    CashBookService(MonthlyLoanInstallmentPaymentService monthlyLoanInstallmentPaymentService) {
+        this.monthlyLoanInstallmentPaymentService = monthlyLoanInstallmentPaymentService;
+    }
 
 	public List<CashBookViewPojo> loadAllCashBookDetailsByTransactionDate(LocalDate transactionDate) {
 
@@ -225,5 +232,31 @@ public class CashBookService {
 		
 		return result;
     }
+	
+	public List<CashBookLedgerCollectionsPojo> getCollectionsOnlyCBLedgerData(LocalDate fromDate, LocalDate toDate) {
+
+		LocalDateTime from = fromDate.atStartOfDay();
+		LocalDateTime to = toDate.atTime(23, 59, 59);
+
+		List<Object[]> rows = cashBookRepo.getDateWiseCashBookCollectionsOnly(from, to);
+
+		List<CashBookLedgerCollectionsPojo> result = new ArrayList<>();
+
+		long i = 0;
+
+		for (Object[] r : rows) {
+
+			CashBookLedgerCollectionsPojo cashBookLedger = new CashBookLedgerCollectionsPojo();
+			cashBookLedger.setSno(++i);
+			cashBookLedger.setDate(((java.sql.Date) r[0]).toLocalDate());
+			cashBookLedger.setMonthlyFinanceCollections((BigDecimal) r[1]);
+			cashBookLedger.setDailyFinanceCollections((BigDecimal) r[2]);
+			cashBookLedger.setTotal(((BigDecimal) r[1]).add((BigDecimal) r[2]));
+
+			result.add(cashBookLedger);
+		}
+
+		return result;
+	}
 
 }

@@ -50,5 +50,23 @@ public interface CashBookRepo extends JpaRepository<CashBook, Double> {
 			""", nativeQuery = true)
 	List<Object[]> getDateWiseCashBook(@Param("fromDate") LocalDateTime fromDate,
 			@Param("toDate") LocalDateTime toDate);
+	
+	
+	
+	
+	@Query(value = """
+			SELECT
+                DATE(TRANSDATE) AS txn_date,
+                SUM(CASE WHEN PARTICULARS IN ('DF LOAN INSTALLMENT','DF LATE FEE','DF DOC CHARGES','DF INTEREST') THEN CREDIT ELSE 0 END) AS daily_total,
+                SUM(CASE WHEN PARTICULARS = ('MF LOAN INSTALLMENT','MF INTEREST','MF LATE FEE','MF DOC CHARGES') THEN CREDIT ELSE 0 END) AS monthly_total
+            FROM cashbook
+            WHERE TRANSDATE BETWEEN :fromDate AND :toDate
+            GROUP BY DATE(TRANSDATE)
+            ORDER BY DATE(TRANSDATE)
+			""", nativeQuery = true)
+	List<Object[]> getDateWiseCashBookCollectionsOnly(@Param("fromDate") LocalDateTime fromDate,
+			@Param("toDate") LocalDateTime toDate);
+	
+	
 
 }
