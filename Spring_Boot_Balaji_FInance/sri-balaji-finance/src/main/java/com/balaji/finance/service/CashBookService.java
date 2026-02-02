@@ -16,6 +16,7 @@ import com.balaji.finance.entity.CashBook;
 import com.balaji.finance.entity.CashBookBK;
 import com.balaji.finance.entity.PersonalInfo;
 import com.balaji.finance.pojo.AccountsLedgerPojo;
+import com.balaji.finance.pojo.AccountsMasterLedgerPojo;
 import com.balaji.finance.pojo.CashBookDeletedViewPojo;
 import com.balaji.finance.pojo.CashBookLedgerCollectionsPojo;
 import com.balaji.finance.pojo.CashBookLedgerPojo;
@@ -296,7 +297,50 @@ public class CashBookService {
 		return result;
 	}
 	
-	
-	
+	public List<AccountsMasterLedgerPojo> getRecordsByAccountMasterCode(String transacType, LocalDate fromDate,
+			LocalDate toDate) {
+
+		List<CashBook> rows = new ArrayList<CashBook>();
+
+		if (fromDate == null && toDate == null) {
+
+			rows = cashBookRepo.findByTransType(transacType);
+
+		} else {
+
+			LocalDateTime from = fromDate.atStartOfDay();
+			LocalDateTime to = toDate.atTime(23, 59, 59);
+
+			rows = cashBookRepo.findByTransTypeAndTransDateBetween(transacType, from, to);
+
+		}
+
+		List<AccountsMasterLedgerPojo> result = new ArrayList<>();
+		long i = 0;
+
+		for (CashBook r : rows) {
+
+			PersonalInfo customer = null;
+			if (r.getCustomerId() != null) {
+				Optional<PersonalInfo> byId = personalInfoRepository.findById(r.getCustomerId());
+				customer = byId.get();
+			}
+
+			AccountsMasterLedgerPojo accountsMasterLedgerPojo = new AccountsMasterLedgerPojo();
+			accountsMasterLedgerPojo.setSno(++i);
+			accountsMasterLedgerPojo
+					.setName(customer != null ? customer.getId() + " - " + customer.getFirstname() : "");
+			accountsMasterLedgerPojo.setParticulars(r.getParticulars());
+			accountsMasterLedgerPojo.setTransCode(r.getTransType());
+			accountsMasterLedgerPojo.setCredit(r.getCredit());
+			accountsMasterLedgerPojo.setDebit(r.getDebit());
+			accountsMasterLedgerPojo.setDate(r.getTransDate().toLocalDate());
+
+			result.add(accountsMasterLedgerPojo);
+		}
+
+		return result;
+	}
+
 
 }

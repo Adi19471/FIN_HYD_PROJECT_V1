@@ -67,8 +67,8 @@ public interface CashBookRepo extends JpaRepository<CashBook, Double> {
 			    IFNULL(SUM(CREDIT), 0) - IFNULL(SUM(DEBIT), 0) AS balance
 			FROM cashbook
 			WHERE TRANSDATE BETWEEN :fromDate AND :toDate
-			GROUP BY DATE(PARTICULARS)
-			ORDER BY DATE(PARTICULARS)
+			GROUP BY PARTICULARS
+			ORDER BY PARTICULARS
 			""", nativeQuery = true)
 	List<Object[]> getSummaryByParticulars(@Param("fromDate") LocalDateTime fromDate,
 			@Param("toDate") LocalDateTime toDate);
@@ -80,9 +80,13 @@ public interface CashBookRepo extends JpaRepository<CashBook, Double> {
 			    IFNULL(SUM(DEBIT), 0) AS debit,
 			    IFNULL(SUM(CREDIT), 0) - IFNULL(SUM(DEBIT), 0) AS balance
 			FROM cashbook
-			GROUP BY DATE(PARTICULARS)
-			ORDER BY DATE(PARTICULARS)
+			GROUP BY PARTICULARS
+			ORDER BY PARTICULARS
 			""", nativeQuery = true)
 	List<Object[]> getSummaryByParticulars();
+
+	List<CashBook> findByTransTypeAndTransDateBetween(String transType, LocalDateTime fromDate, LocalDateTime toDate);
+
+	List<CashBook> findByTransType(String transType);
 
 }
