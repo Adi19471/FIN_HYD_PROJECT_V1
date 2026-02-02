@@ -23,6 +23,7 @@ import com.balaji.finance.pojo.CashBookLedgerPojo;
 import com.balaji.finance.pojo.CashBookSumaryViewPojo;
 import com.balaji.finance.pojo.CashBookViewPojo;
 import com.balaji.finance.pojo.DayWiseTransactionsSummary;
+import com.balaji.finance.pojo.UserCollectionsLedgerPojo;
 import com.balaji.finance.repo.CashBookBkRepo;
 import com.balaji.finance.repo.CashBookRepo;
 import com.balaji.finance.repo.PersonalInfoRepository;
@@ -342,5 +343,40 @@ public class CashBookService {
 		return result;
 	}
 
+	public List<UserCollectionsLedgerPojo> getUsersCollectionsLedger(String userName, LocalDate fromDate,
+			LocalDate toDate) {
 
+		List<Object[]> rows = new ArrayList<Object[]>();
+
+		if (fromDate == null && toDate == null) {
+
+			rows = cashBookRepo.getAllCashBookCollectionsOnlyByUser(userName);
+
+		} else {
+
+			LocalDateTime from = fromDate.atStartOfDay();
+			LocalDateTime to = toDate.atTime(23, 59, 59);
+
+			rows = cashBookRepo.getDateWiseCashBookCollectionsOnlyByUser(from, to, userName);
+
+		}
+
+		List<UserCollectionsLedgerPojo> result = new ArrayList<>();
+
+		long i = 0;
+
+		for (Object[] r : rows) {
+
+			UserCollectionsLedgerPojo cashBookLedger = new UserCollectionsLedgerPojo();
+			cashBookLedger.setSno(++i);
+			cashBookLedger.setDate(((java.sql.Date) r[0]).toLocalDate());
+			cashBookLedger.setMonthlyFinanceCollections((BigDecimal) r[1]);
+			cashBookLedger.setDailyFinanceCollections((BigDecimal) r[2]);
+			cashBookLedger.setTotal(((BigDecimal) r[1]).add((BigDecimal) r[2]));
+
+			result.add(cashBookLedger);
+		}
+
+		return result;
+	}
 }

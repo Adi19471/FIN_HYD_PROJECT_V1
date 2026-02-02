@@ -20,8 +20,8 @@ public class AccountsMasterLedgerController {
 	@Autowired
 	private CashBookService cashBookService;
 
-	@GetMapping("/getAccountsLedger/{masterName}/{fromDate}/{toDate}")
-	public ResponseEntity<List<AccountsMasterLedgerPojo>> getAccountsLedger(@PathVariable String masterName, @PathVariable String fromDate,
+	@GetMapping("/getRecordsByAccountMasterCode/{masterName}/{fromDate}/{toDate}")
+	public ResponseEntity<List<AccountsMasterLedgerPojo>> getRecordsByAccountMasterCode(@PathVariable String masterName, @PathVariable String fromDate,
 			@PathVariable String toDate) {
 
 		DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
