@@ -2244,3 +2244,6 @@ Caused by: org.springframework.util.PlaceholderResolutionException: Could not re
 2026-02-05 12:11:16 INFO  c.b.f.SriBalajiFinanceApplication - Started SriBalajiFinanceApplication in 8.622 seconds (process running for 8.926)
 2026-02-05 12:11:16 WARN  o.s.c.events.SpringDocAppInitializer - SpringDoc /v3/api-docs endpoint is enabled by default. To disable it in production, set the property 'springdoc.api-docs.enabled=false'
 2026-02-05 12:11:16 WARN  o.s.c.events.SpringDocAppInitializer - SpringDoc /swagger-ui.html endpoint is enabled by default. To disable it in production, set the property 'springdoc.swagger-ui.enabled=false'
+2026-02-05 12:11:20 INFO  o.a.c.c.C.[.[.[/balaji-finance] - Initializing Spring DispatcherServlet 'dispatcherServlet'
+2026-02-05 12:11:20 INFO  o.s.web.servlet.DispatcherServlet - Initializing Servlet 'dispatcherServlet'
+2026-02-05 12:11:20 INFO  o.s.web.servlet.DispatcherServlet - Completed initialization in 0 ms

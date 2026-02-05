@@ -7,6 +7,6 @@ public class FrontendController {
 
     @RequestMapping(value = "/balaji-finance")
     public String redirect() {
-        return "redirect:/login";
+        return "forward:/index.html";
     }
 }
