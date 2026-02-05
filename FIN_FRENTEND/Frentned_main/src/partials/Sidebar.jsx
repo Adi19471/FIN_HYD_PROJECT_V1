@@ -337,7 +337,7 @@ function Sidebar({ sidebarOpen, setSidebarOpen }) {
             <ul className="pl-11 mt-1 space-y-1">
               <li>
                 <NavLink
-                  to="/Loans/Daily_Book"
+                  to="/Loans/LoansMainpage"
                   className={({ isActive }) =>
                     `flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-all duration-200 ${
                       isActive
@@ -393,7 +393,8 @@ function Sidebar({ sidebarOpen, setSidebarOpen }) {
                 </NavLink>
               </li>
 
-              <li>
+
+                <li>
                 <NavLink
                   to="/AccountMasterSetup/Registraion_creation"
                   className={({ isActive }) =>
@@ -405,16 +406,12 @@ function Sidebar({ sidebarOpen, setSidebarOpen }) {
                   }
                 >
                   <AccountBalanceWallet className="w-4 h-4" />
-                  <span>Users Registration</span>
+                  <span>User Registraion</span>
                 </NavLink>
               </li>
               {/* You can add more items here later */}
             </ul>
           )}
-
-
-
-
 
           {/* Authentication */}
           <div

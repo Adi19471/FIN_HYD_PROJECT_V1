@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=fallback');
+@import url('https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;600;700&display=fallback');
 
 @import 'tailwindcss';
 @import './additional-styles/utility-patterns.css' layer(components);
@@ -42,29 +42,29 @@ select:focus,
   --color-gray-900: #111827;
   --color-gray-950: #030712;
 
-  --color-violet-50: #f1eeff;
-  --color-violet-100: #e6e1ff;
-  --color-violet-200: #d2cbff;
-  --color-violet-300: #b7acff;
-  --color-violet-400: #9c8cff;
-  --color-violet-500: #8470ff;
-  --color-violet-600: #755ff8;
-  --color-violet-700: #5d47de;
-  --color-violet-800: #4634b1;
-  --color-violet-900: #2f227c;
-  --color-violet-950: #1c1357;
+  --color-blue-50: #eff6ff;
+  --color-blue-100: #dbeafe;
+  --color-blue-200: #bfdbfe;
+  --color-blue-300: #93c5fd;
+  --color-blue-400: #60a5fa;
+  --color-blue-500: #3b82f6;
+  --color-blue-600: #2563eb;
+  --color-blue-700: #1d4ed8;
+  --color-blue-800: #1e40af;
+  --color-blue-900: #1e3a8a;
+  --color-blue-950: #172554;
 
-  --color-sky-50: #e3f3ff;
-  --color-sky-100: #d1ecff;
-  --color-sky-200: #b6e1ff;
-  --color-sky-300: #a0d7ff;
-  --color-sky-400: #7bc8ff;
-  --color-sky-500: #67bfff;
-  --color-sky-600: #56b1f3;
-  --color-sky-700: #3193da;
-  --color-sky-800: #1c71ae;
-  --color-sky-900: #124d79;
-  --color-sky-950: #0b324f;
+  --color-indigo-50: #eef2ff;
+  --color-indigo-100: #e0e7ff;
+  --color-indigo-200: #c7d2fe;
+  --color-indigo-300: #a5b4fc;
+  --color-indigo-400: #818cf8;
+  --color-indigo-500: #6366f1;
+  --color-indigo-600: #4f46e5;
+  --color-indigo-700: #4338ca;
+  --color-indigo-800: #3730a3;
+  --color-indigo-900: #312e81;
+  --color-indigo-950: #1e1b4b;
 
   --color-green-50: #d2ffe2;
   --color-green-100: #b1fdcd;
@@ -102,7 +102,7 @@ select:focus,
   --color-yellow-900: #4f3d0e;
   --color-yellow-950: #342809;
 
-  --font-inter: "Inter", "sans-serif";
+  --font-roboto: "Roboto", "sans-serif";
 
   --text-xs: 0.75rem;
   --text-xs--line-height: 1.5;

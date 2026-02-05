@@ -1,118 +1,174 @@
 import React, { useState, lazy, Suspense } from "react";
-import { Box, Typography, Paper } from "@mui/material";
+import {
+  Box,
+  Tabs,
+  Tab,
+  Typography,
+  Paper,
+  alpha,
+  useTheme,
+} from "@mui/material";
 import { motion } from "framer-motion";
 
 // Icons
 import { MdCalendarToday, MdCalendarMonth } from "react-icons/md";
 
-// Lazy-loaded pages
+// Lazy-loaded views
 const MonthlyFinance = lazy(() => import("./MonthlyFinance/MonthlyFinance"));
-const DailyFinance = lazy(() => import("./DailyFinance/DailyFinace"));
+const DailyFinance = lazy(() => import("./DailyFinance/DailyFinace")); // ← typo? DailyFinance
 
-const Loan = () => {
-  const [activeTab, setActiveTab] = useState("daily");
+const FinanceTabs = () => {
+  const theme = useTheme();
+  const isDark = theme.palette.mode === "dark";
+
+  const [activeTab, setActiveTab] = useState(0);
 
   const tabs = [
-    { id: "daily", label: "DAILY", icon: <MdCalendarToday size={18} /> },
-    { id: "monthly", label: "MONTHLY", icon: <MdCalendarMonth size={18} /> },
+    { label: "DAILY", icon: <MdCalendarToday size={20} /> },
+    { label: "MONTHLY", icon: <MdCalendarMonth size={20} /> },
   ];
 
+  const handleChange = (event, newValue) => {
+    setActiveTab(newValue);
+  };
+
   return (
-    <Box sx={{ p: 0 }}>
-      {/* FULL-WIDTH DARK TAB BAR */}
+    <Box sx={{ width: "100%", minHeight: "100vh", bgcolor: "background.default", p: { xs: 1, md: 2 } }}>
+      {/* Modern Dark Tab Bar */}
       <Paper
-        elevation={6}
+        elevation={4}
         sx={{
-          width: "100%",
-          bgcolor: "#0b1324",
-          borderRadius: "8px",
-          p: 1,
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "center",
+          borderRadius: 2,
+          overflow: "hidden",
+          bgcolor: "#0b1324", // deep navy
+          border: `1px solid ${alpha("#ffffff", 0.06)}`,
+          backdropFilter: "blur(8px)",
+          boxShadow: "0 8px 32px rgba(0,0,0,0.45)",
         }}
       >
-        {/* LEFT — HEADING BUTTON */}
+        {/* Header + Tabs Container */}
         <Box
-          component="button"
-          onClick={() => console.log("Heading clicked")}
-          style={{
-            background: "transparent",
-            border: "none",
-            cursor: "pointer",
+          sx={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+            px: { xs: 2, sm: 3 },
+            py: 1.5,
+            borderBottom: `1px solid ${alpha("#ffffff", 0.08)}`,
           }}
         >
+          {/* Heading (clickable if needed) */}
           <Typography
-            variant="h6"
+            variant="subtitle1"
             sx={{
-              fontSize: "14px",
-              color: "warning.main",
+              fontSize: { xs: "0.95rem", sm: "1.1rem" },
               fontWeight: 700,
-              letterSpacing: "1px",
+              color: "warning.main",
+              letterSpacing: 1.1,
               textTransform: "uppercase",
+              cursor: "pointer",
+              userSelect: "none",
+              "&:hover": { color: "warning.light" },
             }}
+            onClick={() => console.log("Personal Accounts clicked")}
           >
             Personal Accounts
           </Typography>
+
+          {/* Tabs – using MUI Tabs with custom indicator */}
+          <Tabs
+            value={activeTab}
+            onChange={handleChange}
+            variant="standard"
+            scrollButtons="auto"
+            allowScrollButtonsMobile
+            sx={{
+              minHeight: 48,
+              "& .MuiTabs-indicator": { display: "none" }, // hide default indicator
+              "& .MuiTabs-flexContainer": {
+                gap: { xs: 1, sm: 2 },
+              },
+            }}
+          >
+            {tabs.map((tab, index) => {
+              const isActive = activeTab === index;
+
+              return (
+                <Tab
+                  key={tab.label}
+                  icon={tab.icon}
+                  iconPosition="start"
+                  label={
+                    <Typography
+                      variant="subtitle2"
+                      sx={{
+                        fontWeight: isActive ? 700 : 500,
+                        fontSize: { xs: "0.85rem", sm: "0.95rem" },
+                        letterSpacing: 0.8,
+                        textTransform: "uppercase",
+                        color: isActive ? "#2ee6bb" : "#93a4b8",
+                        transition: "color 0.3s ease",
+                      }}
+                    >
+                      {tab.label}
+                    </Typography>
+                  }
+                  sx={{
+                    minHeight: 48,
+                    px: { xs: 2, sm: 3 },
+                    py: 1,
+                    borderRadius: 1.5,
+                    transition: "all 0.25s ease",
+                    "&:hover": {
+                      bgcolor: alpha("#2ee6bb", 0.08),
+                      color: "#2ee6bb !important",
+                    },
+                    position: "relative",
+                    overflow: "hidden",
+                  }}
+                />
+              );
+            })}
+          </Tabs>
         </Box>
 
-        {/* RIGHT — TABS */}
-        <Box sx={{ display: "flex",  }}>
-          {tabs.map((tab) => {
-            const isActive = activeTab === tab.id;
-
-            return (
-              <Box
-                key={tab.id}
-                onClick={() => setActiveTab(tab.id)}
-                sx={{
-                  position: "relative",
-                  cursor: "pointer",
-                  display: "flex",
-                  alignItems: "center",
-                  gap: 1,
-                  px: 2,
-                  py: 1,
-                  color: isActive ? "#2ee6bb" : "#8ea2b8",
-                  fontWeight: isActive ? 700 : 500,
-                  fontSize: "15px",
-                  letterSpacing: "1px",
-                  textTransform: "uppercase",
-                }}
-              >
-                {/* Icon + Label */}
-                {tab.icon}
-                <Typography variant="body1">{tab.label}</Typography>
-
-                {/* Animated Underline */}
-                {isActive && (
-                  <motion.div
-                    layoutId="underline"
-                    style={{
-                      position: "absolute",
-                      bottom: -6,
-                      left: 0,
-                      right: 0,
-                      height: "3px",
-                      backgroundColor: "#4da3ff",
-                      borderRadius: "2px",
-                    }}
-                    transition={{ type: "spring", stiffness: 220, damping: 22 }}
-                  />
-                )}
-              </Box>
-            );
-          })}
+        {/* Animated Underline – shared layout across tabs */}
+        <Box sx={{ position: "relative", height: 4 }}>
+          <motion.div
+            layoutId="active-underline"
+            initial={false}
+            transition={{
+              type: "spring",
+              stiffness: 400,
+              damping: 30,
+            }}
+            style={{
+              position: "absolute",
+              bottom: 0,
+              height: "100%",
+              background: "linear-gradient(90deg, #4da3ff, #60a5fa)",
+              borderRadius: "4px 4px 0 0",
+              zIndex: 1,
+            }}
+          />
         </Box>
       </Paper>
 
-      {/* CONTENT */}
-      <Suspense fallback={<Typography sx={{ mt: 1 }}>Loading...</Typography>}>
-        {activeTab === "daily" && <DailyFinance />}
-        {activeTab === "monthly" && <MonthlyFinance />}
-      </Suspense>
+      {/* Content Area */}
+      <Box sx={{ mt: 3, borderRadius: 2, overflow: "hidden" }}>
+        <Suspense
+          fallback={
+            <Box sx={{ textAlign: "center", py: 8 }}>
+              <Typography color="text.secondary">Loading finance data...</Typography>
+            </Box>
+          }
+        >
+          {activeTab === 0 && <DailyFinance />}
+          {activeTab === 1 && <MonthlyFinance />}
+        </Suspense>
+      </Box>
     </Box>
   );
 };
 
-export default Loan;
+export default FinanceTabs;

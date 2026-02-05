@@ -53,18 +53,17 @@ const Registration_creation = () => {
     try {
       const res = await axios.get(`${API_BASE}/users`, getHeaders());
 
+      // Handle different possible response shapes
       const userList = Array.isArray(res.data)
         ? res.data
-        : res.data?.data ||
-          res.data?.users ||
-          res.data?.result ||
-          [];
+        : res.data?.data || res.data?.users || res.data?.result || [];
 
-      const normalizedRows = userList.map((user, index) => ({
-        id: user.id ?? user._id ?? user.userId ?? `row-${index}`,
-        name: user.name ?? user.username ?? user.email ?? "—",
-        role: user.role ??user.role ?? user.role ?? "—",
-      }));
+   const normalizedRows = userList.map((user, index) => ({
+  id: user.id ?? user._id ?? user.userId ?? `row-${index}`,
+  name: user.name ?? user.username ?? user.email ?? "—",
+  role: user.role || "—",
+}));
+
 
       setRows(normalizedRows);
     } catch (err) {
@@ -84,8 +83,8 @@ const Registration_creation = () => {
       setForm({
         id: row.id ?? "",
         name: row.name ?? "",
-        password: "",
-        role: row.role ?? "",
+        password: "", // never pre-fill password
+        role: row.role === "—" ? "" : row.role ?? "",
       });
     } else {
       setForm({ id: "", name: "", password: "", role: "" });
@@ -122,7 +121,7 @@ const Registration_creation = () => {
         if (form.password?.trim()) payload.password = form.password.trim();
 
         await axios.put(`${API_BASE}/users`, payload, getHeaders());
-        toast.success("User updated");
+        toast.success("User updated successfully");
       } else {
         // Create
         await axios.post(
@@ -134,25 +133,25 @@ const Registration_creation = () => {
           },
           getHeaders()
         );
-        toast.success("User created");
+        toast.success("User created successfully");
       }
 
       handleClose();
       await loadUsers();
     } catch (err) {
       console.error("Save failed:", err);
-      toast.error(err?.response?.data?.message || "Save failed");
+      toast.error(err?.response?.data?.message || "Operation failed");
     } finally {
       setSaving(false);
     }
   };
 
   const handleDelete = async (id) => {
-    if (!window.confirm("Delete this user?")) return;
+    if (!window.confirm("Are you sure you want to delete this user?")) return;
 
     try {
       await axios.delete(`${API_BASE}/users/${id}`, getHeaders());
-      toast.success("User deleted");
+      toast.success("User deleted successfully");
       await loadUsers();
     } catch (err) {
       console.error("Delete failed:", err);
@@ -161,8 +160,7 @@ const Registration_creation = () => {
   };
 
   const columns = [
-
-      {
+    {
       field: "actions",
       headerName: "Actions",
       width: 140,
@@ -187,18 +185,14 @@ const Registration_creation = () => {
         </Box>
       ),
     },
-
-    
     { field: "id", headerName: "ID", width: 120 },
     { field: "name", headerName: "Name", flex: 1, minWidth: 180 },
-    {
-      field: "role",
-      headerName: "Role",
-      flex: 1,
-      minWidth: 140,
-      valueFormatter: (params) => params?.value ?? "—",
-    },
-  
+   {
+  field: "role",
+  headerName: "Role",
+  flex: 1,
+  minWidth: 140,
+}
   ];
 
   return (
@@ -240,15 +234,31 @@ const Registration_creation = () => {
             quickFilterProps: { debounceMs: 500 },
           },
         }}
+        // ── Show grid lines / borders ──
+        showCellVerticalBorder
+        showColumnVerticalBorder
         sx={{
-          border: 0,
+          border: "1px solid #e0e0e0",
+          borderRadius: 1,
           "& .MuiDataGrid-columnHeaders": {
             backgroundColor: "#f8f9fa",
+            borderBottom: "2px solid #ccc",
+          },
+          "& .MuiDataGrid-cell": {
+            borderBottom: "1px solid #e0e0e0 !important",
+          },
+          "& .MuiDataGrid-row": {
+            "&:hover": {
+              backgroundColor: "#f5f5f5",
+            },
+          },
+          "& .MuiDataGrid-virtualScroller": {
+            overflowX: "auto",
           },
         }}
       />
 
-      {/* ── Dialog ── */}
+      {/* Dialog */}
       <Dialog open={open} onClose={handleClose} fullWidth maxWidth="sm">
         <DialogTitle>{form.id ? "Edit User" : "Create New User"}</DialogTitle>
 
@@ -258,6 +268,7 @@ const Registration_creation = () => {
             margin="dense"
             label="Name *"
             fullWidth
+            variant="outlined"
             value={form.name}
             onChange={(e) => setForm({ ...form, name: e.target.value })}
           />
@@ -267,10 +278,13 @@ const Registration_creation = () => {
             label={form.id ? "New Password (optional)" : "Password *"}
             type="password"
             fullWidth
+            variant="outlined"
             value={form.password}
             onChange={(e) => setForm({ ...form, password: e.target.value })}
             helperText={
-              form.id ? "Leave blank to keep current password" : ""
+              form.id
+                ? "Leave blank to keep current password"
+                : "Required for new users"
             }
           />
 
@@ -278,9 +292,10 @@ const Registration_creation = () => {
             margin="dense"
             label="Role"
             fullWidth
+            variant="outlined"
             value={form.role}
             onChange={(e) => setForm({ ...form, role: e.target.value })}
-            helperText="e.g. admin, user, developer, read-only..."
+            helperText="e.g. admin, user, developer, read-only, read"
           />
         </DialogContent>
 
@@ -292,7 +307,9 @@ const Registration_creation = () => {
             variant="contained"
             onClick={handleSave}
             disabled={saving}
-            startIcon={saving ? <CircularProgress size={20} color="inherit" /> : null}
+            startIcon={
+              saving ? <CircularProgress size={20} color="inherit" /> : null
+            }
           >
             {saving ? "Saving..." : form.id ? "Update" : "Create"}
           </Button>

@@ -1,15 +1,13 @@
 import React, { useEffect, Suspense } from "react";
-import { Routes, Route, useLocation } from "react-router-dom";
+import { Routes, Route, useLocation, Navigate } from "react-router-dom";
 
 import "./css/style.css";
-
 import "./charts/ChartjsConfig";
 import "./App.css";
 
 import routes from "./routes";
 import PrivateRoute from "./components/PrivateRoute";
 import Layout from "./components/Layout";
-
 import LoadingSpinner from "./LoadingSpinner";
 
 function App() {
@@ -19,15 +17,17 @@ function App() {
     document.querySelector("html").style.scrollBehavior = "auto";
     window.scroll({ top: 0 });
     document.querySelector("html").style.scrollBehavior = "";
-  }, [location.pathname]); // triggered on route change
+  }, [location.pathname]);
 
-  // Render login (and other public routes) without the app chrome/layout
   const isAuthRoute =
     location.pathname === "/login" || location.pathname === "/unauthorized";
 
   const routesTree = (
     <Suspense fallback={<LoadingSpinner />}>
       <Routes>
+        {/* ✅ Default Redirect */}
+        <Route path="/" element={<Navigate to="/login" replace />} />
+
         {routes.map((route, index) => {
           if (route.path === "/login" || route.public) {
             return (
@@ -35,7 +35,6 @@ function App() {
                 key={index}
                 path={route.path}
                 element={<route.element />}
-                exact={route.exact}
               />
             );
           }
@@ -49,7 +48,6 @@ function App() {
                   <route.element />
                 </PrivateRoute>
               }
-              exact={route.exact}
             />
           );
         })}

@@ -1,32 +1,35 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useAuth } from "../../utils/AuthContext";
 import { useNavigate } from "react-router-dom";
 import {
   Box,
-  Grid,
   TextField,
   Button,
-  Typography,
   InputAdornment,
   IconButton,
   CircularProgress,
+  Paper,
+  Typography,
 } from "@mui/material";
-import { Visibility, VisibilityOff, AccountCircle, Lock } from "@mui/icons-material";
-import { ThemeProvider, createTheme } from "@mui/material/styles";
+import {
+  Visibility,
+  VisibilityOff,
+  AccountCircle,
+  Lock,
+} from "@mui/icons-material";
 
 import { successToast, errorToast } from "toastify";
 import { API_BASE } from "lib/config";
 import { setSession } from "src/utils/session";
-import "./Login.css"
+import "./Login.css"; // you can keep or remove if not needed
 
-import backgroundImg from "../../../public/images/four.png"; 
-
-const theme = createTheme({
-  palette: {
-    primary: { main: "#1976d2" },
-    background: { default: "#f5f7fa" },
-  },
-});
+const images = [
+  "https://tse1.mm.bing.net/th/id/OIP.pRQzkDi4PrxDoTkGb4S4RAAAAA?rs=1&pid=ImgDetMain&o=7&rm=3",
+  "https://wallpaperaccess.com/full/2113262.jpg",
+  "https://wallpaperaccess.com/full/2113304.jpg",
+  "https://wallpaperaccess.com/full/5949291.jpg",
+  "https://tse2.mm.bing.net/th/id/OIP.MjNhd-gfbcDQqJfNGv0hxgHaJ4?rs=1&pid=ImgDetMain&o=7&rm=3",
+];
 
 const Login = () => {
   const { login } = useAuth();
@@ -36,6 +39,15 @@ const Login = () => {
   const [errors, setErrors] = useState({});
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+  const [currentImageIndex, setCurrentImageIndex] = useState(0);
+
+  // Image carousel
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setCurrentImageIndex((prev) => (prev + 1) % images.length);
+    }, 4000);
+    return () => clearInterval(interval);
+  }, []);
 
   const handleChange = (field) => (e) => {
     setFormData((prev) => ({ ...prev, [field]: e.target.value }));
@@ -71,13 +83,13 @@ const Login = () => {
         setSession("token", data.token);
         setSession("username", data.name || formData.username);
         login({ name: data.name || formData.username, token: data.token });
-        successToast("Login successful");
+        successToast("Login successful 🙏");
         navigate("/", { replace: true });
       } else {
         errorToast(data.message || "Invalid credentials");
       }
     } catch (err) {
-      console.error("Login error:", err);
+      console.error(err);
       errorToast("Network error. Please try again.");
     } finally {
       setLoading(false);
@@ -85,147 +97,180 @@ const Login = () => {
   };
 
   return (
-    <ThemeProvider theme={theme}>
-      <Grid container component="main" sx={{ height: "100vh" }}>
-        {/* Background Image – shown on md+ screens */}
-        <Grid
-          item
-          xs={false}
-          md={7}
-          sx={{
-            backgroundImage: `url(${backgroundImg})`,
-            backgroundRepeat: "no-repeat",
-            backgroundSize: "cover",
-            backgroundPosition: "center",
-            position: "relative",
-            display: { xs: "none", md: "block" },
-          }}
-        >
-          {/* Optional overlay */}
+    <Box
+      sx={{
+        width: "100vw",
+        height: "100vh",
+        display: "flex",
+        overflow: "hidden",
+        position: "relative",
+      }}
+    >
+      {/* ===================== LEFT - IMAGE BACKGROUND (75%) ===================== */}
+      <Box
+        sx={{
+          width: { xs: "100%", md: "85%" },
+          height: "100%",
+          position: "relative",
+          overflow: "hidden",
+        }}
+      >
+        {images.map((src, idx) => (
           <Box
+            key={idx}
+            component="img"
+            src={src}
+            alt="background"
+
+
+
             sx={{
+
+                  objectFit: "contain",      // 👈 NO CROPPING
+    backgroundColor: "#000",   // 👈 fills empty space
               position: "absolute",
               inset: 0,
-              background: "linear-gradient(135deg, rgba(25,118,210,0.18) 0%, rgba(0,0,0,0.42) 100%)",
+              width: "100%",
+              height: "100%",
+              objectFit: "cover",
+              opacity: idx === currentImageIndex ? 1 : 0,
+              transition: "opacity 1.2s ease-in-out",
+              zIndex: idx === currentImageIndex ? 1 : 0,
             }}
           />
-        </Grid>
+        ))}
 
-        {/* Form – always centered */}
-        <Grid
-          item
-          xs={12}
-          md={5}
-          component={Box}
-          display="flex"
-          flexDirection="column"
-          justifyContent="center"
-          alignItems="center"
+        {/* Optional overlay for better text readability */}
+        <Box
           sx={{
-            px: { xs: 3, sm: 6, md: 8, lg: 10 },
-            py: { xs: 4, md: 6 },
-            bgcolor: "background.default",
+            position: "absolute",
+            inset: 0,
+            background: "linear-gradient(to right, rgba(0,0,0,0.35), rgba(0,0,0,0.15))",
+            zIndex: 2,
+          }}
+        />
+      </Box>
+
+      {/* ===================== RIGHT - LOGIN FORM (25%) ===================== */}
+      <Box
+        sx={{
+          width: { xs: "100%", md: "25%" },
+          minWidth: { md: "340px" },
+          height: "100%",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          backgroundColor: "rgba(255, 255, 255, 0.94)",
+          backdropFilter: "blur(8px)",
+          zIndex: 10,
+          boxShadow: { md: "-10px 0 25px rgba(0,0,0,0.25)" },
+        }}
+      >
+        <Paper
+          elevation={6}
+          sx={{
+            p: { xs: 3, sm: 4 },
+            width: "90%",
+            maxWidth: 420,
+            borderRadius: 3,
+            background: "linear-gradient(145deg, #ffffff 0%, #fffaf0 100%)",
           }}
         >
-          <Box
-            sx={{
-              width: "100%",
-              maxWidth: 1000,
-              display: "flex",
-              flexDirection: "column",
-              alignItems: "center",
-            }}
-          >
+          {/* Title */}
+          <Box textAlign="center" mb={4}>
             <Typography
-              component="h1"
               variant="h4"
-              fontWeight={700}
-              color="primary.main"
-              gutterBottom
-              sx={{ mb: 5, letterSpacing: "-0.4px" }}
+              fontWeight={800}
+              sx={{
+                color: "#8b0000",
+                letterSpacing: "1.5px",
+                fontFamily: "'Georgia', serif",
+              }}
             >
-              Balaji Finance
+              SRI BALAJI
             </Typography>
-
-            <Box component="form" onSubmit={handleSubmit} noValidate sx={{ width: "100%" }}>
-              <TextField
-                margin="normal"
-                required
-                fullWidth
-                id="username"
-                label="Username / Email"
-                name="username"
-                autoComplete="username"
-                autoFocus
-                value={formData.username}
-                onChange={handleChange("username")}
-                error={!!errors.username}
-                helperText={errors.username}
-                InputProps={{
-                  startAdornment: (
-                    <InputAdornment position="start">
-                      <AccountCircle color="primary" />
-                    </InputAdornment>
-                  ),
-                }}
-              />
-
-              <TextField
-                margin="normal"
-                required
-                fullWidth
-                name="password"
-                label="Password"
-                type={showPassword ? "text" : "password"}
-                id="password"
-                autoComplete="current-password"
-                value={formData.password}
-                onChange={handleChange("password")}
-                error={!!errors.password}
-                helperText={errors.password}
-                InputProps={{
-                  startAdornment: (
-                    <InputAdornment position="start">
-                      <Lock color="primary" />
-                    </InputAdornment>
-                  ),
-                  endAdornment: (
-                    <InputAdornment position="end">
-                      <IconButton
-                        aria-label="toggle password visibility"
-                        onClick={() => setShowPassword(!showPassword)}
-                        edge="end"
-                      >
-                        {showPassword ? <VisibilityOff /> : <Visibility />}
-                      </IconButton>
-                    </InputAdornment>
-                  ),
-                }}
-              />
-
-              <Button
-                type="submit"
-                fullWidth
-                variant="contained"
-                size="large"
-                disabled={loading}
-                sx={{
-                  mt: 4,
-                  mb: 2,
-                  py: 1.6,
-                  fontSize: "1.05rem",
-                  fontWeight: 600,
-                  textTransform: "none",
-                  borderRadius: 2,
-                }}
-              >
-                {loading ? <CircularProgress size={26} color="inherit" /> : "Sign In"}
-              </Button>
-            </Box>
+            <Typography variant="body2" color="text.secondary" mt={0.5}>
+              Secure Access Portal
+            </Typography>
           </Box>
-        </Grid>
-      </Grid>
-    </ThemeProvider>
+
+          {/* Form */}
+          <form onSubmit={handleSubmit} noValidate>
+            <TextField
+              margin="normal"
+              fullWidth
+              size="medium"
+              label="Username / Email"
+              value={formData.username}
+              onChange={handleChange("username")}
+              error={!!errors.username}
+              helperText={errors.username}
+              InputProps={{
+                startAdornment: (
+                  <InputAdornment position="start">
+                    <AccountCircle color="primary" />
+                  </InputAdornment>
+                ),
+              }}
+            />
+
+            <TextField
+              margin="normal"
+              fullWidth
+              size="medium"
+              label="Password"
+              type={showPassword ? "text" : "password"}
+              value={formData.password}
+              onChange={handleChange("password")}
+              error={!!errors.password}
+              helperText={errors.password}
+              InputProps={{
+                startAdornment: (
+                  <InputAdornment position="start">
+                    <Lock color="primary" />
+                  </InputAdornment>
+                ),
+                endAdornment: (
+                  <InputAdornment position="end">
+                    <IconButton
+                      onClick={() => setShowPassword((prev) => !prev)}
+                      edge="end"
+                    >
+                      {showPassword ? <VisibilityOff /> : <Visibility />}
+                    </IconButton>
+                  </InputAdornment>
+                ),
+              }}
+            />
+
+            <Button
+              type="submit"
+              fullWidth
+              variant="contained"
+              size="large"
+              disabled={loading}
+              sx={{
+                mt: 4,
+                py: 1.8,
+                fontSize: "1.1rem",
+                fontWeight: 600,
+                borderRadius: 2,
+                background: "linear-gradient(90deg, #8b0000 0%, #c41e3a 100%)",
+                "&:hover": {
+                  background: "linear-gradient(90deg, #a00000 0%, #d32f2f 100%)",
+                },
+              }}
+            >
+              {loading ? (
+                <CircularProgress size={28} color="inherit" />
+              ) : (
+                "Sign In"
+              )}
+            </Button>
+          </form>
+        </Paper>
+      </Box>
+    </Box>
   );
 };
 

@@ -1,0 +1,1 @@
+import{b3 as s}from"./vendor-DrMsH6wS.js";const o=e=>{s.success(e,{position:"top-right",autoClose:3e3,hideProgressBar:!1,closeOnClick:!0,pauseOnHover:!0,draggable:!0,progress:void 0})},t=e=>{s.error(e,{position:"top-right",autoClose:3e3,hideProgressBar:!1,closeOnClick:!0,pauseOnHover:!0,draggable:!0,progress:void 0})};export{t as e,o as s};

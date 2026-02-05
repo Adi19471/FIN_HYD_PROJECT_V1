@@ -42,7 +42,7 @@ export default function ThemeProvider({ children }) {
       createTheme({
         palette: {
           mode: theme,
-          primary: { main: "#0ea5a0" },
+        primary: { main: "#3b82f6" },
         },
       }),
     [theme]

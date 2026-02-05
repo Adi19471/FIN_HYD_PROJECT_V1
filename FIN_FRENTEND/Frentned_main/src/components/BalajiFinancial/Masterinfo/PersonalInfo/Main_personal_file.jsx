@@ -1,186 +1,157 @@
-import React, { useState, useEffect } from "react";
-import { Box, Tabs, Tab, Paper, Typography } from "@mui/material";
+import React, { useState, useMemo } from "react";
+import {
+  Box,
+  Tabs,
+  Tab,
+  Paper,
+  Typography,
+  alpha,
+  useTheme,
+} from "@mui/material";
 import { Person, Work, Groups, Storefront } from "@mui/icons-material";
 
-import Custmer from "./Custmer/Custmer";
+import Customer from "./Custmer/Custmer"; // ← fix typo if needed: Customer
 import Partner from "./Partner/Partner";
-import Employe from "./Employe/Employe";
-import Vender from "./Vender/Vender";
+import Employee from "./Employe/Employe"; // ← typo: Employee
+import Vendor from "./Vender/Vender";     // ← typo: Vendor
 
 import LoadingSpinner from "../../../../LoadingSpinner";
 
-const Main_personal_file = () => {
+const MainPersonalFile = () => {
+  const theme = useTheme();
+
   const [value, setValue] = useState(0);
   const [loading, setLoading] = useState(false);
 
   const handleChange = (event, newValue) => {
     setValue(newValue);
     setLoading(true);
+    // You can remove timeout in production if content is fast
+    const timer = setTimeout(() => setLoading(false), 600);
+    return () => clearTimeout(timer);
   };
 
-  useEffect(() => {
-    const timer = setTimeout(() => setLoading(false), 700);
-    return () => clearTimeout(timer);
-  }, [value]);
+  // Modern color palette (you can move to theme)
+  const colors = useMemo(
+    () => ({
+      bgDark: "#0f172a",           // slate-950
+      bgPaper: "#1e293b",          // slate-800
+      active: "#2dd4bf",           // teal-400
+      inactive: "#94a3b8",         // slate-400
+      indicator: "#60a5fa",        // blue-400
+      hover: alpha("#2dd4bf", 0.12),
+      border: alpha("#e2e8f0", 0.08),
+    }),
+    []
+  );
 
-  // UI Colors
-  const tabBg = "#0d1528";                  // Dark tab bar
-  const activeColor = "#2ee6bb";            // Teal active text
-  const inactiveColor = "#93a4b8";          // Gray inactive text
-  const indicatorColor = "#4da3ff";         // Blue underline
+  const tabs = [
+    { label: "CUSTOMER", icon: <Person fontSize="medium" />, component: Customer, type: "CUSTOMER" },
+    { label: "EMPLOYEE", icon: <Work fontSize="medium" />,  component: Employee, type: "EMPLOYEE" },
+    { label: "PARTNER",  icon: <Groups fontSize="medium" />,component: Partner,  type: "PARTNER" },
+    { label: "VENDOR",   icon: <Storefront fontSize="medium" />, component: Vendor, type: "VENDOR" },
+  ];
+
+  const SelectedComponent = tabs[value]?.component || (() => null);
 
   return (
-    <Box sx={{ minHeight: "100vh", bgcolor: "#f1f5f9", p: 1 }}>
-      
-      {/* --- Modern Header + Tabs Section --- */}
-      <Paper
-        elevation={6}
-        sx={{
-      
-          overflow: "hidden",
-          bgcolor: tabBg,
-        
-        }}
-      >
-        {/* Heading */}
-    
-<Tab
-  component="button"
-  disableRipple
-  label={
-    <Typography
-      variant="h6"
+    <Box
       sx={{
-        fontSize: "12px",
-        color: "warning.main",      // MUI info color (blue)
-
+        minHeight: "100vh",
+        bgcolor: "grey.100", // #f1f5f9 or use theme.palette.grey[100]
+      
+       
       }}
     >
-      Personal Accounts
-    </Typography>
-  }
-  sx={{
-    cursor: "pointer",
-    borderRadius: "8px",
-    px: 2,
-    py: 1,
-    "&:hover": {
-      backgroundColor: "info.light",
-      color: "white",
-    },
-    "&:active": {
-      backgroundColor: "info.dark",
-    },
-  }}
-/>
-        {/* Modern MUI Tabs */}
+      {/* Main Card Container */}
+      <Paper
+        elevation={4}
+        sx={{
+        
+          overflow: "hidden",
+          bgcolor: colors.bgDark,
+          boxShadow: "0 10px 30px rgba(0,0,0,0.4)",
+          border: `1px solid ${colors.border}`,
+          backdropFilter: "blur(6px)", // light glass effect
+        }}
+      >
+        
+
+        {/* Tabs – modern look */}
         <Tabs
           value={value}
           onChange={handleChange}
-          centered
           variant="fullWidth"
+          scrollButtons="auto"
+          allowScrollButtonsMobile
           sx={{
-            "& .MuiTabs-flexContainer": {
-              justifyContent: "space-between",
-            },
+            bgcolor: colors.bgPaper,
+            minHeight: 72,
             "& .MuiTabs-indicator": {
-              backgroundColor: indicatorColor,
-        
+              height: 4,
+              backgroundColor: colors.indicator,
+              
+            },
+            "& .MuiTabs-flexContainer": {
+              justifyContent: "center",
             },
           }}
         >
-          
-        
-
-          <Tab
-            icon={<Person sx={{ fontSize: 26 }} />}
-            iconPosition="start"
-            label={
-              <Typography
-                fontSize="15px"
-                fontWeight={700}
-                letterSpacing="1px"
-              >
-                CUSTOMER
-              </Typography>
-            }
-            sx={{
-              color: value === 0 ? activeColor : inactiveColor,
-              textTransform: "uppercase",
-            }}
-          />
-
-          <Tab
-            icon={<Work sx={{ fontSize: 26 }} />}
-            iconPosition="start"
-            label={
-              <Typography
-                fontSize="15px"
-                fontWeight={700}
-                letterSpacing="1px"
-              >
-                EMPLOYEE
-              </Typography>
-            }
-            sx={{
-              color: value === 1 ? activeColor : inactiveColor,
-              textTransform: "uppercase",
-            }}
-          />
-
-          <Tab
-            icon={<Groups sx={{ fontSize: 26 }} />}
-            iconPosition="start"
-            label={
-              <Typography
-                fontSize="15px"
-                fontWeight={700}
-                letterSpacing="1px"
-              >
-                PARTNER
-              </Typography>
-            }
-            sx={{
-              color: value === 2 ? activeColor : inactiveColor,
-              textTransform: "uppercase",
-            }}
-          />
-
-          <Tab
-            icon={<Storefront sx={{ fontSize: 26 }} />}
-            iconPosition="start"
-            label={
-              <Typography
-                fontSize="15px"
-                fontWeight={700}
-                letterSpacing="1px"
-              >
-                VENDOR
-              </Typography>
-            }
-            sx={{
-              color: value === 3 ? activeColor : inactiveColor,
-              textTransform: "uppercase",
-            }}
-          />
+          {tabs.map((tab, index) => (
+            <Tab
+              key={tab.label}
+              icon={tab.icon}
+              iconPosition="start"
+              label={
+                <Typography
+                  variant="subtitle1"
+                  fontWeight={700}
+                  fontSize={{ xs: "0.9rem", sm: "1rem" }}
+                  letterSpacing={0.8}
+                  sx={{ textTransform: "uppercase" }}
+                >
+                  {tab.label}
+                </Typography>
+              }
+              sx={{
+                minHeight: 72,
+                color: value === index ? colors.active : colors.inactive,
+                transition: "all 0.25s ease",
+                "&:hover": {
+                  color: colors.active,
+                  bgcolor: colors.hover,
+                },
+                "&.Mui-selected": {
+                  color: colors.active,
+                  bgcolor: alpha(colors.active, 0.08),
+                },
+                gap: 1.2,
+                px: { xs: 1.5, sm: 3, md: 5 },
+              }}
+            />
+          ))}
         </Tabs>
-      </Paper>
 
-      {/* --- Page Content With Loading Spinner --- */}
-      <Box sx={{ mt: 3, minHeight: "350px" }}>
-        {loading ? (
-          <LoadingSpinner />
-        ) : (
-          <>
-            {value === 0 && <Custmer personType="CUSTOMER" />}
-            {value === 1 && <Employe personType="EMPLOYEE" />}
-            {value === 2 && <Partner personType="PARTNER" />}
-            {value === 3 && <Vender personType="VENDOR" />}
-          </>
-        )}
-      </Box>
+        {/* Content Area */}
+        <Box
+          sx={{
+            p: { xs: 2, sm: 3, md: 4 },
+            bgcolor: "background.paper", // white / light for contrast
+            minHeight: "50vh",
+          
+          }}
+        >
+          {loading ? (
+            <Box sx={{ display: "flex", justifyContent: "center", py: 10 }}>
+              <LoadingSpinner />
+            </Box>
+          ) : (
+            <SelectedComponent personType={tabs[value].type} />
+          )}
+        </Box>
+      </Paper>
     </Box>
   );
 };
 
-export default Main_personal_file;
+export default MainPersonalFile;

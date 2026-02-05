@@ -67,11 +67,6 @@ const Cashbook = lazy(() =>
 
 
 
-const Daily_Book = lazy(() =>
-  import(
-    "./components/BalajiFinancial/Loans/DailBook/Daily_Book"
-  )
-);
 
 const Account_Master_Setup = lazy(() =>
   import(
@@ -84,6 +79,56 @@ const Registraion_creation = lazy(() =>
     "./components/BalajiFinancial/AccountMasterSetup/Registraion_creation"
   )
 );
+
+const LoansMainpage = lazy(() =>
+  import(
+    "./components/BalajiFinancial/Loans/Loans"
+  )
+);
+
+const AccountLedger = lazy(() =>
+  import(
+    "./components/BalajiFinancial/Loans/AccountLedger/AccountLedger"
+  )
+);
+const AccountMasterLedger = lazy(() =>
+  import(
+    "./components/BalajiFinancial/Loans/AccountMasterLedger/AccountMasterLedger"
+  )
+);
+
+const Cbledger = lazy(() =>
+  import(
+    "./components/BalajiFinancial/Loans/CBLedger/Cbledger"
+  )
+);
+
+
+const ReciptLedger = lazy(() =>
+  import(
+    "./components/BalajiFinancial/Loans/ReciptLedger/ReciptLedger"
+  )
+);
+
+
+const Daily_Book = lazy(() =>
+  import(
+    "./components/BalajiFinancial/Loans/DailBook/Daily_Book"
+  )
+);
+
+
+const Loansdetailes = lazy(() =>
+  import(
+    "./components/BalajiFinancial/Loans/Loansdetailes/Loansdetailes"
+  )
+);
+
+
+
+
+
+
 
 const routes = [
 
@@ -115,7 +160,17 @@ const routes = [
 
 
   // Daily Book
-  { path: "/Loans/Daily_Book", element: Daily_Book },
+  { path: "/Loans/LoansMainpage", element: LoansMainpage },
+  { path: "/Loans/AccountLedger", element: AccountLedger },
+  { path: "/Loans/AccountMasterLedger", element: AccountMasterLedger },
+  { path: "/Loans/Cbledger", element: Cbledger },
+  { path: "/Loans/ReciptLedger", element: ReciptLedger },
+  { path: "/Loans/DailyBook", element: Daily_Book },
+  { path: "/Loans/Loansdetailes", element: Loansdetailes },
+
+
+
+
   // Account Master Setup
   { path: "/AccountMasterSetup/Account_Master_Setup", element: Account_Master_Setup },
   { path: "/AccountMasterSetup/Registraion_creation", element: Registraion_creation },

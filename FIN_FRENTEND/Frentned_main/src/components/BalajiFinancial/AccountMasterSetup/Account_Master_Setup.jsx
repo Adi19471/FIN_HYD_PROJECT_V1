@@ -204,7 +204,7 @@ const AccountMasterSetup = () => {
   /* ---------------- UI ---------------- */
   return (
     <Box p={3}>
-      <Paper sx={{ p: 2, mb: 2 }}>
+      <Paper className="card" sx={{ p: 2, mb: 2 }}>
         <Box display="flex" justifyContent="space-between">
           <Typography variant="h5">Account Master Setup</Typography>
           <Button startIcon={<AddIcon />} variant="contained" onClick={() => handleOpen()}>
@@ -213,7 +213,7 @@ const AccountMasterSetup = () => {
         </Box>
       </Paper>
 
-      <Paper sx={{ height: 600 }}>
+      <Paper className="card" sx={{ height: 600 }}>
         {loading ? (
           <Box height="100%" display="flex" justifyContent="center" alignItems="center">
             <CircularProgress />

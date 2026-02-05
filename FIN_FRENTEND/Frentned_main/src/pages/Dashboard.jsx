@@ -42,7 +42,7 @@ function ImageCarousel() {
         height: { xs: "45vh", sm: "55vh", md: "65vh", lg: "70vh" }, // much taller → full feel
         width: "100%",
         overflow: "hidden",
-    
+
         boxShadow: 6,
 
         backgroundColor: "#000", // fallback if image fails to load
@@ -57,7 +57,7 @@ function ImageCarousel() {
           sx={{
             width: "100%",
             height: "100%",
-            objectFit: "cover",     // keeps full image visible, crops edges if needed
+            objectFit: "cover", // keeps full image visible, crops edges if needed
             // objectFit: "contain", // ← use this instead if you NEVER want cropping
             position: "absolute",
             top: 0,
@@ -88,9 +88,16 @@ function ImageCarousel() {
               width: 16,
               height: 16,
               borderRadius: "50%",
-              backgroundColor: index === currentIndex ? "primary.main" : "rgba(255, 255, 255, 0.55)",
-              border: index === currentIndex ? "3px solid white" : "2px solid white",
-              boxShadow: index === currentIndex ? "0 0 12px rgba(25, 118, 210, 0.7)" : "none",
+              backgroundColor:
+                index === currentIndex
+                  ? "primary.main"
+                  : "rgba(255, 255, 255, 0.55)",
+              border:
+                index === currentIndex ? "3px solid white" : "2px solid white",
+              boxShadow:
+                index === currentIndex
+                  ? "0 0 12px rgba(25, 118, 210, 0.7)"
+                  : "none",
               transition: "all 0.35s ease",
               cursor: "pointer",
               "&:hover": {
@@ -120,7 +127,11 @@ function Dashboard() {
   }, []);
 
   const handleLogout = () => {
-    if (window.confirm("Are you sure you want to logout from Sri Balaji Finance Dashboard?")) {
+    if (
+      window.confirm(
+        "Are you sure you want to logout from Sri Balaji Finance Dashboard?",
+      )
+    ) {
       logout();
       navigate("/login");
     }
@@ -129,16 +140,14 @@ function Dashboard() {
   return (
     <Box sx={{ minHeight: "100vh", bgcolor: "grey.50" }}>
       {/* Top Navigation Bar – removed Filters & DatePicker */}
-      <AppBar
-        position="static"
-        color="default"
-        elevation={3}
-        sx={{
-          borderBottom: "1px solid",
-          borderColor: "divider",
-        }}
-      >
-        <Toolbar sx={{ justifyContent: "space-between", px: { xs: 2, md: 4 }, py: 1.5 }}>
+      <AppBar position="static" color="default" elevation={3}>
+        <Toolbar
+          sx={{
+            justifyContent: "space-between",
+            px: { xs: 2, md: 0 },
+            py: 1.5,
+          }}
+        >
           <Typography
             variant="h5"
             component="div"
@@ -146,12 +155,10 @@ function Dashboard() {
             color="primary.main"
             sx={{ letterSpacing: 0.5 }}
           >
-      Welcome to Sri Balaji Finance Dashboard
+            Sri Balaji Finance Dashboard
           </Typography>
 
           <Stack direction="row" spacing={2} alignItems="center">
-         
-
             <Button
               variant="contained"
               color="error"
@@ -164,17 +171,9 @@ function Dashboard() {
         </Toolbar>
       </AppBar>
 
-   
-      
-      
+      <ImageCarousel />
 
-     
-      
-
-        <ImageCarousel />
-
-        {/* ← Add your cards, charts, tables here later */}
-
+      {/* ← Add your cards, charts, tables here later */}
     </Box>
   );
 }
