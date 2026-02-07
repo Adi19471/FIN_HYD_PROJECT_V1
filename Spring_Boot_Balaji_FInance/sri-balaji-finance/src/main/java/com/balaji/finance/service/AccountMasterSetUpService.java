@@ -3,6 +3,7 @@ package com.balaji.finance.service;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -109,6 +110,13 @@ public class AccountMasterSetUpService {
 
 		}
 
+	}
+
+	public List<String> findAllMasterCodes() {
+
+		List<AccountMaster> totalList = accountMasterRepo.findAll();
+
+		return totalList.stream().map(p -> p.getCode()).collect(Collectors.toList());
 	}
 
 }
