@@ -20,7 +20,7 @@ public class AccountMasterAutocompleteController {
 	@GetMapping("/findAllMasterCodes")
 	public ResponseEntity<List<String>> findAllMasterCodes() {
 
-		List<String> toBeReturnedList = accountMasterService.findAllMasterCodes();
+		List<String> toBeReturnedList = accountMasterService.findAllMasterCodes(); 
 
 		return ResponseEntity.ok().body(toBeReturnedList);
 	}
