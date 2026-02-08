@@ -2,6 +2,7 @@ package com.balaji.finance.service;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -108,5 +109,14 @@ public class UserService {
 		}
 
 		return allUsers;
+	}
+	
+	public List<String> loadAllUserNames() {
+
+		List<Users> all = userRepo.findAll();
+
+		List<String> allUserNames = all.stream().map(p -> p.getName()).collect(Collectors.toList());
+
+		return allUserNames;
 	}
 }
