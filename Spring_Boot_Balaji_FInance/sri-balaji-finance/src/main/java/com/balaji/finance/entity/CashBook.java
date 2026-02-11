@@ -56,6 +56,12 @@ public class CashBook {
 	@Column(name = "BMREMARKS")
 	private String bmRemarks;
 
+	@Column(name = "CURRENT_INSTALLMENT_NUMBER")
+	private Integer currentInstallmentNumber;
+
+	@Column(name = "PENDING_BALANCE")
+	private Double pendingBalance;
+
 	// Getters and Setters
 
 	public Double getId() {
@@ -161,4 +167,21 @@ public class CashBook {
 	public void setBmRemarks(String bmRemarks) {
 		this.bmRemarks = bmRemarks;
 	}
+
+	public Integer getCurrentInstallmentNumber() {
+		return currentInstallmentNumber;
+	}
+
+	public void setCurrentInstallmentNumber(Integer currentInstallmentNumber) {
+		this.currentInstallmentNumber = currentInstallmentNumber;
+	}
+
+	public Double getPendingBalance() {
+		return pendingBalance;
+	}
+
+	public void setPendingBalance(Double pendingBalance) {
+		this.pendingBalance = pendingBalance;
+	}
+
 }

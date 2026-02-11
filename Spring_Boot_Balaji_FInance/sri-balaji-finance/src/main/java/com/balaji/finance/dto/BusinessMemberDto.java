@@ -23,7 +23,7 @@ public class BusinessMemberDto {
 	private LocalDateTime endDate;
 
 	private Double amount;
-	private Double duration;
+	private Integer duration;
 	private Double interest;
 	private Double installment;
 	private String security;
@@ -108,11 +108,11 @@ public class BusinessMemberDto {
 		this.amount = amount;
 	}
 
-	public Double getDuration() {
+	public Integer getDuration() {
 		return duration;
 	}
 
-	public void setDuration(Double duration) {
+	public void setDuration(Integer duration) {
 		this.duration = duration;
 	}
 

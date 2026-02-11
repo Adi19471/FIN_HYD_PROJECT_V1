@@ -117,5 +117,23 @@ public interface CashBookRepo extends JpaRepository<CashBook, Double> {
 	List<CashBook> findByTransTypeAndTransDateBetween(String transType, LocalDateTime fromDate, LocalDateTime toDate);
 
 	List<CashBook> findByTransType(String transType);
+	
+	
+	@Query("""
+			SELECT c
+			FROM CashBook c
+			WHERE c.transDate BETWEEN :fromDate AND :toDate
+			AND c.accountNo IS NOT NULL
+			""")
+	List<CashBook> findByDateRangeAndBusinessNotNull(@Param("fromDate") LocalDateTime fromDate,
+			@Param("toDate") LocalDateTime toDate);
+	
+
+	@Query("""
+			SELECT c
+			FROM CashBook c
+			WHERE c.accountNo IS NOT NULL
+			""")
+	List<CashBook> findByDateRangeAndBusinessNotNull();
 
 }

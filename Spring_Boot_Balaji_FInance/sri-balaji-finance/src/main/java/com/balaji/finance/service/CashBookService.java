@@ -12,6 +12,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
+import com.balaji.finance.entity.BusinessMember;
 import com.balaji.finance.entity.CashBook;
 import com.balaji.finance.entity.CashBookBK;
 import com.balaji.finance.entity.PersonalInfo;
@@ -23,7 +24,9 @@ import com.balaji.finance.pojo.CashBookLedgerPojo;
 import com.balaji.finance.pojo.CashBookSumaryViewPojo;
 import com.balaji.finance.pojo.CashBookViewPojo;
 import com.balaji.finance.pojo.DayWiseTransactionsSummary;
+import com.balaji.finance.pojo.ReceiptsLedgerPojo;
 import com.balaji.finance.pojo.UserCollectionsLedgerPojo;
+import com.balaji.finance.repo.BusinessMemberRepository;
 import com.balaji.finance.repo.CashBookBkRepo;
 import com.balaji.finance.repo.CashBookRepo;
 import com.balaji.finance.repo.PersonalInfoRepository;
@@ -38,6 +41,10 @@ public class CashBookService {
 	
 	@Autowired
 	private CashBookBkRepo cashBookBkRepo;
+	
+	@Autowired
+	private BusinessMemberRepository businessMemberRepository;
+
 	
 	
 
@@ -379,4 +386,73 @@ public class CashBookService {
 
 		return result;
 	}
+	
+	
+	
+	
+	public List<ReceiptsLedgerPojo> getReceiptsLedger(LocalDate fromDate,
+			LocalDate toDate) {
+
+		List<CashBook> rows = new ArrayList<CashBook>();
+
+		if (fromDate == null && toDate == null) {
+
+			rows = cashBookRepo.findByDateRangeAndBusinessNotNull();
+
+		} else {
+
+			LocalDateTime from = fromDate.atStartOfDay();
+			LocalDateTime to = toDate.atTime(23, 59, 59);
+
+			rows = cashBookRepo.findByDateRangeAndBusinessNotNull(from, to);
+
+		}
+
+		List<ReceiptsLedgerPojo> result = new ArrayList<>();
+
+		int i = 0;
+
+		for (CashBook r : rows) {
+
+			PersonalInfo customer = null;
+			if (r.getCustomerId() != null) {
+				Optional<PersonalInfo> byId = personalInfoRepository.findById(r.getCustomerId());
+				customer = byId.get();
+			}
+
+			BusinessMember businessMember = null;
+			if (r.getAccountNo() != null) {
+				Optional<BusinessMember> opt = businessMemberRepository.findById(r.getAccountNo());
+				businessMember = opt.get();
+			}
+
+			ReceiptsLedgerPojo cashBookLedger = new ReceiptsLedgerPojo();
+			cashBookLedger.setSno(++i);
+			cashBookLedger.setDate(r.getTransDate().toLocalDate());
+			cashBookLedger.setTransId(r.getId());
+			cashBookLedger.setLoanId(r.getAccountNo());
+			cashBookLedger.setLoanDate(businessMember.getStartDate().toLocalDate());
+			cashBookLedger.setCustomerName(customer.getFirstname());
+			cashBookLedger.setAmountPaid(r.getCredit());
+			cashBookLedger.setLateFee(0d);
+			cashBookLedger.setTotal(r.getCredit());
+			
+			
+			cashBookLedger.setTotalPaid(businessMember.getAmount()-r.getPendingBalance());
+			cashBookLedger.setBalance(r.getPendingBalance());
+			
+			
+			cashBookLedger.setCurrentInstallmentNumber(r.getCurrentInstallmentNumber());
+			cashBookLedger.setBalanceInstallmentNumber(businessMember.getDuration()-r.getCurrentInstallmentNumber());
+			cashBookLedger.setParticulars(r.getParticulars());
+			
+			result.add(cashBookLedger);
+		}
+
+		return result;
+	}
+	
+	
+	
+	
 }

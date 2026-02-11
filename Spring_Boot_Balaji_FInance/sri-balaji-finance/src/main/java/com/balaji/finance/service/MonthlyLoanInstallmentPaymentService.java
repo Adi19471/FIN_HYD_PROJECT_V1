@@ -108,7 +108,7 @@ public class MonthlyLoanInstallmentPaymentService {
 	    // -------------------------------
 	    List<InstallmentDetails> pending = new ArrayList<>();
 
-	    Double totalInstallments = bm.getDuration(); // FIX: create installmentCount in entity
+	    Integer totalInstallments = bm.getDuration(); 
 	    LocalDateTime dueDate = lastPaidDate;
 
 	    for (long i = paidInstallments + 1; i <= totalInstallments; i++) {
@@ -222,6 +222,8 @@ public class MonthlyLoanInstallmentPaymentService {
 		}
 		
 		System.out.println("-----------principalPaid ::"+principalPaid);
+		
+		int currentInstallmentNumber = (bm.getPaidInstallments() != null ? bm.getPaidInstallments() + 1 : 0)+1;
 
 		if (principalPaid > 0) {
 			
@@ -242,9 +244,13 @@ public class MonthlyLoanInstallmentPaymentService {
 			cashBookForPrinciplePaid.setTransDate(currentInstallmentDate); 
 			cashBookForPrinciplePaid.setSysDate(LocalDateTime.now());   
 			cashBookForPrinciplePaid.setCustomerId(bm.getCustomerId().getId());
+			cashBookForPrinciplePaid.setCurrentInstallmentNumber(currentInstallmentNumber);
 			
+			cashBookForPrinciplePaid.setPendingBalance(bm.getBalanceAmount() != null ? bm.getBalanceAmount()-principalPaid : 0);
 			
 			cashBookRepo.save(cashBookForPrinciplePaid);
+			
+			
 			
 		}
 		
@@ -269,6 +275,7 @@ public class MonthlyLoanInstallmentPaymentService {
 			cashBookForIntrestPaid.setTransDate(currentInstallmentDate);
 			cashBookForIntrestPaid.setSysDate(LocalDateTime.now());
 			cashBookForIntrestPaid.setCustomerId(bm.getCustomerId().getId());
+			cashBookForIntrestPaid.setCurrentInstallmentNumber(currentInstallmentNumber);
 			
 			cashBookRepo.save(cashBookForIntrestPaid);
 			
@@ -294,13 +301,13 @@ public class MonthlyLoanInstallmentPaymentService {
 			cashBookForLatefeePaid.setTransDate(currentInstallmentDate);
 			cashBookForLatefeePaid.setSysDate(LocalDateTime.now());
 			cashBookForLatefeePaid.setCustomerId(bm.getCustomerId().getId());
-			
+			cashBookForLatefeePaid.setCurrentInstallmentNumber(currentInstallmentNumber);
 			
 			cashBookRepo.save(cashBookForLatefeePaid);
 			
 		}
 		
-
+		bm.setBalanceAmount(bm.getBalanceAmount() != null ? bm.getBalanceAmount()-principalPaid : 0);
 		bm.setPaidInstallments(bm.getPaidInstallments() != null ? bm.getPaidInstallments() + 1 : 0);
 		businessMemberRepository.save(bm);
 	}
@@ -356,6 +363,7 @@ public class MonthlyLoanInstallmentPaymentService {
 		}
 		
 		System.out.println("-----------principalPaid ::"+principalPaid);
+		int currentInstallmentNumber = (bm.getPaidInstallments() != null ? bm.getPaidInstallments() + 1 : 0)+1;
 
 		if (principalPaid > 0) {
 			
@@ -376,6 +384,9 @@ public class MonthlyLoanInstallmentPaymentService {
 			cashBookForPrinciplePaid.setTransDate(transactionDate); 
 			cashBookForPrinciplePaid.setSysDate(LocalDateTime.now());   
 			cashBookForPrinciplePaid.setCustomerId(bm.getCustomerId().getId());
+			cashBookForPrinciplePaid.setCurrentInstallmentNumber(currentInstallmentNumber);
+			
+			bm.setBalanceAmount(bm.getBalanceAmount() != null ? bm.getBalanceAmount()-principalPaid : 0);
 			
 			cashBookRepo.save(cashBookForPrinciplePaid);
 			
@@ -402,7 +413,7 @@ public class MonthlyLoanInstallmentPaymentService {
 			cashBookForIntrestPaid.setTransDate(transactionDate);
 			cashBookForIntrestPaid.setSysDate(LocalDateTime.now());
 			cashBookForIntrestPaid.setCustomerId(bm.getCustomerId().getId());
-			
+			cashBookForIntrestPaid.setCurrentInstallmentNumber(currentInstallmentNumber);
 			
 			
 			cashBookRepo.save(cashBookForIntrestPaid);
@@ -429,12 +440,14 @@ public class MonthlyLoanInstallmentPaymentService {
 			cashBookForLatefeePaid.setTransDate(transactionDate);
 			cashBookForLatefeePaid.setSysDate(LocalDateTime.now());
 			cashBookForLatefeePaid.setCustomerId(bm.getCustomerId().getId());
+			cashBookForLatefeePaid.setCurrentInstallmentNumber(currentInstallmentNumber);
+			
 			
 			cashBookRepo.save(cashBookForLatefeePaid);
 			
 		}
 		
-
+		bm.setBalanceAmount(bm.getBalanceAmount() != null ? bm.getBalanceAmount()-principalPaid : 0);
 		bm.setPaidInstallments(bm.getPaidInstallments() != null ? bm.getPaidInstallments() + 1 : 0);
 		businessMemberRepository.save(bm);
 	}

@@ -17,7 +17,7 @@ public class BusinessMember {
 	private LocalDateTime startDate;
 	private LocalDateTime endDate;
 	private Double amount;
-	private Double duration;
+	private Integer duration;
 	private Double interest;
 	private Double installment;
 	private String security;
@@ -28,6 +28,7 @@ public class BusinessMember {
 	private Double unpaidLateFee;
 	private boolean chequeReminder;
 	private String businessId;
+	private Double balanceAmount;
 
 	@Id
 	@Column(name = "ID", length = 255, nullable = false)
@@ -117,11 +118,11 @@ public class BusinessMember {
 	}
 
 	@Column(name = "DURATION")
-	public Double getDuration() {
+	public Integer getDuration() {
 		return duration;
 	}
 
-	public void setDuration(Double duration) {
+	public void setDuration(Integer duration) {
 		this.duration = duration;
 	}
 
@@ -213,6 +214,16 @@ public class BusinessMember {
 
 	public void setBusinessId(String businessId) {
 		this.businessId = businessId;
+	}
+	
+	
+	@Column(name = "BALANCE_AMOUNT", length = 255)
+	public Double getBalanceAmount() {
+		return balanceAmount;
+	}
+
+	public void setBalanceAmount(Double balanceAmount) {
+		this.balanceAmount = balanceAmount;
 	}
 
 	@Override

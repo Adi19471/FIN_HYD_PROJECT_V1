@@ -120,6 +120,8 @@ public class BusinessMemberService {
 
 		businessMember.setPaidInstallments(0);
 		businessMember.setUnpaidLateFee(0.0);
+		
+		businessMember.setBalanceAmount(businessMemberDto.getAmount());
 
 		businessMemberRepository.save(businessMember);
 
@@ -299,7 +301,9 @@ public class BusinessMemberService {
 			businessMember.setChequeReminder(businessMemberDto.isChequeReminder());
 			businessMember.setBusinessId(businessMemberDto.getBusinessId());
 			businessMember.setSecurity(businessMemberDto.getSecurity());
+			businessMember.setBalanceAmount(businessMemberDto.getAmount());
 
+			
 			businessMemberRepository.save(businessMember);
 
 			return "Sucessfully Updated ";

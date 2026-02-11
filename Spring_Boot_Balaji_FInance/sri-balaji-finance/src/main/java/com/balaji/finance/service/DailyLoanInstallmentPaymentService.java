@@ -110,7 +110,7 @@ public class DailyLoanInstallmentPaymentService {
 	    // NEXT PENDING INSTALLMENTS
 	    List<InstallmentDetails> pending = new ArrayList<>();
 
-	    Double totalInstallments = bm.getDuration();
+	    Integer totalInstallments = bm.getDuration();
 	    LocalDateTime dueDate = lastPaidDate;
 
 	    for (long i = paidInstallments + 1; i <= totalInstallments; i++) {
@@ -181,7 +181,8 @@ public class DailyLoanInstallmentPaymentService {
 		BusinessMember bm = opt.get();
 
 		double currentlyPaidAmount = info.getAmountPaid();
-		
+		int currentInstallmentNumber = (bm.getPaidInstallments() != null ? bm.getPaidInstallments() + 1 : 0)+1;
+
 		
 		System.out.println("-----------currentlyPaidAmount ::"+currentlyPaidAmount);
 
@@ -204,7 +205,8 @@ public class DailyLoanInstallmentPaymentService {
 			cashBookForPrinciplePaid.setTransDate(currentInstallmentDate); 
 			cashBookForPrinciplePaid.setSysDate(LocalDateTime.now());   
 			cashBookForPrinciplePaid.setCustomerId(bm.getCustomerId().getId());
-
+			cashBookForPrinciplePaid.setCurrentInstallmentNumber(currentInstallmentNumber);
+			
 			cashBookRepo.save(cashBookForPrinciplePaid);
 			
 		}
@@ -229,6 +231,8 @@ public class DailyLoanInstallmentPaymentService {
 			cashBookForLatefeePaid.setTransDate(currentInstallmentDate);
 			cashBookForLatefeePaid.setSysDate(LocalDateTime.now());
 			cashBookForLatefeePaid.setCustomerId(bm.getCustomerId().getId());
+			cashBookForLatefeePaid.setCurrentInstallmentNumber(currentInstallmentNumber);
+			
 			
 			cashBookRepo.save(cashBookForLatefeePaid);
 			
@@ -254,7 +258,9 @@ public class DailyLoanInstallmentPaymentService {
 		Double lateFee = quickCashBookRow.getLateFee();
 		
 		System.out.println("-----------currentlyPaidAmount ::"+currentlyPaidAmount);
+		int currentInstallmentNumber = (bm.getPaidInstallments() != null ? bm.getPaidInstallments() + 1 : 0)+1;
 
+		
 		if (currentlyPaidAmount > 0) {
 			
 			
@@ -274,6 +280,8 @@ public class DailyLoanInstallmentPaymentService {
 			cashBookForPrinciplePaid.setTransDate(transactionDate); 
 			cashBookForPrinciplePaid.setSysDate(LocalDateTime.now());   
 			cashBookForPrinciplePaid.setCustomerId(bm.getCustomerId().getId());
+			cashBookForPrinciplePaid.setCurrentInstallmentNumber(currentInstallmentNumber);
+			
 			
 			cashBookRepo.save(cashBookForPrinciplePaid);
 			
@@ -299,7 +307,9 @@ public class DailyLoanInstallmentPaymentService {
 			cashBookForLatefeePaid.setTransDate(transactionDate);
 			cashBookForLatefeePaid.setSysDate(LocalDateTime.now());
 			cashBookForLatefeePaid.setCustomerId(bm.getCustomerId().getId());
-
+			cashBookForLatefeePaid.setCurrentInstallmentNumber(currentInstallmentNumber);
+			
+			
 			cashBookRepo.save(cashBookForLatefeePaid);
 			
 		}
