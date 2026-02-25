@@ -232,10 +232,10 @@ public class CashBookService {
 			CashBookLedgerPojo cashBookLedger = new CashBookLedgerPojo();
 			cashBookLedger.setSno(++i);
 			cashBookLedger.setDate(((java.sql.Date) r[0]).toLocalDate());
-			cashBookLedger.setCredit((BigDecimal) r[1]);
-			cashBookLedger.setDebit((BigDecimal) r[2]);
-			cashBookLedger.setBalance((BigDecimal) r[3]);
-			cashBookLedger.setClosingBalance(((BigDecimal) r[3]).add(new BigDecimal(openingBalanceForToday)));
+			cashBookLedger.setCredit((Double) r[1]);
+			cashBookLedger.setDebit((Double) r[2]);
+			cashBookLedger.setBalance((Double) r[3]);
+			cashBookLedger.setClosingBalance(((Double) r[3]) + (openingBalanceForToday));
 
 			result.add(cashBookLedger);
 		}
@@ -259,9 +259,9 @@ public class CashBookService {
 			CashBookLedgerCollectionsPojo cashBookLedger = new CashBookLedgerCollectionsPojo();
 			cashBookLedger.setSno(++i);
 			cashBookLedger.setDate(((java.sql.Date) r[0]).toLocalDate());
-			cashBookLedger.setMonthlyFinanceCollections((BigDecimal) r[1]);
-			cashBookLedger.setDailyFinanceCollections((BigDecimal) r[2]);
-			cashBookLedger.setTotal(((BigDecimal) r[1]).add((BigDecimal) r[2]));
+			cashBookLedger.setMonthlyFinanceCollections((Double) r[1]);
+			cashBookLedger.setDailyFinanceCollections((Double) r[2]);
+			cashBookLedger.setTotal(((Double) r[1])+((Double) r[2]));
 
 			result.add(cashBookLedger);
 		}
@@ -295,9 +295,9 @@ public class CashBookService {
 
 			AccountsLedgerPojo accountsLedger = new AccountsLedgerPojo();
 			accountsLedger.setSno(++i);
-			accountsLedger.setCredit((BigDecimal) r[1]);
-			accountsLedger.setDebit((BigDecimal) r[2]);
-			accountsLedger.setBalance((BigDecimal) r[3]);
+			accountsLedger.setCredit((Double) r[1]);
+			accountsLedger.setDebit((Double) r[2]);
+			accountsLedger.setBalance((Double) r[3]);
 
 			result.add(accountsLedger);
 		}
@@ -377,9 +377,9 @@ public class CashBookService {
 			UserCollectionsLedgerPojo cashBookLedger = new UserCollectionsLedgerPojo();
 			cashBookLedger.setSno(++i);
 			cashBookLedger.setDate(((java.sql.Date) r[0]).toLocalDate());
-			cashBookLedger.setMonthlyFinanceCollections((BigDecimal) r[1]);
-			cashBookLedger.setDailyFinanceCollections((BigDecimal) r[2]);
-			cashBookLedger.setTotal(((BigDecimal) r[1]).add((BigDecimal) r[2]));
+			cashBookLedger.setMonthlyFinanceCollections((Double) r[1]);
+			cashBookLedger.setDailyFinanceCollections((Double) r[2]);
+			cashBookLedger.setTotal(((Double) r[1]) + ((Double) r[2]));
 
 			result.add(cashBookLedger);
 		}

@@ -6,9 +6,9 @@ public class AccountsLedgerPojo {
 
 	private Long sno;
 	private String accountMaster;
-	private BigDecimal credit;
-	private BigDecimal debit;
-	private BigDecimal balance;
+	private Double credit;
+	private Double debit;
+	private Double balance;
 
 	public Long getSno() {
 		return sno;
@@ -26,27 +26,27 @@ public class AccountsLedgerPojo {
 		this.accountMaster = accountMaster;
 	}
 
-	public BigDecimal getCredit() {
+	public Double getCredit() {
 		return credit;
 	}
 
-	public void setCredit(BigDecimal credit) {
+	public void setCredit(Double credit) {
 		this.credit = credit;
 	}
 
-	public BigDecimal getDebit() {
+	public Double getDebit() {
 		return debit;
 	}
 
-	public void setDebit(BigDecimal debit) {
+	public void setDebit(Double debit) {
 		this.debit = debit;
 	}
 
-	public BigDecimal getBalance() {
+	public Double getBalance() {
 		return balance;
 	}
 
-	public void setBalance(BigDecimal balance) {
+	public void setBalance(Double balance) {
 		this.balance = balance;
 	}
 

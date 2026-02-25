@@ -7,9 +7,9 @@ public class CashBookLedgerCollectionsPojo {
 
 	private Long sno;
 	private LocalDate date;
-	private BigDecimal monthlyFinanceCollections;
-	private BigDecimal dailyFinanceCollections;
-	private BigDecimal total;
+	private Double monthlyFinanceCollections;
+	private Double dailyFinanceCollections;
+	private Double total;
 
 	public Long getSno() {
 		return sno;
@@ -27,27 +27,27 @@ public class CashBookLedgerCollectionsPojo {
 		this.date = date;
 	}
 
-	public BigDecimal getMonthlyFinanceCollections() {
+	public Double getMonthlyFinanceCollections() {
 		return monthlyFinanceCollections;
 	}
 
-	public void setMonthlyFinanceCollections(BigDecimal monthlyFinanceCollections) {
+	public void setMonthlyFinanceCollections(Double monthlyFinanceCollections) {
 		this.monthlyFinanceCollections = monthlyFinanceCollections;
 	}
 
-	public BigDecimal getDailyFinanceCollections() {
+	public Double getDailyFinanceCollections() {
 		return dailyFinanceCollections;
 	}
 
-	public void setDailyFinanceCollections(BigDecimal dailyFinanceCollections) {
+	public void setDailyFinanceCollections(Double dailyFinanceCollections) {
 		this.dailyFinanceCollections = dailyFinanceCollections;
 	}
 
-	public BigDecimal getTotal() {
+	public Double getTotal() {
 		return total;
 	}
 
-	public void setTotal(BigDecimal total) {
+	public void setTotal(Double total) {
 		this.total = total;
 	}
 
