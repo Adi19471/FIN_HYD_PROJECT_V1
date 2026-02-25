@@ -5,7 +5,6 @@ import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import com.balaji.finance.entity.AccountMaster;
 import com.balaji.finance.repo.AccountMasterRepo;
 
 @Service
