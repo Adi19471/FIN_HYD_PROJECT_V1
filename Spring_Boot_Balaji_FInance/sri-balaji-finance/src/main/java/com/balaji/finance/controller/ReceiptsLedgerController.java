@@ -19,7 +19,7 @@ public class ReceiptsLedgerController {
 	@Autowired
 	private CashBookService cashBookService;
 
-	@GetMapping("/ReceiptsLedger/{fromDate}/{toDate}")
+	@GetMapping("/ReceiptsLedger/{fromDate}/{toDate}") 
 	public ResponseEntity<List<ReceiptsLedgerPojo>> getAllCBLedgerData(@PathVariable String fromDate,
 			@PathVariable String toDate) {
 
