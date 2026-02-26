@@ -50,7 +50,7 @@ public interface CashBookRepo extends JpaRepository<CashBook, Double> {
 			       SELECT
 			             DATE(TRANSDATE) AS txn_date,
 			             SUM(CASE WHEN PARTICULARS IN ('DF LOAN INSTALLMENT','DF LATE FEE','DF DOC CHARGES','DF INTEREST') THEN CREDIT ELSE 0 END) AS daily_total,
-			             SUM(CASE WHEN PARTICULARS = ('MF LOAN INSTALLMENT','MF INTEREST','MF LATE FEE','MF DOC CHARGES') THEN CREDIT ELSE 0 END) AS monthly_total
+			             SUM(CASE WHEN PARTICULARS IN ('MF LOAN INSTALLMENT','MF INTEREST','MF LATE FEE','MF DOC CHARGES') THEN CREDIT ELSE 0 END) AS monthly_total
 			         FROM cashbook
 			         WHERE TRANSDATE BETWEEN :fromDate AND :toDate
 			         GROUP BY DATE(TRANSDATE)
@@ -64,7 +64,7 @@ public interface CashBookRepo extends JpaRepository<CashBook, Double> {
 			       SELECT
 			             DATE(TRANSDATE) AS txn_date,
 			             SUM(CASE WHEN PARTICULARS IN ('DF LOAN INSTALLMENT','DF LATE FEE','DF DOC CHARGES','DF INTEREST') THEN CREDIT ELSE 0 END) AS daily_total,
-			             SUM(CASE WHEN PARTICULARS = ('MF LOAN INSTALLMENT','MF INTEREST','MF LATE FEE','MF DOC CHARGES') THEN CREDIT ELSE 0 END) AS monthly_total
+			             SUM(CASE WHEN PARTICULARS IN ('MF LOAN INSTALLMENT','MF INTEREST','MF LATE FEE','MF DOC CHARGES') THEN CREDIT ELSE 0 END) AS monthly_total
 			         FROM cashbook
 			         WHERE TRANSDATE BETWEEN :fromDate AND :toDate
 			         AND USER=:user
@@ -78,7 +78,7 @@ public interface CashBookRepo extends JpaRepository<CashBook, Double> {
 			       SELECT
 			             DATE(TRANSDATE) AS txn_date,
 			             SUM(CASE WHEN PARTICULARS IN ('DF LOAN INSTALLMENT','DF LATE FEE','DF DOC CHARGES','DF INTEREST') THEN CREDIT ELSE 0 END) AS daily_total,
-			             SUM(CASE WHEN PARTICULARS = ('MF LOAN INSTALLMENT','MF INTEREST','MF LATE FEE','MF DOC CHARGES') THEN CREDIT ELSE 0 END) AS monthly_total
+			             SUM(CASE WHEN PARTICULARS IN ('MF LOAN INSTALLMENT','MF INTEREST','MF LATE FEE','MF DOC CHARGES') THEN CREDIT ELSE 0 END) AS monthly_total
 			         FROM cashbook
 			         WHERE USER=:user
 			         GROUP BY DATE(TRANSDATE)
@@ -93,10 +93,11 @@ public interface CashBookRepo extends JpaRepository<CashBook, Double> {
 			    DATE(TRANSDATE) AS txn_date,
 			    IFNULL(SUM(CREDIT), 0) AS credit,
 			    IFNULL(SUM(DEBIT), 0) AS debit,
-			    IFNULL(SUM(CREDIT), 0) - IFNULL(SUM(DEBIT), 0) AS balance
+			    IFNULL(SUM(CREDIT), 0) - IFNULL(SUM(DEBIT), 0) AS balance,
+			     PARTICULARS
 			FROM cashbook
 			WHERE TRANSDATE BETWEEN :fromDate AND :toDate
-			GROUP BY PARTICULARS
+			GROUP BY PARTICULARS, DATE(TRANSDATE)
 			ORDER BY PARTICULARS
 			""", nativeQuery = true)
 	List<Object[]> getSummaryByParticulars(@Param("fromDate") LocalDateTime fromDate,
@@ -107,9 +108,10 @@ public interface CashBookRepo extends JpaRepository<CashBook, Double> {
 			    DATE(TRANSDATE) AS txn_date,
 			    IFNULL(SUM(CREDIT), 0) AS credit,
 			    IFNULL(SUM(DEBIT), 0) AS debit,
-			    IFNULL(SUM(CREDIT), 0) - IFNULL(SUM(DEBIT), 0) AS balance
+			    IFNULL(SUM(CREDIT), 0) - IFNULL(SUM(DEBIT), 0) AS balance,
+			    PARTICULARS
 			FROM cashbook
-			GROUP BY PARTICULARS
+			GROUP BY PARTICULARS, DATE(TRANSDATE)
 			ORDER BY PARTICULARS
 			""", nativeQuery = true)
 	List<Object[]> getSummaryByParticulars();

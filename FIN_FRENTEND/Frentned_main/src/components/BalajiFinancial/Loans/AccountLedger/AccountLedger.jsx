@@ -51,6 +51,8 @@ const AccountLedger = () => {
       let url = "";
 
       if (filterType === "ALL") {
+
+
         url = `${API_BASE}/getAccountsLedger`;
       } else {
         if (!fromDate || !toDate) {

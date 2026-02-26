@@ -23,53 +23,59 @@ import {
 import { API_BASE } from "lib/config";
 import { getSession } from "src/utils/session";
 import { successToast, errorToast } from "toastify";
-
 import Loans from "../Loans";
 
 const Cbledger = () => {
   const [fromDate, setFromDate] = useState("");
   const [toDate, setToDate] = useState("");
   const [showAllData, setShowAllData] = useState(false);
-
   const [ledgerData, setLedgerData] = useState([]);
   const [loading, setLoading] = useState(false);
 
   const fetchLedgerData = async () => {
+    if (!fromDate || !toDate) {
+      errorToast("Please select From Date and To Date");
+      return;
+    }
+
+    setLoading(true);
+
     try {
-      if (!fromDate || !toDate) {
-        errorToast("Please select From Date and To Date");
+      const token = getSession()?.token || getSession("token") || "";
+
+      if (!token) {
+        errorToast("Authentication token not found. Please login again.");
         return;
       }
 
-      setLoading(true);
-
-      const session = getSession();
-      const token = session?.token;
-
-      let url = "";
-
-      if (showAllData) {
-        url = `${API_BASE}/getAllCBLedgerData/${fromDate}/${toDate}`;
-      } else {
-        url = `${API_BASE}/getCollectionsCBLedgerData/${fromDate}/${toDate}`;
-      }
+      const url = showAllData
+        ? `${API_BASE}/getAllCBLedgerData/${fromDate}/${toDate}`
+        : `${API_BASE}/getCollectionsCBLedgerData/${fromDate}/${toDate}`;
 
       const response = await axios.get(url, {
         headers: {
           Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
         },
       });
 
-      if (response?.data) {
-        setLedgerData(response.data);
+      const data = response?.data || [];
+
+      if (Array.isArray(data) && data.length > 0) {
+        setLedgerData(data);
         successToast("Ledger Data Loaded Successfully!");
       } else {
         setLedgerData([]);
-        errorToast("No Data Found!");
+        successToast("No records found for the selected period");
       }
     } catch (error) {
-      console.error(error);
-      errorToast("Failed to fetch Ledger Data!");
+      console.error("Ledger fetch error:", error);
+      const message =
+        error.response?.data?.message ||
+        error.message ||
+        "Failed to fetch Ledger Data";
+      errorToast(message);
+      setLedgerData([]);
     } finally {
       setLoading(false);
     }
@@ -86,7 +92,7 @@ const Cbledger = () => {
           </Typography>
 
           <Grid container spacing={2} alignItems="center">
-            <Grid item xs={12} md={3}>
+            <Grid item xs={12} sm={6} md={3}>
               <TextField
                 fullWidth
                 label="From Date"
@@ -94,10 +100,11 @@ const Cbledger = () => {
                 value={fromDate}
                 onChange={(e) => setFromDate(e.target.value)}
                 InputLabelProps={{ shrink: true }}
+                inputProps={{ max: toDate || new Date().toISOString().split("T")[0] }}
               />
             </Grid>
 
-            <Grid item xs={12} md={3}>
+            <Grid item xs={12} sm={6} md={3}>
               <TextField
                 fullWidth
                 label="To Date"
@@ -105,10 +112,11 @@ const Cbledger = () => {
                 value={toDate}
                 onChange={(e) => setToDate(e.target.value)}
                 InputLabelProps={{ shrink: true }}
+                inputProps={{ min: fromDate }}
               />
             </Grid>
 
-            <Grid item xs={12} md={3}>
+            <Grid item xs={12} sm={6} md={3}>
               <FormControlLabel
                 control={
                   <Checkbox
@@ -117,67 +125,107 @@ const Cbledger = () => {
                     color="primary"
                   />
                 }
-                label="Show All Data"
+                label="Show All Data (Collections + Others)"
               />
             </Grid>
 
-            <Grid item xs={12} md={3}>
+            <Grid item xs={12} sm={6} md={3}>
               <Button
                 fullWidth
                 variant="contained"
                 color="primary"
                 onClick={fetchLedgerData}
-                disabled={loading}
-                sx={{ height: "55px", fontWeight: "bold" }}
+                disabled={loading || !fromDate || !toDate}
+                sx={{ height: "56px", fontWeight: "bold" }}
               >
-                {loading ? <CircularProgress size={25} color="inherit" /> : "Fetch Data"}
+                {loading ? <CircularProgress size={24} color="inherit" /> : "Fetch Ledger"}
               </Button>
             </Grid>
           </Grid>
 
-          {/* Table Display */}
+          {/* Results Table */}
           <Box sx={{ mt: 4 }}>
             <Typography variant="h6" fontWeight="bold" gutterBottom>
-              Ledger Data List
+              Ledger Summary
+              {ledgerData.length > 0 && ` (${ledgerData.length})`}
             </Typography>
 
-            <TableContainer component={Paper} sx={{ borderRadius: 2 }}>
-              <Table>
+            <TableContainer
+              component={Paper}
+              sx={{ borderRadius: 2, overflow: "auto", maxHeight: 500 }}
+            >
+              <Table stickyHeader>
                 <TableHead>
                   <TableRow sx={{ backgroundColor: "#1976d2" }}>
-                    <TableCell sx={{ color: "white", fontWeight: "bold" }}>
+                    <TableCell sx={{ color: "black", fontWeight: "bold" }}>
                       S.No
                     </TableCell>
-                    <TableCell sx={{ color: "white", fontWeight: "bold" }}>
+                    <TableCell sx={{ color: "black", fontWeight: "bold" }}>
                       Date
                     </TableCell>
-                    <TableCell sx={{ color: "white", fontWeight: "bold" }}>
-                      Customer Name
+                    <TableCell
+                      align="right"
+                      sx={{ color: "black", fontWeight: "bold" }}
+                    >
+                      Monthly Collections
                     </TableCell>
-                    <TableCell sx={{ color: "white", fontWeight: "bold" }}>
-                      Amount
+                    <TableCell
+                      align="right"
+                      sx={{ color: "black", fontWeight: "bold" }}
+                    >
+                      Daily Collections
                     </TableCell>
-                    <TableCell sx={{ color: "white", fontWeight: "bold" }}>
-                      Remarks
+                    <TableCell
+                      align="right"
+                      sx={{ color: "black", fontWeight: "bold" }}
+                    >
+                      Total
                     </TableCell>
                   </TableRow>
                 </TableHead>
 
                 <TableBody>
-                  {ledgerData.length > 0 ? (
+                  {loading ? (
+                    <TableRow>
+                      <TableCell colSpan={5} align="center" sx={{ py: 4 }}>
+                        <CircularProgress />
+                      </TableCell>
+                    </TableRow>
+                  ) : ledgerData.length > 0 ? (
                     ledgerData.map((row, index) => (
-                      <TableRow key={index}>
-                        <TableCell>{index + 1}</TableCell>
-                        <TableCell>{row?.date || "-"}</TableCell>
-                        <TableCell>{row?.customerName || row?.name || "-"}</TableCell>
-                        <TableCell>{row?.amount || row?.amt || "-"}</TableCell>
-                        <TableCell>{row?.remarks || "-"}</TableCell>
+                      <TableRow key={index} hover>
+                        <TableCell>{row.sno ?? index + 1}</TableCell>
+                        <TableCell>{row.date || "-"}</TableCell>
+                        <TableCell align="right">
+                          {row.monthlyFinanceCollections != null
+                            ? Number(row.monthlyFinanceCollections).toLocaleString("en-IN", {
+                                minimumFractionDigits: 2,
+                                maximumFractionDigits: 2,
+                              })
+                            : "-"}
+                        </TableCell>
+                        <TableCell align="right">
+                          {row.dailyFinanceCollections != null
+                            ? Number(row.dailyFinanceCollections).toLocaleString("en-IN", {
+                                minimumFractionDigits: 2,
+                                maximumFractionDigits: 2,
+                              })
+                            : "-"}
+                        </TableCell>
+                        <TableCell align="right" sx={{ fontWeight: "medium" }}>
+                          {row.total != null
+                            ? Number(row.total).toLocaleString("en-IN", {
+                                minimumFractionDigits: 2,
+                                maximumFractionDigits: 2,
+                              })
+                            : "-"}
+                        </TableCell>
                       </TableRow>
                     ))
                   ) : (
                     <TableRow>
-                      <TableCell colSpan={5} align="center">
-                        No Data Available
+                      <TableCell colSpan={5} align="center" sx={{ py: 4 }}>
+                        No data available for selected period
                       </TableCell>
                     </TableRow>
                   )}

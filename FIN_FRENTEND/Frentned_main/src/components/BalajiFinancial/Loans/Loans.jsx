@@ -34,14 +34,14 @@ const Loans = () => {
         <Tab label="Account Ledger" value="/Loans/AccountLedger" />
       <Tab label="Account Master Ledger" value="/Loans/AccountMasterLedger" />
 
-
+ <Tab label="User Collection Ledger" value="/Loans/Usercollectionledger" />
+  
+    
           <Tab label="Receipt Ledger" value="/Loans/ReciptLedger" />
 
 
 
-          <Tab label="Recipts Ledger" value="/Loans/Loansdetailes" />
-  
-    
+         
 
   
         </Tabs>

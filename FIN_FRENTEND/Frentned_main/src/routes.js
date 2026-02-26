@@ -124,6 +124,12 @@ const Loansdetailes = lazy(() =>
   )
 );
 
+const Usercollectionledger = lazy(() =>
+
+ import("./components/BalajiFinancial/Loans/UserCollectionLedger/Usercollectionledger")
+
+);
+
 
 
 
@@ -167,6 +173,8 @@ const routes = [
   { path: "/Loans/ReciptLedger", element: ReciptLedger },
   { path: "/Loans/DailyBook", element: Daily_Book },
   { path: "/Loans/Loansdetailes", element: Loansdetailes },
+  { path: "/Loans/Usercollectionledger", element: Usercollectionledger },
+
 
 
 

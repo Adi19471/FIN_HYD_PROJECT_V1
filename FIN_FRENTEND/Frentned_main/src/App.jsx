@@ -9,9 +9,11 @@ import routes from "./routes";
 import PrivateRoute from "./components/PrivateRoute";
 import Layout from "./components/Layout";
 import LoadingSpinner from "./LoadingSpinner";
+import { useAuth } from "./utils/AuthContext";
 
 function App() {
   const location = useLocation();
+  const { isAuthenticated } = useAuth();
 
   useEffect(() => {
     document.querySelector("html").style.scrollBehavior = "auto";
@@ -25,10 +27,26 @@ function App() {
   const routesTree = (
     <Suspense fallback={<LoadingSpinner />}>
       <Routes>
-        {/* ✅ Default Redirect */}
-        <Route path="/" element={<Navigate to="/login" replace />} />
-
         {routes.map((route, index) => {
+          // Handle root path specially - if authenticated show Dashboard, else redirect to login
+          if (route.path === "/") {
+            return (
+              <Route
+                key={index}
+                path={route.path}
+                element={
+                  isAuthenticated ? (
+                    <PrivateRoute>
+                      <route.element />
+                    </PrivateRoute>
+                  ) : (
+                    <Navigate to="/login" replace />
+                  )
+                }
+              />
+            );
+          }
+
           if (route.path === "/login" || route.public) {
             return (
               <Route
