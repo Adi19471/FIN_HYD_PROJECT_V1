@@ -33,6 +33,15 @@ public class CBLedgerController {
 
 		return ResponseEntity.ok().body(cbLedgerList);
 	}
+	
+	
+	@GetMapping("/getAllCBLedgerData")
+	public ResponseEntity<List<CashBookLedgerPojo>> getAllCBLedgerData() {
+
+		List<CashBookLedgerPojo> cbLedgerList = cashBookService.getCashBookLedger(null, null);
+
+		return ResponseEntity.ok().body(cbLedgerList);
+	}
 
 	@GetMapping("/getCollectionsCBLedgerData/{fromDate}/{toDate}")
 	public ResponseEntity<List<CashBookLedgerCollectionsPojo>> getCollectionsOnlyCBLedgerData(
@@ -45,6 +54,17 @@ public class CBLedgerController {
 
 		List<CashBookLedgerCollectionsPojo> cbLedgerCollectionsOnlyList = cashBookService
 				.getCollectionsOnlyCBLedgerData(fromLocalDate, toLocalDate);
+
+		return ResponseEntity.ok().body(cbLedgerCollectionsOnlyList);
+	}
+
+	
+	@GetMapping("/getCollectionsCBLedgerData")
+	public ResponseEntity<List<CashBookLedgerCollectionsPojo>> getCollectionsOnlyCBLedgerData() {
+
+	
+		List<CashBookLedgerCollectionsPojo> cbLedgerCollectionsOnlyList = cashBookService
+				.getCollectionsOnlyCBLedgerData(null, null);
 
 		return ResponseEntity.ok().body(cbLedgerCollectionsOnlyList);
 	}

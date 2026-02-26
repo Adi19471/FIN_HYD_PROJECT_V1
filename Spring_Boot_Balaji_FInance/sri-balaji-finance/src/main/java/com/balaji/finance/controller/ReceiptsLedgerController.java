@@ -33,4 +33,13 @@ public class ReceiptsLedgerController {
 		return ResponseEntity.ok().body(cbLedgerList);
 	}
 
+	
+	@GetMapping("/ReceiptsLedger") 
+	public ResponseEntity<List<ReceiptsLedgerPojo>> getAllCBLedgerData() {
+
+		List<ReceiptsLedgerPojo> cbLedgerList = cashBookService.getReceiptsLedger(null, null);
+
+		return ResponseEntity.ok().body(cbLedgerList);
+	}
+	
 }

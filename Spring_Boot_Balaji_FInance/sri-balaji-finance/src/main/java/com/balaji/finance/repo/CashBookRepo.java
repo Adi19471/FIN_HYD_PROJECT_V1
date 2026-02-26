@@ -90,14 +90,13 @@ public interface CashBookRepo extends JpaRepository<CashBook, Double> {
 
 	@Query(value = """
 			SELECT
-			    DATE(TRANSDATE) AS txn_date,
 			    IFNULL(SUM(CREDIT), 0) AS credit,
 			    IFNULL(SUM(DEBIT), 0) AS debit,
 			    IFNULL(SUM(CREDIT), 0) - IFNULL(SUM(DEBIT), 0) AS balance,
-			     PARTICULARS
+			    PARTICULARS
 			FROM cashbook
 			WHERE TRANSDATE BETWEEN :fromDate AND :toDate
-			GROUP BY PARTICULARS, DATE(TRANSDATE)
+			GROUP BY PARTICULARS
 			ORDER BY PARTICULARS
 			""", nativeQuery = true)
 	List<Object[]> getSummaryByParticulars(@Param("fromDate") LocalDateTime fromDate,
@@ -105,13 +104,12 @@ public interface CashBookRepo extends JpaRepository<CashBook, Double> {
 
 	@Query(value = """
 			SELECT
-			    DATE(TRANSDATE) AS txn_date,
 			    IFNULL(SUM(CREDIT), 0) AS credit,
 			    IFNULL(SUM(DEBIT), 0) AS debit,
 			    IFNULL(SUM(CREDIT), 0) - IFNULL(SUM(DEBIT), 0) AS balance,
 			    PARTICULARS
 			FROM cashbook
-			GROUP BY PARTICULARS, DATE(TRANSDATE)
+			GROUP BY PARTICULARS
 			ORDER BY PARTICULARS
 			""", nativeQuery = true)
 	List<Object[]> getSummaryByParticulars();

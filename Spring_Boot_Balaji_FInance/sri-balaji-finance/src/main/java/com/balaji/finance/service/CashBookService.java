@@ -298,7 +298,8 @@ public class CashBookService {
 			accountsLedger.setCredit((Double) r[1]);
 			accountsLedger.setDebit((Double) r[2]);
 			accountsLedger.setBalance((Double) r[3]);
-
+			accountsLedger.setAccountMaster((String)r[4]);
+			
 			result.add(accountsLedger);
 		}
 
