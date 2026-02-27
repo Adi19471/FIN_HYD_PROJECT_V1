@@ -7,8 +7,8 @@ public class CashBookLedgerCollectionsPojo {
 
 	private Long sno;
 	private LocalDate date;
-	private Double monthlyFinanceCollections;
-	private Double dailyFinanceCollections;
+	private Double monthlyFinanceCollections = 0d;
+	private Double dailyFinanceCollections = 0d;
 	private Double total;
 
 	public Long getSno() {

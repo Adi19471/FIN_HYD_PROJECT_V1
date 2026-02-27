@@ -42,10 +42,10 @@ public class CashBook {
 	private String particulars;
 
 	@Column(name = "CREDIT")
-	private Double credit;
+	private Double credit = 0d;
 
 	@Column(name = "DEBIT")
-	private Double debit;
+	private Double debit = 0d;
 
 	@Column(name = "USER")
 	private String user;
@@ -60,7 +60,7 @@ public class CashBook {
 	private Integer currentInstallmentNumber;
 
 	@Column(name = "PENDING_BALANCE")
-	private Double pendingBalance;
+	private Double pendingBalance = 0d;
 
 	// Getters and Setters
 

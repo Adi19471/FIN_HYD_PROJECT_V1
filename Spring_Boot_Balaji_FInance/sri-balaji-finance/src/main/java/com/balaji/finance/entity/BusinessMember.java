@@ -16,19 +16,19 @@ public class BusinessMember {
 	private PersonalInfo partnerId;
 	private LocalDateTime startDate;
 	private LocalDateTime endDate;
-	private Double amount;
-	private Integer duration;
-	private Double interest;
-	private Double installment;
+	private Double amount = 0d;
+	private Integer duration = 0;
+	private Double interest = 0d;
+	private Double installment = 0d;
 	private String security;
 	private boolean status;
 	private Integer paidInstallments;
 	private Integer partPrincipal;
 	private Integer partInterest;
-	private Double unpaidLateFee;
+	private Double unpaidLateFee = 0d;
 	private boolean chequeReminder;
 	private String businessId;
-	private Double balanceAmount;
+	private Double balanceAmount = 0d;
 
 	@Id
 	@Column(name = "ID", length = 255, nullable = false)
@@ -215,8 +215,7 @@ public class BusinessMember {
 	public void setBusinessId(String businessId) {
 		this.businessId = businessId;
 	}
-	
-	
+
 	@Column(name = "BALANCE_AMOUNT", length = 255)
 	public Double getBalanceAmount() {
 		return balanceAmount;

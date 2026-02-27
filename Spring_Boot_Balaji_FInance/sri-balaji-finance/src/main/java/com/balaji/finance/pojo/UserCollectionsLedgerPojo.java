@@ -6,9 +6,9 @@ public class UserCollectionsLedgerPojo {
 
 	private Long sno;
 	private LocalDate date;
-	private Double monthlyFinanceCollections;
-	private Double dailyFinanceCollections;
-	private Double total;
+	private Double monthlyFinanceCollections = 0d;
+	private Double dailyFinanceCollections = 0d;
+	private Double total = 0d;
 
 	public Long getSno() {
 		return sno;

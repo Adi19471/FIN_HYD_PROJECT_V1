@@ -3,9 +3,9 @@ package com.balaji.finance.pojo;
 import java.util.List;
 
 public class DayWiseTransactionsSummary {
-	
+
 	private List<CashBookSumaryViewPojo> cashBookSumaryViewPojoList;
-	private Double openingBalance;
+	private Double openingBalance = 0d;
 
 	public List<CashBookSumaryViewPojo> getCashBookSumaryViewPojoList() {
 		return cashBookSumaryViewPojoList;

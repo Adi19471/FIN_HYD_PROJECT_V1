@@ -9,20 +9,20 @@ public class LoanInformation {
 	private String partnerName;
 	private String guarantorName;
 
-	private Double loanAmount;
-	private Double installmentAmount;
+	private Double loanAmount = 0d;
+	private Double installmentAmount = 0d;
 
 	private String periodFrom;
 	private String periodTo;
 
 	private String date;
-	private Double paid;
-	private Double balance;
-	private Double amountPaid;
-	private Double lateFee;
+	private Double paid = 0d;
+	private Double balance = 0d;
+	private Double amountPaid = 0d;
+	private Double lateFee = 0d;
 
-	private Double pendingLateFee;
-	private Double dueAmount;
+	private Double pendingLateFee = 0d;
+	private Double dueAmount = 0d;
 
 	private List<InstallmentDetails> installmentDetailsList = new ArrayList<InstallmentDetails>();
 

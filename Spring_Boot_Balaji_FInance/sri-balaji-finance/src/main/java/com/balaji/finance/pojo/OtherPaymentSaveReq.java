@@ -11,7 +11,7 @@ public class OtherPaymentSaveReq {
 	private String particulars;
 	private String transaction;
 
-	private Double amount;
+	private Double amount = 0d;
 
 	public String getTransactionDate() {
 		return transactionDate;

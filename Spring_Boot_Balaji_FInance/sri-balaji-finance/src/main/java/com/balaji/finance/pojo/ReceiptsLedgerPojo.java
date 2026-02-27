@@ -11,11 +11,11 @@ public class ReceiptsLedgerPojo {
 	private String loanId;
 	private LocalDate loanDate;
 	private String customerName;
-	private Double amountPaid;
-	private Double lateFee;
-	private Double total;
-	private Double totalPaid;
-	private Double balance;
+	private Double amountPaid = 0d;
+	private Double lateFee = 0d;
+	private Double total = 0d;
+	private Double totalPaid = 0d;
+	private Double balance = 0d;
 	private Integer currentInstallmentNumber;
 	private Integer balanceInstallmentNumber;
 	private String particulars;
@@ -132,5 +132,4 @@ public class ReceiptsLedgerPojo {
 		this.particulars = particulars;
 	}
 
-	
 }

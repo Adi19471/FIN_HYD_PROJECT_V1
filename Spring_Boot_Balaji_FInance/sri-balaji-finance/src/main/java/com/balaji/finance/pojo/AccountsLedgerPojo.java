@@ -6,9 +6,9 @@ public class AccountsLedgerPojo {
 
 	private Long sno;
 	private String accountMaster;
-	private Double credit;
-	private Double debit;
-	private Double balance;
+	private Double credit = 0d;
+	private Double debit = 0d;
+	private Double balance = 0d;
 
 	public Long getSno() {
 		return sno;

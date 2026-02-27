@@ -13,10 +13,10 @@ public class QuickCashBookRow {
 	private String name;
 
 	@NotNull(message = "Installment amount is required")
-	private Double installment;
+	private Double installment = 0d;
 
-	private Double dueAmount;
-	private Double lateFee;
+	private Double dueAmount = 0d;
+	private Double lateFee = 0d;
 
 	@NotNull(message = "Paid amount is required")
 	@DecimalMin(value = "0.0", inclusive = true, message = "Paid amount cannot be negative")

@@ -22,19 +22,19 @@ public class BusinessMemberDto {
 	@JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
 	private LocalDateTime endDate;
 
-	private Double amount;
+	private Double amount = 0d;
 	private Integer duration;
-	private Double interest;
-	private Double installment;
+	private Double interest = 0d;;
+	private Double installment = 0d;;
 	private String security;
 	private boolean status;
 	private Integer paidInstallments;
 	private Integer partPrincipal;
 	private Integer partInterest;
-	private Double unpaidLateFee;
+	private Double unpaidLateFee = 0d;;
 	private boolean chequeReminder;
 	private String businessId;
-	private Double processingFee;
+	private Double processingFee = 0d;;
 
 	public String getId() {
 		return id;

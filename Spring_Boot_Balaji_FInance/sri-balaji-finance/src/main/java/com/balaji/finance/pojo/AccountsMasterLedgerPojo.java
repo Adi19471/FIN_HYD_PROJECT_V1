@@ -10,8 +10,8 @@ public class AccountsMasterLedgerPojo {
 	private String transCode;
 	private String name;
 	private String particulars;
-	private Double credit;
-	private Double debit;
+	private Double credit = 0d;
+	private Double debit = 0d;
 
 	public Long getSno() {
 		return sno;

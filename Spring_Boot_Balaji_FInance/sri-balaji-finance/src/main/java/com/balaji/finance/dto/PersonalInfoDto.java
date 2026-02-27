@@ -22,8 +22,8 @@ public class PersonalInfoDto {
 
 	private boolean disable;
 
-	private Double shares;
-	private Double loanlimit;
+	private Double shares = 0d;;
+	private Double loanlimit = 0d;;
 
 	private String address2;
 	private String mobile2;

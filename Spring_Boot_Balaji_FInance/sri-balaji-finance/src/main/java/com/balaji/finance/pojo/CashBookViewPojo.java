@@ -7,9 +7,8 @@ public class CashBookViewPojo {
 	private String name;
 	private String transactionType;
 	private String particulars;
-	private Double credit;
-	private Double debit;
-    
+	private Double credit = 0d;
+	private Double debit = 0d;
 	
 	public Double getTransactionId() {
 		return transactionId;
