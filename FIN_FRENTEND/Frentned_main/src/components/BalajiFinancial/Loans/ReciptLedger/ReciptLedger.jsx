@@ -13,7 +13,6 @@ import axios from "axios";
 import { API_BASE } from "lib/config";
 import { getSession } from "src/utils/session";
 import { successToast, errorToast } from "toastify";
-
 import Loans from "../Loans";
 
 const ReceiptLedger = () => {
@@ -23,40 +22,103 @@ const ReceiptLedger = () => {
   const [ledgerData, setLedgerData] = useState([]);
   const [loading, setLoading] = useState(false);
 
-  // Table columns
+  // ✅ Common Header Function (Token Passing Here)
+  const getHeaders = () => ({
+    headers: {
+      Authorization: `Bearer ${getSession()?.token || ""}`,
+      "Content-Type": "application/json"
+    }
+  });
+
+  // ✅ Columns based on your backend response
   const columns = [
-    {
-      field: "id",
-      headerName: "ID",
-      width: 90
-    },
-    {
-      field: "receiptNo",
-      headerName: "Receipt No",
-      width: 150
-    },
+    { field: "sno", headerName: "S.No", width: 80 },
+
     {
       field: "date",
       headerName: "Date",
-      width: 150
+      width: 120
     },
+
+    {
+      field: "transId",
+      headerName: "Trans ID",
+      width: 120
+    },
+
+    {
+      field: "loanId",
+      headerName: "Loan ID",
+      width: 120
+    },
+
+    {
+      field: "loanDate",
+      headerName: "Loan Date",
+      width: 120
+    },
+
     {
       field: "customerName",
       headerName: "Customer Name",
-      width: 220,
-      flex: 1
+      flex: 1,
+      minWidth: 200
     },
+
     {
-      field: "amount",
-      headerName: "Amount (₹)",
-      width: 150,
+      field: "amountPaid",
+      headerName: "Amount",
+      width: 120,
       renderCell: (params) => (
         <strong>₹ {params.value}</strong>
       )
+    },
+
+    {
+      field: "lateFee",
+      headerName: "Late Fee",
+      width: 100
+    },
+
+    {
+      field: "total",
+      headerName: "Total",
+      width: 120
+    },
+
+    {
+      field: "totalPaid",
+      headerName: "Total Paid",
+      width: 130
+    },
+
+    {
+      field: "balance",
+      headerName: "Balance",
+      width: 130
+    },
+
+    {
+      field: "currentInstallmentNumber",
+      headerName: "Current Inst.",
+      width: 120
+    },
+
+    {
+      field: "balanceInstallmentNumber",
+      headerName: "Balance Inst.",
+      width: 120
+    },
+
+    {
+      field: "particulars",
+      headerName: "Particulars",
+      flex: 1,
+      minWidth: 150
     }
   ];
 
-  // Fetch Ledger API
+  // ✅ Fetch Ledger API
   const fetchLedger = async () => {
 
     if (!fromDate || !toDate) {
@@ -68,19 +130,18 @@ const ReceiptLedger = () => {
 
       setLoading(true);
 
-      const session = getSession();
-
       const res = await axios.get(
         `${API_BASE}/ReceiptsLedger/${fromDate}/${toDate}`,
-        {
-          headers: {
-            Authorization: `Bearer ${session?.token}`,
-            "Content-Type": "application/json"
-          }
-        }
+        getHeaders() // 🔥 token passing correctly here
       );
 
-      setLedgerData(res.data);
+      // ⚠ DataGrid needs unique "id"
+      const formattedData = res.data.map((item, index) => ({
+        id: index + 1,
+        ...item
+      }));
+
+      setLedgerData(formattedData);
 
       successToast("Ledger loaded successfully");
 
@@ -100,14 +161,16 @@ const ReceiptLedger = () => {
 
   return (
     <Box p={3}>
-<Loans />
+
+      <Loans />
+
       <Paper elevation={3} sx={{ p: 3 }}>
 
         <Typography variant="h5" mb={2}>
           Receipt Ledger
         </Typography>
 
-        {/* Filters */}
+        {/* Date Filters */}
         <Stack direction="row" spacing={2} mb={3}>
 
           <TextField
@@ -140,16 +203,16 @@ const ReceiptLedger = () => {
 
         </Stack>
 
-        {/* Table */}
-        <Box height={450}>
+        {/* Ledger Table */}
+        <Box height={500}>
 
           <DataGrid
             rows={ledgerData}
             columns={columns}
-            pageSize={5}
+            pageSize={10}
             rowsPerPageOptions={[5, 10, 20]}
             loading={loading}
-            disableSelectionOnClick
+            disableRowSelectionOnClick
           />
 
         </Box>

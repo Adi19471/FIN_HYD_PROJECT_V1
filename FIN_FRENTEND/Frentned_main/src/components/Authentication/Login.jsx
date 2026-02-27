@@ -115,7 +115,7 @@ const Login = () => {
           overflow: "hidden",
         }}
       >
-        {images.map((src, idx) => (
+        {/* {images.map((src, idx) => (
           <Box
             key={idx}
             component="img"
@@ -138,7 +138,7 @@ const Login = () => {
               zIndex: idx === currentImageIndex ? 1 : 0,
             }}
           />
-        ))}
+        ))} */}
 
         {/* Optional overlay for better text readability */}
         <Box
@@ -178,7 +178,7 @@ const Login = () => {
         >
           {/* Title */}
           <Box textAlign="center" mb={4}>
-            <Typography
+            {/* <Typography
               variant="h4"
               fontWeight={800}
               sx={{
@@ -188,7 +188,7 @@ const Login = () => {
               }}
             >
               SRI BALAJI
-            </Typography>
+            </Typography> */}
             <Typography variant="body2" color="text.secondary" mt={0.5}>
               Secure Access Portal
             </Typography>

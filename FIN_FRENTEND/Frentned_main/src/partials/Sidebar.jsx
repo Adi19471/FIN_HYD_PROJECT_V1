@@ -133,7 +133,7 @@ function Sidebar({ sidebarOpen, setSidebarOpen }) {
         <div className="flex items-center justify-between h-16 px-4 border-b border-gray-200 dark:border-gray-800">
           <div className="flex items-center space-x-3">
             <span className="hidden lg:sidebar-expanded:block 2xl:block text-xl font-bold text-gray-900 dark:text-white tracking-tight">
-              BALAJI FINANCE
+              {/* BALAJI FINANCE */}
             </span>
           </div>
 

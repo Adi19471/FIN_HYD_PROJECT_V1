@@ -33,5 +33,14 @@ public class AccountsMasterLedgerController {
 
 		return ResponseEntity.ok().body(cbLedgerList);
 	}
+	
+	@GetMapping("/getRecordsByAccountMasterCode/{masterName}")
+	public ResponseEntity<List<AccountsMasterLedgerPojo>> getRecordsByAccountMasterCode(@PathVariable String masterName) {
+
+	
+		List<AccountsMasterLedgerPojo> cbLedgerList = cashBookService.getRecordsByAccountMasterCode(masterName,null, null);
+
+		return ResponseEntity.ok().body(cbLedgerList);
+	}
 
 }

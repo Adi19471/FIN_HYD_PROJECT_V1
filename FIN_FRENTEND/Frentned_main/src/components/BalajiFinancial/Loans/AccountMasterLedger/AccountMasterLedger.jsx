@@ -14,7 +14,6 @@ import {
 } from "@mui/material";
 
 import { DataGrid } from "@mui/x-data-grid";
-
 import axios from "axios";
 import Loans from "../Loans";
 
@@ -22,12 +21,21 @@ import { API_BASE } from "lib/config";
 import { getSession } from "src/utils/session";
 import { successToast, errorToast } from "toastify";
 
+/* -------------------- COMMON AUTH HEADER -------------------- */
+const getHeaders = () => ({
+  headers: {
+    Authorization: `Bearer ${
+      getSession()?.token || getSession("token") || ""
+    }`,
+    "Content-Type": "application/json"
+  }
+});
+
 const AccountMasterLedger = () => {
 
   const [masterCodes, setMasterCodes] = useState([]);
   const [masterName, setMasterName] = useState("");
-
-  const [dateMode, setDateMode] = useState("range");
+  const [dateMode, setDateMode] = useState("all");
 
   const [fromDate, setFromDate] = useState("");
   const [toDate, setToDate] = useState("");
@@ -35,9 +43,9 @@ const AccountMasterLedger = () => {
   const [rows, setRows] = useState([]);
   const [loading, setLoading] = useState(false);
 
-  // Table columns
+  /* -------------------- TABLE COLUMNS -------------------- */
   const columns = [
-    { field: "id", headerName: "ID", width: 90 },
+    { field: "id", headerName: "S.No", width: 80 },
 
     {
       field: "date",
@@ -48,8 +56,8 @@ const AccountMasterLedger = () => {
     {
       field: "description",
       headerName: "Description",
-      width: 250,
-      flex: 1
+      flex: 1,
+      minWidth: 250
     },
 
     {
@@ -58,7 +66,7 @@ const AccountMasterLedger = () => {
       width: 150,
       renderCell: (params) => (
         <span style={{ color: "red", fontWeight: "bold" }}>
-          ₹ {params.value || 0}
+          ₹ {Number(params.value || 0).toLocaleString()}
         </span>
       )
     },
@@ -69,7 +77,7 @@ const AccountMasterLedger = () => {
       width: 150,
       renderCell: (params) => (
         <span style={{ color: "green", fontWeight: "bold" }}>
-          ₹ {params.value || 0}
+          ₹ {Number(params.value || 0).toLocaleString()}
         </span>
       )
     },
@@ -77,35 +85,27 @@ const AccountMasterLedger = () => {
     {
       field: "balance",
       headerName: "Balance (₹)",
-      width: 150,
+      width: 160,
       renderCell: (params) => (
-        <strong>₹ {params.value || 0}</strong>
+        <strong>
+          ₹ {Number(params.value || 0).toLocaleString()}
+        </strong>
       )
     }
   ];
 
-  // Load dropdown
+  /* -------------------- LOAD DROPDOWN -------------------- */
   const loadMasterCodes = async () => {
-
     try {
-
-      const session = getSession();
-
       const res = await axios.get(
         `${API_BASE}/account-master-droddown/findAllMasterCodes`,
-        {
-          headers: {
-            Authorization: `Bearer ${session?.token}`
-          }
-        }
+        getHeaders()
       );
 
-      setMasterCodes(res.data);
-
-    } catch {
-
+      setMasterCodes(res.data || []);
+    } catch (error) {
+      console.error("Dropdown Error:", error);
       errorToast("Failed to load account names");
-
     }
   };
 
@@ -113,7 +113,7 @@ const AccountMasterLedger = () => {
     loadMasterCodes();
   }, []);
 
-  // Fetch Ledger
+  /* -------------------- FETCH LEDGER -------------------- */
   const fetchLedger = async () => {
 
     if (!masterName) {
@@ -125,37 +125,63 @@ const AccountMasterLedger = () => {
 
       setLoading(true);
 
-      const session = getSession();
+      let url = "";
 
-      const res = await axios.get(
-        `${API_BASE}/getRecordsByAccountMasterCode/${masterName}/${fromDate}/${toDate}`,
-        {
-          headers: {
-            Authorization: `Bearer ${session?.token}`
-          }
+      if (dateMode === "all") {
+        url = `${API_BASE}/getRecordsByAccountMasterCode/${masterName}`;
+      } else {
+
+        if (!fromDate || !toDate) {
+          errorToast("Select From and To Date");
+          return;
         }
-      );
 
-      setRows(
-        res.data.map((item, index) => ({
+        url = `${API_BASE}/getRecordsByAccountMasterCode/${masterName}/${fromDate}/${toDate}`;
+      }
+
+      const res = await axios.get(url, getHeaders());
+
+      console.log("Ledger Response:", res.data);
+
+      let runningBalance = 0;
+
+      const formattedRows = (res.data || []).map((item, index) => {
+
+        const debit = Number(item.debit || item.debitAmount || 0);
+        const credit = Number(item.credit || item.creditAmount || 0);
+
+        runningBalance += credit - debit;
+
+        return {
           id: index + 1,
-          ...item
-        }))
-      );
+          date: item.date || item.txnDate || "",
+          description: item.description || item.particulars || "",
+          debit,
+          credit,
+          balance: item.balance || item.runningBalance || runningBalance
+        };
+      });
 
-      successToast("Ledger Loaded");
+      setRows(formattedRows);
 
-    } catch {
+      successToast("Ledger Loaded Successfully");
 
-      errorToast("Failed to load ledger");
+    } catch (error) {
+
+      console.error("Ledger Error:", error);
+
+      if (error.response?.status === 401) {
+        errorToast("Session Expired. Please Login Again.");
+      } else {
+        errorToast("Failed to load ledger");
+      }
 
     } finally {
-
       setLoading(false);
-
     }
   };
 
+  /* -------------------- UI -------------------- */
   return (
     <Box p={3}>
 
@@ -167,10 +193,9 @@ const AccountMasterLedger = () => {
           Account Master Ledger
         </Typography>
 
-        {/* Filters */}
-        <Stack spacing={2} direction="row" alignItems="center">
+        <Stack spacing={2} direction="row" alignItems="center" flexWrap="wrap">
 
-          {/* Dropdown */}
+          {/* Account Dropdown */}
           <TextField
             select
             label="Account Name"
@@ -178,33 +203,25 @@ const AccountMasterLedger = () => {
             onChange={(e) => setMasterName(e.target.value)}
             sx={{ minWidth: 250 }}
           >
-            {masterCodes.map((item, index) => (
-              <MenuItem key={index} value={item.masterName}>
-                {item.masterName}
-              </MenuItem>
-            ))}
+         
+         {masterCodes.map((item, index) => (
+  <MenuItem key={index} value={item}>
+    {item}
+  </MenuItem>
+))}
           </TextField>
 
-          {/* Radio */}
+          {/* Radio Buttons */}
           <RadioGroup
             row
             value={dateMode}
             onChange={(e) => setDateMode(e.target.value)}
           >
-            <FormControlLabel
-              value="all"
-              control={<Radio />}
-              label="All"
-            />
-
-            <FormControlLabel
-              value="range"
-              control={<Radio />}
-              label="Date Range"
-            />
+            <FormControlLabel value="all" control={<Radio />} label="All" />
+            <FormControlLabel value="range" control={<Radio />} label="Date Range" />
           </RadioGroup>
 
-          {/* Dates */}
+          {/* Date Range */}
           {dateMode === "range" && (
             <>
               <TextField
@@ -225,7 +242,7 @@ const AccountMasterLedger = () => {
             </>
           )}
 
-          {/* Generate */}
+          {/* Generate Button */}
           <Button
             variant="contained"
             onClick={fetchLedger}
@@ -233,27 +250,23 @@ const AccountMasterLedger = () => {
           >
             {loading
               ? <CircularProgress size={22} color="inherit" />
-              : "Generate"
-            }
+              : "Generate"}
           </Button>
 
         </Stack>
 
-        {/* Table */}
-        <Box mt={3} height={450}>
-
+        {/* DataGrid */}
+        <Box mt={3} height={500}>
           <DataGrid
             rows={rows}
             columns={columns}
-            pageSize={10}
-            rowsPerPageOptions={[10, 20, 50]}
+            pageSizeOptions={[10, 20, 50]}
             loading={loading}
+            disableRowSelectionOnClick
           />
-
         </Box>
 
       </Paper>
-
     </Box>
   );
 };

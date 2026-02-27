@@ -2,7 +2,7 @@ import React from "react";
 import "./CopyrightFooter.css";
 
 export default function CopyrightFooter({
-  company = "Balaji Finance",
+  // company = "Balaji Finance",
   className = "",
 }) {
   const year = new Date().getFullYear();

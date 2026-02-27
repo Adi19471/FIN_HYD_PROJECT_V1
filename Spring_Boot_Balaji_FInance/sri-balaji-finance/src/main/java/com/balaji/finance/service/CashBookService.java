@@ -433,7 +433,7 @@ public class CashBookService {
 			cashBookLedger.setTransId(r.getId());
 			cashBookLedger.setLoanId(r.getAccountNo());
 			cashBookLedger.setLoanDate(businessMember.getStartDate().toLocalDate());
-			cashBookLedger.setCustomerName(customer.getFirstname());
+			cashBookLedger.setCustomerName(customer !=  null ? customer.getFirstname() : null);
 			cashBookLedger.setAmountPaid(r.getCredit());
 			cashBookLedger.setLateFee(0d);
 			cashBookLedger.setTotal(r.getCredit());

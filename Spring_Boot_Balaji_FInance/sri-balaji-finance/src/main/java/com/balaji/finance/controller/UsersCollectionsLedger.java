@@ -33,5 +33,17 @@ public class UsersCollectionsLedger {
 
 		return ResponseEntity.ok().body(cbLedgerCollectionsOnlyList);
 	}
+	
+	
+	@GetMapping("/getUsersCollectionsLedger/{userName}")
+	public ResponseEntity<List<UserCollectionsLedgerPojo>> getUsersCollectionsLedger(@PathVariable String userName
+			) {
+
+		
+		List<UserCollectionsLedgerPojo> cbLedgerCollectionsOnlyList = cashBookService
+				.getUsersCollectionsLedger(userName, null, null);
+
+		return ResponseEntity.ok().body(cbLedgerCollectionsOnlyList);
+	}
 
 }

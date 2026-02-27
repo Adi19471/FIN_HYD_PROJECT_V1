@@ -205,7 +205,7 @@ function Header({ sidebarOpen, setSidebarOpen }) {
                 />
               </Box>
 
-              <Box>
+              {/* <Box>
                 <Typography
                   variant="h6"
                   component="div"
@@ -236,7 +236,7 @@ function Header({ sidebarOpen, setSidebarOpen }) {
                 >
                   Premium Banking Dashboard
                 </Typography>
-              </Box>
+              </Box> */}
             </Box>
           </Box>
 

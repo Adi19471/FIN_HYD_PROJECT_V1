@@ -48,7 +48,7 @@ function ImageCarousel() {
         backgroundColor: "#000", // fallback if image fails to load
       }}
     >
-      {carouselImages.map((src, index) => (
+      {/* {carouselImages.map((src, index) => (
         <Box
           key={index}
           component="img"
@@ -66,7 +66,7 @@ function ImageCarousel() {
             transition: "opacity 1.5s ease-in-out",
           }}
         />
-      ))}
+      ))} */}
 
       {/* Navigation Dots – moved lower for better visibility on tall carousel */}
       <Stack
@@ -129,7 +129,7 @@ function Dashboard() {
   const handleLogout = () => {
     if (
       window.confirm(
-        "Are you sure you want to logout from Sri Balaji Finance Dashboard?",
+        // "Are you sure you want to logout from Sri Balaji Finance Dashboard?",
       )
     ) {
       logout();
@@ -148,7 +148,7 @@ function Dashboard() {
             py: 1.5,
           }}
         >
-          <Typography
+          {/* <Typography
             variant="h5"
             component="div"
             fontWeight="bold"
@@ -156,7 +156,7 @@ function Dashboard() {
             sx={{ letterSpacing: 0.5 }}
           >
             Sri Balaji Finance Dashboard
-          </Typography>
+          </Typography> */}
 
           <Stack direction="row" spacing={2} alignItems="center">
             <Button
