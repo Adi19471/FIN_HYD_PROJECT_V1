@@ -178,7 +178,7 @@ const Login = () => {
         >
           {/* Title */}
           <Box textAlign="center" mb={4}>
-            {/* <Typography
+            <Typography
               variant="h4"
               fontWeight={800}
               sx={{
@@ -188,7 +188,7 @@ const Login = () => {
               }}
             >
               SRI BALAJI
-            </Typography> */}
+            </Typography>
             <Typography variant="body2" color="text.secondary" mt={0.5}>
               Secure Access Portal
             </Typography>

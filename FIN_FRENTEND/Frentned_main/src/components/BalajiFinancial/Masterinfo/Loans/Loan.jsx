@@ -15,7 +15,7 @@ import { MdCalendarToday, MdCalendarMonth } from "react-icons/md";
 
 // Lazy-loaded views
 const MonthlyFinance = lazy(() => import("./MonthlyFinance/MonthlyFinance"));
-const DailyFinance = lazy(() => import("./DailyFinance/DailyFinace")); // ← typo? DailyFinance
+const DailyFinance = lazy(() => import("./DailyFinance/DailyFinace")); 
 
 const FinanceTabs = () => {
   const theme = useTheme();

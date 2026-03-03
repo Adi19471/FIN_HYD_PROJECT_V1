@@ -295,10 +295,10 @@ public class CashBookService {
 
 			AccountsLedgerPojo accountsLedger = new AccountsLedgerPojo();
 			accountsLedger.setSno(++i);
-			accountsLedger.setCredit((Double) r[1]);
-			accountsLedger.setDebit((Double) r[2]);
-			accountsLedger.setBalance((Double) r[3]);
-			accountsLedger.setAccountMaster((String)r[4]);
+			accountsLedger.setCredit((Double) r[0]);
+			accountsLedger.setDebit((Double) r[1]);
+			accountsLedger.setBalance((Double) r[2]);
+			accountsLedger.setAccountMaster((String)r[3]);
 			
 			result.add(accountsLedger);
 		}

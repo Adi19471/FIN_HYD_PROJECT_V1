@@ -148,7 +148,7 @@ function Dashboard() {
             py: 1.5,
           }}
         >
-          {/* <Typography
+          <Typography
             variant="h5"
             component="div"
             fontWeight="bold"
@@ -156,7 +156,7 @@ function Dashboard() {
             sx={{ letterSpacing: 0.5 }}
           >
             Sri Balaji Finance Dashboard
-          </Typography> */}
+          </Typography>
 
           <Stack direction="row" spacing={2} alignItems="center">
             <Button
