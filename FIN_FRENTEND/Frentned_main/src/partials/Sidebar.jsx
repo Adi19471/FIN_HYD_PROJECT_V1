@@ -337,7 +337,7 @@ function Sidebar({ sidebarOpen, setSidebarOpen }) {
             <ul className="pl-11 mt-1 space-y-1">
               <li>
                 <NavLink
-                  to="/Loans/LoansMainpage"
+                  to="/AccountsModules/LoansMainpage"
                   className={({ isActive }) =>
                     `flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-all duration-200 ${
                       isActive
@@ -412,6 +412,80 @@ function Sidebar({ sidebarOpen, setSidebarOpen }) {
               {/* You can add more items here later */}
             </ul>
           )}
+
+
+
+{/* Loans */}
+<div
+  className={`flex items-center justify-between px-3 py-3 rounded-xl cursor-pointer transition-all duration-200 font-medium ${
+    openGroup === "loans"
+      ? "bg-gray-100 dark:bg-gray-800"
+      : "hover:bg-gray-100 dark:hover:bg-gray-800"
+  }`}
+  onClick={() => handleGroupToggle("loans")}
+>
+  <div className="flex items-center gap-3">
+    <MonetizationOn className="w-5 h-5 text-gray-600 dark:text-gray-400" />
+    <span className="text-sm lg:opacity-0 lg:sidebar-expanded:opacity-100 2xl:opacity-100 transition-opacity duration-200">
+      Loans
+    </span>
+  </div>
+  <ExpandMore
+    className={`w-5 h-5 transition-transform duration-300 ${
+      openGroup === "loans" ? "rotate-180" : ""
+    }`}
+  />
+</div>
+
+{openGroup === "loans" && (
+  <ul className="pl-11 mt-1 space-y-1">
+    <li>
+      <NavLink
+        to="/Loans/Distubuted"
+        className={({ isActive }) =>
+          `flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-all duration-200 ${
+            isActive
+              ? "bg-gradient-to-r from-teal-600 to-cyan-600 text-white shadow-sm"
+              : "text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800"
+          }`
+        }
+      >
+        <MonetizationOn className="w-4 h-4" />
+        <span>Distributed Loans</span>
+      </NavLink>
+    </li>
+    <li>
+      <NavLink
+        to="/Loans/InstalmentDues"
+        className={({ isActive }) =>
+          `flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-all duration-200 ${
+            isActive
+              ? "bg-gradient-to-r from-teal-600 to-cyan-600 text-white shadow-sm"
+              : "text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800"
+          }`
+        }
+      >
+        <ReceiptLong className="w-4 h-4" />
+        <span>Instalment Dues</span>
+      </NavLink>
+    </li>
+    <li>
+      <NavLink
+        to="/Loans/Maturity"
+        className={({ isActive }) =>
+          `flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-all duration-200 ${
+            isActive
+              ? "bg-gradient-to-r from-teal-600 to-cyan-600 text-white shadow-sm"
+              : "text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800"
+          }`
+        }
+      >
+        <Paid className="w-4 h-4" />
+        <span>Maturity</span>
+      </NavLink>
+    </li>
+  </ul>
+)}
 
           {/* Authentication */}
           <div

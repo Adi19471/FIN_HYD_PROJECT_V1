@@ -27,23 +27,22 @@ const Loans = () => {
           variant="scrollable"
           scrollButtons="auto"
         >
-          <Tab label="Loans Main" value="/Loans/LoansMainpage" />
+          <Tab label="Loans Main" value="/AccountsModules/LoansMainpage" />
 
-                  <Tab label="Daily Book" value="/Loans/DailyBook" />
-          <Tab label="CB Ledger" value="/Loans/Cbledger" />
-        <Tab label="Account Ledger" value="/Loans/AccountLedger" />
-      <Tab label="Account Master Ledger" value="/Loans/AccountMasterLedger" />
+          <Tab label="Daily Book" value="/AccountsModules/DailyBook" />
+          <Tab label="CB Ledger" value="/AccountsModules/Cbledger" />
+          <Tab label="Account Ledger" value="/AccountsModules/AccountLedger" />
+          <Tab
+            label="Account Master Ledger"
+            value="/AccountsModules/AccountMasterLedger"
+          />
 
- <Tab label="User Collection Ledger" value="/Loans/Usercollectionledger" />
-  
-    
-          <Tab label="Receipt Ledger" value="/Loans/ReciptLedger" />
+          <Tab
+            label="User Collection Ledger"
+            value="/AccountsModules/Usercollectionledger"
+          />
 
-
-
-         
-
-  
+          <Tab label="Receipt Ledger" value="/AccountsModules/ReciptLedger" />
         </Tabs>
       </Paper>
 

@@ -82,56 +82,65 @@ const Registraion_creation = lazy(() =>
 
 const LoansMainpage = lazy(() =>
   import(
-    "./components/BalajiFinancial/Loans/Loans"
+    "./components/BalajiFinancial/AccountsModules/Loans"
   )
 );
 
 const AccountLedger = lazy(() =>
   import(
-    "./components/BalajiFinancial/Loans/AccountLedger/AccountLedger"
+    "./components/BalajiFinancial/AccountsModules/AccountLedger/AccountLedger"
   )
 );
 const AccountMasterLedger = lazy(() =>
   import(
-    "./components/BalajiFinancial/Loans/AccountMasterLedger/AccountMasterLedger"
+    "./components/BalajiFinancial/AccountsModules/AccountMasterLedger/AccountMasterLedger"
   )
 );
 
 const Cbledger = lazy(() =>
   import(
-    "./components/BalajiFinancial/Loans/CBLedger/Cbledger"
+    "./components/BalajiFinancial/AccountsModules/CBLedger/Cbledger"
   )
 );
 
 
 const ReciptLedger = lazy(() =>
   import(
-    "./components/BalajiFinancial/Loans/ReciptLedger/ReciptLedger"
+    "./components/BalajiFinancial/AccountsModules/ReciptLedger/ReciptLedger"
   )
 );
 
 
 const Daily_Book = lazy(() =>
   import(
-    "./components/BalajiFinancial/Loans/DailBook/Daily_Book"
+    "./components/BalajiFinancial/AccountsModules/DailBook/Daily_Book"
   )
 );
 
 
 const Loansdetailes = lazy(() =>
   import(
-    "./components/BalajiFinancial/Loans/Loansdetailes/Loansdetailes"
+    "./components/BalajiFinancial/AccountsModules/Loansdetailes/Loansdetailes"
   )
 );
 
 const Usercollectionledger = lazy(() =>
 
- import("./components/BalajiFinancial/Loans/UserCollectionLedger/Usercollectionledger")
+ import("./components/BalajiFinancial/AccountsModules/UserCollectionLedger/Usercollectionledger")
+
 
 );
 
 
+// Loans section 
 
+
+const Distubuted = lazy (()  => import("./components/BalajiFinancial/Loans/Distrubuted/Distubuted"))
+
+const InstalmentDues = lazy (()  => import("./components/BalajiFinancial/Loans/InstalmentDues/InstalmentDues"))
+
+const Maturity = lazy (()  => import("./components/BalajiFinancial/Loans/Maturity/Maturity"))
+;
 
 
 
@@ -165,18 +174,23 @@ const routes = [
   { path: "/Transactions/Cashbook", element: Cashbook },
 
 
-  // Daily Book
-  { path: "/Loans/LoansMainpage", element: LoansMainpage },
-  { path: "/Loans/AccountLedger", element: AccountLedger },
-  { path: "/Loans/AccountMasterLedger", element: AccountMasterLedger },
-  { path: "/Loans/Cbledger", element: Cbledger },
-  { path: "/Loans/ReciptLedger", element: ReciptLedger },
-  { path: "/Loans/DailyBook", element: Daily_Book },
-  { path: "/Loans/Loansdetailes", element: Loansdetailes },
-  { path: "/Loans/Usercollectionledger", element: Usercollectionledger },
+  // Accounts 
+  { path: "/AccountsModules/LoansMainpage", element: LoansMainpage },
+  { path: "/AccountsModules/AccountLedger", element: AccountLedger },
+  { path: "/AccountsModules/AccountMasterLedger", element: AccountMasterLedger },
+  { path: "/AccountsModules/Cbledger", element: Cbledger },
+  { path: "/AccountsModules/ReciptLedger", element: ReciptLedger },
+  { path: "/AccountsModules/DailyBook", element: Daily_Book },
+  { path: "/AccountsModules/Loansdetailes", element: Loansdetailes },
+  { path: "/AccountsModules/Usercollectionledger", element: Usercollectionledger },
 
 
 
+// Loans
+{ path: "/Loans/Distubuted", element: Distubuted },
+{ path: "/Loans/InstalmentDues", element: InstalmentDues },
+{ path: "/Loans/Maturity", element: Maturity},
+ 
 
 
   // Account Master Setup

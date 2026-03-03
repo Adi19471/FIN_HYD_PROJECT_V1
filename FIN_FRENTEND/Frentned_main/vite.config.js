@@ -10,8 +10,9 @@ export default defineConfig({
     "process.env.NEXT_PUBLIC_APP_URL": JSON.stringify(
       process.env.NEXT_PUBLIC_APP_URL
     ),
+   
   },
-
+ 
   plugins: [react()],
 
   resolve: {
