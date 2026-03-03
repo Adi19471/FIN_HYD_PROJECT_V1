@@ -73,5 +73,15 @@ public interface BusinessMemberRepository extends JpaRepository<BusinessMember, 
 			  """)
 	List<BusinessMember> findAllByLoanTypeAndDateRange(@Param("starWithString") String starWithString,
 			@Param("fromDate") LocalDateTime fromDate, @Param("toDate") LocalDateTime toDate);
+	
+	
+	@Query("""
+			SELECT u FROM BusinessMember u
+			          WHERE
+			              u.businessMemberId LIKE CONCAT(:starWithString, '%')
+			              and u.endDate BETWEEN :fromDate AND :toDate
+			  """)
+	List<BusinessMember> findAllByLoanTypeAndEndDateRange(@Param("starWithString") String starWithString,
+			@Param("fromDate") LocalDateTime fromDate, @Param("toDate") LocalDateTime toDate);
 
 }
