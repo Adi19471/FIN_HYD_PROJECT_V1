@@ -1,5 +1,6 @@
 package com.balaji.finance.pojo;
 
+import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -9,20 +10,20 @@ public class LoanInformation {
 	private String partnerName;
 	private String guarantorName;
 
-	private Double loanAmount = 0d;
-	private Double installmentAmount = 0d;
+	private BigDecimal loanAmount;
+	private BigDecimal installmentAmount;
 
 	private String periodFrom;
 	private String periodTo;
 
 	private String date;
-	private Double paid = 0d;
-	private Double balance = 0d;
-	private Double amountPaid = 0d;
-	private Double lateFee = 0d;
+	private BigDecimal paid;
+	private BigDecimal balance;
+	private BigDecimal amountPaid;
+	private BigDecimal lateFee;
 
-	private Double pendingLateFee = 0d;
-	private Double dueAmount = 0d;
+	private BigDecimal pendingLateFee;
+	private BigDecimal dueAmount;
 
 	private List<InstallmentDetails> installmentDetailsList = new ArrayList<InstallmentDetails>();
 
@@ -52,19 +53,19 @@ public class LoanInformation {
 		this.guarantorName = guarantorName;
 	}
 
-	public Double getLoanAmount() {
+	public BigDecimal getLoanAmount() {
 		return loanAmount;
 	}
 
-	public void setLoanAmount(Double loanAmount) {
+	public void setLoanAmount(BigDecimal loanAmount) {
 		this.loanAmount = loanAmount;
 	}
 
-	public Double getInstallmentAmount() {
+	public BigDecimal getInstallmentAmount() {
 		return installmentAmount;
 	}
 
-	public void setInstallmentAmount(Double installmentAmount) {
+	public void setInstallmentAmount(BigDecimal installmentAmount) {
 		this.installmentAmount = installmentAmount;
 	}
 
@@ -92,51 +93,51 @@ public class LoanInformation {
 		this.date = date;
 	}
 
-	public Double getPaid() {
+	public BigDecimal getPaid() {
 		return paid;
 	}
 
-	public void setPaid(Double paid) {
+	public void setPaid(BigDecimal paid) {
 		this.paid = paid;
 	}
 
-	public Double getBalance() {
+	public BigDecimal getBalance() {
 		return balance;
 	}
 
-	public void setBalance(Double balance) {
+	public void setBalance(BigDecimal balance) {
 		this.balance = balance;
 	}
 
-	public Double getAmountPaid() {
+	public BigDecimal getAmountPaid() {
 		return amountPaid;
 	}
 
-	public void setAmountPaid(Double amountPaid) {
+	public void setAmountPaid(BigDecimal amountPaid) {
 		this.amountPaid = amountPaid;
 	}
 
-	public Double getLateFee() {
+	public BigDecimal getLateFee() {
 		return lateFee;
 	}
 
-	public void setLateFee(Double lateFee) {
+	public void setLateFee(BigDecimal lateFee) {
 		this.lateFee = lateFee;
 	}
 
-	public Double getPendingLateFee() {
+	public BigDecimal getPendingLateFee() {
 		return pendingLateFee;
 	}
 
-	public void setPendingLateFee(Double pendingLateFee) {
+	public void setPendingLateFee(BigDecimal pendingLateFee) {
 		this.pendingLateFee = pendingLateFee;
 	}
 
-	public Double getDueAmount() {
+	public BigDecimal getDueAmount() {
 		return dueAmount;
 	}
 
-	public void setDueAmount(Double dueAmount) {
+	public void setDueAmount(BigDecimal dueAmount) {
 		this.dueAmount = dueAmount;
 	}
 

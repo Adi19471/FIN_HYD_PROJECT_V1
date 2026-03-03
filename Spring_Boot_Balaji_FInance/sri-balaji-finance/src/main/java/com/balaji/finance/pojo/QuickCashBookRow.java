@@ -1,5 +1,7 @@
 package com.balaji.finance.pojo;
 
+import java.math.BigDecimal;
+
 import jakarta.validation.constraints.DecimalMin;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
@@ -13,18 +15,18 @@ public class QuickCashBookRow {
 	private String name;
 
 	@NotNull(message = "Installment amount is required")
-	private Double installment = 0d;
+	private BigDecimal installment;
 
-	private Double dueAmount = 0d;
-	private Double lateFee = 0d;
+	private BigDecimal dueAmount;
+	private BigDecimal lateFee;
 
 	@NotNull(message = "Paid amount is required")
 	@DecimalMin(value = "0.0", inclusive = true, message = "Paid amount cannot be negative")
-	private Double paidAmount;
+	private BigDecimal paidAmount;
 
 	@NotNull(message = "Paid late fee is required")
 	@DecimalMin(value = "0.0", inclusive = true, message = "Paid late fee cannot be negative")
-	private Double paidLateFee;
+	private BigDecimal paidLateFee;
 
 	public String getAccountNo() {
 		return accountNo;
@@ -42,43 +44,43 @@ public class QuickCashBookRow {
 		this.name = name;
 	}
 
-	public Double getInstallment() {
+	public BigDecimal getInstallment() {
 		return installment;
 	}
 
-	public void setInstallment(Double installment) {
+	public void setInstallment(BigDecimal installment) {
 		this.installment = installment;
 	}
 
-	public Double getDueAmount() {
+	public BigDecimal getDueAmount() {
 		return dueAmount;
 	}
 
-	public void setDueAmount(Double dueAmount) {
+	public void setDueAmount(BigDecimal dueAmount) {
 		this.dueAmount = dueAmount;
 	}
 
-	public Double getLateFee() {
+	public BigDecimal getLateFee() {
 		return lateFee;
 	}
 
-	public void setLateFee(Double lateFee) {
+	public void setLateFee(BigDecimal lateFee) {
 		this.lateFee = lateFee;
 	}
 
-	public Double getPaidAmount() {
+	public BigDecimal getPaidAmount() {
 		return paidAmount;
 	}
 
-	public void setPaidAmount(Double paidAmount) {
+	public void setPaidAmount(BigDecimal paidAmount) {
 		this.paidAmount = paidAmount;
 	}
 
-	public Double getPaidLateFee() {
+	public BigDecimal getPaidLateFee() {
 		return paidLateFee;
 	}
 
-	public void setPaidLateFee(Double paidLateFee) {
+	public void setPaidLateFee(BigDecimal paidLateFee) {
 		this.paidLateFee = paidLateFee;
 	}
 

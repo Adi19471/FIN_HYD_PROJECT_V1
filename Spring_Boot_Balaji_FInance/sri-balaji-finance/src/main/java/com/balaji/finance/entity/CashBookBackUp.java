@@ -4,6 +4,7 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.Immutable;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -15,14 +16,18 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 
+@Immutable
 @Entity
-@Table(name = "CASH_BOOK")
-public class CashBook {
+@Table(name = "CASH_BOOK_BACKUP")
+public class CashBookBackUp {
 
 	@Id
-	@Column(name = "CASH_BOOK_ID")
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
-	private Long cashBookId;
+	@Column(name = "CASH_BOOK_BACKUP_ID")
+	private Long cashBookBackUpId;
+
+	@Column(name = "CASH_BOOK_OLD_ID", nullable = false)
+	private Long cashBookOldId;
 
 	@Column(name = "LINE_NO")
 	private Integer lineNo;
@@ -30,8 +35,7 @@ public class CashBook {
 	@Column(name = "TRANS_DATE")
 	private LocalDateTime transDate;
 
-	@CreationTimestamp
-	@Column(name = "SYS_DATE", updatable = false)
+	@Column(name = "SYS_DATE")
 	private LocalDateTime sysDate;
 
 	@ManyToOne(fetch = FetchType.LAZY)
@@ -42,33 +46,59 @@ public class CashBook {
 	@JoinColumn(name = "BUSINESS_MEMBER_ID")
 	private BusinessMember businessMember;
 
-	@Column(name = "TRANS_TYPE")
+	@Column(name = "TRANS_TYPE", length = 100)
 	private String transType;
 
-	@Column(name = "PARTICULARS")
+	@Column(name = "PARTICULARS", length = 255)
 	private String particulars;
 
-	@Column(name = "CREDIT", nullable = false)
+	@Column(name = "CREDIT", precision = 19, scale = 2)
 	private BigDecimal credit = BigDecimal.ZERO;
 
-	@Column(name = "DEBIT", nullable = false)
+	@Column(name = "DEBIT", precision = 19, scale = 2)
 	private BigDecimal debit = BigDecimal.ZERO;
 
-	@Column(name = "ENTRY_USER")
-	private String user;
+	@Column(name = "ENTRY_USER", length = 100)
+	private String entryUser;
 
-	@Column(name = "RECEIPT_REMARKS")
+	@Column(name = "RECEIPT_REMARKS", length = 500)
 	private String receiptRemarks;
 
-	@Column(name = "BM_REMARKS")
+	@Column(name = "BM_REMARKS", length = 500)
 	private String bmRemarks;
 
-	public Long getCashBookId() {
-		return cashBookId;
+	@Column(name = "CURRENT_INSTALLMENT_NUMBER")
+	private Integer currentInstallmentNumber;
+
+	@Column(name = "PENDING_BALANCE", precision = 19, scale = 2)
+	private BigDecimal pendingBalance;
+
+	@CreationTimestamp
+	@Column(name = "DELETEDDATE", updatable = false)
+	private LocalDateTime deletedDate;
+
+	@Column(name = "DELETEDBY", length = 255)
+	private String deletedBy;
+
+	@Column(name = "COMMENTS", length = 255)
+	private String comments;
+
+	/* ===================== GETTERS & SETTERS ===================== */
+
+	public Long getCashBookBackUpId() {
+		return cashBookBackUpId;
 	}
 
-	public void setCashBookId(Long cashBookId) {
-		this.cashBookId = cashBookId;
+	public void setCashBookBackUpId(Long cashBookBackUpId) {
+		this.cashBookBackUpId = cashBookBackUpId;
+	}
+
+	public Long getCashBookOldId() {
+		return cashBookOldId;
+	}
+
+	public void setCashBookOldId(Long cashBookOldId) {
+		this.cashBookOldId = cashBookOldId;
 	}
 
 	public Integer getLineNo() {
@@ -143,12 +173,12 @@ public class CashBook {
 		this.debit = debit;
 	}
 
-	public String getUser() {
-		return user;
+	public String getEntryUser() {
+		return entryUser;
 	}
 
-	public void setUser(String user) {
-		this.user = user;
+	public void setEntryUser(String entryUser) {
+		this.entryUser = entryUser;
 	}
 
 	public String getReceiptRemarks() {
@@ -167,4 +197,43 @@ public class CashBook {
 		this.bmRemarks = bmRemarks;
 	}
 
+	public Integer getCurrentInstallmentNumber() {
+		return currentInstallmentNumber;
+	}
+
+	public void setCurrentInstallmentNumber(Integer currentInstallmentNumber) {
+		this.currentInstallmentNumber = currentInstallmentNumber;
+	}
+
+	public BigDecimal getPendingBalance() {
+		return pendingBalance;
+	}
+
+	public void setPendingBalance(BigDecimal pendingBalance) {
+		this.pendingBalance = pendingBalance;
+	}
+
+	public LocalDateTime getDeletedDate() {
+		return deletedDate;
+	}
+
+	public void setDeletedDate(LocalDateTime deletedDate) {
+		this.deletedDate = deletedDate;
+	}
+
+	public String getDeletedBy() {
+		return deletedBy;
+	}
+
+	public void setDeletedBy(String deletedBy) {
+		this.deletedBy = deletedBy;
+	}
+
+	public String getComments() {
+		return comments;
+	}
+
+	public void setComments(String comments) {
+		this.comments = comments;
+	}
 }

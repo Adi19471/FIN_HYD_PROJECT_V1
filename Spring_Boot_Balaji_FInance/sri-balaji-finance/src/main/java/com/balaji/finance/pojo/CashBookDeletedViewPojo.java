@@ -1,22 +1,24 @@
 package com.balaji.finance.pojo;
 
+import java.math.BigDecimal;
+
 public class CashBookDeletedViewPojo {
 
-	private Double transactionId;
+	private Long transactionId;
 	private String accountNumber;
 	private String name;
 	private String transactionType;
 	private String particulars;
-	private Double credit = 0d;
-	private Double debit = 0d;
+	private BigDecimal credit;
+	private BigDecimal debit;
 	private String deletedDate;
 	private String deletedByUser;
 
-	public Double getTransactionId() {
+	public Long getTransactionId() {
 		return transactionId;
 	}
 
-	public void setTransactionId(Double transactionId) {
+	public void setTransactionId(Long transactionId) {
 		this.transactionId = transactionId;
 	}
 
@@ -52,19 +54,19 @@ public class CashBookDeletedViewPojo {
 		this.particulars = particulars;
 	}
 
-	public Double getCredit() {
+	public BigDecimal getCredit() {
 		return credit;
 	}
 
-	public void setCredit(Double credit) {
+	public void setCredit(BigDecimal credit) {
 		this.credit = credit;
 	}
 
-	public Double getDebit() {
+	public BigDecimal getDebit() {
 		return debit;
 	}
 
-	public void setDebit(Double debit) {
+	public void setDebit(BigDecimal debit) {
 		this.debit = debit;
 	}
 

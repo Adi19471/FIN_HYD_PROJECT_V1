@@ -1,8 +1,6 @@
 package com.balaji.finance.dto;
 
-import java.util.Objects;
-
-import jakarta.persistence.*;
+import java.math.BigDecimal;
 
 public class PersonalInfoDto {
 
@@ -22,8 +20,8 @@ public class PersonalInfoDto {
 
 	private boolean disable;
 
-	private Double shares = 0d;;
-	private Double loanlimit = 0d;;
+	private BigDecimal shares;
+	private BigDecimal loanlimit;
 
 	private String address2;
 	private String mobile2;
@@ -142,19 +140,19 @@ public class PersonalInfoDto {
 		this.bussinessexemption = bussinessexemption;
 	}
 
-	public Double getShares() {
+	public BigDecimal getShares() {
 		return shares;
 	}
 
-	public void setShares(Double shares) {
+	public void setShares(BigDecimal shares) {
 		this.shares = shares;
 	}
 
-	public Double getLoanlimit() {
+	public BigDecimal getLoanlimit() {
 		return loanlimit;
 	}
 
-	public void setLoanlimit(Double loanlimit) {
+	public void setLoanlimit(BigDecimal loanlimit) {
 		this.loanlimit = loanlimit;
 	}
 

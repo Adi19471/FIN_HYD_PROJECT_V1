@@ -1,5 +1,6 @@
 package com.balaji.finance.pojo;
 
+import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -11,7 +12,7 @@ public class OtherPaymentSaveReq {
 	private String particulars;
 	private String transaction;
 
-	private Double amount = 0d;
+	private BigDecimal amount;
 
 	public String getTransactionDate() {
 		return transactionDate;
@@ -53,11 +54,11 @@ public class OtherPaymentSaveReq {
 		this.transaction = transaction;
 	}
 
-	public Double getAmount() {
+	public BigDecimal getAmount() {
 		return amount;
 	}
 
-	public void setAmount(Double amount) {
+	public void setAmount(BigDecimal amount) {
 		this.amount = amount;
 	}
 

@@ -13,6 +13,8 @@ import com.balaji.finance.pojo.QuickCashBookRow;
 import com.balaji.finance.pojo.QuickCashBookSaveRequest;
 import com.balaji.finance.repo.BusinessMemberRepository;
 
+import jakarta.transaction.Transactional;
+
 @Service
 public class QuickCashBookService {
 	
@@ -25,6 +27,7 @@ public class QuickCashBookService {
 	@Autowired
 	private MonthlyLoanInstallmentPaymentService monthlyLoanInstallmentPaymentService;
 
+	@Transactional
 	public QuickCashBookRow retriveQuickCashBookRecord(String loanId) {
 
 		Optional<BusinessMember> opt = businessMemberRepository.findById(loanId);
@@ -33,7 +36,7 @@ public class QuickCashBookService {
 		}
 
 		BusinessMember bm = opt.get();
-		if (bm.getCustomerId() == null || bm.getCustomerId().getFirstname() == null) {
+		if (bm.getCustomerId() == null || bm.getCustomerId().getFirstName() == null) {
 			return null;
 		}
 
@@ -42,8 +45,8 @@ public class QuickCashBookService {
 		}
 
 		QuickCashBookRow quickCashBookRow = new QuickCashBookRow();
-		quickCashBookRow.setAccountNo(bm.getId());
-		quickCashBookRow.setName(bm.getCustomerId().getId() + "-" + bm.getCustomerId().getFirstname());
+		quickCashBookRow.setAccountNo(bm.getBusinessMemberId());
+		quickCashBookRow.setName(bm.getCustomerId().getPersonalInfoId() + "-" + bm.getCustomerId().getFirstName());
 		quickCashBookRow.setInstallment(bm.getInstallment());
 
 		quickCashBookRow.setDueAmount(null);
@@ -56,6 +59,7 @@ public class QuickCashBookService {
 
 	}
 
+	@Transactional
 	public void saveQuickCashBookRecords(QuickCashBookSaveRequest quickCashBookSaveRequest) {
 
 		String transactionDate = quickCashBookSaveRequest.getTransactionDate();

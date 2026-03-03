@@ -1,5 +1,6 @@
 package com.balaji.finance.dto;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 import org.springframework.stereotype.Service;
@@ -22,19 +23,19 @@ public class BusinessMemberDto {
 	@JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
 	private LocalDateTime endDate;
 
-	private Double amount = 0d;
+	private BigDecimal amount;
 	private Integer duration;
-	private Double interest = 0d;;
-	private Double installment = 0d;;
+	private BigDecimal interest;
+	private BigDecimal installment;
 	private String security;
 	private boolean status;
 	private Integer paidInstallments;
 	private Integer partPrincipal;
 	private Integer partInterest;
-	private Double unpaidLateFee = 0d;;
+	private BigDecimal unpaidLateFee;
 	private boolean chequeReminder;
 	private String businessId;
-	private Double processingFee = 0d;;
+	private BigDecimal processingFee;
 
 	public String getId() {
 		return id;
@@ -100,11 +101,11 @@ public class BusinessMemberDto {
 		this.endDate = endDate;
 	}
 
-	public Double getAmount() {
+	public BigDecimal getAmount() {
 		return amount;
 	}
 
-	public void setAmount(Double amount) {
+	public void setAmount(BigDecimal amount) {
 		this.amount = amount;
 	}
 
@@ -116,19 +117,19 @@ public class BusinessMemberDto {
 		this.duration = duration;
 	}
 
-	public Double getInterest() {
+	public BigDecimal getInterest() {
 		return interest;
 	}
 
-	public void setInterest(Double interest) {
+	public void setInterest(BigDecimal interest) {
 		this.interest = interest;
 	}
 
-	public Double getInstallment() {
+	public BigDecimal getInstallment() {
 		return installment;
 	}
 
-	public void setInstallment(Double installment) {
+	public void setInstallment(BigDecimal installment) {
 		this.installment = installment;
 	}
 
@@ -172,11 +173,11 @@ public class BusinessMemberDto {
 		this.partInterest = partInterest;
 	}
 
-	public Double getUnpaidLateFee() {
+	public BigDecimal getUnpaidLateFee() {
 		return unpaidLateFee;
 	}
 
-	public void setUnpaidLateFee(Double unpaidLateFee) {
+	public void setUnpaidLateFee(BigDecimal unpaidLateFee) {
 		this.unpaidLateFee = unpaidLateFee;
 	}
 
@@ -196,11 +197,11 @@ public class BusinessMemberDto {
 		this.businessId = businessId;
 	}
 
-	public Double getProcessingFee() {
+	public BigDecimal getProcessingFee() {
 		return processingFee;
 	}
 
-	public void setProcessingFee(Double processingFee) {
+	public void setProcessingFee(BigDecimal processingFee) {
 		this.processingFee = processingFee;
 	}
 

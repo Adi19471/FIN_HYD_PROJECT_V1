@@ -1,14 +1,17 @@
 package com.balaji.finance.pojo;
 
+import java.math.BigDecimal;
+
 public class InstallmentDetails {
 
+	private Integer emiId;
 	private long installmentNumber;
 	private String dueDate;
 	private String lateFeeDate;
-	private double installmentAmount;
-	private double lateFee;
-	private double total;
-	private double paid;
+	private BigDecimal installmentAmount;
+	private BigDecimal lateFee;
+	private BigDecimal total;
+	private BigDecimal paid;
 
 	// Getters and Setters
 
@@ -36,35 +39,44 @@ public class InstallmentDetails {
 		this.lateFeeDate = lateFeeDate;
 	}
 
-	public double getInstallmentAmount() {
+	public BigDecimal getInstallmentAmount() {
 		return installmentAmount;
 	}
 
-	public void setInstallmentAmount(double installmentAmount) {
+	public void setInstallmentAmount(BigDecimal installmentAmount) {
 		this.installmentAmount = installmentAmount;
 	}
 
-	public double getLateFee() {
+	public BigDecimal getLateFee() {
 		return lateFee;
 	}
 
-	public void setLateFee(double lateFee) {
+	public void setLateFee(BigDecimal lateFee) {
 		this.lateFee = lateFee;
 	}
 
-	public double getTotal() {
+	public BigDecimal getTotal() {
 		return total;
 	}
 
-	public void setTotal(double total) {
+	public void setTotal(BigDecimal total) {
 		this.total = total;
 	}
 
-	public double getPaid() {
+	public BigDecimal getPaid() {
 		return paid;
 	}
 
-	public void setPaid(double paid) {
+	public void setPaid(BigDecimal paid) {
 		this.paid = paid;
 	}
+
+	public Integer getEmiId() {
+		return emiId;
+	}
+
+	public void setEmiId(Integer emiId) {
+		this.emiId = emiId;
+	}
+
 }

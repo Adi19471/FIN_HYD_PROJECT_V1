@@ -4,14 +4,14 @@ import java.util.List;
 
 public class DeleteCashBookReq {
 
-	private List<Double> transactionId;
+	private List<Long> transactionId;
 	private String comments;
 
-	public List<Double> getTransactionId() {
+	public List<Long> getTransactionId() {
 		return transactionId;
 	}
 
-	public void setTransactionId(List<Double> transactionId) {
+	public void setTransactionId(List<Long> transactionId) {
 		this.transactionId = transactionId;
 	}
 

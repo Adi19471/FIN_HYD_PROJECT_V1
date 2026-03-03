@@ -6,16 +6,20 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
-import com.balaji.finance.entity.BusinessMember;
+import com.balaji.finance.dto.DateWiseCashBookProjection;
+import com.balaji.finance.dto.DateWiseCollectionsProjection;
+import com.balaji.finance.dto.SummaryByParticularsProjection;
 import com.balaji.finance.entity.CashBook;
-import com.balaji.finance.entity.CashBookBK;
-import com.balaji.finance.entity.PersonalInfo;
+import com.balaji.finance.entity.CashBookBackUp;
+import com.balaji.finance.entity.EMI;
 import com.balaji.finance.pojo.AccountsLedgerPojo;
 import com.balaji.finance.pojo.AccountsMasterLedgerPojo;
 import com.balaji.finance.pojo.CashBookDeletedViewPojo;
@@ -26,53 +30,44 @@ import com.balaji.finance.pojo.CashBookViewPojo;
 import com.balaji.finance.pojo.DayWiseTransactionsSummary;
 import com.balaji.finance.pojo.ReceiptsLedgerPojo;
 import com.balaji.finance.pojo.UserCollectionsLedgerPojo;
-import com.balaji.finance.repo.BusinessMemberRepository;
-import com.balaji.finance.repo.CashBookBkRepo;
+import com.balaji.finance.repo.CashBookBackUpRepo;
 import com.balaji.finance.repo.CashBookRepo;
-import com.balaji.finance.repo.PersonalInfoRepository;
+import com.balaji.finance.repo.EmiRepo;
+
+import jakarta.transaction.Transactional;
 
 @Service
 public class CashBookService {
 
-    private final MonthlyLoanInstallmentPaymentService monthlyLoanInstallmentPaymentService;
-	
+
 	@Autowired
 	private CashBookRepo cashBookRepo;
-	
-	@Autowired
-	private CashBookBkRepo cashBookBkRepo;
-	
-	@Autowired
-	private BusinessMemberRepository businessMemberRepository;
-
-	
-	
 
 	@Autowired
-	private PersonalInfoRepository personalInfoRepository;
+	private CashBookBackUpRepo cashBookBkRepo;
 
-    CashBookService(MonthlyLoanInstallmentPaymentService monthlyLoanInstallmentPaymentService) {
-        this.monthlyLoanInstallmentPaymentService = monthlyLoanInstallmentPaymentService;
-    }
+
+	@Autowired
+	private EmiRepo emiRepo;
+
 
 	public List<CashBookViewPojo> loadAllCashBookDetailsByTransactionDate(LocalDate transactionDate) {
+		
+		LocalDateTime start = transactionDate.atStartOfDay();
+		LocalDateTime end = transactionDate.plusDays(1).atStartOfDay();
 
-		List<CashBook> byTransDate = cashBookRepo.findByTransactionDate(transactionDate);
+		List<CashBook> byTransDate = cashBookRepo.findByTransactionDate(start,end);
 
 		List<CashBookViewPojo> cashBookViewPojoList = new ArrayList<CashBookViewPojo>();
 
 		for (CashBook cashBook : byTransDate) {
 
-			PersonalInfo customer = null;
-			if (cashBook.getCustomerId() != null) {
-				Optional<PersonalInfo> byId = personalInfoRepository.findById(cashBook.getCustomerId());
-				customer = byId.get();
-			}
-
 			CashBookViewPojo cashBookViewPojo = new CashBookViewPojo();
-			cashBookViewPojo.setTransactionId(cashBook.getId());
-			cashBookViewPojo.setAccountNumber(cashBook.getAccountNo());
-			cashBookViewPojo.setName(customer != null ? customer.getId() + " - " + customer.getFirstname() : "");
+			cashBookViewPojo.setTransactionId(cashBook.getCashBookId());
+			cashBookViewPojo.setAccountNumber(cashBook.getBusinessMember().getBusinessMemberId());
+			cashBookViewPojo.setName(cashBook.getPersonalInfo() != null
+					? cashBook.getPersonalInfo().getPersonalInfoId() + " - " + cashBook.getPersonalInfo().getFirstName()
+					: "");
 			cashBookViewPojo.setParticulars(cashBook.getParticulars());
 			cashBookViewPojo.setTransactionType(cashBook.getTransType());
 			cashBookViewPojo.setCredit(cashBook.getCredit());
@@ -85,34 +80,32 @@ public class CashBookService {
 		return cashBookViewPojoList;
 
 	}
-	
-	
+
 	public List<CashBookDeletedViewPojo> loadAllDayWiseDeletedTransactions(LocalDate transactionDate) {
 
-		List<CashBookBK> byTransDate = cashBookBkRepo.findByTransactionDate(transactionDate);
+		LocalDateTime start = transactionDate.atStartOfDay();
+		LocalDateTime end = transactionDate.plusDays(1).atStartOfDay();
+
+		List<CashBookBackUp> byTransDate = cashBookBkRepo.findByTransDateBetween(start, end);
 
 		List<CashBookDeletedViewPojo> cashBookDeleteViewPojoList = new ArrayList<CashBookDeletedViewPojo>();
 		DateTimeFormatter fmt = DateTimeFormatter.ofPattern("dd-MM-yyyy HH:mm:ss");
 		
-		for (CashBookBK cashBook : byTransDate) {
-
-			PersonalInfo customer = null;
-			if (cashBook.getCustomerId() != null) {
-				Optional<PersonalInfo> byId = personalInfoRepository.findById(cashBook.getCustomerId());
-				customer = byId.get();
-			}
+		for (CashBookBackUp cashBook : byTransDate) {
 
 			CashBookDeletedViewPojo cashBookDeletedViewPojo = new CashBookDeletedViewPojo();
-			cashBookDeletedViewPojo.setTransactionId(cashBook.getId());
-			cashBookDeletedViewPojo.setAccountNumber(cashBook.getAccountNo());
-			cashBookDeletedViewPojo.setName(customer != null ? customer.getId() + " - " + customer.getFirstname() : "");
+			cashBookDeletedViewPojo.setTransactionId(cashBook.getCashBookBackUpId());
+			cashBookDeletedViewPojo.setAccountNumber(cashBook.getBusinessMember().getBusinessMemberId());
+			cashBookDeletedViewPojo.setName(cashBook.getPersonalInfo() != null
+					? cashBook.getPersonalInfo().getPersonalInfoId() + " - " + cashBook.getPersonalInfo().getFirstName()
+					: "");
 			cashBookDeletedViewPojo.setParticulars(cashBook.getParticulars());
 			cashBookDeletedViewPojo.setTransactionType(cashBook.getTransType());
 			cashBookDeletedViewPojo.setCredit(cashBook.getCredit());
 			cashBookDeletedViewPojo.setDebit(cashBook.getDebit());
 			cashBookDeletedViewPojo.setDeletedByUser(cashBook.getDeletedBy());
 			cashBookDeletedViewPojo.setDeletedDate(cashBook.getDeletedDate().format(fmt));
-			
+
 			cashBookDeleteViewPojoList.add(cashBookDeletedViewPojo);
 
 		}
@@ -121,11 +114,12 @@ public class CashBookService {
 
 	}
 
-	public String deleteCashBook(List<Double> transactionIdList, String comments) {
+	@Transactional
+	public String deleteCashBook(List<Long> transactionIdList, String comments) {
 
-		List<Double> errorIds = new ArrayList<Double>();
+		List<Long> errorIds = new ArrayList<Long>();
 
-		for (Double transactionId : transactionIdList) {
+		for (Long transactionId : transactionIdList) {
 
 			Optional<CashBook> byId = cashBookRepo.findById(transactionId);
 
@@ -135,21 +129,21 @@ public class CashBookService {
 				
 				String currentUser = SecurityContextHolder.getContext().getAuthentication().getName();
 
-				CashBookBK cashBookBk = new CashBookBK();
-				cashBookBk.setAccountNo(cashBook.getAccountNo());
+				CashBookBackUp cashBookBk = new CashBookBackUp();
+				cashBookBk.setBusinessMember(cashBook.getBusinessMember());
 				cashBookBk.setBmRemarks(cashBook.getBmRemarks());
 				cashBookBk.setComments(comments);
 				cashBookBk.setCredit(cashBook.getCredit());
-				cashBookBk.setCustomerId(cashBook.getCustomerId());
+				cashBookBk.setPersonalInfo(cashBook.getPersonalInfo());
 				cashBookBk.setDebit(cashBook.getDebit());
 
-				cashBookBk.setId(cashBook.getId());
+				cashBookBk.setCashBookOldId(cashBook.getCashBookId());
 				cashBookBk.setLineNo(cashBook.getLineNo());
 				cashBookBk.setParticulars(cashBook.getParticulars());
 				cashBookBk.setReceiptRemarks(cashBook.getReceiptRemarks());
 				cashBookBk.setSysDate(cashBook.getSysDate());
 				cashBookBk.setTransDate(cashBook.getTransDate());
-				cashBookBk.setUser(cashBook.getUser());
+				cashBookBk.setEntryUser(cashBook.getUser());
 				cashBookBk.setTransType(cashBook.getTransType());
 
 				cashBookBk.setDeletedBy(currentUser);
@@ -158,9 +152,9 @@ public class CashBookService {
 				cashBookBkRepo.save(cashBookBk);
 				
 				
-				cashBookRepo.delete(cashBook);
 				
-
+				cashBookRepo.deleteById(transactionId);
+				
 			} else {
 				errorIds.add(transactionId);
 			}
@@ -178,22 +172,22 @@ public class CashBookService {
 	
 	public DayWiseTransactionsSummary loadAllDayWiseTransactionsSummary(LocalDate transactionDate) {
 
-		List<CashBook> byTransDate = cashBookRepo.findByTransactionDate(transactionDate);
+		LocalDateTime start = transactionDate.atStartOfDay();
+		LocalDateTime end = transactionDate.plusDays(1).atStartOfDay();
+
+		List<CashBook> byTransDate = cashBookRepo.findByTransactionDate(start, end);
+		
 
 		List<CashBookSumaryViewPojo> cashBookViewPojoList = new ArrayList<CashBookSumaryViewPojo>();
 
 		for (CashBook cashBook : byTransDate) {
 
-			PersonalInfo customer = null;
-			if (cashBook.getCustomerId() != null) {
-				Optional<PersonalInfo> byId = personalInfoRepository.findById(cashBook.getCustomerId());
-				customer = byId.get();
-			}
-
 			CashBookSumaryViewPojo cashBookViewPojo = new CashBookSumaryViewPojo();
-			cashBookViewPojo.setTransactionId(cashBook.getId());
-			cashBookViewPojo.setAccountNumber(cashBook.getAccountNo());
-			cashBookViewPojo.setName(customer != null ? customer.getId() + " - " + customer.getFirstname() : "");
+			cashBookViewPojo.setTransactionId(cashBook.getCashBookId());
+			cashBookViewPojo.setAccountNumber(cashBook.getBusinessMember().getBusinessId());
+			cashBookViewPojo.setName(cashBook.getPersonalInfo() != null
+					? cashBook.getPersonalInfo().getPersonalInfoId() + " - " + cashBook.getPersonalInfo().getFirstName()
+					: "");
 			cashBookViewPojo.setParticulars(cashBook.getParticulars());
 			cashBookViewPojo.setTransactionType(cashBook.getTransType());
 			cashBookViewPojo.setCredit(cashBook.getCredit());
@@ -204,7 +198,9 @@ public class CashBookService {
 
 		}
 		
-		Double openingBalanceForToday = cashBookRepo.findOpeningBalanceForDate(transactionDate);
+		BigDecimal openingBalanceForToday =
+		        Optional.ofNullable(cashBookRepo.findOpeningBalanceForDate(transactionDate))
+		                .orElse(BigDecimal.ZERO);
 		
 		DayWiseTransactionsSummary dayWiseTransactionsSummary = new DayWiseTransactionsSummary();
 		dayWiseTransactionsSummary.setCashBookSumaryViewPojoList(cashBookViewPojoList);
@@ -215,53 +211,68 @@ public class CashBookService {
 	}
 	
 	public List<CashBookLedgerPojo> getCashBookLedger(LocalDate fromDate, LocalDate toDate) {
+		LocalDateTime from = fromDate.atStartOfDay();
+		LocalDateTime to = toDate.atTime(23, 59, 59);
 
-        LocalDateTime from = fromDate.atStartOfDay();
-        LocalDateTime to = toDate.atTime(23, 59, 59);
+		List<DateWiseCashBookProjection> rows = cashBookRepo.getDateWiseCashBook(from, to);
 
-        List<Object[]> rows = cashBookRepo.getDateWiseCashBook(from, to);
+		List<CashBookLedgerPojo> result = new ArrayList<>();
 
-        List<CashBookLedgerPojo> result = new ArrayList<>();
+		long i = 0;
 
-        long i = 0;
-        
-        Double openingBalanceForToday = cashBookRepo.findOpeningBalanceForDate(fromDate);
+		BigDecimal runningBalance = Optional.ofNullable(cashBookRepo.findOpeningBalanceForDate(fromDate))
+				.orElse(BigDecimal.ZERO);
 
-		for (Object[] r : rows) {
+		for (DateWiseCashBookProjection r : rows) {
 
 			CashBookLedgerPojo cashBookLedger = new CashBookLedgerPojo();
+
 			cashBookLedger.setSno(++i);
-			cashBookLedger.setDate(((java.sql.Date) r[0]).toLocalDate());
-			cashBookLedger.setCredit((Double) r[1]);
-			cashBookLedger.setDebit((Double) r[2]);
-			cashBookLedger.setBalance((Double) r[3]);
-			cashBookLedger.setClosingBalance(((Double) r[3]) + (openingBalanceForToday));
+
+			cashBookLedger.setDate(r.getTxnDate());
+
+			cashBookLedger.setCredit(r.getCredit());
+			cashBookLedger.setDebit(r.getDebit());
+			cashBookLedger.setBalance(r.getBalance());
+
+			runningBalance = runningBalance.add(r.getBalance());
+
+			cashBookLedger.setClosingBalance(runningBalance);
 
 			result.add(cashBookLedger);
 		}
-		
+
 		return result;
-    }
-	
+	}
+
 	public List<CashBookLedgerCollectionsPojo> getCollectionsOnlyCBLedgerData(LocalDate fromDate, LocalDate toDate) {
 
 		LocalDateTime from = fromDate.atStartOfDay();
 		LocalDateTime to = toDate.atTime(23, 59, 59);
 
-		List<Object[]> rows = cashBookRepo.getDateWiseCashBookCollectionsOnly(from, to);
+		List<DateWiseCollectionsProjection> rows = cashBookRepo.getDateWiseCashBookCollectionsOnly(from, to);
 
 		List<CashBookLedgerCollectionsPojo> result = new ArrayList<>();
 
 		long i = 0;
 
-		for (Object[] r : rows) {
+		for (DateWiseCollectionsProjection r : rows) {
 
 			CashBookLedgerCollectionsPojo cashBookLedger = new CashBookLedgerCollectionsPojo();
 			cashBookLedger.setSno(++i);
-			cashBookLedger.setDate(((java.sql.Date) r[0]).toLocalDate());
-			cashBookLedger.setMonthlyFinanceCollections((Double) r[1]);
-			cashBookLedger.setDailyFinanceCollections((Double) r[2]);
-			cashBookLedger.setTotal(((Double) r[1])+((Double) r[2]));
+			cashBookLedger.setDate(r.getTxnDate());
+			cashBookLedger.setMonthlyFinanceCollections(r.getMonthlyTotal());
+			cashBookLedger.setDailyFinanceCollections(r.getDailyTotal());
+			
+			
+			
+			BigDecimal monthly = Optional.ofNullable(r.getMonthlyTotal()).orElse(BigDecimal.ZERO);
+			BigDecimal daily = Optional.ofNullable(r.getDailyTotal()).orElse(BigDecimal.ZERO);
+
+			cashBookLedger.setMonthlyFinanceCollections(monthly);
+			cashBookLedger.setDailyFinanceCollections(daily);
+			cashBookLedger.setTotal(monthly.add(daily));
+			
 
 			result.add(cashBookLedger);
 		}
@@ -272,7 +283,7 @@ public class CashBookService {
 	
 	public List<AccountsLedgerPojo> getAccountsLedgerData(LocalDate fromDate, LocalDate toDate) {
 
-		List<Object[]> rows = new ArrayList<Object[]>();
+		List<SummaryByParticularsProjection> rows = new ArrayList<SummaryByParticularsProjection>();
 
 		if (fromDate == null && toDate == null) {
 
@@ -291,14 +302,14 @@ public class CashBookService {
 
 		long i = 0;
 
-		for (Object[] r : rows) {
+		for (SummaryByParticularsProjection r : rows) {
 
 			AccountsLedgerPojo accountsLedger = new AccountsLedgerPojo();
 			accountsLedger.setSno(++i);
-			accountsLedger.setCredit((Double) r[0]);
-			accountsLedger.setDebit((Double) r[1]);
-			accountsLedger.setBalance((Double) r[2]);
-			accountsLedger.setAccountMaster((String)r[3]);
+			accountsLedger.setCredit(r.getCredit());
+			accountsLedger.setDebit(r.getDebit());
+			accountsLedger.setBalance(r.getBalance());
+			accountsLedger.setAccountMaster(r.getParticulars());
 			
 			result.add(accountsLedger);
 		}
@@ -329,16 +340,11 @@ public class CashBookService {
 
 		for (CashBook r : rows) {
 
-			PersonalInfo customer = null;
-			if (r.getCustomerId() != null) {
-				Optional<PersonalInfo> byId = personalInfoRepository.findById(r.getCustomerId());
-				customer = byId.get();
-			}
-
 			AccountsMasterLedgerPojo accountsMasterLedgerPojo = new AccountsMasterLedgerPojo();
 			accountsMasterLedgerPojo.setSno(++i);
-			accountsMasterLedgerPojo
-					.setName(customer != null ? customer.getId() + " - " + customer.getFirstname() : "");
+			accountsMasterLedgerPojo.setName(r.getPersonalInfo() != null
+					? r.getPersonalInfo().getPersonalInfoId() + " - " + r.getPersonalInfo().getFirstName()
+					: "");
 			accountsMasterLedgerPojo.setParticulars(r.getParticulars());
 			accountsMasterLedgerPojo.setTransCode(r.getTransType());
 			accountsMasterLedgerPojo.setCredit(r.getCredit());
@@ -354,7 +360,7 @@ public class CashBookService {
 	public List<UserCollectionsLedgerPojo> getUsersCollectionsLedger(String userName, LocalDate fromDate,
 			LocalDate toDate) {
 
-		List<Object[]> rows = new ArrayList<Object[]>();
+		List<DateWiseCollectionsProjection> rows = new ArrayList<DateWiseCollectionsProjection>();
 
 		if (fromDate == null && toDate == null) {
 
@@ -373,14 +379,19 @@ public class CashBookService {
 
 		long i = 0;
 
-		for (Object[] r : rows) {
+		for (DateWiseCollectionsProjection r : rows) {
 
 			UserCollectionsLedgerPojo cashBookLedger = new UserCollectionsLedgerPojo();
 			cashBookLedger.setSno(++i);
-			cashBookLedger.setDate(((java.sql.Date) r[0]).toLocalDate());
-			cashBookLedger.setMonthlyFinanceCollections((Double) r[1]);
-			cashBookLedger.setDailyFinanceCollections((Double) r[2]);
-			cashBookLedger.setTotal(((Double) r[1]) + ((Double) r[2]));
+			cashBookLedger.setDate(r.getTxnDate());
+			cashBookLedger.setMonthlyFinanceCollections(r.getMonthlyTotal());
+			cashBookLedger.setDailyFinanceCollections(r.getDailyTotal());
+			
+			BigDecimal monthly = Optional.ofNullable(r.getMonthlyTotal()).orElse(BigDecimal.ZERO);
+			BigDecimal daily = Optional.ofNullable(r.getDailyTotal()).orElse(BigDecimal.ZERO);
+
+			cashBookLedger.setTotal(monthly.add(daily));
+			
 
 			result.add(cashBookLedger);
 		}
@@ -415,43 +426,52 @@ public class CashBookService {
 
 		for (CashBook r : rows) {
 
-			PersonalInfo customer = null;
-			if (r.getCustomerId() != null) {
-				Optional<PersonalInfo> byId = personalInfoRepository.findById(r.getCustomerId());
-				customer = byId.get();
-			}
-
-			BusinessMember businessMember = null;
-			if (r.getAccountNo() != null) {
-				Optional<BusinessMember> opt = businessMemberRepository.findById(r.getAccountNo());
-				businessMember = opt.get();
-			}
-
 			ReceiptsLedgerPojo cashBookLedger = new ReceiptsLedgerPojo();
 			cashBookLedger.setSno(++i);
 			cashBookLedger.setDate(r.getTransDate().toLocalDate());
-			cashBookLedger.setTransId(r.getId());
-			cashBookLedger.setLoanId(r.getAccountNo());
-			cashBookLedger.setLoanDate(businessMember.getStartDate().toLocalDate());
-			cashBookLedger.setCustomerName(customer !=  null ? customer.getFirstname() : null);
+			cashBookLedger.setTransId(r.getCashBookId());
+			cashBookLedger.setLoanId(r.getBusinessMember().getBusinessMemberId());
+			cashBookLedger.setLoanDate(r.getBusinessMember().getStartDate().toLocalDate());
+			cashBookLedger.setCustomerName(r.getPersonalInfo() != null ? r.getPersonalInfo().getFirstName() : null);
 			cashBookLedger.setAmountPaid(r.getCredit());
-			cashBookLedger.setLateFee(0d);
+			cashBookLedger.setLateFee(BigDecimal.ZERO);
 			cashBookLedger.setTotal(r.getCredit());
-			
-			
-			cashBookLedger.setTotalPaid(businessMember.getAmount()-r.getPendingBalance());
-			cashBookLedger.setBalance(r.getPendingBalance());
-			
-			
-			cashBookLedger.setCurrentInstallmentNumber(r.getCurrentInstallmentNumber());
-			cashBookLedger.setBalanceInstallmentNumber(businessMember.getDuration()-r.getCurrentInstallmentNumber());
+
+			List<EMI> allEMIs = emiRepo.findByBusinessMember(r.getBusinessMember());
+
+			Map<Boolean, List<EMI>> collect = allEMIs.stream()
+					.collect(Collectors.partitioningBy(emi -> emi.getPaymentDate().isBefore(r.getTransDate())));
+
+			List<EMI> currentCashBook_beforeEMis = collect.get(true);
+			List<EMI> currentCashBook_afterEMis = collect.get(false);
+
+			BigDecimal totalAmountPaidUpToThisCashBookTrasac = currentCashBook_beforeEMis.stream()
+					.map(EMI::getPaidAmount).reduce(BigDecimal.ZERO, BigDecimal::add);
+
+			BigDecimal totalAmountpendingAfterToThisCashBookTrasac = currentCashBook_afterEMis.stream()
+					.map(EMI::getRemainingAmount).reduce(BigDecimal.ZERO, BigDecimal::add);
+
+			cashBookLedger.setTotalPaid(totalAmountPaidUpToThisCashBookTrasac);
+			cashBookLedger.setBalance(totalAmountpendingAfterToThisCashBookTrasac);
+
+			cashBookLedger.setCurrentInstallmentNumber(currentCashBook_beforeEMis.size());
+			cashBookLedger.setBalanceInstallmentNumber(currentCashBook_afterEMis.size());
+
 			cashBookLedger.setParticulars(r.getParticulars());
-			
+
 			result.add(cashBookLedger);
 		}
 
 		return result;
 	}
+	
+	
+	
+	
+	
+	
+	
+	
 	
 	
 	

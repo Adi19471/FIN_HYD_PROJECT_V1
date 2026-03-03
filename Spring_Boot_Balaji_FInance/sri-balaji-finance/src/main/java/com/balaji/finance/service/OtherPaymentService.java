@@ -1,16 +1,20 @@
 package com.balaji.finance.service;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
 import com.balaji.finance.entity.CashBook;
+import com.balaji.finance.entity.PersonalInfo;
 import com.balaji.finance.pojo.OtherPaymentSaveReq;
 import com.balaji.finance.repo.BusinessMemberRepository;
 import com.balaji.finance.repo.CashBookRepo;
+import com.balaji.finance.repo.PersonalInfoRepository;
 
 @Service
 public class OtherPaymentService {
@@ -19,6 +23,11 @@ public class OtherPaymentService {
 
 	@Autowired
 	private CashBookRepo cashBookRepo;
+	
+
+	@Autowired
+	private PersonalInfoRepository personalInfoRepository;
+
 
 	public void saveOtherPayment(OtherPaymentSaveReq otherPaymentSaveReq) {
 
@@ -28,16 +37,16 @@ public class OtherPaymentService {
 		String currentUser = SecurityContextHolder.getContext().getAuthentication().getName();
 
 		CashBook cashBookForPrinciplePaid = new CashBook();
-		cashBookForPrinciplePaid.setAccountNo(null);
+		cashBookForPrinciplePaid.setBusinessMember(null);
 
 		switch (otherPaymentSaveReq.getTransaction()) {
 		case "CREDIT":
 			cashBookForPrinciplePaid.setCredit(otherPaymentSaveReq.getAmount());
-			cashBookForPrinciplePaid.setDebit(0.0);
+			cashBookForPrinciplePaid.setDebit(BigDecimal.ZERO);
 			break;
 
 		case "DEBIT":
-			cashBookForPrinciplePaid.setCredit(0.0);
+			cashBookForPrinciplePaid.setCredit(BigDecimal.ZERO);
 			cashBookForPrinciplePaid.setDebit(otherPaymentSaveReq.getAmount());
 
 			break;
@@ -57,7 +66,11 @@ public class OtherPaymentService {
 
 		cashBookForPrinciplePaid.setTransDate(currentInstallmentDate);
 		cashBookForPrinciplePaid.setSysDate(LocalDateTime.now());
-		cashBookForPrinciplePaid.setCustomerId(otherPaymentSaveReq.getCustomerId());
+		
+	
+		Optional<PersonalInfo> byId = personalInfoRepository.findById(otherPaymentSaveReq.getCustomerId());
+		
+		cashBookForPrinciplePaid.setPersonalInfo(byId.get());
 
 		cashBookRepo.save(cashBookForPrinciplePaid);
 

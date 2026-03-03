@@ -1,5 +1,6 @@
 package com.balaji.finance.pojo;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.Date;
 
@@ -7,15 +8,15 @@ public class ReceiptsLedgerPojo {
 
 	private Integer sno;
 	private LocalDate date;
-	private Double transId;
+	private Long transId;
 	private String loanId;
 	private LocalDate loanDate;
 	private String customerName;
-	private Double amountPaid = 0d;
-	private Double lateFee = 0d;
-	private Double total = 0d;
-	private Double totalPaid = 0d;
-	private Double balance = 0d;
+	private BigDecimal amountPaid;
+	private BigDecimal lateFee;
+	private BigDecimal total;
+	private BigDecimal totalPaid;
+	private BigDecimal balance;
 	private Integer currentInstallmentNumber;
 	private Integer balanceInstallmentNumber;
 	private String particulars;
@@ -36,11 +37,11 @@ public class ReceiptsLedgerPojo {
 		this.date = date;
 	}
 
-	public Double getTransId() {
+	public Long getTransId() {
 		return transId;
 	}
 
-	public void setTransId(Double transId) {
+	public void setTransId(Long transId) {
 		this.transId = transId;
 	}
 
@@ -68,43 +69,43 @@ public class ReceiptsLedgerPojo {
 		this.customerName = customerName;
 	}
 
-	public Double getAmountPaid() {
+	public BigDecimal getAmountPaid() {
 		return amountPaid;
 	}
 
-	public void setAmountPaid(Double amountPaid) {
+	public void setAmountPaid(BigDecimal amountPaid) {
 		this.amountPaid = amountPaid;
 	}
 
-	public Double getLateFee() {
+	public BigDecimal getLateFee() {
 		return lateFee;
 	}
 
-	public void setLateFee(Double lateFee) {
+	public void setLateFee(BigDecimal lateFee) {
 		this.lateFee = lateFee;
 	}
 
-	public Double getTotal() {
+	public BigDecimal getTotal() {
 		return total;
 	}
 
-	public void setTotal(Double total) {
+	public void setTotal(BigDecimal total) {
 		this.total = total;
 	}
 
-	public Double getTotalPaid() {
+	public BigDecimal getTotalPaid() {
 		return totalPaid;
 	}
 
-	public void setTotalPaid(Double totalPaid) {
+	public void setTotalPaid(BigDecimal totalPaid) {
 		this.totalPaid = totalPaid;
 	}
 
-	public Double getBalance() {
+	public BigDecimal getBalance() {
 		return balance;
 	}
 
-	public void setBalance(Double balance) {
+	public void setBalance(BigDecimal balance) {
 		this.balance = balance;
 	}
 

@@ -18,6 +18,8 @@ import com.balaji.finance.dto.PersonalInfoDto;
 import com.balaji.finance.pojo.AccountUsage;
 import com.balaji.finance.service.PersonalInfoService;
 
+import jakarta.websocket.server.PathParam;
+
 @RestController
 @RequestMapping("/PersonalInfo")
 public class PersonalInfoController {

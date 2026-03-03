@@ -1,5 +1,6 @@
 package com.balaji.finance.entity;
 
+import java.math.BigDecimal;
 import java.util.Objects;
 
 import jakarta.persistence.Column;
@@ -8,66 +9,104 @@ import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 
 @Entity
-@Table(name = "personalinfo")
+@Table(name = "PERSONAL_INFO")
 public class PersonalInfo {
 
 	@Id
-	private String id;
+	@Column(name = "PERSONAL_INFO_ID")
+	private String personalInfoId;
 
-	private String firstname;
-	private String lastname;
+	@Column(name = "FIRST_NAME")
+	private String firstName;
+
+	@Column(name = "LAST_NAME")
+	private String lastName;
+
+	@Column(name = "GENDER")
 	private String gender;
-	private String fathername;
+
+	@Column(name = "FATHER_NAME")
+	private String fatherName;
+
+	@Column(name = "ADDRESS")
 	private String address;
+
+	@Column(name = "MOBILE")
 	private String mobile;
+
+	@Column(name = "PHONE")
 	private String phone;
+
+	@Column(name = "CATEGORY")
 	private String category;
+
+	@Column(name = "REFERENCE")
 	private String reference;
 
-	@Column(name = "IDPROOFTYPE")
+	@Column(name = "ID_PROOF_TYPE")
 	private String idProoftype;
-	private String idproof;
 
+	@Column(name = "ID_PROOF")
+	private String idProof;
+
+	@Column(name = "DISABLE")
 	private boolean disable;
 
-	private Double shares = 0d;
-	private Double loanlimit = 0d;
+	@Column(name = "SHARES")
+	private BigDecimal shares;
 
+	@Column(name = "LOAN_LIMIT")
+	private BigDecimal loanlimit;
+
+	@Column(name = "ADDRESS2")
 	private String address2;
+
+	@Column(name = "MOBILE2")
 	private String mobile2;
+
+	@Column(name = "PHONE2")
 	private String phone2;
-	private String oldid;
+
+	@Column(name = "OLD_ID")
+	private String oldId;
+
+	@Column(name = "age")
 	private String age;
+
+	@Column(name = "OCCUPATION")
 	private String occupation;
+
+	@Column(name = "SPOUSE")
 	private String spouse;
 
-	private boolean bussinessexemption;
+	@Column(name = "BUSSINESS_EXEMPTION")
+	private boolean bussinessExemption;
+
+	@Column(name = "INTRO_NAME")
 	private String introname;
 
-	// ---------- GETTERS & SETTERS ----------
-
-	public String getFirstname() {
-		return firstname;
+	public String getPersonalInfoId() {
+		return personalInfoId;
 	}
 
-	public String getId() {
-		return id;
+	public void setPersonalInfoId(String personalInfoId) {
+		this.personalInfoId = personalInfoId;
 	}
 
-	public void setId(String id) {
-		this.id = id;
+	public String getFirstName() {
+		return firstName;
 	}
 
-	public void setFirstname(String firstname) {
-		this.firstname = firstname;
+	public void setFirstName(String firstName) {
+		this.firstName = firstName;
 	}
 
-	public String getLastname() {
-		return lastname;
+	public String getLastName() {
+		return lastName;
 	}
 
-	public void setLastname(String lastname) {
-		this.lastname = lastname;
+	public void setLastName(String lastName) {
+		this.lastName = lastName;
 	}
 
 	public String getGender() {
@@ -78,12 +117,12 @@ public class PersonalInfo {
 		this.gender = gender;
 	}
 
-	public String getFathername() {
-		return fathername;
+	public String getFatherName() {
+		return fatherName;
 	}
 
-	public void setFathername(String fathername) {
-		this.fathername = fathername;
+	public void setFatherName(String fatherName) {
+		this.fatherName = fatherName;
 	}
 
 	public String getAddress() {
@@ -126,12 +165,20 @@ public class PersonalInfo {
 		this.reference = reference;
 	}
 
-	public String getIdproof() {
-		return idproof;
+	public String getIdProoftype() {
+		return idProoftype;
 	}
 
-	public void setIdproof(String idproof) {
-		this.idproof = idproof;
+	public void setIdProoftype(String idProoftype) {
+		this.idProoftype = idProoftype;
+	}
+
+	public String getIdProof() {
+		return idProof;
+	}
+
+	public void setIdProof(String idProof) {
+		this.idProof = idProof;
 	}
 
 	public boolean isDisable() {
@@ -142,27 +189,19 @@ public class PersonalInfo {
 		this.disable = disable;
 	}
 
-	public boolean isBussinessexemption() {
-		return bussinessexemption;
-	}
-
-	public void setBussinessexemption(boolean bussinessexemption) {
-		this.bussinessexemption = bussinessexemption;
-	}
-
-	public Double getShares() {
+	public BigDecimal getShares() {
 		return shares;
 	}
 
-	public void setShares(Double shares) {
+	public void setShares(BigDecimal shares) {
 		this.shares = shares;
 	}
 
-	public Double getLoanlimit() {
+	public BigDecimal getLoanlimit() {
 		return loanlimit;
 	}
 
-	public void setLoanlimit(Double loanlimit) {
+	public void setLoanlimit(BigDecimal loanlimit) {
 		this.loanlimit = loanlimit;
 	}
 
@@ -190,12 +229,12 @@ public class PersonalInfo {
 		this.phone2 = phone2;
 	}
 
-	public String getOldid() {
-		return oldid;
+	public String getOldId() {
+		return oldId;
 	}
 
-	public void setOldid(String oldid) {
-		this.oldid = oldid;
+	public void setOldId(String oldId) {
+		this.oldId = oldId;
 	}
 
 	public String getAge() {
@@ -222,33 +261,16 @@ public class PersonalInfo {
 		this.spouse = spouse;
 	}
 
+	public boolean isBussinessExemption() {
+		return bussinessExemption;
+	}
+
+	public void setBussinessExemption(boolean bussinessExemption) {
+		this.bussinessExemption = bussinessExemption;
+	}
+
 	public String getIntroname() {
 		return introname;
-	}
-
-	public String getIdProoftype() {
-		return idProoftype;
-	}
-
-	public void setIdProoftype(String idProoftype) {
-		this.idProoftype = idProoftype;
-	}
-
-	@Override
-	public int hashCode() {
-		return Objects.hash(id);
-	}
-
-	@Override
-	public boolean equals(Object obj) {
-		if (this == obj)
-			return true;
-		if (obj == null)
-			return false;
-		if (getClass() != obj.getClass())
-			return false;
-		PersonalInfo other = (PersonalInfo) obj;
-		return Objects.equals(id, other.id);
 	}
 
 	public void setIntroname(String introname) {

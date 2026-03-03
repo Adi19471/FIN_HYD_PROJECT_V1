@@ -1,14 +1,15 @@
 package com.balaji.finance.pojo;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 
 public class UserCollectionsLedgerPojo {
 
 	private Long sno;
 	private LocalDate date;
-	private Double monthlyFinanceCollections = 0d;
-	private Double dailyFinanceCollections = 0d;
-	private Double total = 0d;
+	private BigDecimal monthlyFinanceCollections;
+	private BigDecimal dailyFinanceCollections;
+	private BigDecimal total;
 
 	public Long getSno() {
 		return sno;
@@ -26,27 +27,27 @@ public class UserCollectionsLedgerPojo {
 		this.date = date;
 	}
 
-	public Double getMonthlyFinanceCollections() {
+	public BigDecimal getMonthlyFinanceCollections() {
 		return monthlyFinanceCollections;
 	}
 
-	public void setMonthlyFinanceCollections(Double monthlyFinanceCollections) {
+	public void setMonthlyFinanceCollections(BigDecimal monthlyFinanceCollections) {
 		this.monthlyFinanceCollections = monthlyFinanceCollections;
 	}
 
-	public Double getDailyFinanceCollections() {
+	public BigDecimal getDailyFinanceCollections() {
 		return dailyFinanceCollections;
 	}
 
-	public void setDailyFinanceCollections(Double dailyFinanceCollections) {
+	public void setDailyFinanceCollections(BigDecimal dailyFinanceCollections) {
 		this.dailyFinanceCollections = dailyFinanceCollections;
 	}
 
-	public Double getTotal() {
+	public BigDecimal getTotal() {
 		return total;
 	}
 
-	public void setTotal(Double total) {
+	public void setTotal(BigDecimal total) {
 		this.total = total;
 	}
 

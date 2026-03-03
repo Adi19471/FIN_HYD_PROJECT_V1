@@ -1,15 +1,16 @@
 package com.balaji.finance.pojo;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 
 public class CashBookLedgerPojo {
 
 	private Long sno;
 	private LocalDate date;
-	private Double credit = 0d;
-	private Double debit = 0d;
-	private Double balance = 0d;
-	private Double closingBalance = 0d;
+	private BigDecimal credit;
+	private BigDecimal debit;
+	private BigDecimal balance;
+	private BigDecimal closingBalance;
 
 	public Long getSno() {
 		return sno;
@@ -27,35 +28,35 @@ public class CashBookLedgerPojo {
 		this.date = date;
 	}
 
-	public Double getCredit() {
+	public BigDecimal getCredit() {
 		return credit;
 	}
 
-	public void setCredit(Double credit) {
+	public void setCredit(BigDecimal credit) {
 		this.credit = credit;
 	}
 
-	public Double getDebit() {
+	public BigDecimal getDebit() {
 		return debit;
 	}
 
-	public void setDebit(Double debit) {
+	public void setDebit(BigDecimal debit) {
 		this.debit = debit;
 	}
 
-	public Double getBalance() {
+	public BigDecimal getBalance() {
 		return balance;
 	}
 
-	public void setBalance(Double balance) {
+	public void setBalance(BigDecimal balance) {
 		this.balance = balance;
 	}
 
-	public Double getClosingBalance() {
+	public BigDecimal getClosingBalance() {
 		return closingBalance;
 	}
 
-	public void setClosingBalance(Double closingBalance) {
+	public void setClosingBalance(BigDecimal closingBalance) {
 		this.closingBalance = closingBalance;
 	}
 
