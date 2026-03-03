@@ -15,11 +15,34 @@ function App() {
   const location = useLocation();
   const { isAuthenticated } = useAuth();
 
+  // ✅ Scroll Effect
   useEffect(() => {
     document.querySelector("html").style.scrollBehavior = "auto";
     window.scroll({ top: 0 });
     document.querySelector("html").style.scrollBehavior = "";
   }, [location.pathname]);
+
+  // ✅ Title Rotation Effect (ADD HERE)
+  useEffect(() => {
+    const titles = [
+      "💰 Sri Balaji Finance",
+      "✅ Safe • ⚡ Fast • 🔒 Reliable",
+      "📅 Daily Chit Funds Available",
+      "🗓️ Monthly Chit Schemes",
+      "🤝 Trusted Chit Fund Services",
+      "📈 Smart Savings • Better Returns",
+      "🏦 Secure Finance Solutions"
+    ];
+
+    let index = 0;
+
+    const interval = setInterval(() => {
+      document.title = titles[index];
+      index = (index + 1) % titles.length;
+    }, 2000);
+
+    return () => clearInterval(interval);
+  }, []);
 
   const isAuthRoute =
     location.pathname === "/login" || location.pathname === "/unauthorized";
@@ -28,7 +51,6 @@ function App() {
     <Suspense fallback={<LoadingSpinner />}>
       <Routes>
         {routes.map((route, index) => {
-          // Handle root path specially - if authenticated show Dashboard, else redirect to login
           if (route.path === "/") {
             return (
               <Route

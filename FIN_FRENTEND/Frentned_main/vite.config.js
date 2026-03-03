@@ -1,6 +1,9 @@
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
 import path from "path";
+import os from "os";
+
+const viteCacheDir = path.join(os.tmpdir(), "vite-cache");
 
 export default defineConfig({
   base: "./",
@@ -14,6 +17,8 @@ export default defineConfig({
   },
  
   plugins: [react()],
+
+  cacheDir: viteCacheDir,
 
   resolve: {
     alias: {

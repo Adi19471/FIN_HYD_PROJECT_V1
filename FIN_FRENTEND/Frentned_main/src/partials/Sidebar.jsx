@@ -3,19 +3,26 @@ import { NavLink, useLocation } from "react-router-dom";
 import {
   Close,
   Dashboard,
-  FolderShared,
+  Home,
+  Info,
   AccountCircle,
   Login,
   PersonAdd,
-  RestartAlt,
+  LockReset,
   ChevronRight,
   ExpandMore,
   Person,
   MonetizationOn,
+  AccountBalance,
   AccountBalanceWallet,
   ReceiptLong,
   DeleteForever,
   Paid,
+  SwapHoriz,
+  AccountTree,
+  Construction,
+  EventNote,
+  EventAvailable,
 } from "@mui/icons-material";
 
 import { useThemeProvider } from "../utils/ThemeContext";
@@ -125,8 +132,8 @@ function Sidebar({ sidebarOpen, setSidebarOpen }) {
         className={`flex flex-col absolute z-50 left-0 top-0 lg:static lg:left-auto lg:top-auto lg:translate-x-0 
           h-screen overflow-y-auto no-scrollbar
           w-64 lg:w-20 lg:sidebar-expanded:w-64 2xl:!w-64 
-          shrink-0 bg-white dark:bg-gray-950 border-r border-gray-200 dark:border-gray-800 
-          transition-all duration-300 ease-in-out
+          shrink-0 bg-white/80 dark:bg-gray-950/80 backdrop-blur-xl border-r border-gray-200/50 dark:border-gray-800/50 
+          transition-all duration-300 ease-in-out shadow-xl lg:shadow-none
           ${sidebarOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"}`}
       >
         {/* Header */}
@@ -159,11 +166,11 @@ function Sidebar({ sidebarOpen, setSidebarOpen }) {
               `flex items-center gap-3 px-3 py-3 rounded-xl transition-all duration-200 font-medium ${
                 isActive
                   ? "bg-gradient-to-r from-teal-600 to-cyan-600 text-white shadow-md"
-                  : "text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800"
+                  : "text-gray-700 dark:text-gray-300 hover:bg-teal-50 dark:hover:bg-teal-900/20 hover:text-teal-600 dark:hover:text-teal-400"
               }`
             }
           >
-            <Dashboard className="w-5 h-5 min-w-[20px]" />
+            <Home className="w-5 h-5 min-w-[20px]" />
             <span className="text-sm lg:opacity-0 lg:sidebar-expanded:opacity-100 2xl:opacity-100 transition-opacity duration-200">
               Dashboard
             </span>
@@ -173,13 +180,13 @@ function Sidebar({ sidebarOpen, setSidebarOpen }) {
           <div
             className={`flex items-center justify-between px-3 py-3 rounded-xl cursor-pointer transition-all duration-200 font-medium ${
               openGroup === "master"
-                ? "bg-gray-100 dark:bg-gray-800"
-                : "hover:bg-gray-100 dark:hover:bg-gray-800"
+                ? "bg-teal-50 dark:bg-teal-900/30"
+                : "hover:bg-teal-50 dark:hover:bg-teal-900/20"
             }`}
             onClick={() => handleGroupToggle("master")}
           >
             <div className="flex items-center gap-3">
-              <FolderShared className="w-5 h-5 text-gray-600 dark:text-gray-400" />
+              <Info className="w-5 h-5 text-teal-600 dark:text-teal-400" />
               <span className="text-sm lg:opacity-0 lg:sidebar-expanded:opacity-100 2xl:opacity-100 transition-opacity duration-200">
                 Master Info
               </span>
@@ -200,7 +207,7 @@ function Sidebar({ sidebarOpen, setSidebarOpen }) {
                     `flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-all duration-200 ${
                       isActive
                         ? "bg-gradient-to-r from-teal-600 to-cyan-600 text-white shadow-sm"
-                        : "text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800"
+                        : "text-gray-600 dark:text-gray-400 hover:bg-teal-50 dark:hover:bg-teal-900/20 hover:text-teal-600 dark:hover:text-teal-400"
                     }`
                   }
                 >
@@ -215,7 +222,7 @@ function Sidebar({ sidebarOpen, setSidebarOpen }) {
                     `flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-all duration-200 ${
                       isActive
                         ? "bg-gradient-to-r from-teal-600 to-cyan-600 text-white shadow-sm"
-                        : "text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800"
+                        : "text-gray-600 dark:text-gray-400 hover:bg-teal-50 dark:hover:bg-teal-900/20 hover:text-teal-600 dark:hover:text-teal-400"
                     }`
                   }
                 >
@@ -230,13 +237,13 @@ function Sidebar({ sidebarOpen, setSidebarOpen }) {
           <div
             className={`flex items-center justify-between px-3 py-3 rounded-xl cursor-pointer transition-all duration-200 font-medium ${
               openGroup === "transactions"
-                ? "bg-gray-100 dark:bg-gray-800"
-                : "hover:bg-gray-100 dark:hover:bg-gray-800"
+                ? "bg-teal-50 dark:bg-teal-900/30"
+                : "hover:bg-teal-50 dark:hover:bg-teal-900/20"
             }`}
             onClick={() => handleGroupToggle("transactions")}
           >
             <div className="flex items-center gap-3">
-              <Paid className="w-5 h-5 text-gray-600 dark:text-gray-400" />
+              <SwapHoriz className="w-5 h-5 text-teal-600 dark:text-teal-400" />
               <span className="text-sm lg:opacity-0 lg:sidebar-expanded:opacity-100 2xl:opacity-100 transition-opacity duration-200">
                 Transactions
               </span>
@@ -257,7 +264,7 @@ function Sidebar({ sidebarOpen, setSidebarOpen }) {
                     `flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-all duration-200 ${
                       isActive
                         ? "bg-gradient-to-r from-teal-600 to-cyan-600 text-white shadow-sm"
-                        : "text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800"
+                        : "text-gray-600 dark:text-gray-400 hover:bg-teal-50 dark:hover:bg-teal-900/20 hover:text-teal-600 dark:hover:text-teal-400"
                     }`
                   }
                 >
@@ -272,7 +279,7 @@ function Sidebar({ sidebarOpen, setSidebarOpen }) {
                     `flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-all duration-200 ${
                       isActive
                         ? "bg-gradient-to-r from-teal-600 to-cyan-600 text-white shadow-sm"
-                        : "text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800"
+                        : "text-gray-600 dark:text-gray-400 hover:bg-teal-50 dark:hover:bg-teal-900/20 hover:text-teal-600 dark:hover:text-teal-400"
                     }`
                   }
                 >
@@ -284,8 +291,10 @@ function Sidebar({ sidebarOpen, setSidebarOpen }) {
                 <NavLink
                   to="/Transactions/Deleete_Transaction"
                   className={({ isActive }) =>
-                    `flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-all duration-200 text-red-600 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300 ${
-                      isActive ? "bg-red-50 dark:bg-red-950/50" : ""
+                    `flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-all duration-200 ${
+                      isActive
+                        ? "bg-red-50 dark:bg-red-950/50 text-red-600 dark:text-red-400"
+                        : "text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20"
                     }`
                   }
                 >
@@ -300,7 +309,7 @@ function Sidebar({ sidebarOpen, setSidebarOpen }) {
                     `flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-all duration-200 ${
                       isActive
                         ? "bg-teal-50 text-teal-700 dark:bg-teal-950/50 dark:text-teal-300"
-                        : "text-gray-600 hover:text-teal-600 dark:text-gray-400 dark:hover:text-teal-300"
+                        : "text-gray-600 hover:text-teal-600 dark:text-gray-400 dark:hover:text-teal-300 hover:bg-teal-50 dark:hover:bg-teal-900/20"
                     }`
                   }
                 >
@@ -315,13 +324,13 @@ function Sidebar({ sidebarOpen, setSidebarOpen }) {
           <div
             className={`flex items-center justify-between px-3 py-3 rounded-xl cursor-pointer transition-all duration-200 font-medium ${
               openGroup === "accounts"
-                ? "bg-gray-100 dark:bg-gray-800"
-                : "hover:bg-gray-100 dark:hover:bg-gray-800"
+                ? "bg-teal-50 dark:bg-teal-900/30"
+                : "hover:bg-teal-50 dark:hover:bg-teal-900/20"
             }`}
             onClick={() => handleGroupToggle("accounts")}
           >
             <div className="flex items-center gap-3">
-              <AccountBalanceWallet className="w-5 h-5 text-gray-600 dark:text-gray-400" />
+              <AccountTree className="w-5 h-5 text-teal-600 dark:text-teal-400" />
               <span className="text-sm lg:opacity-0 lg:sidebar-expanded:opacity-100 2xl:opacity-100 transition-opacity duration-200">
                 Accounts
               </span>
@@ -342,7 +351,7 @@ function Sidebar({ sidebarOpen, setSidebarOpen }) {
                     `flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-all duration-200 ${
                       isActive
                         ? "bg-teal-50 text-teal-700 dark:bg-teal-950/50 dark:text-teal-300 shadow-sm"
-                        : "text-gray-600 hover:text-teal-600 dark:text-gray-400 dark:hover:text-teal-300"
+                        : "text-gray-600 hover:text-teal-600 dark:text-gray-400 dark:hover:text-teal-300 hover:bg-teal-50 dark:hover:bg-teal-900/20"
                     }`
                   }
                 >
@@ -357,13 +366,13 @@ function Sidebar({ sidebarOpen, setSidebarOpen }) {
           <div
             className={`flex items-center justify-between px-3 py-3 rounded-xl cursor-pointer transition-all duration-200 font-medium ${
               openGroup === "accountMaster"
-                ? "bg-gray-100 dark:bg-gray-800"
-                : "hover:bg-gray-100 dark:hover:bg-gray-800"
+                ? "bg-teal-50 dark:bg-teal-900/30"
+                : "hover:bg-teal-50 dark:hover:bg-teal-900/20"
             }`}
             onClick={() => handleGroupToggle("accountMaster")}
           >
             <div className="flex items-center gap-3">
-              <AccountBalanceWallet className="w-5 h-5 text-gray-600 dark:text-gray-400" />
+              <Construction className="w-5 h-5 text-teal-600 dark:text-teal-400" />
               <span className="text-sm lg:opacity-0 lg:sidebar-expanded:opacity-100 2xl:opacity-100 transition-opacity duration-200">
                 Account Master
               </span>
@@ -384,7 +393,7 @@ function Sidebar({ sidebarOpen, setSidebarOpen }) {
                     `flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-all duration-200 ${
                       isActive
                         ? "bg-teal-50 text-teal-700 dark:bg-teal-950/50 dark:text-teal-300 shadow-sm"
-                        : "text-gray-600 hover:text-teal-600 dark:text-gray-400 dark:hover:text-teal-300"
+                        : "text-gray-600 hover:text-teal-600 dark:text-gray-400 dark:hover:text-teal-300 hover:bg-teal-50 dark:hover:bg-teal-900/20"
                     }`
                   }
                 >
@@ -401,7 +410,7 @@ function Sidebar({ sidebarOpen, setSidebarOpen }) {
                     `flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-all duration-200 ${
                       isActive
                         ? "bg-teal-50 text-teal-700 dark:bg-teal-950/50 dark:text-teal-300 shadow-sm"
-                        : "text-gray-600 hover:text-teal-600 dark:text-gray-400 dark:hover:text-teal-300"
+                        : "text-gray-600 hover:text-teal-600 dark:text-gray-400 dark:hover:text-teal-300 hover:bg-teal-50 dark:hover:bg-teal-900/20"
                     }`
                   }
                 >
@@ -419,13 +428,13 @@ function Sidebar({ sidebarOpen, setSidebarOpen }) {
 <div
   className={`flex items-center justify-between px-3 py-3 rounded-xl cursor-pointer transition-all duration-200 font-medium ${
     openGroup === "loans"
-      ? "bg-gray-100 dark:bg-gray-800"
-      : "hover:bg-gray-100 dark:hover:bg-gray-800"
+      ? "bg-teal-50 dark:bg-teal-900/30"
+      : "hover:bg-teal-50 dark:hover:bg-teal-900/20"
   }`}
   onClick={() => handleGroupToggle("loans")}
 >
   <div className="flex items-center gap-3">
-    <MonetizationOn className="w-5 h-5 text-gray-600 dark:text-gray-400" />
+    <AccountBalance className="w-5 h-5 text-teal-600 dark:text-teal-400" />
     <span className="text-sm lg:opacity-0 lg:sidebar-expanded:opacity-100 2xl:opacity-100 transition-opacity duration-200">
       Loans
     </span>
@@ -446,7 +455,7 @@ function Sidebar({ sidebarOpen, setSidebarOpen }) {
           `flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-all duration-200 ${
             isActive
               ? "bg-gradient-to-r from-teal-600 to-cyan-600 text-white shadow-sm"
-              : "text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800"
+              : "text-gray-600 dark:text-gray-400 hover:bg-teal-50 dark:hover:bg-teal-900/20 hover:text-teal-600 dark:hover:text-teal-400"
           }`
         }
       >
@@ -461,11 +470,11 @@ function Sidebar({ sidebarOpen, setSidebarOpen }) {
           `flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-all duration-200 ${
             isActive
               ? "bg-gradient-to-r from-teal-600 to-cyan-600 text-white shadow-sm"
-              : "text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800"
+              : "text-gray-600 dark:text-gray-400 hover:bg-teal-50 dark:hover:bg-teal-900/20 hover:text-teal-600 dark:hover:text-teal-400"
           }`
         }
       >
-        <ReceiptLong className="w-4 h-4" />
+        <EventNote className="w-4 h-4" />
         <span>Instalment Dues</span>
       </NavLink>
     </li>
@@ -476,11 +485,11 @@ function Sidebar({ sidebarOpen, setSidebarOpen }) {
           `flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-all duration-200 ${
             isActive
               ? "bg-gradient-to-r from-teal-600 to-cyan-600 text-white shadow-sm"
-              : "text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800"
+              : "text-gray-600 dark:text-gray-400 hover:bg-teal-50 dark:hover:bg-teal-900/20 hover:text-teal-600 dark:hover:text-teal-400"
           }`
         }
       >
-        <Paid className="w-4 h-4" />
+        <EventAvailable className="w-4 h-4" />
         <span>Maturity</span>
       </NavLink>
     </li>
@@ -491,13 +500,13 @@ function Sidebar({ sidebarOpen, setSidebarOpen }) {
           <div
             className={`flex items-center justify-between px-3 py-3 rounded-xl cursor-pointer transition-all duration-200 font-medium ${
               openGroup === "auth"
-                ? "bg-gray-100 dark:bg-gray-800"
-                : "hover:bg-gray-100 dark:hover:bg-gray-800"
+                ? "bg-teal-50 dark:bg-teal-900/30"
+                : "hover:bg-teal-50 dark:hover:bg-teal-900/20"
             }`}
             onClick={() => handleGroupToggle("auth")}
           >
             <div className="flex items-center gap-3">
-              <AccountCircle className="w-5 h-5 text-gray-600 dark:text-gray-400" />
+              <AccountCircle className="w-5 h-5 text-teal-600 dark:text-teal-400" />
               <span className="text-sm lg:opacity-0 lg:sidebar-expanded:opacity-100 2xl:opacity-100 transition-opacity duration-200">
                 Authentication
               </span>
@@ -518,7 +527,7 @@ function Sidebar({ sidebarOpen, setSidebarOpen }) {
                     `flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-all duration-200 ${
                       isActive
                         ? "bg-gray-900 text-white dark:bg-white dark:text-gray-900 shadow-sm"
-                        : "text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800"
+                        : "text-gray-600 dark:text-gray-400 hover:bg-teal-50 dark:hover:bg-teal-900/20 hover:text-teal-600 dark:hover:text-teal-400"
                     }`
                   }
                 >
@@ -533,7 +542,7 @@ function Sidebar({ sidebarOpen, setSidebarOpen }) {
                     `flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-all duration-200 ${
                       isActive
                         ? "bg-gray-900 text-white dark:bg-white dark:text-gray-900 shadow-sm"
-                        : "text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800"
+                        : "text-gray-600 dark:text-gray-400 hover:bg-teal-50 dark:hover:bg-teal-900/20 hover:text-teal-600 dark:hover:text-teal-400"
                     }`
                   }
                 >
@@ -548,11 +557,11 @@ function Sidebar({ sidebarOpen, setSidebarOpen }) {
                     `flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-all duration-200 ${
                       isActive
                         ? "bg-gray-900 text-white dark:bg-white dark:text-gray-900 shadow-sm"
-                        : "text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800"
+                        : "text-gray-600 dark:text-gray-400 hover:bg-teal-50 dark:hover:bg-teal-900/20 hover:text-teal-600 dark:hover:text-teal-400"
                     }`
                   }
                 >
-                  <RestartAlt className="w-4 h-4" />
+                  <LockReset className="w-4 h-4" />
                   <span>Reset Password</span>
                 </NavLink>
               </li>

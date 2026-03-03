@@ -10,6 +10,7 @@ import {
   CircularProgress,
   Paper,
   Typography,
+  Fade,
 } from "@mui/material";
 import {
   Visibility,
@@ -21,14 +22,37 @@ import {
 import { successToast, errorToast } from "toastify";
 import { API_BASE } from "lib/config";
 import { setSession } from "src/utils/session";
-import "./Login.css"; // you can keep or remove if not needed
 
-const images = [
-  "https://tse1.mm.bing.net/th/id/OIP.pRQzkDi4PrxDoTkGb4S4RAAAAA?rs=1&pid=ImgDetMain&o=7&rm=3",
-  "https://wallpaperaccess.com/full/2113262.jpg",
-  "https://wallpaperaccess.com/full/2113304.jpg",
-  "https://wallpaperaccess.com/full/5949291.jpg",
-  "https://tse2.mm.bing.net/th/id/OIP.MjNhd-gfbcDQqJfNGv0hxgHaJ4?rs=1&pid=ImgDetMain&o=7&rm=3",
+const backgroundImages = [
+  // Gold luxury abstract – finance elegance
+  "https://images.unsplash.com/photo-1618005182384-a83a8bd71c2d?auto=format&fit=crop&q=80&w=2000",
+  
+  // Gold coins stack – wealth & finance symbol
+  "https://images.unsplash.com/photo-1611974789855-9c2a0a7236a3?auto=format&fit=crop&q=80&w=2000",
+  
+  // Red-gold luxury texture
+  "https://images.unsplash.com/photo-1554224154-6726b3ff1f36?auto=format&fit=crop&q=80&w=2000",
+  
+  // Modern finance dashboard glow with red tones
+  "https://images.unsplash.com/photo-1556155099-490a1ba16284?auto=format&fit=crop&q=80&w=2000",
+  
+  // Warm golden professional office
+  "https://images.unsplash.com/photo-1557804506-669a67965ba0?auto=format&fit=crop&q=80&w=2000",
+  
+  // Elegant business meeting room – subtle Indian vibe
+  "https://images.unsplash.com/photo-1556740714-a8395b3a74dd?auto=format&fit=crop&q=80&w=2000",
+  
+  // Gold bars & financial success
+  "https://images.unsplash.com/photo-1580519548246-7285d30d8d3e?auto=format&fit=crop&q=80&w=2000",
+  
+  // Premium red-gold abstract luxury
+  "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&q=80&w=2000",
+  
+  // Corporate workspace with warm red/gold lighting
+  "https://images.unsplash.com/photo-1551836022-d5d88e9218df?auto=format&fit=crop&q=80&w=2000",
+  
+  // Gold ingots – strong wealth/finance theme
+  "https://images.unsplash.com/photo-1616401784286-647d015ed0e6?auto=format&fit=crop&q=80&w=2000",
 ];
 
 const Login = () => {
@@ -41,11 +65,12 @@ const Login = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
 
-  // Image carousel
+  // Auto-rotate background images every 5 seconds
   useEffect(() => {
     const interval = setInterval(() => {
-      setCurrentImageIndex((prev) => (prev + 1) % images.length);
-    }, 4000);
+      setCurrentImageIndex((prev) => (prev + 1) % backgroundImages.length);
+    }, 5000);
+
     return () => clearInterval(interval);
   }, []);
 
@@ -102,95 +127,98 @@ const Login = () => {
         width: "100vw",
         height: "100vh",
         display: "flex",
-        overflow: "hidden",
         position: "relative",
+        overflow: "hidden",
+        bgcolor: "#0a0a0a",
       }}
     >
-      {/* ===================== LEFT - IMAGE BACKGROUND (75%) ===================== */}
-      <Box
-        sx={{
-          width: { xs: "100%", md: "85%" },
-          height: "100%",
-          position: "relative",
-          overflow: "hidden",
-        }}
-      >
-        {/* {images.map((src, idx) => (
-          <Box
-            key={idx}
-            component="img"
-            src={src}
-            alt="background"
+      {/* Background Image Carousel */}
+      <Box sx={{ position: "absolute", inset: 0, zIndex: 1 }}>
+        {backgroundImages.map((src, idx) => (
+          <Fade
+            key={src}
+            in={idx === currentImageIndex}
+            timeout={{ enter: 1400, exit: 900 }}
+            unmountOnExit
+          >
+            <Box
+              component="img"
+              src={src}
+              alt="background"
+              sx={{
+                position: "absolute",
+                inset: 0,
+                width: "100%",
+                height: "100%",
+                objectFit: "cover",
+                objectPosition: "center",
+              }}
+            />
+          </Fade>
+        ))}
 
-
-
-            sx={{
-
-                  objectFit: "contain",      // 👈 NO CROPPING
-    backgroundColor: "#000",   // 👈 fills empty space
-              position: "absolute",
-              inset: 0,
-              width: "100%",
-              height: "100%",
-              objectFit: "cover",
-              opacity: idx === currentImageIndex ? 1 : 0,
-              transition: "opacity 1.2s ease-in-out",
-              zIndex: idx === currentImageIndex ? 1 : 0,
-            }}
-          />
-        ))} */}
-
-        {/* Optional overlay for better text readability */}
+        {/* Overlay – dark with subtle red tint for brand feel */}
         <Box
           sx={{
             position: "absolute",
             inset: 0,
-            background: "linear-gradient(to right, rgba(0,0,0,0.35), rgba(0,0,0,0.15))",
+            background:
+              "linear-gradient(135deg, rgba(10,10,10,0.78) 0%, rgba(139,0,0,0.28) 100%)",
             zIndex: 2,
           }}
         />
       </Box>
 
-      {/* ===================== RIGHT - LOGIN FORM (25%) ===================== */}
+      {/* Login Form Panel */}
       <Box
         sx={{
-          width: { xs: "100%", md: "25%" },
-          minWidth: { md: "340px" },
+          width: { xs: "100%", md: "38%", lg: "35%" },
+          minWidth: { md: "400px" },
           height: "100%",
+          ml: { md: "auto" },
           display: "flex",
           alignItems: "center",
           justifyContent: "center",
-          backgroundColor: "rgba(255, 255, 255, 0.94)",
-          backdropFilter: "blur(8px)",
+          position: "relative",
           zIndex: 10,
-          boxShadow: { md: "-10px 0 25px rgba(0,0,0,0.25)" },
+          px: { xs: 2, sm: 4 },
         }}
       >
         <Paper
-          elevation={6}
+          elevation={10}
           sx={{
-            p: { xs: 3, sm: 4 },
-            width: "90%",
-            maxWidth: 420,
-            borderRadius: 3,
-            background: "linear-gradient(145deg, #ffffff 0%, #fffaf0 100%)",
+            p: { xs: 4, sm: 5, md: 6 },
+            width: "100%",
+            maxWidth: 480,
+            borderRadius: 4,
+            bgcolor: "rgba(255, 255, 255, 0.91)",
+            backdropFilter: "blur(14px)",
+            border: "1px solid rgba(255,255,255,0.35)",
+            boxShadow: "0 16px 60px rgba(0,0,0,0.4)",
           }}
         >
-          {/* Title */}
-          <Box textAlign="center" mb={4}>
+          {/* Brand / Title */}
+          <Box textAlign="center" mb={5}>
             <Typography
-              variant="h4"
-              fontWeight={800}
+              variant="h3"
+              fontWeight={900}
               sx={{
                 color: "#8b0000",
-                letterSpacing: "1.5px",
-                fontFamily: "'Georgia', serif",
+                letterSpacing: 3,
+                fontFamily: "'Playfair Display', serif",
+                textShadow: "1px 1px 4px rgba(0,0,0,0.2)",
               }}
             >
               SRI BALAJI
             </Typography>
-            <Typography variant="body2" color="text.secondary" mt={0.5}>
-              Secure Access Portal
+            <Typography
+              variant="subtitle1"
+              color="#555"
+              fontWeight={500}
+              mt={1}
+              letterSpacing={0.8}
+            >
+              Chit Funds • Secure Login Portal
             </Typography>
           </Box>
 
@@ -199,7 +227,6 @@ const Login = () => {
             <TextField
               margin="normal"
               fullWidth
-              size="medium"
               label="Username / Email"
               value={formData.username}
               onChange={handleChange("username")}
@@ -208,16 +235,16 @@ const Login = () => {
               InputProps={{
                 startAdornment: (
                   <InputAdornment position="start">
-                    <AccountCircle color="primary" />
+                    <AccountCircle sx={{ color: "#8b0000" }} />
                   </InputAdornment>
                 ),
               }}
+              sx={{ mb: 3 }}
             />
 
             <TextField
               margin="normal"
               fullWidth
-              size="medium"
               label="Password"
               type={showPassword ? "text" : "password"}
               value={formData.password}
@@ -227,7 +254,7 @@ const Login = () => {
               InputProps={{
                 startAdornment: (
                   <InputAdornment position="start">
-                    <Lock color="primary" />
+                    <Lock sx={{ color: "#8b0000" }} />
                   </InputAdornment>
                 ),
                 endAdornment: (
@@ -241,6 +268,7 @@ const Login = () => {
                   </InputAdornment>
                 ),
               }}
+              sx={{ mb: 4 }}
             />
 
             <Button
@@ -250,24 +278,37 @@ const Login = () => {
               size="large"
               disabled={loading}
               sx={{
-                mt: 4,
                 py: 1.8,
-                fontSize: "1.1rem",
-                fontWeight: 600,
-                borderRadius: 2,
+                fontSize: "1.18rem",
+                fontWeight: 700,
+                borderRadius: 3,
                 background: "linear-gradient(90deg, #8b0000 0%, #c41e3a 100%)",
+                boxShadow: "0 8px 25px rgba(139,0,0,0.4)",
                 "&:hover": {
                   background: "linear-gradient(90deg, #a00000 0%, #d32f2f 100%)",
+                  transform: "translateY(-3px)",
+                  boxShadow: "0 14px 35px rgba(139,0,0,0.5)",
                 },
+                transition: "all 0.3s ease",
               }}
             >
               {loading ? (
-                <CircularProgress size={28} color="inherit" />
+                <CircularProgress size={30} color="inherit" />
               ) : (
                 "Sign In"
               )}
             </Button>
           </form>
+
+          <Typography
+            variant="body2"
+            color="text.secondary"
+            align="center"
+            mt={5}
+            fontSize="0.9rem"
+          >
+            © {new Date().getFullYear()} Sri Balaji Chit Funds • Hyderabad
+          </Typography>
         </Paper>
       </Box>
     </Box>

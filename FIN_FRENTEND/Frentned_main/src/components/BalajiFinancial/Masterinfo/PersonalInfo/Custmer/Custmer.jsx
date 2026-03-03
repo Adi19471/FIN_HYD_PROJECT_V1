@@ -28,7 +28,7 @@ import {
 } from "react-icons/fi";
 
 import { MdClose } from "react-icons/md";
-import { DataGrid } from "@mui/x-data-grid";
+import { DataGrid, GridToolbar } from "@mui/x-data-grid";
 import axios from "axios";
 import { successToast, errorToast } from "toastify";
 import { getSession } from "src/utils/session";
@@ -368,9 +368,10 @@ const Custmer = ({ personType = "CUSTOMER" }) => {
             </Paper>
           )}
 
-          {/* FORM UI */}
-          <Grid container spacing={3} sx={{ mt: 1 }}>
-            <Grid item xs={4}>
+          {/* FORM UI - Fixed Responsive Grid */}
+          <Grid container spacing={2}>
+            {/* Row 1: Name fields */}
+            <Grid item xs={12} sm={6} md={4}>
               <TextField
                 fullWidth
                 required
@@ -383,40 +384,44 @@ const Custmer = ({ personType = "CUSTOMER" }) => {
               />
             </Grid>
 
-            <Grid item xs={4}>
+            <Grid item xs={12} sm={6} md={4}>
               <TextField
                 fullWidth
-                required     size="small"
+                required
+                size="small"
                 label="Last Name"
                 value={form.lastname}
                 onChange={(e) => handleChange("lastname", e.target.value)}
               />
             </Grid>
 
-            <Grid item xs={4}>
+            <Grid item xs={12} sm={6} md={4}>
               <TextField
                 fullWidth
-                required     size="small"
+                required
+                size="small"
                 label="Father Name"
                 value={form.fathername}
                 onChange={(e) => handleChange("fathername", e.target.value)}
               />
             </Grid>
 
-            <Grid item xs={4}>
+            {/* Row 2: Spouse, Gender, Occupation */}
+            <Grid item xs={12} sm={6} md={4}>
               <TextField
-                fullWidth     size="small"
+                fullWidth
+                size="small"
                 label="Spouse Name"
                 value={form.spouse}
                 onChange={(e) => handleChange("spouse", e.target.value)}
               />
             </Grid>
 
-            <Grid item xs={4}>
+            <Grid item xs={12} sm={6} md={4}>
               <TextField
                 select
-                fullWidth     size="small"
-                sx={{ width: "220px" }}
+                fullWidth
+                size="small"
                 label="Gender"
                 value={form.gender}
                 onChange={(e) => handleChange("gender", e.target.value)}
@@ -427,30 +432,33 @@ const Custmer = ({ personType = "CUSTOMER" }) => {
               </TextField>
             </Grid>
 
-            <Grid item xs={6}>
+            <Grid item xs={12} sm={6} md={4}>
               <TextField
-                fullWidth               sx={{ width: "220px" }}  size="small"
+                fullWidth
+                size="small"
                 label="Occupation"
                 value={form.occupation}
                 onChange={(e) => handleChange("occupation", e.target.value)}
               />
             </Grid>
 
-            <Grid item xs={6}>
+            {/* Row 3: Age, ID Proof Type, ID Number */}
+            <Grid item xs={12} sm={6} md={4}>
               <TextField
-                fullWidth     size="small"
+                fullWidth
+                size="small"
                 label="Age"
-                type="number" 
+                type="number"
                 value={form.age}
                 onChange={(e) => handleChange("age", e.target.value)}
               />
             </Grid>
 
-            <Grid item xs={6}>
+            <Grid item xs={12} sm={6} md={4}>
               <TextField
-                      sx={{ width: "220px" }}
-                select     size="small"
+                select
                 fullWidth
+                size="small"
                 label="ID Proof Type"
                 value={form.idprooftype}
                 onChange={(e) => handleChange("idprooftype", e.target.value)}
@@ -463,72 +471,80 @@ const Custmer = ({ personType = "CUSTOMER" }) => {
               </TextField>
             </Grid>
 
-            <Grid item xs={6}>
+            <Grid item xs={12} sm={6} md={4}>
               <TextField
-                fullWidth     size="small"
+                fullWidth
+                size="small"
                 label="ID Number"
                 value={form.idproof}
                 onChange={(e) => handleChange("idproof", e.target.value)}
               />
             </Grid>
 
-            <Grid item xs={6}>
+            {/* Row 4: Addresses */}
+            <Grid item xs={12} md={6}>
               <TextField
                 fullWidth
                 multiline
-                required     size="small"           sx={{ width: "220px" }}
-          
-                label="Res.Address"
+                required
+                size="small"
+                label="Res. Address"
                 value={form.address}
                 onChange={(e) => handleChange("address", e.target.value)}
               />
             </Grid>
 
-            <Grid item xs={12}>
+            <Grid item xs={12} md={6}>
               <TextField
-                fullWidth     size="small"
-                  sx={{ width: "220px" }}
+                fullWidth
+                size="small"
                 multiline
-                label="Off Address"
+                label="Off. Address"
                 value={form.address2}
                 onChange={(e) => handleChange("address2", e.target.value)}
               />
             </Grid>
 
-            <Grid item xs={6}>
+            {/* Row 5: Mobile & Phone */}
+            <Grid item xs={12} sm={6} md={4}>
               <TextField
-                fullWidth     size="small"
+                fullWidth
                 required
-                label="Mobile No "
+                size="small"
+                label="Mobile No"
                 value={form.mobile}
                 onChange={(e) => handleChange("mobile", e.target.value)}
               />
             </Grid>
 
-            <Grid item xs={12}>
-              <TextField     size="small"
+            <Grid item xs={12} sm={6} md={4}>
+              <TextField
                 fullWidth
-                label="Res.No"
-                value={form.reference}
-                onChange={(e) => handleChange("reference", e.target.value)}
-              />
-            </Grid>
-
-            <Grid item xs={6}>
-              <TextField     size="small"
-                fullWidth
+                size="small"
                 label="Mobile No 2"
                 value={form.mobile2}
                 onChange={(e) => handleChange("mobile2", e.target.value)}
               />
             </Grid>
 
-            <Grid item xs={6}>
+            <Grid item xs={12} sm={6} md={4}>
               <TextField
                 fullWidth
-                label="Off No"     size="small"
+                size="small"
+                label="Office No"
                 value={form.phone}
                 onChange={(e) => handleChange("phone", e.target.value)}
+              />
+            </Grid>
+
+            {/* Row 6: Reference */}
+            <Grid item xs={12} sm={6} md={4}>
+              <TextField
+                fullWidth
+                size="small"
+                label="Reference"
+                value={form.reference}
+                onChange={(e) => handleChange("reference", e.target.value)}
               />
             </Grid>
           </Grid>

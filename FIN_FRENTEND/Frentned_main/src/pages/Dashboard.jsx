@@ -2,180 +2,355 @@ import React, { useState, useEffect } from "react";
 import { useAuth } from "../utils/AuthContext";
 import { useNavigate } from "react-router-dom";
 
-import AppBar from "@mui/material/AppBar";
-import Toolbar from "@mui/material/Toolbar";
-import Typography from "@mui/material/Typography";
-import Button from "@mui/material/Button";
-import Stack from "@mui/material/Stack";
-import Box from "@mui/material/Box";
-import Paper from "@mui/material/Paper";
-import AddIcon from "@mui/icons-material/Add";
+import {
+  AppBar,
+  Toolbar,
+  Box,
+  Typography,
+  Button,
+  Card,
+  CardContent,
+  Grid,
+  alpha,
+  useTheme,
+  Divider,
+  Stack,
+} from "@mui/material";
 
-// Import carousel images (ensure these files exist and are high resolution)
-import banner1 from "../images/two.png";
-import banner2 from "../images/two.png";
-import banner3 from "../images/four.png";
+import { motion } from "framer-motion";
 
-const carouselImages = [banner1, banner2, banner3];
+// MUI X Charts
+import { LineChart } from "@mui/x-charts/LineChart";
+import { PieChart, pieArcLabelClasses } from "@mui/x-charts/PieChart";
 
-function ImageCarousel() {
-  const [currentIndex, setCurrentIndex] = useState(0);
-
-  useEffect(() => {
-    if (carouselImages.length <= 1) return;
-
-    const interval = setInterval(() => {
-      setCurrentIndex((prev) => (prev + 1) % carouselImages.length);
-    }, 5000); // change image every 5 seconds
-
-    return () => clearInterval(interval);
-  }, []);
-
-  const handleDotClick = (index) => {
-    setCurrentIndex(index);
-  };
+// ────────────────────────────────────────────────
+function StatCard({ title, value, icon, color, subtitle = "" }) {
+  const theme = useTheme();
 
   return (
-    <Box
-      sx={{
-        position: "relative",
-        height: { xs: "45vh", sm: "55vh", md: "65vh", lg: "70vh" }, // much taller → full feel
-        width: "100%",
-        overflow: "hidden",
-
-        boxShadow: 6,
-
-        backgroundColor: "#000", // fallback if image fails to load
-      }}
+    <motion.div
+      initial={{ y: 20, opacity: 0 }}
+      animate={{ y: 0, opacity: 1 }}
+      transition={{ duration: 0.5 }}
     >
-      {/* {carouselImages.map((src, index) => (
-        <Box
-          key={index}
-          component="img"
-          src={src}
-          alt={`Finance Banner ${index + 1}`}
-          sx={{
-            width: "100%",
-            height: "100%",
-            objectFit: "cover", // keeps full image visible, crops edges if needed
-            // objectFit: "contain", // ← use this instead if you NEVER want cropping
-            position: "absolute",
-            top: 0,
-            left: 0,
-            opacity: index === currentIndex ? 1 : 0,
-            transition: "opacity 1.5s ease-in-out",
-          }}
-        />
-      ))} */}
-
-      {/* Navigation Dots – moved lower for better visibility on tall carousel */}
-      <Stack
-        direction="row"
-        spacing={2.5}
+      <Card
+        elevation={0}
         sx={{
-          position: "absolute",
-          bottom: { xs: 16, sm: 24, md: 32 },
-          left: "50%",
-          transform: "translateX(-50%)",
-          zIndex: 10,
+          borderRadius: 3,
+          bgcolor: alpha(theme.palette.background.paper, 0.7),
+          backdropFilter: "blur(16px)",
+          border: `1px solid ${alpha(theme.palette.divider, 0.12)}`,
+          boxShadow: `0 8px 32px ${alpha(color, 0.12)}`,
+          transition: "all 0.4s ease",
+          "&:hover": {
+            transform: "translateY(-6px)",
+            boxShadow: `0 16px 48px ${alpha(color, 0.22)}`,
+          },
         }}
       >
-        {carouselImages.map((_, index) => (
-          <Box
-            key={index}
-            onClick={() => handleDotClick(index)}
-            sx={{
-              width: 16,
-              height: 16,
-              borderRadius: "50%",
-              backgroundColor:
-                index === currentIndex
-                  ? "primary.main"
-                  : "rgba(255, 255, 255, 0.55)",
-              border:
-                index === currentIndex ? "3px solid white" : "2px solid white",
-              boxShadow:
-                index === currentIndex
-                  ? "0 0 12px rgba(25, 118, 210, 0.7)"
-                  : "none",
-              transition: "all 0.35s ease",
-              cursor: "pointer",
-              "&:hover": {
-                transform: "scale(1.3)",
-                backgroundColor: "primary.light",
-              },
-            }}
-          />
-        ))}
-      </Stack>
-    </Box>
+        <CardContent sx={{ p: 3.5 }}>
+          <Stack direction="row" spacing={2.5} alignItems="center">
+            <Box
+              sx={{
+                width: 56,
+                height: 56,
+                borderRadius: 2.5,
+                bgcolor: alpha(color, 0.12),
+                color,
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                fontSize: "1.8rem",
+              }}
+            >
+              {icon}
+            </Box>
+            <Box>
+              <Typography
+                variant="body2"
+                color="text.secondary"
+                sx={{ fontWeight: 600, textTransform: "uppercase", letterSpacing: 0.6, fontSize: "0.78rem" }}
+              >
+                {title}
+              </Typography>
+              <Typography variant="h4" fontWeight={700} color={color} sx={{ mt: 0.4 }}>
+                {value}
+              </Typography>
+              {subtitle && (
+                <Typography variant="body2" sx={{ color: alpha(color, 0.85), mt: 0.5 }}>
+                  {subtitle}
+                </Typography>
+              )}
+            </Box>
+          </Stack>
+        </CardContent>
+      </Card>
+    </motion.div>
   );
 }
 
-function Dashboard() {
+// ────────────────────────────────────────────────
+export default function Dashboard() {
   const { logout } = useAuth();
   const navigate = useNavigate();
+  const theme = useTheme();
 
   const [currentTime, setCurrentTime] = useState(new Date());
 
   useEffect(() => {
-    const timer = setInterval(() => {
-      setCurrentTime(new Date());
-    }, 60000);
-
+    const timer = setInterval(() => setCurrentTime(new Date()), 1000);
     return () => clearInterval(timer);
   }, []);
 
+  const greeting = (() => {
+    const h = currentTime.getHours();
+    if (h < 12) return "Good Morning";
+    if (h < 17) return "Good Afternoon";
+    return "Good Evening";
+  })();
+
   const handleLogout = () => {
-    if (
-      window.confirm(
-        // "Are you sure you want to logout from Sri Balaji Finance Dashboard?",
-      )
-    ) {
+    if (window.confirm("Logout from Sri Balaji Chit Funds Dashboard?")) {
       logout();
       navigate("/login");
     }
   };
 
+  // Sample data — replace with real data later
+  const monthlyData = [
+    { month: "Jan", value: 180000 },
+    { month: "Feb", value: 215000 },
+    { month: "Mar", value: 248000 },
+    { month: "Apr", value: 315000 },
+    { month: "May", value: 292000 },
+    { month: "Jun", value: 405000 },
+  ];
+
+  const pieData = [
+    { id: 0, value: 856, label: "Active", color: "#10b981" },
+    { id: 1, value: 312, label: "Completed", color: "#3b82f6" },
+    { id: 2, value: 98, label: "Delayed", color: "#ef4444" },
+    { id: 3, value: 145, label: "Upcoming", color: "#f59e0b" },
+  ];
+
   return (
-    <Box sx={{ minHeight: "100vh", bgcolor: "grey.50" }}>
-      {/* Top Navigation Bar – removed Filters & DatePicker */}
-      <AppBar position="static" color="default" elevation={3}>
-        <Toolbar
-          sx={{
-            justifyContent: "space-between",
-            px: { xs: 2, md: 0 },
-            py: 1.5,
-          }}
-        >
-          <Typography
-            variant="h5"
-            component="div"
-            fontWeight="bold"
-            color="primary.main"
-            sx={{ letterSpacing: 0.5 }}
-          >
-            Sri Balaji Finance Dashboard
+    <>
+      {/* ─── Header ─── */}
+      <AppBar
+        position="static"
+        elevation={0}
+        sx={{
+          bgcolor: "background.default",
+          borderBottom: `1px solid ${alpha(theme.palette.divider, 0.08)}`,
+        }}
+      >
+        <Toolbar sx={{ justifyContent: "space-between", px: { xs: 2, md: 5 }, py: 1.8 }}>
+          <Typography variant="h6" fontWeight={700} color="text.primary">
+            Sri Balaji Chit Funds
           </Typography>
 
-          <Stack direction="row" spacing={2} alignItems="center">
-            <Button
-              variant="contained"
-              color="error"
-              onClick={handleLogout}
-              sx={{ textTransform: "none", fontWeight: 600 }}
-            >
-              Logout
-            </Button>
-          </Stack>
+          <Typography variant="body2" color="text.secondary" fontWeight={500}>
+            {currentTime.toLocaleDateString("en-IN", { weekday: "long", year: "numeric", month: "long", day: "numeric" })}
+            {" • "}
+            {currentTime.toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit", hour12: true })}
+          </Typography>
         </Toolbar>
       </AppBar>
 
-      <ImageCarousel />
+      {/* ─── Content ─── */}
+      <Box
+        component="main"
+        sx={{
+          p: { xs: 3, md: 5 },
+          maxWidth: 1680,
+          mx: "auto",
+          bgcolor: "background.default",
+        }}
+      >
+        {/* Greeting */}
+        <Box sx={{ mb: 6 }}>
+          <Typography
+            variant="h3"
+            component={motion.h1}
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            sx={{
+              fontWeight: 800,
+              letterSpacing: -1,
+              background: "linear-gradient(90deg, #2563eb, #7c3aed)",
+              WebkitBackgroundClip: "text",
+              WebkitTextFillColor: "transparent",
+            }}
+          >
+            {greeting}
+          </Typography>
+          <Typography variant="subtitle1" color="text.secondary" sx={{ mt: 1 }}>
+            Manage chit collections, members & operations efficiently
+          </Typography>
+        </Box>
 
-      {/* ← Add your cards, charts, tables here later */}
-    </Box>
+        {/* Stats */}
+        <Grid container spacing={3} sx={{ mb: 7 }}>
+          <Grid item xs={12} sm={6} md={3}>
+            <StatCard title="Total Members" value="1,234" color="#2563eb" icon="👥" subtitle="Active members" />
+          </Grid>
+          <Grid item xs={12} sm={6} md={3}>
+            <StatCard title="Running Chits" value="856" color="#10b981" icon="🔄" subtitle="Ongoing" />
+          </Grid>
+          <Grid item xs={12} sm={6} md={3}>
+            <StatCard title="Today's Collection" value="₹2.50 Lakh" color="#d97706" icon="₹" subtitle="+12% today" />
+          </Grid>
+          <Grid item xs={12} sm={6} md={3}>
+            <StatCard title="Pending Dues" value="₹5.20 Lakh" color="#dc2626" icon="⚠️" subtitle="42 members" />
+          </Grid>
+        </Grid>
+
+        {/* Charts */}
+        <Grid container spacing={3} sx={{ mb: 7 }}>
+          <Grid item xs={12} lg={8}>
+            <Card
+              sx={{
+                borderRadius: 3,
+                bgcolor: alpha(theme.palette.background.paper, 0.75),
+                backdropFilter: "blur(16px)",
+                border: `1px solid ${alpha(theme.palette.divider, 0.1)}`,
+              }}
+            >
+              <CardContent sx={{ p: 4 }}>
+                <Typography variant="h6" fontWeight={700} gutterBottom>
+                  Collection Trend (Last 6 Months)
+                </Typography>
+                <Divider sx={{ mb: 3 }} />
+                <Box sx={{ height: 380 }}>
+                  <LineChart
+                    xAxis={[{ scaleType: "band", data: monthlyData.map(d => d.month) }]}
+                    series={[{ data: monthlyData.map(d => d.value), color: "#2563eb", label: "Amount (₹)" }]}
+                    height={380}
+                    margin={{ top: 20, right: 30, bottom: 60, left: 80 }}
+                  />
+                </Box>
+              </CardContent>
+            </Card>
+          </Grid>
+
+          <Grid item xs={12} lg={4}>
+            <Card
+              sx={{
+                borderRadius: 3,
+                height: "100%",
+                bgcolor: alpha(theme.palette.background.paper, 0.75),
+                backdropFilter: "blur(16px)",
+                border: `1px solid ${alpha(theme.palette.divider, 0.1)}`,
+              }}
+            >
+              <CardContent sx={{ p: 4, height: "100%", display: "flex", flexDirection: "column" }}>
+                <Typography variant="h6" fontWeight={700} gutterBottom>
+                  Chit Status Breakdown
+                </Typography>
+                <Divider sx={{ mb: 3 }} />
+                <Box sx={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center" }}>
+                  <PieChart
+                    series={[{
+                      data: pieData,
+                      innerRadius: 55,
+                      outerRadius: 110,
+                      paddingAngle: 4,
+                      arcLabel: (item) => `${item.label}`,
+                      arcLabelMinAngle: 45,
+                    }]}
+                    sx={{
+                      [`& .${pieArcLabelClasses.root}`]: {
+                        fill: theme.palette.text.primary,
+                        fontWeight: 600,
+                        fontSize: 12,
+                      },
+                    }}
+                    height={320}
+                    legend={{ hidden: true }}
+                  />
+                </Box>
+              </CardContent>
+            </Card>
+          </Grid>
+        </Grid>
+
+        {/* Quick Actions */}
+        <Card
+          sx={{
+            borderRadius: 3,
+            bgcolor: alpha(theme.palette.background.paper, 0.75),
+            backdropFilter: "blur(16px)",
+            border: `1px solid ${alpha(theme.palette.divider, 0.1)}`,
+            p: { xs: 3, md: 5 },
+          }}
+        >
+          <Typography variant="h5" fontWeight={700} sx={{ mb: 4 }}>
+            Quick Actions
+          </Typography>
+
+          <Grid container spacing={2.5}>
+            <Grid item xs={12} sm={4}>
+              <Button
+                fullWidth
+                variant="contained"
+                size="large"
+                onClick={() => navigate("/Main_personal_file")}
+                sx={{
+                  py: 2,
+                  borderRadius: 2.5,
+                  fontSize: "1.05rem",
+                  fontWeight: 600,
+                  textTransform: "none",
+                  bgcolor: "#2563eb",
+                  "&:hover": { bgcolor: "#1d4ed8" },
+                }}
+              >
+                Add New Member
+              </Button>
+            </Grid>
+
+            <Grid item xs={12} sm={4}>
+              <Button
+                fullWidth
+                variant="contained"
+                color="success"
+                size="large"
+                onClick={() => navigate("/Loan")}
+                sx={{
+                  py: 2,
+                  borderRadius: 2.5,
+                  fontSize: "1.05rem",
+                  fontWeight: 600,
+                  textTransform: "none",
+                }}
+              >
+                Start New Chit
+              </Button>
+            </Grid>
+
+            <Grid item xs={12} sm={4}>
+              <Button
+                fullWidth
+                variant="outlined"
+                color="error"
+                size="large"
+                onClick={handleLogout}
+                sx={{
+                  py: 2,
+                  borderRadius: 2.5,
+                  fontSize: "1.05rem",
+                  fontWeight: 600,
+                  textTransform: "none",
+                  borderWidth: 2,
+                  "&:hover": { borderWidth: 2 },
+                }}
+              >
+                Logout
+              </Button>
+            </Grid>
+          </Grid>
+        </Card>
+      </Box>
+    </>
   );
 }
-
-export default Dashboard;
