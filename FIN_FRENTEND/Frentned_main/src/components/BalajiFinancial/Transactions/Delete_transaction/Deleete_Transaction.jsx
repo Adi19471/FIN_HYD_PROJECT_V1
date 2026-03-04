@@ -169,8 +169,16 @@ const DeleteTransactions = () => {
         </Typography>
       </Box>
 
-      <Paper elevation={2} sx={{ p: 3, mb: 4 }}>
-        <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 3, alignItems: 'flex-end' }}>
+    
+        <Box 
+          sx={{ 
+            display: 'flex', 
+            flexDirection: { xs: 'column', sm: 'row' },
+            gap: 2, 
+            alignItems: 'flex-start',
+            flexWrap: 'wrap'
+          }}
+        >
           <TextField
             label="Transaction Date"
             type="date"
@@ -243,7 +251,7 @@ const DeleteTransactions = () => {
             />
           )}
         </Box>
-      </Paper>
+   
 
       {success && <Alert severity="success" sx={{ mb: 3 }}>{success}</Alert>}
       {error && <Alert severity="error" sx={{ mb: 3 }}>{error}</Alert>}

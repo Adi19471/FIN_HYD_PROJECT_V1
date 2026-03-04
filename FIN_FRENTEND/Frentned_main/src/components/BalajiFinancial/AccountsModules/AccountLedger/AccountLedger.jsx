@@ -123,10 +123,10 @@ const AccountLedger = () => {
   ];
 
   // ✅ Export Buttons Dummy
-  const handlePrint = () => toast.info("Print feature under development 🖨️);
-  const handleWord = () => toast.info("Word export under development 📄");
-  const handleExcel = () => toast.info("Excel export under development 📊");
-  const handlePdf = () => toast.info("PDF export under development 📑");
+const handlePrint = () => toast.info(`Print feature under development 🖨️`);
+const handleWord  = () => toast.info(`Word export under development 📄`);
+const handleExcel = () => toast.info(`Excel export under development 📊`);
+const handlePdf   = () => toast.info(`PDF export under development 📑`);
 
   return (
     <Box sx={{ p: 2 }}>

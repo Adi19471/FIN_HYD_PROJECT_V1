@@ -233,27 +233,10 @@ const Cashbook = () => {
 
   return (
     <Box
-      sx={{
-        width: "100%",
-        minHeight: "100vh",
-        bgcolor: "grey.50",
-        p: { xs: 2, md: 4 },
-      }}
+      
     >
-      <Typography
-        variant="h4"
-        component="h1"
-        fontWeight="bold"
-        color="primary.dark"
-        gutterBottom
-      >
-        Cash Book Entry
-      </Typography>
-
-      <Paper
-        elevation={4}
-        sx={{ p: { xs: 3, md: 5 }, maxWidth: 960, mx: "auto", borderRadius: 3 }}
-      >
+     
+    
         <Typography variant="h5" color="primary" gutterBottom sx={{ mb: 4 }}>
           New Transaction / Payment
         </Typography>
@@ -291,6 +274,7 @@ const Cashbook = () => {
                   label="Account Group"
                   onChange={(e) => setMasterCode(e.target.value)}
                   disabled={loadingMaster || submitting}
+                  sx={{width:180,}}
                   endAdornment={
                     loadingMaster ? (
                       <CircularProgress size={20} sx={{ mr: 2 }} />
@@ -312,7 +296,7 @@ const Cashbook = () => {
                 <InputLabel>Account Code</InputLabel>
                 <Select
                   value={code}
-                  label="Account Code"
+                  label="Account Code"      sx={{width:180,}}
                   onChange={(e) => setCode(e.target.value)}
                   disabled={loadingCodes || !masterCode || submitting}
                   endAdornment={
@@ -336,7 +320,7 @@ const Cashbook = () => {
                 fullWidth
                 freeSolo
                 disableClearable
-                value={name}
+                value={name}      sx={{width:180,}}
                 onChange={(event, newValue) => {
                   if (typeof newValue === "string") {
                     setName(newValue);
@@ -386,8 +370,7 @@ const Cashbook = () => {
             <Grid item xs={12}>
               <TextField
                 fullWidth
-                multiline
-                rows={3}
+                 sx={{width:180,}}
                 label="Particulars / Description"
                 value={particulars}
                 onChange={(e) => setParticulars(e.target.value)}
@@ -469,12 +452,13 @@ const Cashbook = () => {
             </Grid>
 
             {/* Submit Button */}
-            <Grid item xs={12} sx={{ mt: 5 }}>
-              <Divider sx={{ mb: 4 }} />
+            <Grid item xs={12}>
+              <Divider sx={{ mb: 3 }} />
               <Box
                 sx={{
                   display: "flex",
-                  justifyContent: { xs: "center", sm: "flex-end" },
+                  justifyContent: "center",
+                  gap: 2,
                 }}
               >
                 <Button
@@ -485,12 +469,17 @@ const Cashbook = () => {
                   disabled={submitting}
                   startIcon={
                     submitting ? (
-                      <CircularProgress size={24} />
+                      <CircularProgress size={24} color="inherit" />
                     ) : (
                       <PaymentsIcon />
                     )
                   }
-                  sx={{ px: 6, py: 1.8, minWidth: { xs: "100%", sm: 300 } }}
+                  sx={{ 
+                    px: 6, 
+                    py: 1.5, 
+                    minWidth: 250,
+                    fontWeight: 600,
+                  }}
                 >
                   {submitting ? "Saving..." : "Record Transaction"}
                 </Button>
@@ -498,7 +487,7 @@ const Cashbook = () => {
             </Grid>
           </Grid>
         </form>
-      </Paper>
+
     </Box>
   );
 };

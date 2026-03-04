@@ -20,11 +20,13 @@ const BussinessCashbook_Main = () => {
         sx={{
           width: "100%",
           bgcolor: "#0d1528",
-        
-        
+          borderRadius: 1,
           display: "flex",
           justifyContent: "space-between",
           alignItems: "center",
+          flexWrap: "wrap",
+          p: 1,
+          gap: 1,
         }}
       >
 

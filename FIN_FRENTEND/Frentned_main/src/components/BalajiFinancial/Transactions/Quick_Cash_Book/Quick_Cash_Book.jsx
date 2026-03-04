@@ -237,103 +237,95 @@ const QuickCashBook = () => {
   /* ------------------ UI ------------------ */
   return (
     <LocalizationProvider dateAdapter={AdapterDayjs}>
-      <Paper sx={{ p: 3 }}>
-      
 
-       
-
-<Paper
-  elevation={2}
-  sx={{
-    p: 2,
-    mb: 2,
-    borderRadius: 2,
-    background: "linear-gradient(180deg, #ffffff 0%, #f9fbff 100%)",
-  }}
->
-  <Stack
-    direction={{ xs: "column", md: "row" }}
-    spacing={2}
-    alignItems="center"
-    justifyContent="space-between"
-  >
-    {/* Title */}
-    <Typography
-      variant="h5"
-      fontWeight={700}
-      sx={{
-        color: "primary.main",
-        whiteSpace: "nowrap",
-      }}
-    >
-      Quick Business Cash Book
-    </Typography>
-
-    {/* Inputs */}
-    <Stack
-      direction="row"
-      spacing={2}
-      alignItems="center"
-      sx={{ flexWrap: "wrap" }}
-    >
-      <DateTimePicker
-        label="Transaction Date"
-        value={transactionDate}
-        onChange={setTransactionDate}
-        ampm={false}
-        slotProps={{
-          textField: {
-            size: "small",
-            sx: { width: 220 },
-          },
-        }}
-      />
-
-      <Autocomplete
-        freeSolo
-        sx={{ width: 260 }}
-        options={accountOptions}
-        value={selectedAccount}
-        inputValue={inputValue}
-        getOptionLabel={(o) => o.displayString || o.loanId || ""}
-        onInputChange={(e, v) => setInputValue(v)}
-        onChange={(e, v) => v && addRow(v)}
-        renderInput={(params) => (
-          <TextField
-            {...params}
-            size="small"
-            label="Loan / Account No"
-            placeholder="Type or scan account"
-            onKeyDown={(e) => {
-              if (e.key === "Enter" && inputValue.trim()) {
-                addRow();
-              }
+        <Paper
+          elevation={2}
+          sx={{
+            p: 2,
+            mb: 2,
+            borderRadius: 2,
+            background: "linear-gradient(180deg, #ffffff 0%, #f9fbff 100%)",
+            display: 'flex',
+            flexDirection: { xs: 'column', md: 'row' },
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            gap: 2,
+            flexWrap: 'wrap'
+          }}
+        >
+          <Typography
+            variant="h5"
+            fontWeight={700}
+            sx={{
+              color: "primary.main",
+              whiteSpace: "nowrap",
             }}
-          />
-        )}
-      />
-    </Stack>
+          >
+            Quick Business Cash Book
+          </Typography>
 
-    {/* Save Button */}
-    <Button
-      variant="contained"
-      color="success"
-      startIcon={<Save />}
-      onClick={handleSaveAll}
-      sx={{
-        px: 3,
-        height: 40,
-        fontWeight: 600,
-        boxShadow: 2,
-        textTransform: "none",
-      }}
-    >
-      Save
-    </Button>
-  </Stack>
-</Paper>
+          <Stack
+            direction="row"
+            spacing={2}
+            alignItems="center"
+            sx={{ flexWrap: "wrap" }}
+          >
+            <DateTimePicker
+              label="Transaction Date"
+              value={transactionDate}
+              onChange={setTransactionDate}
+              ampm={false}
+              slotProps={{
+                textField: {
+                  size: "small",
+                  sx: { width: 220 },
+                },
+              }}
+            />
 
- <Divider sx={{ my: 2 }} />
+            <Autocomplete
+              freeSolo
+              sx={{ width: 260 }}
+              options={accountOptions}
+              value={selectedAccount}
+              inputValue={inputValue}
+              getOptionLabel={(o) => o.displayString || o.loanId || ""}
+              onInputChange={(e, v) => setInputValue(v)}
+              onChange={(e, v) => v && addRow(v)}
+              renderInput={(params) => (
+                <TextField
+                  {...params}
+                  size="small"
+                  label="Loan / Account No"
+                  placeholder="Type or scan account"
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" && inputValue.trim()) {
+                      addRow();
+                    }
+                  }}
+                />
+              )}
+            />
+          </Stack>
+
+          <Button
+            variant="contained"
+            color="success"
+            startIcon={<Save />}
+            onClick={handleSaveAll}
+            sx={{
+              px: 3,
+              height: 40,
+              fontWeight: 600,
+              boxShadow: 2,
+              textTransform: "none",
+            }}
+          >
+            Save
+          </Button>
+        </Paper>
+
+        <Divider sx={{ my: 2 }} />
         {alertMsg.text && (
           <Alert severity={alertMsg.severity}>{alertMsg.text}</Alert>
         )}
@@ -353,7 +345,7 @@ const QuickCashBook = () => {
         <Typography mt={2} fontWeight="bold">
           Total Collected: ₹{totalCollected}
         </Typography>
-      </Paper>
+
     </LocalizationProvider>
   );
 };

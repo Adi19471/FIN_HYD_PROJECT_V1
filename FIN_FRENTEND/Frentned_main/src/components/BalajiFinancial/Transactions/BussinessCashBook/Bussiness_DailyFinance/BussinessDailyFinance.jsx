@@ -245,7 +245,7 @@ const BussinessDailyFinance = () => {
     <LocalizationProvider dateAdapter={AdapterDayjs}>
       <Box display="flex" height="100vh" bgcolor="#f5f5f5">
         <Box flexGrow={1}>
-          <Paper elevation={6} sx={{ p: 3, borderRadius: 1 }}>
+       
             <Typography variant="h6" fontWeight="bold" color="info" mb={1}>
             DAILY  Custmer
             </Typography>
@@ -541,7 +541,7 @@ const BussinessDailyFinance = () => {
                 </TableBody>
               </Table>
             </TableContainer>
-          </Paper>
+   
         </Box>
       </Box>
     </LocalizationProvider>
