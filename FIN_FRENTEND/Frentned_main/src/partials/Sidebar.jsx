@@ -2,7 +2,6 @@ import React, { useState, useEffect, useRef } from "react";
 import { NavLink, useLocation } from "react-router-dom";
 import {
   Close,
-  Dashboard,
   Home,
   Info,
   AccountCircle,
@@ -17,7 +16,6 @@ import {
   AccountBalanceWallet,
   ReceiptLong,
   DeleteForever,
-  Paid,
   SwapHoriz,
   AccountTree,
   Construction,
@@ -165,8 +163,8 @@ function Sidebar({ sidebarOpen, setSidebarOpen }) {
             className={({ isActive }) =>
               `flex items-center gap-3 px-3 py-3 rounded-xl transition-all duration-200 font-medium ${
                 isActive
-                  ? "bg-gradient-to-r from-teal-600 to-cyan-600 text-white shadow-md"
-                  : "text-gray-700 dark:text-gray-300 hover:bg-teal-50 dark:hover:bg-teal-900/20 hover:text-teal-600 dark:hover:text-teal-400"
+                  ? "bg-gradient-to-r from-sky-600 to-blue-600 text-white shadow-md"
+                  : "text-gray-700 dark:text-gray-300 hover:bg-sky-50 dark:hover:bg-sky-900/20 hover:text-sky-600 dark:hover:text-sky-400"
               }`
             }
           >
@@ -180,13 +178,13 @@ function Sidebar({ sidebarOpen, setSidebarOpen }) {
           <div
             className={`flex items-center justify-between px-3 py-3 rounded-xl cursor-pointer transition-all duration-200 font-medium ${
               openGroup === "master"
-                ? "bg-teal-50 dark:bg-teal-900/30"
-                : "hover:bg-teal-50 dark:hover:bg-teal-900/20"
+                ? "bg-sky-50 dark:bg-sky-900/30"
+                : "hover:bg-sky-50 dark:hover:bg-sky-900/20"
             }`}
             onClick={() => handleGroupToggle("master")}
           >
             <div className="flex items-center gap-3">
-              <Info className="w-5 h-5 text-teal-600 dark:text-teal-400" />
+              <Info className="w-5 h-5 text-sky-600 dark:text-sky-400" />
               <span className="text-sm lg:opacity-0 lg:sidebar-expanded:opacity-100 2xl:opacity-100 transition-opacity duration-200">
                 Master Info
               </span>
@@ -206,8 +204,8 @@ function Sidebar({ sidebarOpen, setSidebarOpen }) {
                   className={({ isActive }) =>
                     `flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-all duration-200 ${
                       isActive
-                        ? "bg-gradient-to-r from-teal-600 to-cyan-600 text-white shadow-sm"
-                        : "text-gray-600 dark:text-gray-400 hover:bg-teal-50 dark:hover:bg-teal-900/20 hover:text-teal-600 dark:hover:text-teal-400"
+                        ? "bg-gradient-to-r from-sky-600 to-blue-600 text-white shadow-sm"
+                        : "text-gray-600 dark:text-gray-400 hover:bg-sky-50 dark:hover:bg-sky-900/20 hover:text-sky-600 dark:hover:text-sky-400"
                     }`
                   }
                 >
@@ -221,8 +219,8 @@ function Sidebar({ sidebarOpen, setSidebarOpen }) {
                   className={({ isActive }) =>
                     `flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-all duration-200 ${
                       isActive
-                        ? "bg-gradient-to-r from-teal-600 to-cyan-600 text-white shadow-sm"
-                        : "text-gray-600 dark:text-gray-400 hover:bg-teal-50 dark:hover:bg-teal-900/20 hover:text-teal-600 dark:hover:text-teal-400"
+                        ? "bg-gradient-to-r from-sky-600 to-blue-600 text-white shadow-sm"
+                        : "text-gray-600 dark:text-gray-400 hover:bg-sky-50 dark:hover:bg-sky-900/20 hover:text-sky-600 dark:hover:text-sky-400"
                     }`
                   }
                 >
@@ -237,13 +235,13 @@ function Sidebar({ sidebarOpen, setSidebarOpen }) {
           <div
             className={`flex items-center justify-between px-3 py-3 rounded-xl cursor-pointer transition-all duration-200 font-medium ${
               openGroup === "transactions"
-                ? "bg-teal-50 dark:bg-teal-900/30"
-                : "hover:bg-teal-50 dark:hover:bg-teal-900/20"
+                ? "bg-sky-50 dark:bg-sky-900/30"
+                : "hover:bg-sky-50 dark:hover:bg-sky-900/20"
             }`}
             onClick={() => handleGroupToggle("transactions")}
           >
             <div className="flex items-center gap-3">
-              <SwapHoriz className="w-5 h-5 text-teal-600 dark:text-teal-400" />
+              <SwapHoriz className="w-5 h-5 text-sky-600 dark:text-sky-400" />
               <span className="text-sm lg:opacity-0 lg:sidebar-expanded:opacity-100 2xl:opacity-100 transition-opacity duration-200">
                 Transactions
               </span>
@@ -263,8 +261,8 @@ function Sidebar({ sidebarOpen, setSidebarOpen }) {
                   className={({ isActive }) =>
                     `flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-all duration-200 ${
                       isActive
-                        ? "bg-gradient-to-r from-teal-600 to-cyan-600 text-white shadow-sm"
-                        : "text-gray-600 dark:text-gray-400 hover:bg-teal-50 dark:hover:bg-teal-900/20 hover:text-teal-600 dark:hover:text-teal-400"
+                        ? "bg-gradient-to-r from-sky-600 to-blue-600 text-white shadow-sm"
+                        : "text-gray-600 dark:text-gray-400 hover:bg-sky-50 dark:hover:bg-sky-900/20 hover:text-sky-600 dark:hover:text-sky-400"
                     }`
                   }
                 >
@@ -278,8 +276,8 @@ function Sidebar({ sidebarOpen, setSidebarOpen }) {
                   className={({ isActive }) =>
                     `flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-all duration-200 ${
                       isActive
-                        ? "bg-gradient-to-r from-teal-600 to-cyan-600 text-white shadow-sm"
-                        : "text-gray-600 dark:text-gray-400 hover:bg-teal-50 dark:hover:bg-teal-900/20 hover:text-teal-600 dark:hover:text-teal-400"
+                        ? "bg-gradient-to-r from-sky-600 to-blue-600 text-white shadow-sm"
+                        : "text-gray-600 dark:text-gray-400 hover:bg-sky-50 dark:hover:bg-sky-900/20 hover:text-sky-600 dark:hover:text-sky-400"
                     }`
                   }
                 >
@@ -308,8 +306,8 @@ function Sidebar({ sidebarOpen, setSidebarOpen }) {
                   className={({ isActive }) =>
                     `flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-all duration-200 ${
                       isActive
-                        ? "bg-teal-50 text-teal-700 dark:bg-teal-950/50 dark:text-teal-300"
-                        : "text-gray-600 hover:text-teal-600 dark:text-gray-400 dark:hover:text-teal-300 hover:bg-teal-50 dark:hover:bg-teal-900/20"
+                        ? "bg-sky-50 text-sky-700 dark:bg-sky-950/50 dark:text-sky-300"
+                        : "text-gray-600 hover:text-sky-600 dark:text-gray-400 dark:hover:text-sky-300 hover:bg-sky-50 dark:hover:bg-sky-900/20"
                     }`
                   }
                 >
@@ -324,13 +322,13 @@ function Sidebar({ sidebarOpen, setSidebarOpen }) {
           <div
             className={`flex items-center justify-between px-3 py-3 rounded-xl cursor-pointer transition-all duration-200 font-medium ${
               openGroup === "accounts"
-                ? "bg-teal-50 dark:bg-teal-900/30"
-                : "hover:bg-teal-50 dark:hover:bg-teal-900/20"
+                ? "bg-sky-50 dark:bg-sky-900/30"
+                : "hover:bg-sky-50 dark:hover:bg-sky-900/20"
             }`}
             onClick={() => handleGroupToggle("accounts")}
           >
             <div className="flex items-center gap-3">
-              <AccountTree className="w-5 h-5 text-teal-600 dark:text-teal-400" />
+              <AccountTree className="w-5 h-5 text-sky-600 dark:text-sky-400" />
               <span className="text-sm lg:opacity-0 lg:sidebar-expanded:opacity-100 2xl:opacity-100 transition-opacity duration-200">
                 Accounts
               </span>
@@ -350,8 +348,8 @@ function Sidebar({ sidebarOpen, setSidebarOpen }) {
                   className={({ isActive }) =>
                     `flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-all duration-200 ${
                       isActive
-                        ? "bg-teal-50 text-teal-700 dark:bg-teal-950/50 dark:text-teal-300 shadow-sm"
-                        : "text-gray-600 hover:text-teal-600 dark:text-gray-400 dark:hover:text-teal-300 hover:bg-teal-50 dark:hover:bg-teal-900/20"
+                        ? "bg-sky-50 text-sky-700 dark:bg-sky-950/50 dark:text-sky-300 shadow-sm"
+                        : "text-gray-600 hover:text-sky-600 dark:text-gray-400 dark:hover:text-sky-300 hover:bg-sky-50 dark:hover:bg-sky-900/20"
                     }`
                   }
                 >
@@ -366,13 +364,13 @@ function Sidebar({ sidebarOpen, setSidebarOpen }) {
           <div
             className={`flex items-center justify-between px-3 py-3 rounded-xl cursor-pointer transition-all duration-200 font-medium ${
               openGroup === "accountMaster"
-                ? "bg-teal-50 dark:bg-teal-900/30"
-                : "hover:bg-teal-50 dark:hover:bg-teal-900/20"
+                ? "bg-sky-50 dark:bg-sky-900/30"
+                : "hover:bg-sky-50 dark:hover:bg-sky-900/20"
             }`}
             onClick={() => handleGroupToggle("accountMaster")}
           >
             <div className="flex items-center gap-3">
-              <Construction className="w-5 h-5 text-teal-600 dark:text-teal-400" />
+              <Construction className="w-5 h-5 text-sky-600 dark:text-sky-400" />
               <span className="text-sm lg:opacity-0 lg:sidebar-expanded:opacity-100 2xl:opacity-100 transition-opacity duration-200">
                 Account Master
               </span>
@@ -392,8 +390,8 @@ function Sidebar({ sidebarOpen, setSidebarOpen }) {
                   className={({ isActive }) =>
                     `flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-all duration-200 ${
                       isActive
-                        ? "bg-teal-50 text-teal-700 dark:bg-teal-950/50 dark:text-teal-300 shadow-sm"
-                        : "text-gray-600 hover:text-teal-600 dark:text-gray-400 dark:hover:text-teal-300 hover:bg-teal-50 dark:hover:bg-teal-900/20"
+                        ? "bg-sky-50 text-sky-700 dark:bg-sky-950/50 dark:text-sky-300 shadow-sm"
+                        : "text-gray-600 hover:text-sky-600 dark:text-gray-400 dark:hover:text-sky-300 hover:bg-sky-50 dark:hover:bg-sky-900/20"
                     }`
                   }
                 >
@@ -402,111 +400,107 @@ function Sidebar({ sidebarOpen, setSidebarOpen }) {
                 </NavLink>
               </li>
 
-
-                <li>
+              <li>
                 <NavLink
                   to="/AccountMasterSetup/Registraion_creation"
                   className={({ isActive }) =>
                     `flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-all duration-200 ${
                       isActive
-                        ? "bg-teal-50 text-teal-700 dark:bg-teal-950/50 dark:text-teal-300 shadow-sm"
-                        : "text-gray-600 hover:text-teal-600 dark:text-gray-400 dark:hover:text-teal-300 hover:bg-teal-50 dark:hover:bg-teal-900/20"
+                        ? "bg-sky-50 text-sky-700 dark:bg-sky-950/50 dark:text-sky-300 shadow-sm"
+                        : "text-gray-600 hover:text-sky-600 dark:text-gray-400 dark:hover:text-sky-300 hover:bg-sky-50 dark:hover:bg-sky-900/20"
                     }`
                   }
                 >
                   <AccountBalanceWallet className="w-4 h-4" />
-                  <span>User Registraion</span>
+                  <span>User Registration</span>
                 </NavLink>
               </li>
-              {/* You can add more items here later */}
             </ul>
           )}
 
+          {/* Loans */}
+          <div
+            className={`flex items-center justify-between px-3 py-3 rounded-xl cursor-pointer transition-all duration-200 font-medium ${
+              openGroup === "loans"
+                ? "bg-sky-50 dark:bg-sky-900/30"
+                : "hover:bg-sky-50 dark:hover:bg-sky-900/20"
+            }`}
+            onClick={() => handleGroupToggle("loans")}
+          >
+            <div className="flex items-center gap-3">
+              <AccountBalance className="w-5 h-5 text-sky-600 dark:text-sky-400" />
+              <span className="text-sm lg:opacity-0 lg:sidebar-expanded:opacity-100 2xl:opacity-100 transition-opacity duration-200">
+                Loans
+              </span>
+            </div>
+            <ExpandMore
+              className={`w-5 h-5 transition-transform duration-300 ${
+                openGroup === "loans" ? "rotate-180" : ""
+              }`}
+            />
+          </div>
 
-
-{/* Loans */}
-<div
-  className={`flex items-center justify-between px-3 py-3 rounded-xl cursor-pointer transition-all duration-200 font-medium ${
-    openGroup === "loans"
-      ? "bg-teal-50 dark:bg-teal-900/30"
-      : "hover:bg-teal-50 dark:hover:bg-teal-900/20"
-  }`}
-  onClick={() => handleGroupToggle("loans")}
->
-  <div className="flex items-center gap-3">
-    <AccountBalance className="w-5 h-5 text-teal-600 dark:text-teal-400" />
-    <span className="text-sm lg:opacity-0 lg:sidebar-expanded:opacity-100 2xl:opacity-100 transition-opacity duration-200">
-      Loans
-    </span>
-  </div>
-  <ExpandMore
-    className={`w-5 h-5 transition-transform duration-300 ${
-      openGroup === "loans" ? "rotate-180" : ""
-    }`}
-  />
-</div>
-
-{openGroup === "loans" && (
-  <ul className="pl-11 mt-1 space-y-1">
-    <li>
-      <NavLink
-        to="/Loans/Distubuted"
-        className={({ isActive }) =>
-          `flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-all duration-200 ${
-            isActive
-              ? "bg-gradient-to-r from-teal-600 to-cyan-600 text-white shadow-sm"
-              : "text-gray-600 dark:text-gray-400 hover:bg-teal-50 dark:hover:bg-teal-900/20 hover:text-teal-600 dark:hover:text-teal-400"
-          }`
-        }
-      >
-        <MonetizationOn className="w-4 h-4" />
-        <span>Distributed Loans</span>
-      </NavLink>
-    </li>
-    <li>
-      <NavLink
-        to="/Loans/InstalmentDues"
-        className={({ isActive }) =>
-          `flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-all duration-200 ${
-            isActive
-              ? "bg-gradient-to-r from-teal-600 to-cyan-600 text-white shadow-sm"
-              : "text-gray-600 dark:text-gray-400 hover:bg-teal-50 dark:hover:bg-teal-900/20 hover:text-teal-600 dark:hover:text-teal-400"
-          }`
-        }
-      >
-        <EventNote className="w-4 h-4" />
-        <span>Instalment Dues</span>
-      </NavLink>
-    </li>
-    <li>
-      <NavLink
-        to="/Loans/Maturity"
-        className={({ isActive }) =>
-          `flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-all duration-200 ${
-            isActive
-              ? "bg-gradient-to-r from-teal-600 to-cyan-600 text-white shadow-sm"
-              : "text-gray-600 dark:text-gray-400 hover:bg-teal-50 dark:hover:bg-teal-900/20 hover:text-teal-600 dark:hover:text-teal-400"
-          }`
-        }
-      >
-        <EventAvailable className="w-4 h-4" />
-        <span>Maturity</span>
-      </NavLink>
-    </li>
-  </ul>
-)}
+          {openGroup === "loans" && (
+            <ul className="pl-11 mt-1 space-y-1">
+              <li>
+                <NavLink
+                  to="/Loans/Distubuted"
+                  className={({ isActive }) =>
+                    `flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-all duration-200 ${
+                      isActive
+                        ? "bg-gradient-to-r from-sky-600 to-blue-600 text-white shadow-sm"
+                        : "text-gray-600 dark:text-gray-400 hover:bg-sky-50 dark:hover:bg-sky-900/20 hover:text-sky-600 dark:hover:text-sky-400"
+                    }`
+                  }
+                >
+                  <MonetizationOn className="w-4 h-4" />
+                  <span>Distributed Loans</span>
+                </NavLink>
+              </li>
+              <li>
+                <NavLink
+                  to="/Loans/InstalmentDues"
+                  className={({ isActive }) =>
+                    `flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-all duration-200 ${
+                      isActive
+                        ? "bg-gradient-to-r from-sky-600 to-blue-600 text-white shadow-sm"
+                        : "text-gray-600 dark:text-gray-400 hover:bg-sky-50 dark:hover:bg-sky-900/20 hover:text-sky-600 dark:hover:text-sky-400"
+                    }`
+                  }
+                >
+                  <EventNote className="w-4 h-4" />
+                  <span>Instalment Dues</span>
+                </NavLink>
+              </li>
+              <li>
+                <NavLink
+                  to="/Loans/Maturity"
+                  className={({ isActive }) =>
+                    `flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-all duration-200 ${
+                      isActive
+                        ? "bg-gradient-to-r from-sky-600 to-blue-600 text-white shadow-sm"
+                        : "text-gray-600 dark:text-gray-400 hover:bg-sky-50 dark:hover:bg-sky-900/20 hover:text-sky-600 dark:hover:text-sky-400"
+                    }`
+                  }
+                >
+                  <EventAvailable className="w-4 h-4" />
+                  <span>Maturity</span>
+                </NavLink>
+              </li>
+            </ul>
+          )}
 
           {/* Authentication */}
           <div
             className={`flex items-center justify-between px-3 py-3 rounded-xl cursor-pointer transition-all duration-200 font-medium ${
               openGroup === "auth"
-                ? "bg-teal-50 dark:bg-teal-900/30"
-                : "hover:bg-teal-50 dark:hover:bg-teal-900/20"
+                ? "bg-sky-50 dark:bg-sky-900/30"
+                : "hover:bg-sky-50 dark:hover:bg-sky-900/20"
             }`}
             onClick={() => handleGroupToggle("auth")}
           >
             <div className="flex items-center gap-3">
-              <AccountCircle className="w-5 h-5 text-teal-600 dark:text-teal-400" />
+              <AccountCircle className="w-5 h-5 text-sky-600 dark:text-sky-400" />
               <span className="text-sm lg:opacity-0 lg:sidebar-expanded:opacity-100 2xl:opacity-100 transition-opacity duration-200">
                 Authentication
               </span>
@@ -527,7 +521,7 @@ function Sidebar({ sidebarOpen, setSidebarOpen }) {
                     `flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-all duration-200 ${
                       isActive
                         ? "bg-gray-900 text-white dark:bg-white dark:text-gray-900 shadow-sm"
-                        : "text-gray-600 dark:text-gray-400 hover:bg-teal-50 dark:hover:bg-teal-900/20 hover:text-teal-600 dark:hover:text-teal-400"
+                        : "text-gray-600 dark:text-gray-400 hover:bg-sky-50 dark:hover:bg-sky-900/20 hover:text-sky-600 dark:hover:text-sky-400"
                     }`
                   }
                 >
@@ -542,7 +536,7 @@ function Sidebar({ sidebarOpen, setSidebarOpen }) {
                     `flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-all duration-200 ${
                       isActive
                         ? "bg-gray-900 text-white dark:bg-white dark:text-gray-900 shadow-sm"
-                        : "text-gray-600 dark:text-gray-400 hover:bg-teal-50 dark:hover:bg-teal-900/20 hover:text-teal-600 dark:hover:text-teal-400"
+                        : "text-gray-600 dark:text-gray-400 hover:bg-sky-50 dark:hover:bg-sky-900/20 hover:text-sky-600 dark:hover:text-sky-400"
                     }`
                   }
                 >
@@ -557,7 +551,7 @@ function Sidebar({ sidebarOpen, setSidebarOpen }) {
                     `flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-all duration-200 ${
                       isActive
                         ? "bg-gray-900 text-white dark:bg-white dark:text-gray-900 shadow-sm"
-                        : "text-gray-600 dark:text-gray-400 hover:bg-teal-50 dark:hover:bg-teal-900/20 hover:text-teal-600 dark:hover:text-teal-400"
+                        : "text-gray-600 dark:text-gray-400 hover:bg-sky-50 dark:hover:bg-sky-900/20 hover:text-sky-600 dark:hover:text-sky-400"
                     }`
                   }
                 >

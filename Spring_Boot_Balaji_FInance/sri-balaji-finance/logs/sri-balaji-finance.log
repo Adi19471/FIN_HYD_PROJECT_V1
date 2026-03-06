@@ -414,3 +414,16 @@ java.lang.NullPointerException: Cannot invoke "java.time.LocalDateTime.isBefore(
 2026-03-06 13:14:45 INFO  o.s.o.j.LocalContainerEntityManagerFactoryBean - Initialized JPA EntityManagerFactory for persistence unit 'default'
 2026-03-06 13:14:45 INFO  o.s.d.j.r.query.QueryEnhancerFactory - Hibernate is in classpath; If applicable, HQL parser will be used.
 2026-03-06 13:14:47 INFO  o.s.s.c.a.a.c.InitializeUserDetailsBeanManagerConfigurer$InitializeUserDetailsManagerConfigurer - Global AuthenticationManager configured with UserDetailsService bean with name myOwnUserDetails
+2026-03-06 13:14:48 WARN  o.s.b.a.o.j.JpaBaseConfiguration$JpaWebConfiguration - spring.jpa.open-in-view is enabled by default. Therefore, database queries may be performed during view rendering. Explicitly configure spring.jpa.open-in-view to disable this warning
+2026-03-06 13:14:48 INFO  o.s.b.a.w.s.WelcomePageHandlerMapping - Adding welcome page: class path resource [static/index.html]
+2026-03-06 13:14:49 INFO  o.a.coyote.http11.Http11NioProtocol - Starting ProtocolHandler ["http-nio-8881"]
+2026-03-06 13:14:49 INFO  o.s.b.w.e.tomcat.TomcatWebServer - Tomcat started on port 8881 (http) with context path '/balaji-finance'
+2026-03-06 13:14:49 INFO  c.b.f.SriBalajiFinanceApplication - Started SriBalajiFinanceApplication in 11.717 seconds (process running for 12.178)
+2026-03-06 13:14:49 WARN  o.s.c.events.SpringDocAppInitializer - SpringDoc /v3/api-docs endpoint is enabled by default. To disable it in production, set the property 'springdoc.api-docs.enabled=false'
+2026-03-06 13:14:49 WARN  o.s.c.events.SpringDocAppInitializer - SpringDoc /swagger-ui.html endpoint is enabled by default. To disable it in production, set the property 'springdoc.swagger-ui.enabled=false'
+2026-03-06 13:14:58 INFO  o.a.c.c.C.[.[.[/balaji-finance] - Initializing Spring DispatcherServlet 'dispatcherServlet'
+2026-03-06 13:14:58 INFO  o.s.web.servlet.DispatcherServlet - Initializing Servlet 'dispatcherServlet'
+2026-03-06 13:14:58 INFO  o.s.web.servlet.DispatcherServlet - Completed initialization in 0 ms
+2026-03-06 13:46:42 WARN  com.zaxxer.hikari.pool.HikariPool - HikariPool-1 - Thread starvation or clock leap detected (housekeeper delta=15m28s889ms556µs900ns).
+2026-03-06 13:50:47 WARN  com.zaxxer.hikari.pool.HikariPool - HikariPool-1 - Thread starvation or clock leap detected (housekeeper delta=4m18s21ms12µs400ns).
+2026-03-06 14:29:47 WARN  com.zaxxer.hikari.pool.HikariPool - HikariPool-1 - Thread starvation or clock leap detected (housekeeper delta=29m30s487ms567µs200ns).

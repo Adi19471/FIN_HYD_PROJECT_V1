@@ -287,12 +287,11 @@ export default function ProfessionalDashboard() {
           gap: 1,
         }}>
           <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
-            <AccountBalance sx={{ color: "primary.main", fontSize: 32 }} />
+            <AccountBalance sx={{ color: "#0ea5e9", fontSize: 32 }} />
             <Typography 
               variant="h6" 
               fontWeight={700} 
-              color="primary.main"
-              sx={{ fontSize: { xs: "1rem", sm: "1.25rem" } }}
+              sx={{ color: "#0ea5e9", fontSize: { xs: "1rem", sm: "1.25rem" } }}
             >
               Sri Balaji Chit Funds
             </Typography>
@@ -319,7 +318,7 @@ export default function ProfessionalDashboard() {
             </Typography>
 
             <Stack direction="row" spacing={1.5} alignItems="center">
-              <Avatar sx={{ bgcolor: "primary.main", width: 38, height: 38, fontSize: "1rem" }}>
+              <Avatar sx={{ bgcolor: "#0ea5e9", width: 38, height: 38, fontSize: "1rem" }}>
                 {userName.charAt(0).toUpperCase()}
               </Avatar>
               <Box sx={{ display: { xs: "none", md: "block" } }}>
@@ -350,7 +349,7 @@ export default function ProfessionalDashboard() {
       <Box
         sx={{
           bgcolor: "background.paper",
-          borderBottom: 1,
+          borderBottom: 0,
           borderColor: "divider",
           px: { xs: 2, md: 4 },
           py: 2,
@@ -373,39 +372,84 @@ export default function ProfessionalDashboard() {
               minWidth: { xs: "100%", sm: 180 }, 
               py: 1.2, 
               fontWeight: 600,
-              fontSize: "0.875rem"
+              fontSize: "0.875rem",
+              bgcolor: "#0ea5e9",
+              "&:hover": { bgcolor: "#0284c7" }
             }}
           >
             Add New Member
           </Button>
           <Button
             variant="contained"
-            color="success"
+            color="primary"
             startIcon={<PaymentsRounded />}
             onClick={() => navigate("/Loan")}
             sx={{ 
               minWidth: { xs: "100%", sm: 180 }, 
               py: 1.2, 
               fontWeight: 600,
-              fontSize: "0.875rem"
+              fontSize: "0.875rem",
+              bgcolor: "#0ea5e9",
+              "&:hover": { bgcolor: "#0284c7" }
             }}
           >
             Start New Chit
           </Button>
-         
-          <Typography
-            variant="h6"
-            fontWeight={800}
-            sx={{
-              background: "linear-gradient(90deg, #1e40af, #7c3aed)",
-              WebkitBackgroundClip: "text",
-              WebkitTextFillColor: "transparent",
-              letterSpacing: -0.5,
-              fontSize: { xs: "0.75rem", sm: "2.25rem", md: "2.5rem" },
+
+            <Button
+            variant="contained"
+            color="primary"
+            startIcon={<PaymentsRounded />}
+            onClick={() => navigate("/Transactions/Cashbook")}
+            sx={{ 
+              minWidth: { xs: "100%", sm: 180 }, 
+              py: 1.2, 
+              fontWeight: 600,
+              fontSize: "0.875rem",
+              bgcolor: "#0ea5e9",
+              "&:hover": { bgcolor: "#0284c7" }
             }}
           >
-            {greeting}, {userName.split(' ')[0]}
-          </Typography>
+       Cashbook
+          </Button>
+
+            <Button
+            variant="contained"
+            color="primary"
+            startIcon={<PaymentsRounded />}
+            onClick={() => navigate("/AccountMasterSetup/Registraion_creation")}
+            sx={{ 
+              minWidth: { xs: "100%", sm: 180 }, 
+              py: 1.2, 
+              fontWeight: 600,
+              fontSize: "0.875rem",
+              bgcolor: "#0ea5e9",
+              "&:hover": { bgcolor: "#0284c7" }
+            }}
+          >
+    Registration
+          </Button>
+
+
+ <Button
+            variant="contained"
+            color="primary"
+            startIcon={<PaymentsRounded />}
+            onClick={() => navigate("/AccountMasterSetup/Registraion_creation")}
+            sx={{ 
+              minWidth: { xs: "100%", sm: 180 }, 
+              py: 1.2, 
+              fontWeight: 600,
+              fontSize: "0.875rem",
+              bgcolor: "#0ea5e9",
+              "&:hover": { bgcolor: "#0284c7" }
+            }}
+          >
+    Registration
+          </Button>
+
+
+        
         </Stack>
       </Box>
 
@@ -427,7 +471,7 @@ export default function ProfessionalDashboard() {
           </Alert>
         )}
 
-      
+     
 
         {/* KPI CARDS – 4 in a row */}
         <Typography 
@@ -439,31 +483,30 @@ export default function ProfessionalDashboard() {
           Key Performance Indicators
         </Typography>
 
-        <Grid container spacing={12} sx={{ mb: 6 }}>
+        <Grid container spacing={2.5} sx={{ mb: 3 }}>
           <Grid item xs={12} sm={6} md={3}>
             <StatCard
               title="Total Members"
               value={loading ? "" : `${stats.totalMembers?.toLocaleString() || 0}`}
               subtitle={loading ? "" : `${stats.activeMembers || 0} active • ${stats.inactiveMembers || 0} inactive`}
               icon={PeopleAltRounded}
-              color="#2563eb"
-              bgLight="#dbeafe"
+              color="#0ea5e9"
+              bgLight="#e0f2fe"
               trend={trends.members}
               trendUp={trends.members >= 0}
               loading={loading}
             />
           </Grid>
 
-         
-
+        
           <Grid item xs={12} sm={6} md={3}>
             <StatCard
               title="Today's Collection"
               value={loading ? "" : formatINR(stats.todayCollection || 0)}
               subtitle={loading ? "" : `from ${stats.todayMembers || 0} members`}
               icon={CurrencyRupeeRounded}
-              color="#d97706"
-              bgLight="#fef3c7"
+              color="#0ea5e9"
+              bgLight="#e0f2fe"
               trend={trends.collection}
               trendUp={trends.collection >= 0}
               loading={loading}
@@ -480,40 +523,21 @@ export default function ProfessionalDashboard() {
               bgLight="#fee2e2"
               trend={trends.dues}
               trendUp={trends.dues >= 0}
-              alert={true}
               loading={loading}
             />
           </Grid>
         </Grid>
 
-        {/* CHARTS */}
-        <Grid container spacing={3}>
+        {/* CHARTS SECTION */}
+        <Grid container spacing={3} sx={{ mt: 1 }}>
           <Grid item xs={12} lg={8}>
-            <Card 
-              elevation={4} 
-              sx={{ 
-                borderRadius: 3,
-                height: { xs: "auto", lg: "100%" },
-                minHeight: { lg: 500 }
-              }}
-            >
+            <Card elevation={4} sx={{ borderRadius: 3, height: "100%" }}>
               <CardContent sx={{ p: { xs: 2, sm: 3, md: 4 } }}>
-                <Typography 
-                  variant="h6" 
-                  fontWeight={700} 
-                  gutterBottom
-                  sx={{ fontSize: { xs: "1rem", sm: "1.25rem" } }}
-                >
-                  Monthly Collection Trend – Last 6 Months
+                <Typography variant="h6" fontWeight={700} gutterBottom sx={{ fontSize: { xs: "1rem", sm: "1.25rem" } }}>
+                  Collection Trend
                 </Typography>
                 <Divider sx={{ mb: 3 }} />
-                <Box sx={{ 
-                  height: { xs: 300, sm: 350, md: 420 }, 
-                  width: "100%",
-                  display: "flex",
-                  justifyContent: "center",
-                  alignItems: "center"
-                }}>
+                <Box sx={{ height: collectionTrend.length > 0 ? (window.innerWidth < 600 ? 300 : 420) : 300 }}>
                   {loading ? (
                     <Skeleton variant="rectangular" width="100%" height="100%" />
                   ) : (
