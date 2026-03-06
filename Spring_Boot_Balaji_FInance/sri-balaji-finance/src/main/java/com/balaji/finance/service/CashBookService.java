@@ -180,13 +180,19 @@ public class CashBookService {
 
 		List<CashBookSumaryViewPojo> cashBookViewPojoList = new ArrayList<CashBookSumaryViewPojo>();
 
+		
+		BigDecimal sumOfCredits = BigDecimal.ZERO;
+		BigDecimal sumOfDebits = BigDecimal.ZERO;
+		
 		for (CashBook cashBook : byTransDate) {
 
 			CashBookSumaryViewPojo cashBookViewPojo = new CashBookSumaryViewPojo();
 			cashBookViewPojo.setTransactionId(cashBook.getCashBookId());
-			cashBookViewPojo.setAccountNumber(cashBook.getBusinessMember() != null  ? cashBook.getBusinessMember().getBusinessId() : "");
-			cashBookViewPojo.setName(cashBook.getPersonalInfo() != null
-					? cashBook.getPersonalInfo().getPersonalInfoId() + " - " + cashBook.getPersonalInfo().getFirstName()
+			cashBookViewPojo.setAccountNumber(
+					cashBook.getBusinessMember() != null ? cashBook.getBusinessMember().getBusinessId() : "");
+			cashBookViewPojo.setName(cashBook.getPersonalInfo() != null ? cashBook.getPersonalInfo().getPersonalInfoId()
+					+ " - " + cashBook.getPersonalInfo().getFirstName() + " - "
+					+ (cashBook.getPersonalInfo().getMobile() != null ? cashBook.getPersonalInfo().getMobile() : "")
 					: "");
 			cashBookViewPojo.setParticulars(cashBook.getParticulars());
 			cashBookViewPojo.setTransactionType(cashBook.getTransType());
@@ -195,17 +201,37 @@ public class CashBookService {
 			cashBookViewPojo.setUser(cashBook.getUser());
 
 			cashBookViewPojoList.add(cashBookViewPojo);
+			
+			if(cashBook.getCredit() != null) {
+				sumOfCredits = sumOfCredits.add(cashBook.getCredit());
+			}
+			
+			if(cashBook.getDebit() != null) {
+				sumOfDebits = sumOfDebits.add(sumOfDebits);
+			}
+			
 
 		}
 		
 		BigDecimal openingBalanceForToday =
 		        Optional.ofNullable(cashBookRepo.findOpeningBalanceForDate(transactionDate))
 		                .orElse(BigDecimal.ZERO);
-		
+
 		DayWiseTransactionsSummary dayWiseTransactionsSummary = new DayWiseTransactionsSummary();
 		dayWiseTransactionsSummary.setCashBookSumaryViewPojoList(cashBookViewPojoList);
 		dayWiseTransactionsSummary.setOpeningBalance(openingBalanceForToday);
+		dayWiseTransactionsSummary.setCredits(sumOfCredits);
+		dayWiseTransactionsSummary.setDebits(sumOfDebits);
 
+		// Closing Balance = Opening + Credits - Debits
+		BigDecimal closingBalance = openingBalanceForToday
+		        .add(sumOfCredits)
+		        .subtract(sumOfDebits);
+
+		dayWiseTransactionsSummary.setClosingBalance(closingBalance);
+		
+		
+		
 		return dayWiseTransactionsSummary;
 
 	}

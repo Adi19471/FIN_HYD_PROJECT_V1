@@ -25,6 +25,8 @@ public interface PersonalInfoRepository extends JpaRepository<PersonalInfo, Stri
 			            u.personalInfoId LIKE CONCAT('%', :keyword, '%')
 			         OR u.firstName LIKE CONCAT('%', :keyword, '%')
 			         OR u.lastName LIKE CONCAT('%', :keyword, '%')
+			         OR u.mobile LIKE CONCAT('%', :keyword, '%')
+			         OR u.phone LIKE CONCAT('%', :keyword, '%')
 			      )
 			      AND u.category IN (:categoryList)
 			""")
