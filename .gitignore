@@ -2,12 +2,17 @@
 logs/
 *.log
 
-# Java build
+# Build
 target/
-*.class
+build/
+
+# IDE
+.idea/
+.vscode/
+*.iml
 
 # Node
 node_modules/
 
-# OS files
+# OS
 .DS_Store
