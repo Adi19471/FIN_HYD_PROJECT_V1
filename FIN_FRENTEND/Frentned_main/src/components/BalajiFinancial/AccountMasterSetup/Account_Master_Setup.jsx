@@ -13,17 +13,12 @@ import {
   CircularProgress,
   Select,
   Checkbox,
-  ListItemText,
   Chip,
   InputLabel,
   FormControl,
   FormControlLabel,
   Switch,
   Divider,
-  List,
-  ListItem,
-  ListItemIcon,
-  ListItemText as MuiListItemText,
 } from "@mui/material";
 
 import {
@@ -44,11 +39,8 @@ import { toast } from "react-toastify";
 import { API_BASE } from "lib/config";
 import { getSession } from "src/utils/session";
 
-/* ---------------- CONSTANTS ---------------- */
 const PERSON_TYPES = ["CUSTOMER", "PARTNER", "EMPLOYEE", "VENDOR"];
 const TRANS_TYPES = ["CREDIT", "DEBIT"];
-
-const DRAWER_WIDTH = 400;
 
 const AccountMasterSetup = () => {
   const [accounts, setAccounts] = useState([]);
@@ -67,26 +59,19 @@ const AccountMasterSetup = () => {
     transType: [],
   });
 
-  /* ---------------- HEADERS ---------------- */
   const getHeaders = () => ({
     headers: {
-      Authorization: `Bearer ${
-        getSession()?.token || getSession("token") || ""
-      }`,
+      Authorization: `Bearer ${getSession()?.token || getSession("token") || ""}`,
       "Content-Type": "application/json",
     },
   });
 
-  /* ---------------- FETCH DATA ---------------- */
   const fetchData = async () => {
     setLoading(true);
     try {
-      const res = await axios.get(
-        `${API_BASE}/account-master-setup/findAll`,
-        getHeaders()
-      );
+      const res = await axios.get(`${API_BASE}/account-master-setup/findAll`, getHeaders());
       setAccounts(res.data || []);
-    } catch {
+    } catch (err) {
       toast.error("Failed to load account masters");
     } finally {
       setLoading(false);
@@ -97,14 +82,13 @@ const AccountMasterSetup = () => {
     fetchData();
   }, []);
 
-  /* ---------------- OPEN / CLOSE ---------------- */
   const handleOpen = (row = null) => {
     if (row) {
       setIsEdit(true);
       setForm({
         ...row,
-        personType: row.personType?.split(",") || [],
-        transType: row.transType?.split(",") || [],
+        personType: row.personType ? row.personType.split(",").map((v) => v.trim()) : [],
+        transType: row.transType ? row.transType.split(",").map((v) => v.trim()) : [],
       });
     } else {
       setIsEdit(false);
@@ -126,13 +110,12 @@ const AccountMasterSetup = () => {
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setForm((p) => ({ ...p, [name]: value }));
+    setForm((prev) => ({ ...prev, [name]: value }));
   };
 
-  /* ---------------- SAVE ---------------- */
   const handleSubmit = async () => {
-    if (!form.type || !form.masterCode || !form.code) {
-      toast.warn("Type, Master Code and Code are required");
+    if (!form.type.trim() || !form.masterCode.trim() || !form.code.trim()) {
+      toast.warn("Type, Master Code and Code are required fields");
       return;
     }
 
@@ -151,93 +134,55 @@ const AccountMasterSetup = () => {
       toast.success(isEdit ? "Updated successfully" : "Created successfully");
       handleClose();
       fetchData();
-    } catch {
-      toast.error("Save failed");
+    } catch (err) {
+      toast.error(err?.response?.data?.message || "Save failed");
     }
   };
 
-  /* ---------------- DELETE ---------------- */
   const handleDelete = async (id) => {
-    if (!window.confirm("Delete this record?")) return;
+    if (!window.confirm("Are you sure you want to delete this record?")) return;
     try {
-      await axios.get(
-        `${API_BASE}/account-master-setup/deleteAccountMasterById/${id}`,
-        getHeaders()
-      );
+      await axios.get(`${API_BASE}/account-master-setup/deleteAccountMasterById/${id}`, getHeaders());
       toast.success("Deleted successfully");
       fetchData();
-    } catch {
+    } catch (err) {
       toast.error("Delete failed");
     }
   };
 
-  /* ---------------- GRID ---------------- */
   const columns = [
-    { 
-      field: "id", 
-      headerName: "ID", 
-      width: 70, 
-      align: "center", 
-      headerAlign: "center",
-      headerClassName: "header-cell" 
-    },
-    { 
-      field: "type", 
-      headerName: "Type", 
-      flex: 1,
-      minWidth: 120,
-      headerClassName: "header-cell" 
-    },
-    { 
-      field: "masterCode", 
-      headerName: "Master Code", 
-      width: 150,
-      headerClassName: "header-cell" 
-    },
-    { 
-      field: "code", 
-      headerName: "Code", 
-      width: 120,
-      headerClassName: "header-cell" 
-    },
-    { 
-      field: "personType", 
-      headerName: "Person Type", 
-      width: 220,
-      headerClassName: "header-cell",
+    { field: "id", headerName: "ID", width: 70, align: "center", headerAlign: "center" },
+    { field: "type", headerName: "Type", flex: 1, minWidth: 130 },
+    { field: "masterCode", headerName: "Master Code", width: 140 },
+    { field: "code", headerName: "Code", width: 110 },
+    {
+      field: "personType",
+      headerName: "Person Type",
+      width: 240,
       renderCell: (params) => (
         <Box sx={{ display: "flex", gap: 0.5, flexWrap: "wrap" }}>
-          {params.value?.split(",").map((pt, i) => (
-            <Chip 
-              key={i} 
-              label={pt} 
-              size="small" 
-              sx={{ fontSize: "0.7rem", height: 20 }} 
-              color="primary" 
-              variant="outlined"
-            />
+          {params.value?.split(",").map((pt, i) => pt.trim() && (
+            <Chip key={i} label={pt.trim()} size="small" color="primary" variant="outlined" />
           ))}
         </Box>
-      )
+      ),
     },
-    { 
-      field: "transType", 
-      headerName: "Transaction", 
+    {
+      field: "transType",
+      headerName: "Transaction",
       width: 160,
-      headerClassName: "header-cell",
       renderCell: (params) => (
-        <Box sx={{ display: "flex", gap: 0.5 }}>
-          {params.value?.split(",").map((tt, i) => (
-            <Chip 
-              key={i} 
-              label={tt} 
-              size="small" 
-              sx={{ fontSize: "0.7rem", height: 20 }}
-              color={tt === "CREDIT" ? "success" : "error"}
+        <Box sx={{ display: "flex", gap: 0.5, flexWrap: "wrap" }}>
+          {params.value?.split(",").map((tt, i) => tt.trim() && (
+            <Chip
+              key={i}
+              label={tt.trim()}
+              size="small"
+              color={tt.trim() === "CREDIT" ? "success" : "error"}
             />
           ))}
         </Box>
-      )
+      ),
     },
     {
       field: "visibility",
@@ -245,40 +190,23 @@ const AccountMasterSetup = () => {
       width: 90,
       align: "center",
       headerAlign: "center",
-      headerClassName: "header-cell",
-      renderCell: ({ value }) => (
-        value ? 
-          <Visibility sx={{ color: "success.main" }} /> : 
-          <VisibilityOff sx={{ color: "text.disabled" }} />
-      ),
+      renderCell: ({ value }) =>
+        value ? <Visibility color="success" /> : <VisibilityOff color="disabled" />,
     },
     {
       field: "actions",
       headerName: "Actions",
-      width: 120,
+      width: 110,
       sortable: false,
-      headerClassName: "header-cell",
       renderCell: ({ row }) => (
-        <Box sx={{ display: "flex", gap: 0.5 }}>
+        <Box>
           <Tooltip title="Edit">
-            <IconButton 
-              onClick={() => handleOpen(row)}
-              size="small"
-              sx={{ 
-                color: "primary.main",
-                "&:hover": { backgroundColor: "primary.light", color: "primary.contrastText" }
-              }}
-            >
+            <IconButton onClick={() => handleOpen(row)} color="primary" size="small">
               <EditIcon fontSize="small" />
             </IconButton>
           </Tooltip>
           <Tooltip title="Delete">
-            <IconButton 
-              color="error" 
-              onClick={() => handleDelete(row.id)}
-              size="small"
-              sx={{ "&:hover": { backgroundColor: "error.light", color: "error.contrastText" } }}
-            >
+            <IconButton onClick={() => handleDelete(row.id)} color="error" size="small">
               <DeleteIcon fontSize="small" />
             </IconButton>
           </Tooltip>
@@ -287,130 +215,81 @@ const AccountMasterSetup = () => {
     },
   ];
 
-  /* ---------------- UI ---------------- */
   return (
-    <Box p={3}>
-      <Paper 
-        elevation={0} 
-        sx={{ 
-          p: 2, 
-          mb: 2, 
-          borderRadius: 2,
-          border: "1px solid",
-          borderColor: "divider",
-          background: "linear-gradient(135deg, #f8f9fa 0%, #fff 100%)"
-        }}
-      >
-        <Box display="flex" justifyContent="space-between" alignItems="center">
+    <Box sx={{ p: { xs: 2, md: 3 } }}>
+      <Paper sx={{ p: 2, mb: 3, borderRadius: 2, boxShadow: 1 }}>
+        <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 2 }}>
           <Box sx={{ display: "flex", alignItems: "center", gap: 1.5 }}>
-            <AccountTreeIcon sx={{ color: "primary.main", fontSize: 28 }} />
-            <Typography variant="h5" sx={{ fontWeight: 600, color: "text.primary" }}>
+            <AccountTreeIcon color="primary" sx={{ fontSize: 32 }} />
+            <Typography variant="h5" fontWeight={600}>
               Account Master Setup
             </Typography>
           </Box>
-          <Button 
-            startIcon={<AddIcon />} 
-            variant="contained" 
+          <Button
+            variant="contained"
+            startIcon={<AddIcon />}
             onClick={() => handleOpen()}
-            sx={{ 
-              borderRadius: 2,
-              textTransform: "none",
-              px: 2,
-              boxShadow: "0 4px 14px rgba(25, 118, 210, 0.3)"
-            }}
+            sx={{ borderRadius: 2, textTransform: "none" }}
           >
             Add New
           </Button>
         </Box>
       </Paper>
 
-      <Paper 
-        elevation={0}
-        sx={{ 
-          height: 600, 
-          borderRadius: 2,
-          border: "1px solid",
-          borderColor: "divider",
-          overflow: "hidden"
-        }}
-      >
+      <Paper sx={{ height: 620, borderRadius: 2, overflow: "hidden", boxShadow: 1 }}>
         {loading ? (
-          <Box height="100%" display="flex" justifyContent="center" alignItems="center">
+          <Box sx={{ height: "100%", display: "flex", alignItems: "center", justifyContent: "center" }}>
             <CircularProgress />
           </Box>
         ) : (
           <DataGrid
             rows={accounts}
             columns={columns}
-            getRowId={(r) => r.id}
+            getRowId={(row) => row.id}
             slots={{ toolbar: GridToolbar }}
             slotProps={{
-              toolbar: {
-                showQuickFilter: true,
-                quickFilterProps: { debounceMs: 500 },
-              },
+              toolbar: { showQuickFilter: true, quickFilterProps: { debounceMs: 500 } },
             }}
-            showCellVerticalBorder
-            showColumnVerticalBorder
+            pageSizeOptions={[10, 25, 50]}
             sx={{
               border: "none",
               "& .MuiDataGrid-columnHeaders": {
                 backgroundColor: "primary.main",
                 color: "black",
-                borderBottom: "2px solid primary.dark",
-              },
-              "& .MuiDataGrid-columnHeaderTitle": {
                 fontWeight: 600,
               },
-              "& .MuiDataGrid-cell": {
-                borderBottom: "1px solid #f0f0f0",
-              },
-              "& .MuiDataGrid-row": {
-                "&:hover": {
-                  backgroundColor: "action.hover",
-                },
-                "&.Mui-selected": {
-                  backgroundColor: "action.selected",
-                },
-              },
-              "& .MuiDataGrid-footerContainer": {
-                borderTop: "2px solid primary.light",
-              },
-              "& .header-cell": {
-                fontWeight: 600,
-              },
+              "& .MuiDataGrid-cell": { borderBottom: "1px solid #eee" },
             }}
           />
         )}
       </Paper>
 
-      {/* ---------------- DRAWER ---------------- */}
+      {/* Drawer - Improved responsive size */}
       <Drawer
         anchor="right"
         open={drawerOpen}
         onClose={handleClose}
         PaperProps={{
           sx: {
-            width: { xs: "100%", sm: DRAWER_WIDTH },
+            width: { xs: "100%", sm: "420px", md: "280px" }, // better size on tablet/desktop
+            maxWidth: "50vw",
             borderRadius: { xs: 0, sm: "16px 0 0 16px" },
           },
         }}
       >
-        <Box sx={{ display: "flex", flexDirection: "column", height: "100%" }}>
+        <Box sx={{ height: "100%", display: "flex", flexDirection: "column" }}>
           {/* Header */}
           <Box
             sx={{
-              p: 2,
+              p: 3,
+              bgcolor: "primary.main",
+              color: "white",
               display: "flex",
               alignItems: "center",
               justifyContent: "space-between",
-              borderBottom: "1px solid",
-              borderColor: "divider",
-              background: "linear-gradient(135deg, #1976d2 0%, #1565c0 100%)",
-              color: "white",
             }}
           >
-            <Typography variant="h6" sx={{ fontWeight: 600, display: "flex", alignItems: "center", gap: 1 }}>
+            <Typography variant="h6" fontWeight={600}>
               {isEdit ? "Edit Account Master" : "Create Account Master"}
             </Typography>
             <IconButton onClick={handleClose} sx={{ color: "white" }}>
@@ -420,217 +299,143 @@ const AccountMasterSetup = () => {
 
           {/* Form Content */}
           <Box sx={{ flex: 1, overflowY: "auto", p: 3 }}>
-            <Grid container spacing={2}>
-              {/* Row 1: Type + Master Code */}
-              <Grid item xs={12} sm={6}>
+            <Grid container spacing={2.5}>
+              <Grid item xs={12}>
                 <TextField
                   fullWidth
-                  label="Type"
+                  required
+                  label="Type *"
                   name="type"
                   value={form.type}
                   onChange={handleChange}
-                  required
                   variant="outlined"
-                  sx={{
-                    "& .MuiOutlinedInput-root": {
-                      borderRadius: 1.5,
-                    },
-                  }}
+                  error={!form.type.trim() && form.type !== ""}
+                  helperText={!form.type.trim() && form.type !== "" ? "Required" : ""}
                 />
               </Grid>
 
               <Grid item xs={12} sm={6}>
                 <TextField
                   fullWidth
-                  label="Master Code"
+                  required
+                  label="Master Code *"
                   name="masterCode"
                   value={form.masterCode}
                   onChange={handleChange}
-                  required
                   variant="outlined"
-                  sx={{
-                    "& .MuiOutlinedInput-root": {
-                      borderRadius: 1.5,
-                    },
-                  }}
+                  error={!form.masterCode.trim() && form.masterCode !== ""}
+                  helperText={!form.masterCode.trim() && form.masterCode !== "" ? "Required" : ""}
                 />
               </Grid>
 
-              {/* Row 2: Code + Master Icon */}
               <Grid item xs={12} sm={6}>
                 <TextField
                   fullWidth
-                  label="Code"
+                  required
+                  label="Code *"
                   name="code"
                   value={form.code}
                   onChange={handleChange}
-                  required
                   variant="outlined"
-                  sx={{
-                    "& .MuiOutlinedInput-root": {
-                      borderRadius: 1.5,
-                    },
-                  }}
+                  error={!form.code.trim() && form.code !== ""}
+                  helperText={!form.code.trim() && form.code !== "" ? "Required" : ""}
                 />
               </Grid>
 
-              <Grid item xs={12} sm={6}>
+              <Grid item xs={12}>
                 <TextField
                   fullWidth
-                  label="Master Icon"
+                  label="Master Icon (optional)"
                   name="masterIcon"
                   value={form.masterIcon}
                   onChange={handleChange}
                   variant="outlined"
-                  sx={{
-                    "& .MuiOutlinedInput-root": {
-                      borderRadius: 1.5,
-                    },
-                  }}
                 />
               </Grid>
 
-              {/* Row 3: Person Type */}
               <Grid item xs={12}>
                 <FormControl fullWidth>
-                  <InputLabel sx={{ bgcolor: "background.paper", px: 1 }}>
-                    Person Type
-                  </InputLabel>
+                  <InputLabel>Person Type</InputLabel>
                   <Select
-                    multiple
+                    multiple sx={{width:200}}
                     value={form.personType}
                     label="Person Type"
-                    onChange={(e) =>
-                      setForm((p) => ({ ...p, personType: e.target.value }))
-                    }
-                    sx={{ borderRadius: 1.5 }}
+                    onChange={(e) => setForm((p) => ({ ...p, personType: e.target.value }))}
                     renderValue={(selected) => (
                       <Box sx={{ display: "flex", flexWrap: "wrap", gap: 0.5 }}>
-                        {selected.map((v) => (
-                          <Chip 
-                            key={v} 
-                            label={v} 
-                            size="small" 
-                            color="primary" 
-                            variant="outlined"
-                          />
+                        {selected.map((value) => (
+                          <Chip key={value} label={value} size="small" color="primary" />
                         ))}
                       </Box>
                     )}
                   >
-                    {PERSON_TYPES.map((p) => (
-                      <MenuItem key={p} value={p}>
-                        <Checkbox checked={form.personType.includes(p)} />
-                        <ListItemText primary={p} />
+                    {PERSON_TYPES.map((type) => (
+                      <MenuItem key={type} value={type}>
+                        <Checkbox checked={form.personType.includes(type)} />
+                        {type}
                       </MenuItem>
                     ))}
                   </Select>
                 </FormControl>
               </Grid>
 
-              {/* Row 4: Transaction Type */}
               <Grid item xs={12}>
                 <FormControl fullWidth>
-                  <InputLabel sx={{ bgcolor: "background.paper", px: 1 }}>
-                    Transaction Type
-                  </InputLabel>
+                  <InputLabel>Transaction Type</InputLabel>
                   <Select
-                    multiple
+                    multiple sx={{width:200}}
                     value={form.transType}
                     label="Transaction Type"
-                    onChange={(e) =>
-                      setForm((p) => ({ ...p, transType: e.target.value }))
-                    }
-                    sx={{ borderRadius: 1.5 }}
+                    onChange={(e) => setForm((p) => ({ ...p, transType: e.target.value }))}
                     renderValue={(selected) => (
                       <Box sx={{ display: "flex", flexWrap: "wrap", gap: 0.5 }}>
-                        {selected.map((v) => (
+                        {selected.map((value) => (
                           <Chip
-                            key={v}
-                            label={v}
+                            key={value}
+                            label={value}
                             size="small"
-                            color={v === "CREDIT" ? "success" : "error"}
+                            color={value === "CREDIT" ? "success" : "error"}
                           />
                         ))}
                       </Box>
                     )}
                   >
-                    {TRANS_TYPES.map((t) => (
-                      <MenuItem key={t} value={t}>
-                        <Checkbox checked={form.transType.includes(t)} />
-                        <ListItemText primary={t} />
+                    {TRANS_TYPES.map((type) => (
+                      <MenuItem key={type} value={type}>
+                        <Checkbox checked={form.transType.includes(type)} />
+                        {type}
                       </MenuItem>
                     ))}
                   </Select>
                 </FormControl>
               </Grid>
 
-              {/* Row 5: Visibility Toggle */}
               <Grid item xs={12}>
-                <Paper 
-                  variant="outlined" 
-                  sx={{ 
-                    p: 2, 
-                    borderRadius: 1.5,
-                    bgcolor: form.visibility ? "success.light" : "grey.100",
-                    transition: "all 0.3s"
-                  }}
-                >
-                  <FormControlLabel
-                    control={
-                      <Switch
-                        checked={form.visibility}
-                        onChange={(e) =>
-                          setForm((p) => ({ ...p, visibility: e.target.checked }))
-                        }
-                        color="success"
-                      />
-                    }
-                    label={
-                      <Typography variant="body1" sx={{ fontWeight: 500 }}>
-                        {form.visibility ? "Visible" : "Hidden"}
-                      </Typography>
-                    }
-                  />
-                </Paper>
+                <FormControlLabel sx={{width:200}}
+                  control={
+                    <Switch
+                      checked={form.visibility}
+                      onChange={(e) => setForm((p) => ({ ...p, visibility: e.target.checked }))}
+                      color="success"
+                    />
+                  }
+                  label={
+                    <Typography>
+                      {form.visibility ? "Visible in lists" : "Hidden"}
+                    </Typography>
+                  }
+                />
               </Grid>
             </Grid>
           </Box>
 
-          {/* Footer Actions */}
-          <Box
-            sx={{
-              p: 2,
-              borderTop: "1px solid",
-              borderColor: "divider",
-              display: "flex",
-              gap: 2,
-              justifyContent: "flex-end",
-              bgcolor: "background.paper",
-            }}
-          >
-            <Button
-              onClick={handleClose}
-              variant="outlined"
-              sx={{ 
-                borderRadius: 1.5,
-                textTransform: "none",
-                px: 3
-              }}
-            >
+          {/* Footer */}
+          <Divider />
+          <Box sx={{ p: 3, display: "flex", gap: 2, justifyContent: "flex-end" }}>
+            <Button variant="outlined" onClick={handleClose}>
               Cancel
             </Button>
-            <Button
-              startIcon={<SaveIcon />}
-              variant="contained"
-              onClick={handleSubmit}
-              sx={{ 
-                borderRadius: 1.5,
-                textTransform: "none",
-                px: 3,
-                boxShadow: "0 4px 14px rgba(25, 118, 210, 0.3)"
-              }}
-            >
+            <Button variant="contained" startIcon={<SaveIcon />} onClick={handleSubmit}>
               {isEdit ? "Update" : "Save"}
             </Button>
           </Box>
