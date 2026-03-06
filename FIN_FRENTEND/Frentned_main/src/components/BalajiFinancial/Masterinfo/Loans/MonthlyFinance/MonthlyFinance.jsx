@@ -151,24 +151,24 @@ const MonthlyFinance = () => {
 
   // Auto calculate monthly EMI (Flat Interest Method)
   useEffect(() => {
-    if (!formData.amount || !formData.interestRate) {
-      setFormData((prev) => ({ ...prev, installment: "" }));
-      return;
-    }
 
-    const principal = Number(formData.amount);
-    const intrestRate = Number(formData.interestRate);
+    const amount = Number(formData.amount);
+    const rate = Number(formData.interestRate);
 
-    const interestAmount = principal * TOTAL_INSTALLMENTS * (intrestRate / 100); 
-    const totalPayable = principal + interestAmount;
+    if (!amount || !rate) return;
 
-    const monthlyEMI = Math.round(totalPayable / TOTAL_INSTALLMENTS);
+    const interestAmount = amount * TOTAL_INSTALLMENTS * (rate / 100);
 
-    setFormData((prev) => ({
+    const total = amount + interestAmount;
+
+    const emi = Math.round(total / TOTAL_INSTALLMENTS);
+
+    setFormData(prev => ({
       ...prev,
-      installment: monthlyEMI.toString(),
-      interestAmount: interestAmount.toFixed(2), 
+      interestAmount: interestAmount.toFixed(2),
+      installment: emi
     }));
+
   }, [formData.amount, formData.interestRate]);
 
   const searchMembers = useCallback(
@@ -185,9 +185,8 @@ const MonthlyFinance = () => {
         });
         const list = (res.data || []).map((item) => ({
           id: item.id,
-          label: `${item.firstname || ""} ${item.lastname || ""} - ${
-            item.mobile || "No Mobile"
-          } (${item.id})`.trim(),
+          label: `${item.firstname || ""} ${item.lastname || ""} - ${item.mobile || "No Mobile"
+            } (${item.id})`.trim(),
         }));
         setOptions(list);
       } catch (err) {
@@ -218,28 +217,62 @@ const MonthlyFinance = () => {
     setIsEditMode(false);
     setCurrentLoanId(null);
   };
-
   const handleEdit = async (id) => {
     try {
       const res = await axios.get(`${API_BASE}/BusinessMember/findById/${id}`, {
         headers,
       });
+
       const l = res.data;
 
+      // Fetch labels for customer & guarantors
+      const idsToFetch = [
+        l.customerId,
+        l.guarantor1,
+        l.guarantor2,
+        l.guarantor3,
+      ].filter(Boolean);
+
+      let map = {};
+
+      if (idsToFetch.length > 0) {
+        const mRes = await axios.get(`${API_BASE}/PersonalInfo/byIds`, {
+          headers,
+          params: { ids: idsToFetch.join(",") },
+        });
+
+        mRes.data.forEach((m) => {
+          map[m.id] = {
+            id: m.id,
+            label: `${m.firstname || ""} ${m.lastname || ""} - ${m.mobile || ""}`,
+          };
+        });
+      }
+
       setFormData({
-        customerId: { id: l.customerId, label: "" },
-        guarantor1: l.guarantor1 ? { id: l.guarantor1 } : null,
-        guarantor2: l.guarantor2 ? { id: l.guarantor2 } : null,
-        guarantor3: l.guarantor3 ? { id: l.guarantor3 } : null,
+        customerId: map[l.customerId] || null,
+        guarantor1: map[l.guarantor1] || null,
+        guarantor2: map[l.guarantor2] || null,
+        guarantor3: map[l.guarantor3] || null,
+
         partnerId: l.partnerId || "",
-        startDate: dayjs(l.startDate),
-        endDate: dayjs(l.endDate),
-        amount: l.amount?.toString(),
-        interestRate: l.interestRate?.toString(),
+
+        startDate: l.startDate ? dayjs(l.startDate) : null,
+        endDate: l.endDate ? dayjs(l.endDate) : null,
+
+        amount: l.amount?.toString() || "",
+        duration: l.duration?.toString() || "",
+        interestRate: l.interestRate?.toString() || "",
+
+        interestAmount: l.interest?.toString() || "",
+
         installment: l.installment?.toString() || "",
+
         processingFee: l.processingFee?.toString() || "",
+
         security: l.security || "",
       });
+
       setCurrentLoanId(id);
       setIsEditMode(true);
       setOpen(true);
@@ -275,6 +308,7 @@ const MonthlyFinance = () => {
       endDate: formData.endDate.format("YYYY-MM-DD HH:mm:ss"),
       amount: Number(formData.amount),
       interestRate: Number(formData.interestRate),
+      interest: Number(formData.interestAmount),
       installment: Number(formData.installment), // Send calculated EMI
       processingFee: Number(formData.processingFee) || 0,
       security: formData.security,
@@ -354,7 +388,7 @@ const MonthlyFinance = () => {
     },
 
     {
-      field: "intrestAmount",
+      field: "interestAmount",
       headerName: "Interest Amount",
       width: 150,
     },
@@ -528,7 +562,7 @@ const MonthlyFinance = () => {
               <TextField
                 fullWidth
                 label="Interest Amount"
-                 InputLabelProps={{ shrink: true }}
+                InputLabelProps={{ shrink: true }}
                 variant="outlined"
                 value={formData.interestAmount}
                 InputProps={{ readOnly: true }}

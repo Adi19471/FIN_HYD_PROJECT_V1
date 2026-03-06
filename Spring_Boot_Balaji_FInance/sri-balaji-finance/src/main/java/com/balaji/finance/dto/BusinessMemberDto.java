@@ -7,6 +7,8 @@ import org.springframework.stereotype.Service;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 
+import jakarta.persistence.Column;
+
 @Service
 public class BusinessMemberDto {
 
@@ -36,6 +38,7 @@ public class BusinessMemberDto {
 	private boolean chequeReminder;
 	private String businessId;
 	private BigDecimal processingFee;
+	private BigDecimal interestRate;
 
 	public String getId() {
 		return id;
@@ -203,6 +206,14 @@ public class BusinessMemberDto {
 
 	public void setProcessingFee(BigDecimal processingFee) {
 		this.processingFee = processingFee;
+	}
+
+	public BigDecimal getInterestRate() {
+		return interestRate;
+	}
+
+	public void setInterestRate(BigDecimal interestRate) {
+		this.interestRate = interestRate;
 	}
 
 }

@@ -6,6 +6,7 @@ public class PersonalInfoAutoCompletePojo {
 	private String firstname;
 	private String lastname;
 	private String gender;
+	private String mobile;
 
 	public String getId() {
 		return id;
@@ -38,5 +39,15 @@ public class PersonalInfoAutoCompletePojo {
 	public void setGender(String gender) {
 		this.gender = gender;
 	}
+
+	public String getMobile() {
+		return mobile;
+	}
+
+	public void setMobile(String mobile) {
+		this.mobile = mobile;
+	}
+	
+	
 
 }

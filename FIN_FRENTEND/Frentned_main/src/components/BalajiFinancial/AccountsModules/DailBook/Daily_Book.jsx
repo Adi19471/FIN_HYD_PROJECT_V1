@@ -52,6 +52,9 @@ const DailyBook = () => {
   const [loading, setLoading] = useState(false);
   const [openingBalance, setOpeningBalance] = useState(0);
   const [transactions, setTransactions] = useState([]);
+  const [credits, setCredits] = useState(0);
+  const [debits, setDebits] = useState(0);
+  const [closingBalance, setClosingBalance] = useState(0);
 
   const fetchDailyBook = async () => {
     if (!transactionDate) {
@@ -73,6 +76,9 @@ const DailyBook = () => {
       const data = response.data;
       setOpeningBalance(data.openingBalance || 0);
       setTransactions(data.cashBookSumaryViewPojoList || []); // note possible typo: cashBookSummary...
+      setCredits(data.credits)
+      setDebits(data.debits)
+      setClosingBalance(data.closingBalance)
       successToast("Daily book loaded successfully");
     } catch (error) {
       console.error("Failed to load daily book:", error);
@@ -98,9 +104,9 @@ const DailyBook = () => {
 
   // Placeholder export handlers
   const handlePrint = () => successToast("Print feature coming soon 🖨️");
-  const handleWord  = () => successToast("Word export coming soon 📄");
+  const handleWord = () => successToast("Word export coming soon 📄");
   const handleExcel = () => successToast("Excel export coming soon 📊");
-  const handlePdf   = () => successToast("PDF export coming soon 📑");
+  const handlePdf = () => successToast("PDF export coming soon 📑");
 
   return (
     <LocalizationProvider dateAdapter={AdapterDayjs}>
@@ -173,6 +179,39 @@ const DailyBook = () => {
               ₹ {Number(openingBalance).toLocaleString()}
             </span>
           </Typography>
+          <Box sx={{ mt: 3 }}>
+            <Stack direction={{ xs: "column", md: "row" }} spacing={2}>
+
+              <Paper sx={{ p: 2, flex: 1, background: "#e8f5e9" }}>
+                <Typography variant="subtitle2">Opening Balance</Typography>
+                <Typography variant="h6" fontWeight="bold">
+                  ₹ {Number(openingBalance).toLocaleString()}
+                </Typography>
+              </Paper>
+
+              <Paper sx={{ p: 2, flex: 1, background: "#e3f2fd" }}>
+                <Typography variant="subtitle2">Total Credits</Typography>
+                <Typography variant="h6" fontWeight="bold" color="green">
+                  ₹ {Number(credits).toLocaleString()}
+                </Typography>
+              </Paper>
+
+              <Paper sx={{ p: 2, flex: 1, background: "#ffebee" }}>
+                <Typography variant="subtitle2">Total Debits</Typography>
+                <Typography variant="h6" fontWeight="bold" color="red">
+                  ₹ {Number(debits).toLocaleString()}
+                </Typography>
+              </Paper>
+
+              <Paper sx={{ p: 2, flex: 1, background: "#ede7f6" }}>
+                <Typography variant="subtitle2">Closing Balance</Typography>
+                <Typography variant="h6" fontWeight="bold" color="blue">
+                  ₹ {Number(closingBalance).toLocaleString()}
+                </Typography>
+              </Paper>
+
+            </Stack>
+          </Box>
         </Paper>
 
         {loading && (

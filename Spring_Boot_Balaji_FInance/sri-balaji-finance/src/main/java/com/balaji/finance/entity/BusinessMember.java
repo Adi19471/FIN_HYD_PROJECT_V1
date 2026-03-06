@@ -90,6 +90,14 @@ public class BusinessMember {
 	@Column(name = "SYS_DATE", updatable = false)
 	private LocalDateTime sysDate;
 
+	@Column(name = "INTeREST_RATE")
+	private BigDecimal interestRate;
+
+	@Column(name = "PROCESSING_FEE")
+	private BigDecimal processingFee;
+	
+	
+
 	public String getLoanStatus() {
 		return loanStatus;
 	}
@@ -264,6 +272,22 @@ public class BusinessMember {
 
 	public void setSysDate(LocalDateTime sysDate) {
 		this.sysDate = sysDate;
+	}
+
+	public BigDecimal getInterestRate() {
+		return interestRate;
+	}
+
+	public void setInterestRate(BigDecimal interestRate) {
+		this.interestRate = interestRate;
+	}
+
+	public BigDecimal getProcessingFee() {
+		return processingFee;
+	}
+
+	public void setProcessingFee(BigDecimal processingFee) {
+		this.processingFee = processingFee;
 	}
 
 }

@@ -12,24 +12,26 @@ import {
   TableBody,
   TableHead,
   TableContainer,
-  Divider,
   Autocomplete,
   CircularProgress,
   FormControlLabel,
   Checkbox,
 } from "@mui/material";
+
 import { DateTimePicker } from "@mui/x-date-pickers/DateTimePicker";
 import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
 import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
+
 import dayjs from "dayjs";
 import axios from "axios";
+
 import { successToast, errorToast } from "toastify";
 import { API_BASE } from "lib/config";
 import { getSession } from "src/utils/session";
 
 const BussinessDailyFinance = () => {
-  // Stable headers using useMemo
   const token = getSession("token");
+
   const headers = useMemo(
     () => ({
       Authorization: `Bearer ${token || ""}`,
@@ -55,18 +57,17 @@ const BussinessDailyFinance = () => {
     date: dayjs(),
     balance: 0,
     paid: "",
-    amountPaid: "", // Principal / Installment paid
-    lateFeePaid: "", // Late fee collected now
-
+    amountPaid: "",
+    lateFeePaid: "",
     installmentDetailsList: [],
   });
 
-  // Stable fetchAccounts with proper dependencies
   const fetchAccounts = useCallback(
     async (query = "") => {
       setLoadingAccounts(true);
       try {
         const loanType = "DAILY_FINANCE";
+
         const res = await axios.get(
           `${API_BASE}/BusinessMember/loanDetailsAutoComplete/${loanType}`,
           {
@@ -74,11 +75,10 @@ const BussinessDailyFinance = () => {
             params: { q: query },
           }
         );
+
         setAccountList(res.data || []);
       } catch (err) {
         errorToast("Failed to load accounts");
-        console.error(err);
-        setAccountList([]);
       } finally {
         setLoadingAccounts(false);
       }
@@ -86,32 +86,29 @@ const BussinessDailyFinance = () => {
     [headers]
   );
 
-  // Initial load
   useEffect(() => {
     fetchAccounts();
-  }, []); // Only once on mount
+  }, []);
 
-  // Debounced search - NO fetchAccounts in deps to prevent loop
   useEffect(() => {
     const timer = setTimeout(() => {
       fetchAccounts(searchInput);
     }, 400);
 
     return () => clearTimeout(timer);
-  }, [searchInput]); // Only searchInput triggers debounce
+  }, [searchInput]);
 
-  // Load loan details
   const loadLoanInfo = async (loanId) => {
     if (!loanId) return;
 
     setLoading(true);
+
     try {
       const res = await axios.get(
         `${API_BASE}/loadDFLoanInformation/${loanId}`,
-        {
-          headers,
-        }
+        { headers }
       );
+
       const data = res.data;
 
       setSelectedLoanId(loanId);
@@ -124,12 +121,11 @@ const BussinessDailyFinance = () => {
         installmentAmount: data.installmentAmount || 0,
         periodFrom: data.periodFrom || "",
         periodTo: data.periodTo || "",
-        date: dayjs(), // Current date & time
+        date: dayjs(),
         balance: data.balance || 0,
         paid: data.paid || "",
         amountPaid: "",
         lateFeePaid: "",
-
         installmentDetailsList: (data.installmentDetailsList || []).map(
           (inst) => ({
             ...inst,
@@ -141,27 +137,14 @@ const BussinessDailyFinance = () => {
       successToast("Loan details loaded successfully");
     } catch (err) {
       errorToast("Failed to load loan information");
-      console.error(err);
-      setSelectedLoanId(null);
-      setForm((prev) => ({
-        ...prev,
-        accountNo: "",
-        partnerName: "",
-        guarantorName: "",
-        balance: 0,
-        paid: "",
-
-        installmentDetailsList: [],
-      }));
     } finally {
       setLoading(false);
     }
   };
 
-  // Handle Payment
   const handlePay = async () => {
     if (!selectedLoanId) {
-      errorToast("Please select a loan account first");
+      errorToast("Select a loan first");
       return;
     }
 
@@ -170,16 +153,12 @@ const BussinessDailyFinance = () => {
     const totalPaid = principalAmount + lateFeeAmount;
 
     if (totalPaid <= 0) {
-      errorToast("Please enter at least one payment amount");
-      return;
-    }
-
-    if (!form.date?.isValid()) {
-      errorToast("Please select a valid date and time");
+      errorToast("Enter payment amount");
       return;
     }
 
     setLoading(true);
+
     try {
       const payload = {
         accountNo: form.accountNo,
@@ -193,9 +172,7 @@ const BussinessDailyFinance = () => {
         balance: form.balance,
         paid: form.paid,
         amountPaid: principalAmount,
-
-        lateFee: lateFeeAmount, // Backup field (common in backends)
-        dueAmount: 0,
+        lateFee: lateFeeAmount,
         installmentDetailsList: form.installmentDetailsList.map((inst) => ({
           installmentNumber: inst.installmentNumber,
           dueDate: inst.dueDate,
@@ -213,29 +190,17 @@ const BussinessDailyFinance = () => {
         { headers }
       );
 
-      let message = `Payment recorded: ₹${totalPaid}`;
-      if (principalAmount > 0 && lateFeeAmount > 0) {
-        message = `₹${principalAmount} (installment) + ₹${lateFeeAmount} (late fee) = ₹${totalPaid}`;
-      } else if (lateFeeAmount > 0) {
-        message = `Late fee collected: ₹${lateFeeAmount}`;
-      } else {
-        message = `Installment paid: ₹${principalAmount}`;
-      }
+      successToast(`Payment recorded ₹${totalPaid}`);
 
-      successToast(message);
+      setForm((prev) => ({
+        ...prev,
+        amountPaid: "",
+        lateFeePaid: "",
+      }));
 
-      if (printReceipt) {
-        successToast("Receipt printing triggered...");
-      }
-
-      // Clear inputs
-      setForm((prev) => ({ ...prev, amountPaid: "", lateFeePaid: "" }));
-
-      // Reload fresh data
       await loadLoanInfo(selectedLoanId);
     } catch (err) {
-      errorToast("Payment failed. Please try again.");
-      console.error(err);
+      errorToast("Payment failed");
     } finally {
       setLoading(false);
     }
@@ -243,58 +208,43 @@ const BussinessDailyFinance = () => {
 
   return (
     <LocalizationProvider dateAdapter={AdapterDayjs}>
-      <Box display="flex" height="100vh" bgcolor="#f5f5f5">
-        <Box flexGrow={1}>
-       
-            <Typography variant="h6" fontWeight="bold" color="info" mb={1}>
-            DAILY  Custmer
+      <Box sx={{ minHeight: "100vh", backgroundColor: "#f4f6f8", p: 3 }}>
+        <Paper sx={{ maxWidth: 1400, margin: "0 auto", p: 3 }}>
+
+          <Typography variant="h5" fontWeight="bold" mb={3}>
+            Daily Finance Collection
+          </Typography>
+
+          {/* CUSTOMER DETAILS */}
+
+          <Paper sx={{ p: 2, mb: 3 }}>
+            <Typography variant="h6" mb={2}>
+              Customer Details
             </Typography>
 
-            {/* Search Account */}
-            <Grid container spacing={3} mb={4}>
-              <Grid item xs={12} sm={6} md={3}>
+            <Grid container spacing={2}>
+
+              <Grid item xs={12} md={4}>
                 <Autocomplete
                   options={accountList}
-                  sx={{ width: "223px" }}
                   getOptionLabel={(option) => option.displayString || ""}
                   inputValue={searchInput}
-                  onInputChange={(e, value, reason) => {
-                    if (reason === "input" || reason === "reset") {
-                      setSearchInput(value);
-                    }
-                  }}
-                  onChange={(e, value) => {
-                    if (value) {
-                      loadLoanInfo(value.loanId);
-                      setSearchInput(value.displayString || "");
-                    } else {
-                      setSelectedLoanId(null);
-                      setForm((prev) => ({
-                        ...prev,
-                        accountNo: "",
-                        partnerName: "",
-                        guarantorName: "",
-                        balance: 0,
-
-                        installmentDetailsList: [],
-                      }));
-                    }
-                  }}
+                  onInputChange={(e, value) => setSearchInput(value)}
+                  onChange={(e, value) =>
+                    value ? loadLoanInfo(value.loanId) : null
+                  }
                   loading={loadingAccounts}
-                  noOptionsText="Type to search customer or account..."
                   renderInput={(params) => (
                     <TextField
                       {...params}
-                      label="Search Customer / Account"
-                      placeholder="Name or Account No"
+                      label="Search Customer"
                       size="small"
-                      fullWidth
                       InputProps={{
                         ...params.InputProps,
                         endAdornment: (
                           <>
                             {loadingAccounts && (
-                              <CircularProgress color="inherit" size={20} />
+                              <CircularProgress size={20} />
                             )}
                             {params.InputProps.endAdornment}
                           </>
@@ -304,141 +254,124 @@ const BussinessDailyFinance = () => {
                   )}
                 />
               </Grid>
-              <Grid item xs={12} sm={6} md={3}>
+
+              <Grid item xs={12} md={4}>
                 <TextField
                   label="Account No"
                   value={form.accountNo}
-                  fullWidth
                   size="small"
+                  fullWidth
                   InputProps={{ readOnly: true }}
                 />
               </Grid>
 
-              <Grid item xs={12} sm={6} md={3}>
+              <Grid item xs={12} md={4}>
                 <TextField
                   label="Partner Name"
                   value={form.partnerName}
-                  fullWidth
                   size="small"
+                  fullWidth
                   InputProps={{ readOnly: true }}
                 />
               </Grid>
-              <Grid item xs={12} sm={6} md={3}>
-                <TextField
-                  label="Guarantor Name"
-                  value={form.guarantorName}
-                  fullWidth
-                  size="small"
-                  InputProps={{ readOnly: true }}
-                />
-              </Grid>
-            </Grid>
 
-            {/* Loan Details */}
-            <Grid container spacing={3} mb={4}>
-              <Grid item xs={12} sm={6} md={3}>
+              <Grid item xs={12} md={4}>
+                <TextField
+                  label="Guarantor"
+                  value={form.guarantorName}
+                  size="small"
+                  fullWidth
+                  InputProps={{ readOnly: true }}
+                />
+              </Grid>
+
+            </Grid>
+          </Paper>
+
+          {/* LOAN DETAILS */}
+
+          <Paper sx={{ p: 2, mb: 3 }}>
+            <Typography variant="h6" mb={2}>
+              Loan Details
+            </Typography>
+
+            <Grid container spacing={2}>
+
+              <Grid item xs={12} md={4}>
                 <TextField
                   label="Loan Amount"
                   value={form.loanAmount}
-                  fullWidth
                   size="small"
+                  fullWidth
                   InputProps={{ readOnly: true }}
                 />
               </Grid>
-              <Grid item xs={12} sm={6} md={3}>
+
+              <Grid item xs={12} md={4}>
                 <TextField
-                  label="Installment "
+                  label="Installment"
                   value={form.installmentAmount}
-                  fullWidth
                   size="small"
+                  fullWidth
                   InputProps={{ readOnly: true }}
                 />
               </Grid>
-              <Grid item xs={12} sm={6} md={3}>
+
+              <Grid item xs={12} md={4}>
                 <TextField
                   label="Period From"
                   value={form.periodFrom}
-                  fullWidth
                   size="small"
+                  fullWidth
                   InputProps={{ readOnly: true }}
                 />
               </Grid>
-              <Grid item xs={12} sm={6} md={3}>
+
+              <Grid item xs={12} md={4}>
                 <TextField
                   label="Period To"
                   value={form.periodTo}
-                  fullWidth
                   size="small"
+                  fullWidth
                   InputProps={{ readOnly: true }}
                 />
               </Grid>
 
-              <Divider sx={{ my: 1 }} />
             </Grid>
+          </Paper>
 
-            {/* Payment Section */}
-            <Typography variant="h6" fontWeight="bold" color="info" mb={1}>
-              Loan
+          {/* PAYMENT */}
+
+          <Paper sx={{ p: 2, mb: 3 }}>
+            <Typography variant="h6" mb={2}>
+              Payment
             </Typography>
-            <Grid container spacing={3} mb={3}>
+
+            <Grid container spacing={2}>
+
               <Grid item xs={12} md={4}>
                 <DateTimePicker
-                  label="Payment Date & Time"
+                  label="Payment Date"
                   value={form.date}
                   onChange={(newDate) =>
                     setForm((prev) => ({ ...prev, date: newDate }))
                   }
                   slotProps={{ textField: { size: "small", fullWidth: true } }}
-                  ampm={false}
-                />
-              </Grid>
-              <Grid item xs={12} md={4}>
-                <TextField
-                  label="Selected Date & Time"
-                  value={
-                    form.date?.isValid()
-                      ? form.date.format("DD-MM-YYYY HH:mm")
-                      : "-"
-                  }
-                  fullWidth
-                  size="small"
-                  InputProps={{ readOnly: true }}
-                />
-              </Grid>
-
-              <Grid item xs={12} sm={6} md={3}>
-                <TextField
-                  label="Paid"
-                  value={form.paid}
-                  fullWidth
-                  size="small"
-                  InputProps={{ readOnly: true }}
-                />
-              </Grid>
-
-              <Grid item xs={12} sm={6} md={3}>
-                <TextField
-                  label="Current Balance"
-                  value={form.balance}
-                  fullWidth
-                  size="small"
-                  InputProps={{ readOnly: true }}
                 />
               </Grid>
 
               <Grid item xs={12} md={4}>
                 <TextField
-                  label=" Amount Paid"
+                  label="Amount Paid"
                   value={form.amountPaid}
-                  onChange={(e) =>
-                    setForm((prev) => ({
-                      ...prev,
-                      amountPaid: e.target.value.replace(/[^0-9]/g, ""),
-                    }))
-                  }
-                  fullWidth
                   size="small"
-                  placeholder="0"
+                  fullWidth
+                  onChange={(e) =>
+                    setForm({
+                      ...form,
+                      amountPaid: e.target.value.replace(/[^0-9]/g, ""),
+                    })
+                  }
                 />
               </Grid>
 
@@ -446,20 +379,21 @@ const BussinessDailyFinance = () => {
                 <TextField
                   label="Late Fee"
                   value={form.lateFeePaid}
-                  onChange={(e) =>
-                    setForm((prev) => ({
-                      ...prev,
-                      lateFeePaid: e.target.value.replace(/[^0-9]/g, ""),
-                    }))
-                  }
-                  fullWidth
                   size="small"
-                  placeholder="0"
+                  fullWidth
+                  onChange={(e) =>
+                    setForm({
+                      ...form,
+                      lateFeePaid: e.target.value.replace(/[^0-9]/g, ""),
+                    })
+                  }
                 />
               </Grid>
+
             </Grid>
 
-            <Box display="flex" alignItems="center" gap={3} mb={4}>
+            <Box mt={2} display="flex" gap={3} alignItems="center">
+
               <FormControlLabel
                 control={
                   <Checkbox
@@ -469,86 +403,126 @@ const BussinessDailyFinance = () => {
                 }
                 label="Print Receipt"
               />
+
               <Button
                 variant="contained"
-                color="primary"
                 size="large"
                 onClick={handlePay}
-                disabled={
-                  loading ||
-                  (!form.amountPaid && !form.lateFeePaid) ||
-                  !form.date?.isValid() ||
-                  !selectedLoanId
-                }
+                disabled={loading}
               >
                 {loading ? "Processing..." : "Record Payment"}
               </Button>
-            </Box>
 
-            {/* Installments Table */}
-            <TableContainer component={Paper} elevation={3}>
-              <Table size="small">
-                <TableHead sx={{ backgroundColor: "#e3f2fd" }}>
+            </Box>
+          </Paper>
+
+          {/* INSTALLMENT TABLE */}
+
+          <Paper sx={{ p: 2, mt: 2 }}>
+            <Typography variant="h6" fontWeight="bold" mb={2}>
+              Installment Details
+            </Typography>
+
+            <TableContainer
+              sx={{
+                maxHeight: 350,
+                border: "1px solid #e0e0e0",
+              }}
+            >
+              <Table stickyHeader size="small">
+
+                {/* TABLE HEADER */}
+                <TableHead>
                   <TableRow>
-                    <TableCell>
-                      <strong>Inst. No</strong>
+                    <TableCell sx={{ backgroundColor: "#1976d2", color: "#fff", fontWeight: "bold" }}>
+                      Inst No
                     </TableCell>
-                    <TableCell>
-                      <strong>Due Date</strong>
+
+                    <TableCell sx={{ backgroundColor: "#1976d2", color: "#fff", fontWeight: "bold" }}>
+                      Due Date
                     </TableCell>
-                    <TableCell>
-                      <strong>Late Fee Date</strong>
+
+                    <TableCell sx={{ backgroundColor: "#1976d2", color: "#fff", fontWeight: "bold" }}>
+                      Late Fee Date
                     </TableCell>
-                    <TableCell>
-                      <strong>Installment</strong>
+
+                    <TableCell sx={{ backgroundColor: "#1976d2", color: "#fff", fontWeight: "bold" }}>
+                      Installment
                     </TableCell>
-                    <TableCell>
-                      <strong>Late Fee</strong>
+
+                    <TableCell sx={{ backgroundColor: "#1976d2", color: "#fff", fontWeight: "bold" }}>
+                      Late Fee
                     </TableCell>
-                    <TableCell>
-                      <strong>Total</strong>
+
+                    <TableCell sx={{ backgroundColor: "#1976d2", color: "#fff", fontWeight: "bold" }}>
+                      Total
                     </TableCell>
-                    <TableCell>
-                      <strong>Status</strong>
+
+                    <TableCell sx={{ backgroundColor: "#1976d2", color: "#fff", fontWeight: "bold" }}>
+                      Paid
+                    </TableCell>
+
+                    <TableCell sx={{ backgroundColor: "#1976d2", color: "#fff", fontWeight: "bold" }}>
+                      Status
                     </TableCell>
                   </TableRow>
                 </TableHead>
+
+                {/* TABLE BODY */}
                 <TableBody>
                   {form.installmentDetailsList.map((row, idx) => {
-                    const total =
-                      (row.installmentAmount || 0) + (row.lateFee || 0);
+
+
                     return (
                       <TableRow key={idx} hover>
+
                         <TableCell>{row.installmentNumber}</TableCell>
+
                         <TableCell>{row.dueDate || "-"}</TableCell>
+
                         <TableCell>{row.lateFeeDate || "-"}</TableCell>
+
                         <TableCell>₹{row.installmentAmount || 0}</TableCell>
+
                         <TableCell>₹{row.lateFee || 0}</TableCell>
-                        <TableCell>
-                          <strong>₹{total}</strong>
-                        </TableCell>
+
+                        <TableCell>₹{row.total || 0}</TableCell>
+
+                        <TableCell> ₹{row.paid} </TableCell>
+
                         <TableCell>
                           <Typography
-                            color={row.paid ? "success.main" : "error.main"}
-                            fontWeight="medium"
+                            fontWeight="bold"
+                            color={
+                              row.paid === row.total
+                                ? "success.main"
+                                : row.paid > 0
+                                  ? "warning.main"
+                                  : "error.main"
+                            }
                           >
-                            {row.paid ? "Paid" : "Pending"}
+                            {row.paid === row.total
+                              ? "Completed"
+                              : row.paid > 0
+                                ? "Partial"
+                                : "Pending"}
                           </Typography>
                         </TableCell>
+
                       </TableRow>
                     );
+
                   })}
                 </TableBody>
+
               </Table>
             </TableContainer>
-   
-        </Box>
+          </Paper>
+
+        </Paper>
       </Box>
     </LocalizationProvider>
   );
 };
 
 export default BussinessDailyFinance;
-
-
-

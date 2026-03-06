@@ -39,7 +39,7 @@ public class OtherPaymentService {
 		CashBook cashBookForPrinciplePaid = new CashBook();
 		cashBookForPrinciplePaid.setBusinessMember(null);
 
-		switch (otherPaymentSaveReq.getTransaction()) {
+		switch (otherPaymentSaveReq.getTransaction().toUpperCase()) {
 		case "CREDIT":
 			cashBookForPrinciplePaid.setCredit(otherPaymentSaveReq.getAmount());
 			cashBookForPrinciplePaid.setDebit(BigDecimal.ZERO);

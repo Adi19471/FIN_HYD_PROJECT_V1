@@ -207,7 +207,7 @@ public class CashBookService {
 			}
 			
 			if(cashBook.getDebit() != null) {
-				sumOfDebits = sumOfDebits.add(sumOfDebits);
+				sumOfDebits = sumOfDebits.add(cashBook.getDebit());
 			}
 			
 

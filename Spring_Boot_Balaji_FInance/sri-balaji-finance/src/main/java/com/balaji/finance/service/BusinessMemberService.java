@@ -130,6 +130,9 @@ public class BusinessMemberService {
 		businessMember.setUnpaidLateFee(BigDecimal.ZERO);
 		
 		businessMember.setLoanStatus(LoanStatus.ACTIVE.toString());
+		
+		businessMember.setProcessingFee(businessMemberDto.getProcessingFee());
+		businessMember.setInterestRate(businessMemberDto.getInterestRate());
 
 		businessMemberRepository.save(businessMember);
 
@@ -332,6 +335,10 @@ public class BusinessMemberService {
 			businessMember.setChequeReminder(businessMemberDto.isChequeReminder());
 			businessMember.setBusinessId(businessMemberDto.getBusinessId());
 			businessMember.setSecurity(businessMemberDto.getSecurity());
+			
+			businessMember.setProcessingFee(businessMemberDto.getProcessingFee());
+			businessMember.setInterestRate(businessMemberDto.getInterestRate());
+
 		
 			businessMemberRepository.save(businessMember);
 
@@ -353,6 +360,8 @@ public class BusinessMemberService {
 		if (businessMemberInDb.isPresent()) {
 
 			BusinessMember businessMember = businessMemberInDb.get();
+			
+			
 
 			businessMemberRepository.delete(businessMember);
 
@@ -412,6 +421,9 @@ public class BusinessMemberService {
 			businessMemberDto.setUnpaidLateFee(p.getUnpaidLateFee());
 			businessMemberDto.setChequeReminder(p.isChequeReminder());
 			businessMemberDto.setBusinessId(p.getBusinessId());
+			
+			businessMemberDto.setInterestRate(p.getInterestRate());
+			businessMemberDto.setProcessingFee(p.getProcessingFee());
 
 			toBeReturnedDtoList.add(businessMemberDto);
 
@@ -451,6 +463,9 @@ public class BusinessMemberService {
 			businessMemberDto.setUnpaidLateFee(p.getUnpaidLateFee());
 			businessMemberDto.setChequeReminder(p.isChequeReminder());
 			businessMemberDto.setBusinessId(p.getBusinessId());
+			
+			businessMemberDto.setInterestRate(p.getInterestRate());
+			businessMemberDto.setProcessingFee(p.getProcessingFee());
 
 			return businessMemberDto;
 
