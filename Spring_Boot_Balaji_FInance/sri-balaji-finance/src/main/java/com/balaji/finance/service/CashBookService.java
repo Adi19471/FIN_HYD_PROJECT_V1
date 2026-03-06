@@ -466,7 +466,7 @@ public class CashBookService {
 			List<EMI> allEMIs = emiRepo.findByBusinessMember(r.getBusinessMember());
 
 			Map<Boolean, List<EMI>> collect = allEMIs.stream()
-					.collect(Collectors.partitioningBy(emi ->  emi.getPaymentDate() == null &&  emi.getPaymentDate().isBefore(r.getTransDate())));
+					.collect(Collectors.partitioningBy(emi ->  emi.getPaymentDate() == null ||  emi.getPaymentDate().isBefore(r.getTransDate())));
 
 			List<EMI> currentCashBook_beforeEMis = collect.get(true);
 			List<EMI> currentCashBook_afterEMis = collect.get(false);

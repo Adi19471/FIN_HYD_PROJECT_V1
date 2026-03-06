@@ -1,0 +1,13 @@
+# Logs
+logs/
+*.log
+
+# Java build
+target/
+*.class
+
+# Node
+node_modules/
+
+# OS files
+.DS_Store

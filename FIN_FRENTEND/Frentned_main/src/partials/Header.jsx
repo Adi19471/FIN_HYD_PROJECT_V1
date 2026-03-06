@@ -22,31 +22,32 @@ import Help from '../components/DropdownHelp';
 import UserMenu from '../components/DropdownProfile';
 
 // ────────────────────────────────────────────────
-// Modern 2025–2026 Fintech Dark Theme
-// Deeper background, stronger glassmorphism, subtle gradient
+// Modern 2025–2026 Fintech Light Theme
+// Clean white base, trust blue primary, lime success, subtle glass
+// High readability, premium banking feel
 // ────────────────────────────────────────────────
-const fintechBlueTheme = createTheme({
+const fintechLightTheme = createTheme({
   palette: {
-    mode: 'dark',
+    mode: 'light',
     primary: {
-      main: '#3b82f6',     // Keep your bright professional blue
-      light: '#60a5fa',
-      dark: '#1d4ed8',
+      main: '#0ea5e9',     // Modern blue-teal – trust + innovation
+      light: '#38bdf8',
+      dark: '#0284c7',
     },
     secondary: {
-      main: '#10b981',     // Emerald – success / money
-      light: '#34d399',
-      dark: '#047857',
+      main: '#84cc16',     // Fresh lime – money/growth/energy
+      light: '#a3e635',
+      dark: '#65a30d',
     },
     background: {
-      default: '#0a0f1a',           // Very deep slate — modern fintech favorite
-      paper: alpha('#111827', 0.78), // Slightly more opaque glass card feel
+      default: '#f8fafc',           // Soft off-white – clean & modern
+      paper: '#ffffff',             // Pure white cards/glass
     },
     text: {
-      primary: '#f1f5f9',
-      secondary: '#cbd5e1',
+      primary: '#0f172a',
+      secondary: '#475569',
     },
-    divider: alpha('#3b82f6', 0.20),
+    divider: alpha('#0ea5e9', 0.12),
   },
   components: {
     MuiAppBar: {
@@ -54,9 +55,9 @@ const fintechBlueTheme = createTheme({
         root: {
           background: 'transparent',
           boxShadow: 'none',
-          backdropFilter: 'blur(32px) saturate(180%)', // Stronger glassmorphism
-          WebkitBackdropFilter: 'blur(32px) saturate(180%)',
-          borderBottom: '1px solid rgba(59, 130, 246, 0.18)',
+          backdropFilter: 'blur(16px) saturate(180%)',
+          WebkitBackdropFilter: 'blur(16px) saturate(180%)',
+          borderBottom: '1px solid rgba(14, 165, 233, 0.12)',
         },
       },
     },
@@ -64,13 +65,13 @@ const fintechBlueTheme = createTheme({
       styleOverrides: {
         root: {
           borderRadius: 12,
-          border: '1px solid rgba(59, 130, 246, 0.20)',
-          background: 'rgba(255, 255, 255, 0.04)',
+          border: '1px solid rgba(14, 165, 233, 0.18)',
+          background: 'rgba(255, 255, 255, 0.75)',
           transition: 'all 0.25s ease',
           '&:hover': {
-            background: 'rgba(59, 130, 246, 0.16)',
-            borderColor: 'rgba(59, 130, 246, 0.55)',
-            transform: 'scale(1.08)',
+            background: 'rgba(14, 165, 233, 0.12)',
+            borderColor: 'rgba(14, 165, 233, 0.45)',
+            transform: 'scale(1.06)',
           },
         },
       },
@@ -92,63 +93,34 @@ const fintechBlueTheme = createTheme({
 function Header({ sidebarOpen, setSidebarOpen }) {
   const theme = useTheme();
   const [searchModalOpen, setSearchModalOpen] = useState(false);
-  const [darkMode, setDarkMode] = useState(true);
+  const [darkMode, setDarkMode] = useState(false); // Default to light now
 
   return (
-    <ThemeProvider theme={fintechBlueTheme}>
+    <ThemeProvider theme={fintechLightTheme}>
       <AppBar position="sticky" elevation={0}>
-        {/* Modern fintech background: deep gradient + subtle noise/glass */}
+        {/* Subtle light gradient background */}
         <Box
           sx={{
             position: 'absolute',
             inset: 0,
             pointerEvents: 'none',
-            background: 'linear-gradient(135deg, #0a0f1a 0%, #0f172a 50%, #111827 100%)',
+            background: 'linear-gradient(135deg, #f8fafc 0%, #f1f5f9 50%, #e2e8f0 100%)',
             zIndex: -2,
           }}
         />
 
-        {/* Optional very subtle noise texture (comment out if unwanted) */}
+        {/* Very light glass overlay + subtle accent */}
         <Box
           sx={{
             position: 'absolute',
             inset: 0,
-            opacity: 0.07,
-            backgroundImage: `
-              url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.08'/%3E%3C/svg%3E")
-            `,
-            zIndex: -1.5,
-          }}
-        />
-
-        {/* Glass overlay + animated subtle mesh accents */}
-        <Box
-          sx={{
-            position: 'absolute',
-            inset: 0,
-            backdropFilter: 'blur(1px)', // Very light extra diffusion
-            background: 'linear-gradient(to bottom right, rgba(59,130,246,0.05), rgba(16,185,129,0.04), transparent 70%)',
-            opacity: 0.9,
+            backdropFilter: 'blur(2px)',
+            background: 'linear-gradient(to bottom right, rgba(14,165,233,0.04), rgba(132,204,22,0.03), transparent 70%)',
+            opacity: 0.95,
             pointerEvents: 'none',
             zIndex: -1,
           }}
-        >
-          {/* Floating accent dots (your original mesh idea — refined) */}
-          <Box
-            sx={{
-              position: 'absolute',
-              inset: 0,
-              backgroundImage: `
-                radial-gradient(circle at 15% 75%, #3b82f6 1.2px, transparent 3px),
-                radial-gradient(circle at 85% 30%, #10b981 1px, transparent 2.8px),
-                radial-gradient(circle at 45% 55%, #60a5fa 0.9px, transparent 2.5px)
-              `,
-              backgroundSize: '220px 220px',
-              animation: 'floatMesh 50s ease-in-out infinite',
-              opacity: 0.4,
-            }}
-          />
-        </Box>
+        />
 
         <Toolbar sx={{ px: { xs: 2, sm: 3, lg: 5 }, minHeight: 64 }}>
           {/* Left – Mobile menu + Logo */}
@@ -163,7 +135,7 @@ function Header({ sidebarOpen, setSidebarOpen }) {
               <MenuIcon sx={{ color: 'primary.main' }} />
             </IconButton>
 
-            {/* Logo + Brand (unchanged — looks great) */}
+            {/* Updated Logo + Brand – light mode friendly */}
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 2.5 }}>
               <Box sx={{ position: 'relative' }}>
                 <Box
@@ -171,12 +143,12 @@ function Header({ sidebarOpen, setSidebarOpen }) {
                     width: 48,
                     height: 48,
                     borderRadius: '50%',
-                    background: 'linear-gradient(135deg, #3b82f6, #1d4ed8, #1e40af)',
+                    background: 'linear-gradient(135deg, #0ea5e9, #0284c7, #0369a1)',
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
-                    boxShadow: '0 0 28px rgba(59,130,246,0.38)',
-                    border: '2.5px solid rgba(59,130,246,0.24)',
+                    boxShadow: '0 0 24px rgba(14,165,233,0.28)',
+                    border: '2.5px solid rgba(14,165,233,0.18)',
                   }}
                 >
                   <Typography
@@ -197,8 +169,8 @@ function Header({ sidebarOpen, setSidebarOpen }) {
                     position: 'absolute',
                     inset: -6,
                     borderRadius: '50%',
-                    background: 'radial-gradient(circle, rgba(59,130,246,0.36) 0%, transparent 70%)',
-                    filter: 'blur(12px)',
+                    background: 'radial-gradient(circle, rgba(14,165,233,0.28) 0%, transparent 70%)',
+                    filter: 'blur(10px)',
                     animation: 'pulse 6s ease-in-out infinite',
                     zIndex: -1,
                   }}
@@ -210,7 +182,7 @@ function Header({ sidebarOpen, setSidebarOpen }) {
                   variant="h6"
                   component="div"
                   sx={{
-                    background: 'linear-gradient(90deg, #60a5fa, #3b82f6, #1d4ed8)',
+                    background: 'linear-gradient(90deg, #38bdf8, #0ea5e9, #0284c7)',
                     WebkitBackgroundClip: 'text',
                     WebkitTextFillColor: 'transparent',
                     fontWeight: 800,
@@ -227,7 +199,7 @@ function Header({ sidebarOpen, setSidebarOpen }) {
                 <Typography
                   variant="caption"
                   sx={{
-                    color: 'primary.light',
+                    color: 'primary.main',
                     fontWeight: 600,
                     letterSpacing: '0.06em',
                     opacity: 0.9,
@@ -247,7 +219,7 @@ function Header({ sidebarOpen, setSidebarOpen }) {
               onClick={() => setSearchModalOpen(true)}
               sx={{
                 ...(searchModalOpen && {
-                  boxShadow: `0 0 0 4px ${alpha(theme.palette.primary.main, 0.38)}`,
+                  boxShadow: `0 0 0 4px ${alpha(theme.palette.primary.main, 0.28)}`,
                 }),
               }}
             >
@@ -269,7 +241,7 @@ function Header({ sidebarOpen, setSidebarOpen }) {
               onClick={() => setDarkMode(!darkMode)}
               sx={{ ml: 1 }}
             >
-              {darkMode ? <Brightness7Icon /> : <Brightness4Icon />}
+              {darkMode ? <Brightness7Icon sx={{ color: 'secondary.main' }} /> : <Brightness4Icon sx={{ color: 'primary.main' }} />}
             </IconButton>
 
             <Box
@@ -278,25 +250,21 @@ function Header({ sidebarOpen, setSidebarOpen }) {
                 height: 36,
                 backgroundColor: 'divider',
                 mx: 1.5,
-                opacity: 0.6,
+                opacity: 0.5,
               }}
             />
           </Box>
         </Toolbar>
       </AppBar>
 
-      {/* Animations */}
+      {/* Animations – kept subtle */}
       <Box
         component="style"
         dangerouslySetInnerHTML={{
           __html: `
-            @keyframes floatMesh {
-              0%, 100% { transform: translate(0, 0) rotate(0deg); }
-              50% { transform: translate(-12px, -18px) rotate(2.5deg); }
-            }
             @keyframes pulse {
-              0%, 100% { opacity: 0.36; transform: scale(1); }
-              50% { opacity: 0.70; transform: scale(1.14); }
+              0%, 100% { opacity: 0.28; transform: scale(1); }
+              50% { opacity: 0.55; transform: scale(1.12); }
             }
           `,
         }}
