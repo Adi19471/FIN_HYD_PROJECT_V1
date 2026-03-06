@@ -1,0 +1,81 @@
+2026-03-04 10:11:34 INFO  o.h.validator.internal.util.Version - HV000001: Hibernate Validator 8.0.3.Final
+2026-03-04 10:11:34 INFO  c.b.f.SriBalajiFinanceApplication - Starting SriBalajiFinanceApplication using Java 21.0.9 with PID 42772 (C:\Users\infyz\Desktop\Fast_API_Python\Spring_Boot_Balaji_FInance\sri-balaji-finance\target\classes started by infyz in C:\Users\infyz\Desktop\Fast_API_Python\Spring_Boot_Balaji_FInance\sri-balaji-finance)
+2026-03-04 10:11:34 INFO  c.b.f.SriBalajiFinanceApplication - No active profile set, falling back to 1 default profile: "default"
+2026-03-04 10:11:36 INFO  o.s.d.r.c.RepositoryConfigurationDelegate - Bootstrapping Spring Data JPA repositories in DEFAULT mode.
+2026-03-04 10:11:36 INFO  o.s.d.r.c.RepositoryConfigurationDelegate - Finished Spring Data repository scanning in 90 ms. Found 8 JPA repository interfaces.
+2026-03-04 10:11:37 INFO  o.s.b.w.e.tomcat.TomcatWebServer - Tomcat initialized with port 8881 (http)
+2026-03-04 10:11:37 INFO  o.a.coyote.http11.Http11NioProtocol - Initializing ProtocolHandler ["http-nio-8881"]
+2026-03-04 10:11:37 INFO  o.a.catalina.core.StandardService - Starting service [Tomcat]
+2026-03-04 10:11:37 INFO  o.a.catalina.core.StandardEngine - Starting Servlet engine: [Apache Tomcat/10.1.49]
+2026-03-04 10:11:37 INFO  o.a.c.c.C.[.[.[/balaji-finance] - Initializing Spring embedded WebApplicationContext
+2026-03-04 10:11:37 INFO  o.s.b.w.s.c.ServletWebServerApplicationContext - Root WebApplicationContext: initialization completed in 3021 ms
+2026-03-04 10:11:38 INFO  o.h.jpa.internal.util.LogHelper - HHH000204: Processing PersistenceUnitInfo [name: default]
+2026-03-04 10:11:38 INFO  org.hibernate.Version - HHH000412: Hibernate ORM core version 6.6.36.Final
+2026-03-04 10:11:38 INFO  o.h.c.i.RegionFactoryInitiator - HHH000026: Second-level cache disabled
+2026-03-04 10:11:38 INFO  o.s.o.j.p.SpringPersistenceUnitInfo - No LoadTimeWeaver setup: ignoring JPA class transformer
+2026-03-04 10:11:38 INFO  com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Starting...
+2026-03-04 10:11:39 INFO  com.zaxxer.hikari.pool.HikariPool - HikariPool-1 - Added connection com.mysql.cj.jdbc.ConnectionImpl@153c6603
+2026-03-04 10:11:39 INFO  com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Start completed.
+2026-03-04 10:11:39 INFO  o.hibernate.orm.connections.pooling - HHH10001005: Database info:
+	Database JDBC URL [Connecting through datasource 'HikariDataSource (HikariPool-1)']
+	Database driver: undefined/unknown
+	Database version: 8.0.45
+	Autocommit mode: undefined/unknown
+	Isolation level: undefined/unknown
+	Minimum pool size: undefined/unknown
+	Maximum pool size: undefined/unknown
+2026-03-04 10:11:40 INFO  o.h.e.t.j.p.i.JtaPlatformInitiator - HHH000489: No JTA platform available (set 'hibernate.transaction.jta.platform' to enable JTA platform integration)
+2026-03-04 10:11:40 INFO  o.s.o.j.LocalContainerEntityManagerFactoryBean - Initialized JPA EntityManagerFactory for persistence unit 'default'
+2026-03-04 10:11:41 INFO  o.s.d.j.r.query.QueryEnhancerFactory - Hibernate is in classpath; If applicable, HQL parser will be used.
+2026-03-04 10:11:42 INFO  o.s.s.c.a.a.c.InitializeUserDetailsBeanManagerConfigurer$InitializeUserDetailsManagerConfigurer - Global AuthenticationManager configured with UserDetailsService bean with name myOwnUserDetails
+2026-03-04 10:11:42 WARN  o.s.b.a.o.j.JpaBaseConfiguration$JpaWebConfiguration - spring.jpa.open-in-view is enabled by default. Therefore, database queries may be performed during view rendering. Explicitly configure spring.jpa.open-in-view to disable this warning
+2026-03-04 10:11:42 INFO  o.s.b.a.w.s.WelcomePageHandlerMapping - Adding welcome page: class path resource [static/index.html]
+2026-03-04 10:11:43 INFO  o.a.coyote.http11.Http11NioProtocol - Starting ProtocolHandler ["http-nio-8881"]
+2026-03-04 10:11:43 INFO  o.s.b.w.e.tomcat.TomcatWebServer - Tomcat started on port 8881 (http) with context path '/balaji-finance'
+2026-03-04 10:11:43 INFO  c.b.f.SriBalajiFinanceApplication - Started SriBalajiFinanceApplication in 9.467 seconds (process running for 9.916)
+2026-03-04 10:11:43 WARN  o.s.c.events.SpringDocAppInitializer - SpringDoc /v3/api-docs endpoint is enabled by default. To disable it in production, set the property 'springdoc.api-docs.enabled=false'
+2026-03-04 10:11:43 WARN  o.s.c.events.SpringDocAppInitializer - SpringDoc /swagger-ui.html endpoint is enabled by default. To disable it in production, set the property 'springdoc.swagger-ui.enabled=false'
+2026-03-04 10:13:02 INFO  o.a.c.c.C.[.[.[/balaji-finance] - Initializing Spring DispatcherServlet 'dispatcherServlet'
+2026-03-04 10:13:02 INFO  o.s.web.servlet.DispatcherServlet - Initializing Servlet 'dispatcherServlet'
+2026-03-04 10:13:02 INFO  o.s.web.servlet.DispatcherServlet - Completed initialization in 7 ms
+2026-03-04 17:20:58 INFO  o.h.validator.internal.util.Version - HV000001: Hibernate Validator 8.0.3.Final
+2026-03-04 17:20:58 INFO  c.b.f.SriBalajiFinanceApplication - Starting SriBalajiFinanceApplication using Java 21.0.9 with PID 14708 (C:\Users\infyz\Desktop\Fast_API_Python\Spring_Boot_Balaji_FInance\sri-balaji-finance\target\classes started by infyz in C:\Users\infyz\Desktop\Fast_API_Python\Spring_Boot_Balaji_FInance\sri-balaji-finance)
+2026-03-04 17:20:58 INFO  c.b.f.SriBalajiFinanceApplication - No active profile set, falling back to 1 default profile: "default"
+2026-03-04 17:21:00 INFO  o.s.d.r.c.RepositoryConfigurationDelegate - Bootstrapping Spring Data JPA repositories in DEFAULT mode.
+2026-03-04 17:21:00 INFO  o.s.d.r.c.RepositoryConfigurationDelegate - Finished Spring Data repository scanning in 87 ms. Found 8 JPA repository interfaces.
+2026-03-04 17:21:01 INFO  o.s.b.w.e.tomcat.TomcatWebServer - Tomcat initialized with port 8881 (http)
+2026-03-04 17:21:01 INFO  o.a.coyote.http11.Http11NioProtocol - Initializing ProtocolHandler ["http-nio-8881"]
+2026-03-04 17:21:01 INFO  o.a.catalina.core.StandardService - Starting service [Tomcat]
+2026-03-04 17:21:01 INFO  o.a.catalina.core.StandardEngine - Starting Servlet engine: [Apache Tomcat/10.1.49]
+2026-03-04 17:21:02 INFO  o.a.c.c.C.[.[.[/balaji-finance] - Initializing Spring embedded WebApplicationContext
+2026-03-04 17:21:02 INFO  o.s.b.w.s.c.ServletWebServerApplicationContext - Root WebApplicationContext: initialization completed in 3162 ms
+2026-03-04 17:21:02 INFO  o.h.jpa.internal.util.LogHelper - HHH000204: Processing PersistenceUnitInfo [name: default]
+2026-03-04 17:21:02 INFO  org.hibernate.Version - HHH000412: Hibernate ORM core version 6.6.36.Final
+2026-03-04 17:21:02 INFO  o.h.c.i.RegionFactoryInitiator - HHH000026: Second-level cache disabled
+2026-03-04 17:21:03 INFO  o.s.o.j.p.SpringPersistenceUnitInfo - No LoadTimeWeaver setup: ignoring JPA class transformer
+2026-03-04 17:21:03 INFO  com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Starting...
+2026-03-04 17:21:03 INFO  com.zaxxer.hikari.pool.HikariPool - HikariPool-1 - Added connection com.mysql.cj.jdbc.ConnectionImpl@24e2355c
+2026-03-04 17:21:03 INFO  com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Start completed.
+2026-03-04 17:21:03 INFO  o.hibernate.orm.connections.pooling - HHH10001005: Database info:
+	Database JDBC URL [Connecting through datasource 'HikariDataSource (HikariPool-1)']
+	Database driver: undefined/unknown
+	Database version: 8.0.45
+	Autocommit mode: undefined/unknown
+	Isolation level: undefined/unknown
+	Minimum pool size: undefined/unknown
+	Maximum pool size: undefined/unknown
+2026-03-04 17:21:04 INFO  o.h.e.t.j.p.i.JtaPlatformInitiator - HHH000489: No JTA platform available (set 'hibernate.transaction.jta.platform' to enable JTA platform integration)
+2026-03-04 17:21:05 INFO  o.s.o.j.LocalContainerEntityManagerFactoryBean - Initialized JPA EntityManagerFactory for persistence unit 'default'
+2026-03-04 17:21:05 INFO  o.s.d.j.r.query.QueryEnhancerFactory - Hibernate is in classpath; If applicable, HQL parser will be used.
+2026-03-04 17:21:07 INFO  o.s.s.c.a.a.c.InitializeUserDetailsBeanManagerConfigurer$InitializeUserDetailsManagerConfigurer - Global AuthenticationManager configured with UserDetailsService bean with name myOwnUserDetails
+2026-03-04 17:21:07 WARN  o.s.b.a.o.j.JpaBaseConfiguration$JpaWebConfiguration - spring.jpa.open-in-view is enabled by default. Therefore, database queries may be performed during view rendering. Explicitly configure spring.jpa.open-in-view to disable this warning
+2026-03-04 17:21:07 INFO  o.s.b.a.w.s.WelcomePageHandlerMapping - Adding welcome page: class path resource [static/index.html]
+2026-03-04 17:21:08 INFO  o.a.coyote.http11.Http11NioProtocol - Starting ProtocolHandler ["http-nio-8881"]
+2026-03-04 17:21:08 INFO  o.s.b.w.e.tomcat.TomcatWebServer - Tomcat started on port 8881 (http) with context path '/balaji-finance'
+2026-03-04 17:21:08 INFO  c.b.f.SriBalajiFinanceApplication - Started SriBalajiFinanceApplication in 10.569 seconds (process running for 11.016)
+2026-03-04 17:21:08 WARN  o.s.c.events.SpringDocAppInitializer - SpringDoc /v3/api-docs endpoint is enabled by default. To disable it in production, set the property 'springdoc.api-docs.enabled=false'
+2026-03-04 17:21:08 WARN  o.s.c.events.SpringDocAppInitializer - SpringDoc /swagger-ui.html endpoint is enabled by default. To disable it in production, set the property 'springdoc.swagger-ui.enabled=false'
+2026-03-04 17:22:49 INFO  o.a.c.c.C.[.[.[/balaji-finance] - Initializing Spring DispatcherServlet 'dispatcherServlet'
+2026-03-04 17:22:49 INFO  o.s.web.servlet.DispatcherServlet - Initializing Servlet 'dispatcherServlet'
+2026-03-04 17:22:49 INFO  o.s.web.servlet.DispatcherServlet - Completed initialization in 0 ms
+2026-03-04 17:30:54 INFO  o.s.api.AbstractOpenApiResource - Init duration for springdoc-openapi is: 1124 ms

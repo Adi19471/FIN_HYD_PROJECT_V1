@@ -59,22 +59,22 @@ public interface CashBookRepo extends JpaRepository<CashBook, Long> {
 
     @Query(value = """
             SELECT COALESCE(SUM(DEBIT),0) - COALESCE(SUM(CREDIT),0)
-            FROM cashbook
-            WHERE TRANSDATE < :givenDate
+            FROM cash_book
+            WHERE TRANS_DATE < :givenDate
             """, nativeQuery = true)
     BigDecimal findOpeningBalanceForDate(
             @Param("givenDate") LocalDate givenDate);
 
     @Query(value = """
             SELECT
-                DATE(TRANSDATE) AS txnDate,
+                DATE(TRANS_DATE) AS txnDate,
                 COALESCE(SUM(CREDIT), 0) AS credit,
                 COALESCE(SUM(DEBIT), 0) AS debit,
                 COALESCE(SUM(CREDIT), 0) - COALESCE(SUM(DEBIT), 0) AS balance
-            FROM cashbook
-            WHERE TRANSDATE BETWEEN :fromDate AND :toDate
-            GROUP BY DATE(TRANSDATE)
-            ORDER BY DATE(TRANSDATE)
+            FROM cash_book
+            WHERE TRANS_DATE BETWEEN :fromDate AND :toDate
+            GROUP BY DATE(TRANS_DATE)
+            ORDER BY DATE(TRANS_DATE)
             """, nativeQuery = true)
     List<DateWiseCashBookProjection> getDateWiseCashBook(
             @Param("fromDate") LocalDateTime fromDate,
@@ -82,17 +82,17 @@ public interface CashBookRepo extends JpaRepository<CashBook, Long> {
 
     @Query(value = """
             SELECT
-                DATE(TRANSDATE) AS txnDate,
+                DATE(TRANS_DATE) AS txnDate,
                 SUM(CASE WHEN PARTICULARS IN 
                     ('DF LOAN INSTALLMENT','DF LATE FEE','DF DOC CHARGES','DF INTEREST')
                     THEN CREDIT ELSE 0 END) AS dailyTotal,
                 SUM(CASE WHEN PARTICULARS IN 
                     ('MF LOAN INSTALLMENT','MF INTEREST','MF LATE FEE','MF DOC CHARGES')
                     THEN CREDIT ELSE 0 END) AS monthlyTotal
-            FROM cashbook
-            WHERE TRANSDATE BETWEEN :fromDate AND :toDate
-            GROUP BY DATE(TRANSDATE)
-            ORDER BY DATE(TRANSDATE)
+            FROM cash_book
+            WHERE TRANS_DATE BETWEEN :fromDate AND :toDate
+            GROUP BY DATE(TRANS_DATE)
+            ORDER BY DATE(TRANS_DATE)
             """, nativeQuery = true)
     List<DateWiseCollectionsProjection> getDateWiseCashBookCollectionsOnly(
             @Param("fromDate") LocalDateTime fromDate,
@@ -100,18 +100,18 @@ public interface CashBookRepo extends JpaRepository<CashBook, Long> {
 
     @Query(value = """
             SELECT
-                DATE(TRANSDATE) AS txnDate,
+                DATE(TRANS_DATE) AS txnDate,
                 SUM(CASE WHEN PARTICULARS IN 
                     ('DF LOAN INSTALLMENT','DF LATE FEE','DF DOC CHARGES','DF INTEREST')
                     THEN CREDIT ELSE 0 END) AS dailyTotal,
                 SUM(CASE WHEN PARTICULARS IN 
                     ('MF LOAN INSTALLMENT','MF INTEREST','MF LATE FEE','MF DOC CHARGES')
                     THEN CREDIT ELSE 0 END) AS monthlyTotal
-            FROM cashbook
-            WHERE TRANSDATE BETWEEN :fromDate AND :toDate
-            AND USER = :user
-            GROUP BY DATE(TRANSDATE)
-            ORDER BY DATE(TRANSDATE)
+            FROM cash_book
+            WHERE TRANS_DATE BETWEEN :fromDate AND :toDate
+            AND ENTRY_USER = :user
+            GROUP BY DATE(TRANS_DATE)
+            ORDER BY DATE(TRANS_DATE)
             """, nativeQuery = true)
     List<DateWiseCollectionsProjection> getDateWiseCashBookCollectionsOnlyByUser(
             @Param("fromDate") LocalDateTime fromDate,
@@ -120,17 +120,17 @@ public interface CashBookRepo extends JpaRepository<CashBook, Long> {
     
     @Query(value = """
             SELECT
-                DATE(TRANSDATE) AS txnDate,
+                DATE(TRANS_DATE) AS txnDate,
                 SUM(CASE WHEN PARTICULARS IN 
                     ('DF LOAN INSTALLMENT','DF LATE FEE','DF DOC CHARGES','DF INTEREST')
                     THEN CREDIT ELSE 0 END) AS dailyTotal,
                 SUM(CASE WHEN PARTICULARS IN 
                     ('MF LOAN INSTALLMENT','MF INTEREST','MF LATE FEE','MF DOC CHARGES')
                     THEN CREDIT ELSE 0 END) AS monthlyTotal
-            FROM cashbook
-            WHERE USER = :user
-            GROUP BY DATE(TRANSDATE)
-            ORDER BY DATE(TRANSDATE)
+            FROM cash_book
+            WHERE ENTRY_USER = :user
+            GROUP BY DATE(TRANS_DATE)
+            ORDER BY DATE(TRANS_DATE)
             """, nativeQuery = true)
     List<DateWiseCollectionsProjection> getAllCashBookCollectionsOnlyByUser(
             @Param("user") String user);
@@ -141,8 +141,8 @@ public interface CashBookRepo extends JpaRepository<CashBook, Long> {
                 COALESCE(SUM(DEBIT), 0) AS debit,
                 COALESCE(SUM(CREDIT), 0) - COALESCE(SUM(DEBIT), 0) AS balance,
                 PARTICULARS AS particulars
-            FROM cashbook
-            WHERE TRANSDATE BETWEEN :fromDate AND :toDate
+            FROM cash_book
+            WHERE TRANS_DATE BETWEEN :fromDate AND :toDate
             GROUP BY PARTICULARS
             ORDER BY PARTICULARS
             """, nativeQuery = true)
@@ -156,7 +156,7 @@ public interface CashBookRepo extends JpaRepository<CashBook, Long> {
                 COALESCE(SUM(DEBIT), 0) AS debit,
                 COALESCE(SUM(CREDIT), 0) - COALESCE(SUM(DEBIT), 0) AS balance,
                 PARTICULARS AS particulars
-            FROM cashbook
+            FROM cash_book
             GROUP BY PARTICULARS
             ORDER BY PARTICULARS
             """, nativeQuery = true)
