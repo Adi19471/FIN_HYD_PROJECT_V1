@@ -1,5 +1,6 @@
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
+import { visualizer } from "rollup-plugin-visualizer";
 import path from "path";
 import os from "os";
 
@@ -16,7 +17,15 @@ export default defineConfig({
    
   },
  
-  plugins: [react()],
+  plugins: [
+    react(),
+    visualizer({
+      filename: "dist/stats.html",
+      open: true,
+      gzipSize: true,
+      brotliSize: true,
+    }),
+  ],
 
   cacheDir: viteCacheDir,
 
@@ -49,7 +58,7 @@ export default defineConfig({
     target: "es2018",
     sourcemap: false,
     minify: "esbuild",
-    chunkSizeWarningLimit: 2000,
+    chunkSizeWarningLimit: 1000,
     brotliSize: false,
     commonjsOptions: {
       transformMixedEsModules: true,

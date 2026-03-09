@@ -21,9 +21,6 @@ import {
 
 import { DataGrid } from "@mui/x-data-grid";
 import { Save, Delete } from "@mui/icons-material";
-import { DateTimePicker } from "@mui/x-date-pickers/DateTimePicker";
-import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
-import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
 
 const QuickCashBook = () => {
   const [transactionDate, setTransactionDate] = useState(dayjs());
@@ -236,117 +233,126 @@ const QuickCashBook = () => {
 
   /* ------------------ UI ------------------ */
   return (
-    <LocalizationProvider dateAdapter={AdapterDayjs}>
-
-        <Paper
-          elevation={2}
+    <Box>
+      <Paper
+        elevation={2}
+        sx={{
+          p: 2,
+          mb: 2,
+          borderRadius: 2,
+          background: "linear-gradient(180deg, #ffffff 0%, #f9fbff 100%)",
+          display: 'flex',
+          flexDirection: { xs: 'column', md: 'row' },
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          gap: 2,
+          flexWrap: 'wrap'
+        }}
+      >
+        <Typography
+          variant="h5"
+          fontWeight={700}
           sx={{
-            p: 2,
-            mb: 2,
-            borderRadius: 2,
-            background: "linear-gradient(180deg, #ffffff 0%, #f9fbff 100%)",
-            display: 'flex',
-            flexDirection: { xs: 'column', md: 'row' },
-            justifyContent: 'space-between',
-            alignItems: 'center',
-            gap: 2,
-            flexWrap: 'wrap'
+            color: "primary.main",
+            whiteSpace: "nowrap",
           }}
         >
-          <Typography
-            variant="h5"
-            fontWeight={700}
-            sx={{
-              color: "primary.main",
-              whiteSpace: "nowrap",
-            }}
-          >
-            Quick Business Cash Book
-          </Typography>
-
-          <Stack
-            direction="row"
-            spacing={2}
-            alignItems="center"
-            sx={{ flexWrap: "wrap" }}
-          >
-            <DateTimePicker
-              label="Transaction Date"
-              value={transactionDate}
-              onChange={setTransactionDate}
-              ampm={false}
-              slotProps={{
-                textField: {
-                  size: "small",
-                  sx: { width: 220 },
-                },
-              }}
-            />
-
-            <Autocomplete
-              freeSolo
-              sx={{ width: 260 }}
-              options={accountOptions}
-              value={selectedAccount}
-              inputValue={inputValue}
-              getOptionLabel={(o) => o.displayString || o.loanId || ""}
-              onInputChange={(e, v) => setInputValue(v)}
-              onChange={(e, v) => v && addRow(v)}
-              renderInput={(params) => (
-                <TextField
-                  {...params}
-                  size="small"
-                  label="Loan / Account No"
-                  placeholder="Type or scan account"
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter" && inputValue.trim()) {
-                      addRow();
-                    }
-                  }}
-                />
-              )}
-            />
-          </Stack>
-
-          <Button
-            variant="contained"
-            color="success"
-            startIcon={<Save />}
-            onClick={handleSaveAll}
-            sx={{
-              px: 3,
-              height: 40,
-              fontWeight: 600,
-              boxShadow: 2,
-              textTransform: "none",
-            }}
-          >
-            Save
-          </Button>
-        </Paper>
-
-        <Divider sx={{ my: 2 }} />
-        {alertMsg.text && (
-          <Alert severity={alertMsg.severity}>{alertMsg.text}</Alert>
-        )}
-
-        <Paper sx={{ height: 520, mt: 2 }}>
-          <DataGrid
-            rows={collectionRows}
-            columns={columns}
-            editMode="cell"
-            processRowUpdate={processRowUpdate}
-            onProcessRowUpdateError={() =>
-              errorToast("Edit failed")
-            }
-          />
-        </Paper>
-
-        <Typography mt={2} fontWeight="bold">
-          Total Collected: ₹{totalCollected}
+          Quick Business Cash Book
         </Typography>
 
-    </LocalizationProvider>
+        <Stack
+          direction="row"
+          spacing={2}
+          alignItems="center"
+          sx={{ flexWrap: "wrap" }}
+        >
+          {/* Transaction Date - using dayjs with native date/time inputs */}
+          <TextField
+            label="Transaction Date"
+            type="date"
+            value={transactionDate ? transactionDate.format("YYYY-MM-DD") : ""}
+            onChange={(e) => setTransactionDate(dayjs(e.target.value))}
+            size="small"
+            sx={{ width: 150 }}
+            InputLabelProps={{ shrink: true }}
+          />
+          <TextField
+            label="Time"
+            type="time"
+            value={transactionDate ? transactionDate.format("HH:mm") : ""}
+            onChange={(e) => {
+              const [hours, minutes] = e.target.value.split(":");
+              setTransactionDate((prev) => prev.hour(parseInt(hours) || 0).minute(parseInt(minutes) || 0));
+            }}
+            size="small"
+            sx={{ width: 120 }}
+            InputLabelProps={{ shrink: true }}
+          />
+
+          <Autocomplete
+            freeSolo
+            sx={{ width: 260 }}
+            options={accountOptions}
+            value={selectedAccount}
+            inputValue={inputValue}
+            getOptionLabel={(o) => o.displayString || o.loanId || ""}
+            onInputChange={(e, v) => setInputValue(v)}
+            onChange={(e, v) => v && addRow(v)}
+            renderInput={(params) => (
+              <TextField
+                {...params}
+                size="small"
+                label="Loan / Account No"
+                placeholder="Type or scan account"
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" && inputValue.trim()) {
+                    addRow();
+                  }
+                }}
+              />
+            )}
+          />
+        </Stack>
+
+        <Button
+          variant="contained"
+          color="success"
+          startIcon={<Save />}
+          onClick={handleSaveAll}
+          disabled={loading}
+          sx={{
+            px: 3,
+            height: 40,
+            fontWeight: 600,
+            boxShadow: 2,
+            textTransform: "none",
+          }}
+        >
+          {loading ? "Saving..." : "Save"}
+        </Button>
+      </Paper>
+
+      <Divider sx={{ my: 2 }} />
+      {alertMsg.text && (
+        <Alert severity={alertMsg.severity}>{alertMsg.text}</Alert>
+      )}
+
+      <Paper sx={{ height: 520, mt: 2 }}>
+        <DataGrid
+          rows={collectionRows}
+          columns={columns}
+          editMode="cell"
+          processRowUpdate={processRowUpdate}
+          onProcessRowUpdateError={() =>
+            errorToast("Edit failed")
+          }
+        />
+      </Paper>
+
+      <Typography mt={2} fontWeight="bold">
+        Total Collected: ₹{totalCollected}
+      </Typography>
+    </Box>
   );
 };
 

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useCallback, memo } from 'react';
 import {
   AppBar,
   Toolbar,
@@ -95,6 +95,19 @@ function Header({ sidebarOpen, setSidebarOpen }) {
   const [searchModalOpen, setSearchModalOpen] = useState(false);
   const [darkMode, setDarkMode] = useState(false); // Default to light now
 
+  // Memoized handlers for better performance
+  const handleMenuClick = useCallback(() => {
+    setSidebarOpen(!sidebarOpen);
+  }, [sidebarOpen, setSidebarOpen]);
+
+  const handleSearchClick = useCallback(() => {
+    setSearchModalOpen(true);
+  }, []);
+
+  const handleDarkModeToggle = useCallback(() => {
+    setDarkMode(prev => !prev);
+  }, []);
+
   return (
     <ThemeProvider theme={fintechLightTheme}>
       <AppBar position="sticky" elevation={0}>
@@ -128,7 +141,7 @@ function Header({ sidebarOpen, setSidebarOpen }) {
             <IconButton
               color="inherit"
               edge="start"
-              onClick={() => setSidebarOpen(!sidebarOpen)}
+              onClick={handleMenuClick}
               sx={{ display: { lg: 'none' } }}
               aria-label="open sidebar"
             >
@@ -216,7 +229,7 @@ function Header({ sidebarOpen, setSidebarOpen }) {
           <Box sx={{ ml: 'auto', display: 'flex', alignItems: 'center', gap: 1.5 }}>
             <IconButton
               color="inherit"
-              onClick={() => setSearchModalOpen(true)}
+              onClick={handleSearchClick}
               sx={{
                 ...(searchModalOpen && {
                   boxShadow: `0 0 0 4px ${alpha(theme.palette.primary.main, 0.28)}`,
@@ -238,7 +251,7 @@ function Header({ sidebarOpen, setSidebarOpen }) {
 
             <IconButton
               color="inherit"
-              onClick={() => setDarkMode(!darkMode)}
+              onClick={handleDarkModeToggle}
               sx={{ ml: 1 }}
             >
               {darkMode ? <Brightness7Icon sx={{ color: 'secondary.main' }} /> : <Brightness4Icon sx={{ color: 'primary.main' }} />}

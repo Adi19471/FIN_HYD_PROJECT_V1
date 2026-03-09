@@ -163,12 +163,7 @@ const DeleteTransactions = () => {
 
   return (
     <Box sx={{ p: { xs: 2, md: 3 }, bgcolor: 'background.default', minHeight: '100vh' }}>
-      <Box sx={{ mb: 4 }}>
-        <Typography variant="h4" fontWeight="bold" gutterBottom>
-          Delete Transactions
-        </Typography>
-      </Box>
-
+   
     
         <Box 
           sx={{ 

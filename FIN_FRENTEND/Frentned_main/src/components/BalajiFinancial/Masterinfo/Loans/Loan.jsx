@@ -8,24 +8,21 @@ import {
   alpha,
   useTheme,
 } from "@mui/material";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 
-// Icons
 import { MdCalendarToday, MdCalendarMonth } from "react-icons/md";
+import LoadingSpinner from "src/LoadingSpinner";
 
-// Lazy-loaded views
 const MonthlyFinance = lazy(() => import("./MonthlyFinance/MonthlyFinance"));
-const DailyFinance = lazy(() => import("./DailyFinance/DailyFinace")); 
+const DailyFinance = lazy(() => import("./DailyFinance/DailyFinace"));
 
 const FinanceTabs = () => {
   const theme = useTheme();
-  const isDark = theme.palette.mode === "dark";
-
   const [activeTab, setActiveTab] = useState(0);
 
   const tabs = [
-    { label: "DAILY", icon: <MdCalendarToday size={20} /> },
-    { label: "MONTHLY", icon: <MdCalendarMonth size={20} /> },
+    { label: "Daily", icon: <MdCalendarToday size={18} /> },
+    { label: "Monthly", icon: <MdCalendarMonth size={18} /> },
   ];
 
   const handleChange = (event, newValue) => {
@@ -33,140 +30,130 @@ const FinanceTabs = () => {
   };
 
   return (
-    <Box sx={{ width: "100%", minHeight: "100vh", bgcolor: "background.default", p: { xs: 1, md: 2 } }}>
-      {/* Modern Dark Tab Bar */}
+    <Box
+      sx={{
+        minHeight: "100vh",
+        bgcolor: "#f1f5f9",
+        p: { xs: 0, md: 0 },
+      }}
+    >
+      {/* Main Card */}
       <Paper
-        elevation={4}
+        elevation={6}
         sx={{
-          borderRadius: 2,
+          borderRadius: 0,
           overflow: "hidden",
-          bgcolor: "#0b1324", // deep navy
-          border: `1px solid ${alpha("#ffffff", 0.06)}`,
-          backdropFilter: "blur(8px)",
-          boxShadow: "0 8px 32px rgba(0,0,0,0.45)",
         }}
       >
-        {/* Header + Tabs Container */}
+        {/* Header */}
         <Box
           sx={{
+            px: { xs: 2, md: 3 },
+            py: 2,
+            borderBottom: "1px solid #e2e8f0",
             display: "flex",
             alignItems: "center",
             justifyContent: "space-between",
-            px: { xs: 2, sm: 3 },
-            py: 1.5,
-            borderBottom: `1px solid ${alpha("#ffffff", 0.08)}`,
+            flexWrap: "wrap",
+            gap: 2,
           }}
         >
-          {/* Heading (clickable if needed) */}
           <Typography
-            variant="subtitle1"
+            variant="h6"
             sx={{
-              fontSize: { xs: "0.95rem", sm: "1.1rem" },
               fontWeight: 700,
-              color: "warning.main",
-              letterSpacing: 1.1,
-              textTransform: "uppercase",
-              cursor: "pointer",
-              userSelect: "none",
-              "&:hover": { color: "warning.light" },
+              letterSpacing: 0.6,
             }}
-            onClick={() => console.log("Personal Accounts clicked")}
           >
             Personal Accounts
           </Typography>
 
-          {/* Tabs – using MUI Tabs with custom indicator */}
+          {/* Tabs */}
           <Tabs
             value={activeTab}
             onChange={handleChange}
-            variant="standard"
-            scrollButtons="auto"
-            allowScrollButtonsMobile
             sx={{
-              minHeight: 48,
-              "& .MuiTabs-indicator": { display: "none" }, // hide default indicator
-              "& .MuiTabs-flexContainer": {
-                gap: { xs: 1, sm: 2 },
+              minHeight: 40,
+              "& .MuiTabs-indicator": {
+                height: 3,
+                borderRadius: 2,
+                background:
+                  "linear-gradient(90deg,#3b82f6,#06b6d4)",
               },
             }}
           >
-            {tabs.map((tab, index) => {
-              const isActive = activeTab === index;
-
-              return (
-                <Tab
-                  key={tab.label}
-                  icon={tab.icon}
-                  iconPosition="start"
-                  label={
-                    <Typography
-                      variant="subtitle2"
-                      sx={{
-                        fontWeight: isActive ? 700 : 500,
-                        fontSize: { xs: "0.85rem", sm: "0.95rem" },
-                        letterSpacing: 0.8,
-                        textTransform: "uppercase",
-                        color: isActive ? "#2ee6bb" : "#93a4b8",
-                        transition: "color 0.3s ease",
-                      }}
-                    >
-                      {tab.label}
-                    </Typography>
-                  }
-                  sx={{
-                    minHeight: 48,
-                    px: { xs: 2, sm: 3 },
-                    py: 1,
-                    borderRadius: 1.5,
-                    transition: "all 0.25s ease",
-                    "&:hover": {
-                      bgcolor: alpha("#2ee6bb", 0.08),
-                      color: "#2ee6bb !important",
-                    },
-                    position: "relative",
-                    overflow: "hidden",
-                  }}
-                />
-              );
-            })}
+            {tabs.map((tab) => (
+              <Tab
+                key={tab.label}
+                icon={tab.icon}
+                iconPosition="start"
+                label={
+                  <Typography
+                    sx={{
+                      fontSize: "0.9rem",
+                      fontWeight: 600,
+                      textTransform: "capitalize",
+                    }}
+                  >
+                    {tab.label}
+                  </Typography>
+                }
+                sx={{
+                  minHeight: 40,
+                  px: 3,
+                  borderRadius: 2,
+                  transition: "0.25s",
+                  "&:hover": {
+                    bgcolor: alpha(theme.palette.primary.main, 0.08),
+                  },
+                }}
+              />
+            ))}
           </Tabs>
         </Box>
 
-        {/* Animated Underline – shared layout across tabs */}
-        <Box sx={{ position: "relative", height: 4 }}>
-          <motion.div
-            layoutId="active-underline"
-            initial={false}
-            transition={{
-              type: "spring",
-              stiffness: 400,
-              damping: 30,
-            }}
-            style={{
-              position: "absolute",
-              bottom: 0,
-              height: "100%",
-              background: "linear-gradient(90deg, #4da3ff, #60a5fa)",
-              borderRadius: "4px 4px 0 0",
-              zIndex: 1,
-            }}
-          />
+        {/* Content */}
+        <Box
+          sx={{
+            p: { xs: 2, md: 3 },
+            minHeight: "60vh",
+          }}
+        >
+<Suspense
+            fallback={
+              <Box sx={{ display: "flex", justifyContent: "center", alignItems: "center", height: "300px" }}>
+                <LoadingSpinner />
+              </Box>
+            }
+          >
+            <AnimatePresence mode="wait">
+              {activeTab === 0 && (
+                <motion.div
+                  key="daily"
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -20 }}
+                  transition={{ duration: 0.3 }}
+                >
+                  <DailyFinance />
+                </motion.div>
+              )}
+
+              {activeTab === 1 && (
+                <motion.div
+                  key="monthly"
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -20 }}
+                  transition={{ duration: 0.3 }}
+                >
+                  <MonthlyFinance />
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </Suspense>
         </Box>
       </Paper>
-
-      {/* Content Area */}
-      <Box sx={{ mt: 3, borderRadius: 2, overflow: "hidden" }}>
-        <Suspense
-          fallback={
-            <Box sx={{ textAlign: "center", py: 8 }}>
-              <Typography color="text.secondary">Loading finance data...</Typography>
-            </Box>
-          }
-        >
-          {activeTab === 0 && <DailyFinance />}
-          {activeTab === 1 && <MonthlyFinance />}
-        </Suspense>
-      </Box>
     </Box>
   );
 };

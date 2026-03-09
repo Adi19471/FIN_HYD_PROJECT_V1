@@ -20,6 +20,7 @@ import dayjs from "dayjs";
 import axios from "axios";
 import { API_BASE } from "lib/config";
 import { getSession } from "src/utils/session";
+import LoadingSpinner from "src/LoadingSpinner";
 
 const Maturity = () => {
   const [loanType, setLoanType] = useState("MONTHLY_FINANCE"); // default selected
@@ -139,9 +140,14 @@ const Maturity = () => {
         </Grid>
       </Paper>
 
-      {/* Table Section */}
+{/* Table Section */}
       <Paper>
-        <TableContainer>
+        {loading && data.length === 0 ? (
+          <Box sx={{ display: "flex", justifyContent: "center", alignItems: "center", height: "300px" }}>
+            <LoadingSpinner />
+          </Box>
+        ) : (
+          <TableContainer>
           <Table>
             <TableHead sx={{ backgroundColor: "#1976d2" }}>
               <TableRow>
@@ -216,7 +222,8 @@ const Maturity = () => {
               )}
             </TableBody>
           </Table>
-        </TableContainer>
+          </TableContainer>
+        )}
       </Paper>
     </Box>
   );

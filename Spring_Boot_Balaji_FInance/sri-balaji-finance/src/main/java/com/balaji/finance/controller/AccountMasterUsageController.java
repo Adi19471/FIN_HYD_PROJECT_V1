@@ -1,5 +1,6 @@
 package com.balaji.finance.controller;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
@@ -45,7 +46,9 @@ public class AccountMasterUsageController {
 		String transacTypeByMasterCodeAndCode = accountMasterService
 				.findTransacTypeByMasterCodeAndCode(reuestBody.getMasterCode(), reuestBody.getCode());
 
-		List<String> transacList = Arrays.asList(transacTypeByMasterCodeAndCode.split(","));
+		List<String> transacList = transacTypeByMasterCodeAndCode != null
+				? Arrays.asList(transacTypeByMasterCodeAndCode.split(","))
+				: new ArrayList<>();
 
 		return ResponseEntity.ok().body(transacList);
 	}

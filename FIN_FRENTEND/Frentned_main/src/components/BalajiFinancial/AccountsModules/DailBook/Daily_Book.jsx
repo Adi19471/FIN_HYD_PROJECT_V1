@@ -1,9 +1,11 @@
-import React, { useState } from "react";
+import React, { useState, useCallback, lazy, Suspense } from "react";
 import axios from "axios";
 import { API_BASE } from "lib/config";
 import { getSession } from "src/utils/session";
-import { successToast, errorToast } from "toastify"; // assuming this is correct
-import Loans from "../Loans";
+import { successToast, errorToast } from "toastify";
+
+// Lazy load the Loans component for better performance
+const Loans = lazy(() => import("../Loans"));
 
 // MUI imports
 import {
@@ -29,9 +31,6 @@ import DescriptionIcon from "@mui/icons-material/Description";
 import GridOnIcon from "@mui/icons-material/GridOn";
 import PictureAsPdfIcon from "@mui/icons-material/PictureAsPdf";
 
-import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
-import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
-import { DatePicker } from "@mui/x-date-pickers/DatePicker";
 import dayjs from "dayjs";
 
 // ── Reusable headers ────────────────────────────────────────
@@ -103,157 +102,174 @@ const DailyBook = () => {
   const handlePdf   = () => successToast("PDF export coming soon 📑");
 
   return (
-    <LocalizationProvider dateAdapter={AdapterDayjs}>
-      <Box sx={{ p: 2, maxWidth: 1500, mx: "auto" }}>
-        <Loans />
+    <Box sx={{ p: 2, maxWidth: 1500, mx: "auto", position: "relative" }}>
+      <Loans />
 
-        <Paper elevation={2} sx={{ p: 2, borderRadius: 2 }}>
-          <Stack
-            direction={{ xs: "column", sm: "row" }}
-            spacing={2}
-            alignItems="center"
+      {/* Loading Overlay */}
+      {loading && (
+        <Box
+          sx={{
+            position: "absolute",
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            bgcolor: "rgba(255, 255, 255, 0.8)",
+            display: "flex",
+            justifyContent: "center",
+            alignItems: "center",
+            zIndex: 9999,
+            borderRadius: 2,
+          }}
+        >
+          <CircularProgress size={60} thickness={4} />
+        </Box>
+      )}
+
+      <Paper elevation={2} sx={{ p: 2, borderRadius: 2 }}>
+        <Stack
+          direction={{ xs: "column", sm: "row" }}
+          spacing={2}
+          alignItems="center"
+        >
+          <Typography fontWeight="bold">Date :</Typography>
+
+          <TextField
+            type="date"
+            value={transactionDate ? dayjs(transactionDate).format("YYYY-MM-DD") : ""}
+            onChange={(e) => setTransactionDate(e.target.value ? dayjs(e.target.value) : null)}
+            size="small"
+            sx={{
+              minWidth: 220,
+              "& .MuiInputBase-root": {
+                backgroundColor: "#fff176",
+                fontWeight: "bold",
+              },
+            }}
+            InputLabelProps={{ shrink: true }}
+          />
+
+          <Button
+            variant="contained"
+            onClick={fetchDailyBook}
+            disabled={loading || !transactionDate}
+            sx={{ minWidth: 120 }}
           >
-            <Typography fontWeight="bold">Date :</Typography>
+            {loading ? "Loading..." : "Generate"}
+          </Button>
 
-            <DatePicker
-              value={transactionDate}
-              onChange={(newValue) => setTransactionDate(newValue)}
-              slotProps={{
-                textField: {
-                  size: "small",
-                  sx: {
-                    minWidth: 220,
-                    "& .MuiInputBase-root": {
-                      backgroundColor: "#fff176",
-                      fontWeight: "bold",
-                    },
-                  },
-                },
-              }}
-            />
-
-            <Button
-              variant="contained"
-              onClick={fetchDailyBook}
-              disabled={loading || !transactionDate}
-              sx={{ minWidth: 120 }}
-            >
-              {loading ? "Loading..." : "Generate"}
-            </Button>
-
-            <Box sx={{ display: "flex", gap: 1, ml: "auto" }}>
-              <Tooltip title="Print">
-                <IconButton color="primary" onClick={handlePrint}>
-                  <PrintIcon />
-                </IconButton>
-              </Tooltip>
-              <Tooltip title="Export Word">
-                <IconButton color="info" onClick={handleWord}>
-                  <DescriptionIcon />
-                </IconButton>
-              </Tooltip>
-              <Tooltip title="Export Excel">
-                <IconButton color="success" onClick={handleExcel}>
-                  <GridOnIcon />
-                </IconButton>
-              </Tooltip>
-              <Tooltip title="Export PDF">
-                <IconButton color="error" onClick={handlePdf}>
-                  <PictureAsPdfIcon />
-                </IconButton>
-              </Tooltip>
-            </Box>
-          </Stack>
-
-          <Divider sx={{ my: 2 }} />
-
-          <Typography variant="subtitle1" fontWeight="bold">
-            Opening Balance :{" "}
-            <span style={{ color: "green" }}>
-              ₹ {Number(openingBalance).toLocaleString()}
-            </span>
-          </Typography>
-        </Paper>
-
-        {loading && (
-          <Box sx={{ display: "flex", justifyContent: "center", my: 5 }}>
-            <CircularProgress />
+          <Box sx={{ display: "flex", gap: 1, ml: "auto" }}>
+            <Tooltip title="Print">
+              <IconButton color="primary" onClick={handlePrint}>
+                <PrintIcon />
+              </IconButton>
+            </Tooltip>
+            <Tooltip title="Export Word">
+              <IconButton color="info" onClick={handleWord}>
+                <DescriptionIcon />
+              </IconButton>
+            </Tooltip>
+            <Tooltip title="Export Excel">
+              <IconButton color="success" onClick={handleExcel}>
+                <GridOnIcon />
+              </IconButton>
+            </Tooltip>
+            <Tooltip title="Export PDF">
+              <IconButton color="error" onClick={handlePdf}>
+                <PictureAsPdfIcon />
+              </IconButton>
+            </Tooltip>
           </Box>
-        )}
+        </Stack>
 
-        {!loading && transactions.length > 0 && (
-          <TableContainer
-            component={Paper}
-            elevation={2}
-            sx={{ mt: 3, borderRadius: 2 }}
-          >
-            <Table>
-              <TableHead>
-                <TableRow sx={{ backgroundColor: "#cfe8ff" }}>
-                  <TableCell><b>S.No</b></TableCell>
-                  <TableCell><b>Trans ID</b></TableCell>
-                  <TableCell><b>Acc. No</b></TableCell>
-                  <TableCell><b>Name</b></TableCell>
-                  <TableCell><b>Type</b></TableCell>
-                  <TableCell><b>Particulars</b></TableCell>
-                  <TableCell align="right"><b>Credit</b></TableCell>
-                  <TableCell align="right"><b>Debit</b></TableCell>
-                  <TableCell><b>User</b></TableCell>
-                </TableRow>
-              </TableHead>
-              <TableBody>
-                {transactions.map((item, index) => (
-                  <TableRow
-                    key={item.transactionId || index}
-                    sx={{
-                      backgroundColor: index % 2 === 0 ? "#ffffff" : "#f5fbff",
-                    }}
-                  >
-                    <TableCell>{index + 1}</TableCell>
-                    <TableCell>{item.transactionId || "-"}</TableCell>
-                    <TableCell>{item.accountNumber || "-"}</TableCell>
-                    <TableCell>{item.name || "-"}</TableCell>
-                    <TableCell>{item.transactionType || "-"}</TableCell>
-                    <TableCell>{item.particulars || "-"}</TableCell>
-                    <TableCell align="right">
-                      {item.credit ? Number(item.credit).toLocaleString() : "0"}
-                    </TableCell>
-                    <TableCell align="right">
-                      {item.debit ? Number(item.debit).toLocaleString() : "0"}
-                    </TableCell>
-                    <TableCell>{item.user || "-"}</TableCell>
-                  </TableRow>
-                ))}
+        <Divider sx={{ my: 2 }} />
 
-                <TableRow sx={{ backgroundColor: "#bbdefb" }}>
-                  <TableCell colSpan={6} align="right">
-                    <b>Total</b>
+        <Typography variant="subtitle1" fontWeight="bold">
+          Opening Balance :{" "}
+          <span style={{ color: "green" }}>
+            ₹ {Number(openingBalance).toLocaleString()}
+          </span>
+        </Typography>
+      </Paper>
+
+      {loading && (
+        <Box sx={{ display: "flex", justifyContent: "center", my: 5 }}>
+          <CircularProgress />
+        </Box>
+      )}
+
+      {!loading && transactions.length > 0 && (
+        <TableContainer
+          component={Paper}
+          elevation={2}
+          sx={{ mt: 3, borderRadius: 2 }}
+        >
+          <Table>
+            <TableHead>
+              <TableRow sx={{ backgroundColor: "#cfe8ff" }}>
+                <TableCell><b>S.No</b></TableCell>
+                <TableCell><b>Trans ID</b></TableCell>
+                <TableCell><b>Acc. No</b></TableCell>
+                <TableCell><b>Name</b></TableCell>
+                <TableCell><b>Type</b></TableCell>
+                <TableCell><b>Particulars</b></TableCell>
+                <TableCell align="right"><b>Credit</b></TableCell>
+                <TableCell align="right"><b>Debit</b></TableCell>
+                <TableCell><b>User</b></TableCell>
+              </TableRow>
+            </TableHead>
+            <TableBody>
+              {transactions.map((item, index) => (
+                <TableRow
+                  key={item.transactionId || index}
+                  sx={{
+                    backgroundColor: index % 2 === 0 ? "#ffffff" : "#f5fbff",
+                  }}
+                >
+                  <TableCell>{index + 1}</TableCell>
+                  <TableCell>{item.transactionId || "-"}</TableCell>
+                  <TableCell>{item.accountNumber || "-"}</TableCell>
+                  <TableCell>{item.name || "-"}</TableCell>
+                  <TableCell>{item.transactionType || "-"}</TableCell>
+                  <TableCell>{item.particulars || "-"}</TableCell>
+                  <TableCell align="right">
+                    {item.credit ? Number(item.credit).toLocaleString() : "0"}
                   </TableCell>
                   <TableCell align="right">
-                    <b>{totalCredit.toLocaleString()}</b>
+                    {item.debit ? Number(item.debit).toLocaleString() : "0"}
                   </TableCell>
-                  <TableCell align="right">
-                    <b>{totalDebit.toLocaleString()}</b>
-                  </TableCell>
-                  <TableCell />
+                  <TableCell>{item.user || "-"}</TableCell>
                 </TableRow>
-              </TableBody>
-            </Table>
-          </TableContainer>
-        )}
+              ))}
 
-        {!loading && transactions.length === 0 && transactionDate && (
-          <Typography
-            variant="body1"
-            color="text.secondary"
-            align="center"
-            sx={{ mt: 4 }}
-          >
-            No records found for the selected date.
-          </Typography>
-        )}
-      </Box>
-    </LocalizationProvider>
+              <TableRow sx={{ backgroundColor: "#bbdefb" }}>
+                <TableCell colSpan={6} align="right">
+                  <b>Total</b>
+                </TableCell>
+                <TableCell align="right">
+                  <b>{totalCredit.toLocaleString()}</b>
+                </TableCell>
+                <TableCell align="right">
+                  <b>{totalDebit.toLocaleString()}</b>
+                </TableCell>
+                <TableCell />
+              </TableRow>
+            </TableBody>
+          </Table>
+        </TableContainer>
+      )}
+
+      {!loading && transactions.length === 0 && transactionDate && (
+        <Typography
+          variant="body1"
+          color="text.secondary"
+          align="center"
+          sx={{ mt: 4 }}
+        >
+          No records found for the selected date.
+        </Typography>
+      )}
+    </Box>
   );
 };
 

@@ -23,36 +23,47 @@ import { successToast, errorToast } from "toastify";
 import { API_BASE } from "lib/config";
 import { setSession } from "src/utils/session";
 
+
 const backgroundImages = [
-  // Gold luxury abstract – finance elegance
-  "https://images.unsplash.com/photo-1618005182384-a83a8bd71c2d?auto=format&fit=crop&q=80&w=2000",
-  
-  // Gold coins stack – wealth & finance symbol
+
+  // ----- Finance Charts & Stock Market -----
+  "https://images.unsplash.com/photo-1640161704729-cbe966a08476?auto=format&fit=crop&q=80&w=2000",
+  "https://images.unsplash.com/photo-1551288049-bebda4e38f71?auto=format&fit=crop&q=80&w=2000",
   "https://images.unsplash.com/photo-1611974789855-9c2a0a7236a3?auto=format&fit=crop&q=80&w=2000",
-  
-  // Red-gold luxury texture
-  "https://images.unsplash.com/photo-1554224154-6726b3ff1f36?auto=format&fit=crop&q=80&w=2000",
-  
-  // Modern finance dashboard glow with red tones
-  "https://images.unsplash.com/photo-1556155099-490a1ba16284?auto=format&fit=crop&q=80&w=2000",
-  
-  // Warm golden professional office
+  "https://images.unsplash.com/photo-1559526324-593bc073d938?auto=format&fit=crop&q=80&w=2000",
+
+  // ----- Investment & Money -----
+  "https://images.unsplash.com/photo-1579621970795-87facc2f976d?auto=format&fit=crop&q=80&w=2000",
+  "https://images.unsplash.com/photo-1554224155-1696413565d3?auto=format&fit=crop&q=80&w=2000",
+  "https://images.unsplash.com/photo-1611078489935-0cb964de46d6?auto=format&fit=crop&q=80&w=2000",
+  "https://images.unsplash.com/photo-1604594849809-dfedbc827105?auto=format&fit=crop&q=80&w=2000",
+
+  // ----- Business Meeting / Corporate -----
+  "https://images.unsplash.com/photo-1454165804606-c3d57bc86b40?auto=format&fit=crop&q=80&w=2000",
+  "https://images.unsplash.com/photo-1556745757-8d76bdb6984b?auto=format&fit=crop&q=80&w=2000",
   "https://images.unsplash.com/photo-1557804506-669a67965ba0?auto=format&fit=crop&q=80&w=2000",
-  
-  // Elegant business meeting room – subtle Indian vibe
-  "https://images.unsplash.com/photo-1556740714-a8395b3a74dd?auto=format&fit=crop&q=80&w=2000",
-  
-  // Gold bars & financial success
-  "https://images.unsplash.com/photo-1580519548246-7285d30d8d3e?auto=format&fit=crop&q=80&w=2000",
-  
-  // Premium red-gold abstract luxury
-  "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&q=80&w=2000",
-  
-  // Corporate workspace with warm red/gold lighting
-  "https://images.unsplash.com/photo-1551836022-d5d88e9218df?auto=format&fit=crop&q=80&w=2000",
-  
-  // Gold ingots – strong wealth/finance theme
-  "https://images.unsplash.com/photo-1616401784286-647d015ed0e6?auto=format&fit=crop&q=80&w=2000",
+
+  // ----- Banking & Fintech -----
+  "https://images.unsplash.com/photo-1565514158740-064f34bd6cfd?auto=format&fit=crop&q=80&w=2000",
+  "https://images.unsplash.com/photo-1569025690938-a00729c9e1f9?auto=format&fit=crop&q=80&w=2000",
+  "https://images.unsplash.com/photo-1611971260890-8d52fdf3a21a?auto=format&fit=crop&q=80&w=2000",
+
+  // ----- Daily Business Work / Planning -----
+  "https://images.unsplash.com/photo-1554224154-26032ffc0d07?auto=format&fit=crop&q=80&w=2000",
+  "https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?auto=format&fit=crop&q=80&w=2000",
+  "https://images.unsplash.com/photo-1504384308090-c894fdcc538d?auto=format&fit=crop&q=80&w=2000",
+
+  // ----- Money Saving / Growth Concept -----
+  "https://images.unsplash.com/photo-1565372919476-6c3c5fbe8b7b?auto=format&fit=crop&q=80&w=2000",
+  "https://images.unsplash.com/photo-1581092335397-9583eb92d232?auto=format&fit=crop&q=80&w=2000",
+
+  // ----- Lord Venkateswara (Balaji) -----
+  "https://upload.wikimedia.org/wikipedia/commons/9/9d/Lord_Venkateswara_Tirumala.jpg",
+  "https://upload.wikimedia.org/wikipedia/commons/3/3f/Tirupati_Balaji_Temple_Deity.jpg",
+  "https://upload.wikimedia.org/wikipedia/commons/4/4a/Sri_Venkateswara_Swamy.jpg",
+  "https://upload.wikimedia.org/wikipedia/commons/0/09/Venkateswara_Tirumala_Deity.jpg",
+  "https://upload.wikimedia.org/wikipedia/commons/2/2c/Lord_Balaji_Tirupati.jpg",
+
 ];
 
 const Login = () => {

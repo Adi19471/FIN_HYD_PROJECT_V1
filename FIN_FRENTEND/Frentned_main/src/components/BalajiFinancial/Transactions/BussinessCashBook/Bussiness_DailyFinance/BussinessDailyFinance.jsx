@@ -18,9 +18,6 @@ import {
   FormControlLabel,
   Checkbox,
 } from "@mui/material";
-import { DateTimePicker } from "@mui/x-date-pickers/DateTimePicker";
-import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
-import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
 import dayjs from "dayjs";
 import axios from "axios";
 import { successToast, errorToast } from "toastify";
@@ -242,10 +239,28 @@ const BussinessDailyFinance = () => {
   };
 
   return (
-    <LocalizationProvider dateAdapter={AdapterDayjs}>
-      <Box display="flex" height="100vh" bgcolor="#f5f5f5">
-        <Box flexGrow={1}>
-       
+    <Box display="flex" height="100vh" bgcolor="#f5f5f5">
+      <Box flexGrow={1} position="relative">
+          {/* Loading Overlay */}
+          {loading && (
+            <Box
+              sx={{
+                position: "absolute",
+                top: 0,
+                left: 0,
+                right: 0,
+                bottom: 0,
+                bgcolor: "rgba(255, 255, 255, 0.8)",
+                display: "flex",
+                justifyContent: "center",
+                alignItems: "center",
+                zIndex: 9999,
+              }}
+            >
+              <CircularProgress size={60} thickness={4} />
+            </Box>
+          )}
+         
             <Typography variant="h6" fontWeight="bold" color="info" mb={1}>
             DAILY  Custmer
             </Typography>
@@ -382,14 +397,33 @@ const BussinessDailyFinance = () => {
             </Typography>
             <Grid container spacing={3} mb={3}>
               <Grid item xs={12} md={4}>
-                <DateTimePicker
-                  label="Payment Date & Time"
-                  value={form.date}
-                  onChange={(newDate) =>
-                    setForm((prev) => ({ ...prev, date: newDate }))
+                <TextField
+                  label="Payment Date"
+                  type="date"
+                  value={form.date ? form.date.format("YYYY-MM-DD") : ""}
+                  onChange={(e) =>
+                    setForm((prev) => ({ ...prev, date: dayjs(e.target.value) }))
                   }
-                  slotProps={{ textField: { size: "small", fullWidth: true } }}
-                  ampm={false}
+                  fullWidth
+                  size="small"
+                  InputLabelProps={{ shrink: true }}
+                />
+              </Grid>
+              <Grid item xs={12} md={4}>
+                <TextField
+                  label="Payment Time"
+                  type="time"
+                  value={form.date ? form.date.format("HH:mm") : ""}
+                  onChange={(e) => {
+                    const [hours, minutes] = e.target.value.split(":");
+                    setForm((prev) => ({
+                      ...prev,
+                      date: prev.date.hour(parseInt(hours)).minute(parseInt(minutes)),
+                    }));
+                  }}
+                  fullWidth
+                  size="small"
+                  InputLabelProps={{ shrink: true }}
                 />
               </Grid>
               <Grid item xs={12} md={4}>
@@ -541,10 +575,9 @@ const BussinessDailyFinance = () => {
                 </TableBody>
               </Table>
             </TableContainer>
-   
         </Box>
       </Box>
-    </LocalizationProvider>
+
   );
 };
 

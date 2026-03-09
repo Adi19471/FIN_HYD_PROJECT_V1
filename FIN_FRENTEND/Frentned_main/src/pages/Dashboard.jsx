@@ -4,8 +4,6 @@ import { useNavigate } from "react-router-dom";
 import { apiFetch } from "../lib/apiClient";
 
 import {
-  AppBar,
-  Toolbar,
   Box,
   Typography,
   Button,
@@ -15,10 +13,7 @@ import {
   Divider,
   Stack,
   Chip,
-  Avatar,
-  IconButton,
   Skeleton,
-  Alert,
 } from "@mui/material";
 
 import {
@@ -27,10 +22,12 @@ import {
   CurrencyRupeeRounded,
   WarningAmberRounded,
   TrendingUpRounded,
-  LogoutRounded,
-  AccountBalance,
-  GroupAddRounded,
   PaymentsRounded,
+  MenuBookRounded,
+  AccountTreeRounded,
+  ReceiptRounded,
+  PersonAddRounded,
+  ReceiptLongRounded,
 } from "@mui/icons-material";
 
 import { motion } from "framer-motion";
@@ -97,14 +94,15 @@ function StatCard({
   trendUp = true,
   alert = false,
   loading = false,
+  index = 0,
 }) {
   if (loading) {
     return (
-      <Card elevation={3} sx={{ borderRadius: 3, height: "100%" }}>
+      <Card elevation={2} sx={{ borderRadius: 2, height: "100%" }}>
         <Box sx={{ height: 6, bgcolor: color }} />
-        <CardContent sx={{ p: 3.5 }}>
+        <CardContent sx={{ p: 2 }}>
           <Skeleton variant="text" width="60%" height={20} />
-          <Skeleton variant="text" width="80%" height={48} sx={{ my: 1 }} />
+          <Skeleton variant="text" width="80%" height={40} sx={{ my: 1 }} />
           <Skeleton variant="text" width="40%" height={20} />
         </CardContent>
       </Card>
@@ -115,75 +113,80 @@ function StatCard({
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.5 }}
+      transition={{ duration: 0.4, delay: index * 0.08 }}
     >
       <Card
-        elevation={3}
+        elevation={2}
         sx={{
-          borderRadius: 3,
+          borderRadius: 2,
           overflow: "hidden",
-          border: `1px solid ${bgLight}80`,
-          transition: "all 0.25s ease",
+          border: `1px solid ${bgLight}`,
+          transition: "all 0.2s ease",
           height: "100%",
           "&:hover": {
-            transform: "translateY(-6px)",
-            boxShadow: `0 16px 40px ${bgLight}60`,
+            transform: "translateY(-4px)",
+            boxShadow: `0 8px 25px ${bgLight}`,
           },
         }}
       >
-        <Box sx={{ height: 6, bgcolor: color }} />
-        <CardContent sx={{ p: 3.5 }}>
-          <Stack direction="row" justifyContent="space-between" alignItems="flex-start">
+        <Box sx={{ height: 4, bgcolor: color }} />
+        <CardContent sx={{ p: 2 }}>
+          <Stack
+            direction="row"
+            justifyContent="space-between"
+            alignItems="center"
+          >
             <Box sx={{ flex: 1, minWidth: 0 }}>
               <Typography
-                variant="subtitle2"
+                variant="caption"
                 color="text.secondary"
                 sx={{
-                  fontWeight: 700,
+                  fontWeight: 600,
                   textTransform: "uppercase",
-                  fontSize: "0.75rem",
-                  letterSpacing: 0.8,
-                  mb: 0.8,
+                  fontSize: "0.65rem",
+                  letterSpacing: 0.5,
                 }}
               >
                 {title}
               </Typography>
               <Typography
-                variant="h5"
-                fontWeight={800}
+                variant="h6"
+                fontWeight={700}
                 sx={{
-                  color: alert ? "error.main" : color,
-                  lineHeight: 1.2,
-                  wordBreak: "break-word",
+                  color: alert ? "error.main" : "#1e293b",
+                  lineHeight: 1.3,
+                  fontSize: "1.25rem",
                 }}
               >
                 {value}
               </Typography>
               {subtitle && (
-                <Typography variant="body2" color="text.secondary" sx={{ mt: 0.6, fontSize: "0.8rem" }}>
+                <Typography
+                  variant="caption"
+                  color="text.secondary"
+                  sx={{ fontSize: "0.7rem" }}
+                >
                   {subtitle}
                 </Typography>
               )}
             </Box>
-
             <Box
               sx={{
                 bgcolor: bgLight,
                 color,
-                borderRadius: 2,
-                width: 52,
-                height: 52,
+                borderRadius: 1.5,
+                width: 40,
+                height: 40,
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "center",
                 flexShrink: 0,
-                ml: 1.5,
+                ml: 1,
               }}
             >
-              <Icon sx={{ fontSize: 28 }} />
+              <Icon sx={{ fontSize: 22 }} />
             </Box>
           </Stack>
-
           {trend !== undefined && (
             <Chip
               size="small"
@@ -193,10 +196,10 @@ function StatCard({
                   sx={{ transform: trendUp ? "none" : "rotate(180deg)" }}
                 />
               }
-              label={`${trendUp ? "+" : ""}${trend}% this month`}
+              label={`${trendUp ? "+" : ""}${trend}%`}
               color={trendUp ? "success" : "error"}
               variant="outlined"
-              sx={{ mt: 2, fontWeight: 600, borderRadius: 12, fontSize: "0.7rem" }}
+              sx={{ mt: 1.5, fontWeight: 600, fontSize: "0.6rem", height: 22 }}
             />
           )}
         </CardContent>
@@ -205,52 +208,69 @@ function StatCard({
   );
 }
 
-// ────────────────────────────────────────────────
-export default function ProfessionalDashboard() {
-  const { logout, user } = useAuth();
+// Quick Action Button Component
+function QuickActionButton({ icon: Icon, label, onClick, color }) {
+  return (
+    <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
+      <Button
+        variant="contained"
+        startIcon={<Icon />}
+        onClick={onClick}
+        sx={{
+          minWidth: 130,
+          py: 1,
+          fontWeight: 600,
+          fontSize: "0.75rem",
+          bgcolor: color,
+          color: "#fff",
+          boxShadow: "none",
+          "&:hover": { bgcolor: color, opacity: 0.9 },
+          borderRadius: 1.5,
+          textTransform: "none",
+        }}
+      >
+        {label}
+      </Button>
+    </motion.div>
+  );
+}
+
+// Main Dashboard Component
+export default function Dashboard() {
+  const { user } = useAuth();
   const navigate = useNavigate();
   const [time, setTime] = useState(new Date());
-  
-  // Dashboard data state
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
   const [dashboardData, setDashboardData] = useState(null);
 
-  // Get user info from auth context
   const userName = user?.name || "User";
   const userRole = user?.role || "Branch Admin";
   const accountId = user?.accountId || user?.branchId || null;
 
   useEffect(() => {
-    const timer = setInterval(() => setTime(new Date()), 1000);
+    const timer = setInterval(() => setTime(new Date()), 60000);
     return () => clearInterval(timer);
   }, []);
 
-  // Fetch dashboard data from API
   useEffect(() => {
     const fetchDashboardData = async () => {
       setLoading(true);
-      setError(null);
-      
       try {
-        // Try to fetch from API if accountId exists
         if (accountId) {
           const response = await apiFetch(`/dashboard?accountId=${accountId}`);
           setDashboardData(response.data || getMockData(accountId));
         } else {
-          // Use mock data for now
           setDashboardData(getMockData(accountId));
         }
       } catch (err) {
-        console.log("Using mock data due to API error:", err.message);
-        // Fallback to mock data
         setDashboardData(getMockData(accountId));
       } finally {
         setLoading(false);
       }
     };
-
     fetchDashboardData();
+    const refreshInterval = setInterval(fetchDashboardData, 60000);
+    return () => clearInterval(refreshInterval);
   }, [accountId]);
 
   const greeting = (() => {
@@ -260,399 +280,316 @@ export default function ProfessionalDashboard() {
     return "Good Evening";
   })();
 
-  // Extract data from state or use defaults
   const stats = dashboardData?.stats || {};
   const collectionTrend = dashboardData?.collectionTrend || [];
   const statusData = dashboardData?.statusData || [];
   const trends = dashboardData?.trends || {};
 
   return (
-    <>
-      {/* HEADER */}
-      <AppBar 
-        position="static" 
-        color="default" 
-        elevation={2}
-        sx={{ 
-          background: "linear-gradient(135deg, #ffffff 0%, #f8fafc 100%)",
-          borderBottom: "1px solid",
-          borderColor: "divider",
-        }}
-      >
-        <Toolbar sx={{ 
-          justifyContent: "space-between", 
-          px: { xs: 2, md: 4 }, 
-          py: 1.5,
-          flexWrap: "wrap",
-          gap: 1,
-        }}>
-          <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
-            <AccountBalance sx={{ color: "#0ea5e9", fontSize: 32 }} />
-            <Typography 
-              variant="h6" 
-              fontWeight={700} 
-              sx={{ color: "#0ea5e9", fontSize: { xs: "1rem", sm: "1.25rem" } }}
-            >
-              Sri Balaji Chit Funds
-            </Typography>
-          </Box>
-
-          <Stack 
-            direction={{ xs: "column", sm: "row" }} 
-            spacing={{ xs: 1, sm: 3 }} 
-            alignItems={{ xs: "flex-start", sm: "center" }}
-          >
-            <Typography 
-              variant="body2" 
-              color="text.secondary" 
-              fontWeight={500}
-              sx={{ fontSize: { xs: "0.75rem", sm: "0.875rem" } }}
-            >
-              {time.toLocaleDateString("en-IN", {
-                weekday: "long",
-                day: "numeric",
-                month: "long",
-                year: "numeric",
-              })}{" • "}
-              {time.toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit", hour12: true })}
-            </Typography>
-
-            <Stack direction="row" spacing={1.5} alignItems="center">
-              <Avatar sx={{ bgcolor: "#0ea5e9", width: 38, height: 38, fontSize: "1rem" }}>
-                {userName.charAt(0).toUpperCase()}
-              </Avatar>
-              <Box sx={{ display: { xs: "none", md: "block" } }}>
-                <Typography variant="subtitle2" fontWeight={600} sx={{ fontSize: "0.875rem" }}>
-                  {userName}
-                </Typography>
-                <Typography variant="caption" color="text.secondary">
-                  {userRole}
-                </Typography>
-              </Box>
-            </Stack>
-
-            <IconButton 
-              color="inherit" 
-              onClick={() => logout()}
-              sx={{ 
-                color: "text.secondary",
-                "&:hover": { color: "error.main", bgcolor: "error.light" }
-              }}
-            >
-              <LogoutRounded />
-            </IconButton>
-          </Stack>
-        </Toolbar>
-      </AppBar>
-
-      {/* QUICK ACTION BAR */}
-      <Box
-        sx={{
-          bgcolor: "background.paper",
-          borderBottom: 0,
-          borderColor: "divider",
-          px: { xs: 2, md: 4 },
-          py: 2,
-        }}
-      >
-        <Stack 
-          direction={{ xs: "column", sm: "row" }} 
-          spacing={2}
-          sx={{
-            "& > *": {
-              width: { xs: "100%", sm: "auto" },
-            }
-          }}
+    <Box sx={{ p: { xs: 1.5, md: 3 } }}>
+      {/* Quick Action Bar */}
+      <Box sx={{ mb: 3, pb: 2, borderBottom: "1px solid #e2e8f0" }}>
+        <Stack
+          direction={{ xs: "column", sm: "row" }}
+          spacing={1.5}
+          flexWrap="wrap"
+          useFlexGap
         >
-          <Button
-            variant="contained"
-            startIcon={<GroupAddRounded />}
+          <QuickActionButton
+            icon={PersonAddRounded}
+            label="Add Member"
             onClick={() => navigate("/Main_personal_file")}
-            sx={{ 
-              minWidth: { xs: "100%", sm: 180 }, 
-              py: 1.2, 
-              fontWeight: 600,
-              fontSize: "0.875rem",
-              bgcolor: "#0ea5e9",
-              "&:hover": { bgcolor: "#0284c7" }
-            }}
-          >
-            Add New Member
-          </Button>
-          <Button
-            variant="contained"
-            color="primary"
-            startIcon={<PaymentsRounded />}
+            color="#0ea5e9"
+          />
+          <QuickActionButton
+            icon={AccountTreeRounded}
+            label="New Chit"
             onClick={() => navigate("/Loan")}
-            sx={{ 
-              minWidth: { xs: "100%", sm: 180 }, 
-              py: 1.2, 
-              fontWeight: 600,
-              fontSize: "0.875rem",
-              bgcolor: "#0ea5e9",
-              "&:hover": { bgcolor: "#0284c7" }
-            }}
-          >
-            Start New Chit
-          </Button>
-
-            <Button
-            variant="contained"
-            color="primary"
-            startIcon={<PaymentsRounded />}
+            color="#8b5cf6"
+          />
+          <QuickActionButton
+            icon={MenuBookRounded}
+            label="Cashbook"
             onClick={() => navigate("/Transactions/Cashbook")}
-            sx={{ 
-              minWidth: { xs: "100%", sm: 180 }, 
-              py: 1.2, 
-              fontWeight: 600,
-              fontSize: "0.875rem",
-              bgcolor: "#0ea5e9",
-              "&:hover": { bgcolor: "#0284c7" }
-            }}
-          >
-       Cashbook
-          </Button>
-
-            <Button
-            variant="contained"
-            color="primary"
-            startIcon={<PaymentsRounded />}
+            color="#10b981"
+          />
+          <QuickActionButton
+            icon={ReceiptLongRounded}
+            label="Registration"
             onClick={() => navigate("/AccountMasterSetup/Registraion_creation")}
-            sx={{ 
-              minWidth: { xs: "100%", sm: 180 }, 
-              py: 1.2, 
-              fontWeight: 600,
-              fontSize: "0.875rem",
-              bgcolor: "#0ea5e9",
-              "&:hover": { bgcolor: "#0284c7" }
-            }}
-          >
-    Registration
-          </Button>
-
-
- <Button
-            variant="contained"
-            color="primary"
-            startIcon={<PaymentsRounded />}
-            onClick={() => navigate("/AccountMasterSetup/Registraion_creation")}
-            sx={{ 
-              minWidth: { xs: "100%", sm: 180 }, 
-              py: 1.2, 
-              fontWeight: 600,
-              fontSize: "0.875rem",
-              bgcolor: "#0ea5e9",
-              "&:hover": { bgcolor: "#0284c7" }
-            }}
-          >
-    Registration
-          </Button>
-
-
-        
+            color="#f59e0b"
+          />
+          <QuickActionButton
+            icon={ReceiptRounded}
+            label="Daily Book"
+            onClick={() => navigate("/AccountsModules/DailBook")}
+            color="#ec4899"
+          />
         </Stack>
       </Box>
 
-      {/* MAIN CONTENT */}
-      <Box
-        component="main"
-        sx={{
-          p: { xs: 2, md: 4 },
-          maxWidth: 1680,
-          mx: "auto",
-          bgcolor: "grey.50",
-          minHeight: "100vh",
-        }}
+      {/* Greeting */}
+      <motion.div
+        initial={{ opacity: 0, y: -10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.3 }}
       >
-        {/* Error Alert */}
-        {error && (
-          <Alert severity="warning" sx={{ mb: 3 }}>
-            {error}
-          </Alert>
-        )}
+        <Box sx={{ mb: 3 }}>
+          <Typography
+            variant="h5"
+            fontWeight={700}
+            sx={{ color: "#1e293b", fontSize: { xs: "1.25rem", md: "1.5rem" } }}
+          >
+            {greeting} 👋 {userName}
+          </Typography>
+          <Typography
+            variant="body2"
+            color="text.secondary"
+            sx={{ fontSize: "0.85rem" }}
+          >
+            Here's your business overview for today
+          </Typography>
+        </Box>
+      </motion.div>
 
-     
+      {/* KPI Cards - 5 in a row */}
+      <Typography
+        variant="subtitle1"
+        fontWeight={600}
+        sx={{ mb: 2, color: "#1e293b" }}
+      >
+        Key Performance Indicators
+      </Typography>
 
-        {/* KPI CARDS – 4 in a row */}
-        <Typography 
-          variant="h6" 
-          fontWeight={700} 
-          gutterBottom 
-          sx={{ mb: 3, fontSize: { xs: "1rem", sm: "1.25rem" } }}
-        >
-          Key Performance Indicators
-        </Typography>
-
-        <Grid container spacing={2.5} sx={{ mb: 3 }}>
-          <Grid item xs={12} sm={6} md={3}>
-            <StatCard
-              title="Total Members"
-              value={loading ? "" : `${stats.totalMembers?.toLocaleString() || 0}`}
-              subtitle={loading ? "" : `${stats.activeMembers || 0} active • ${stats.inactiveMembers || 0} inactive`}
-              icon={PeopleAltRounded}
-              color="#0ea5e9"
-              bgLight="#e0f2fe"
-              trend={trends.members}
-              trendUp={trends.members >= 0}
-              loading={loading}
-            />
-          </Grid>
-
-        
-          <Grid item xs={12} sm={6} md={3}>
-            <StatCard
-              title="Today's Collection"
-              value={loading ? "" : formatINR(stats.todayCollection || 0)}
-              subtitle={loading ? "" : `from ${stats.todayMembers || 0} members`}
-              icon={CurrencyRupeeRounded}
-              color="#0ea5e9"
-              bgLight="#e0f2fe"
-              trend={trends.collection}
-              trendUp={trends.collection >= 0}
-              loading={loading}
-            />
-          </Grid>
-
-          <Grid item xs={12} sm={6} md={3}>
-            <StatCard
-              title="Pending Dues"
-              value={loading ? "" : formatINR(stats.pendingDues || 0)}
-              subtitle={loading ? "" : `${stats.pendingMembers || 0} members • ${stats.pendingInstalments || 0} instalments`}
-              icon={WarningAmberRounded}
-              color="#dc2626"
-              bgLight="#fee2e2"
-              trend={trends.dues}
-              trendUp={trends.dues >= 0}
-              loading={loading}
-            />
-          </Grid>
+      <Grid container spacing={2} sx={{ mb: 3 }}>
+        <Grid item xs={6} sm={4} md={2.4}>
+          <StatCard
+            title="Total Members"
+            value={`${stats.totalMembers?.toLocaleString() || 0}`}
+            subtitle={`${stats.activeMembers || 0} active`}
+            icon={PeopleAltRounded}
+            color="#0ea5e9"
+            bgLight="#e0f2fe"
+            trend={trends.members}
+            trendUp={trends.members >= 0}
+            loading={loading}
+            index={0}
+          />
         </Grid>
+        <Grid item xs={6} sm={4} md={2.4}>
+          <StatCard
+            title="Running Chits"
+            value={`${stats.runningChits?.toLocaleString() || 0}`}
+            subtitle={`${statusData[0]?.value || 0} active`}
+            icon={AutorenewRounded}
+            color="#8b5cf6"
+            bgLight="#ede9fe"
+            trend={trends.chits}
+            trendUp={trends.chits >= 0}
+            loading={loading}
+            index={1}
+          />
+        </Grid>
+        <Grid item xs={6} sm={4} md={2.4}>
+          <StatCard
+            title="Chit Value"
+            value={formatINR(stats.chitValue || 0)}
+            subtitle="Total fund value"
+            icon={CurrencyRupeeRounded}
+            color="#10b981"
+            bgLight="#d1fae5"
+            loading={loading}
+            index={2}
+          />
+        </Grid>
+        <Grid item xs={6} sm={4} md={2.4}>
+          <StatCard
+            title="Today's Collection"
+            value={formatINR(stats.todayCollection || 0)}
+            subtitle={`${stats.todayMembers || 0} members`}
+            icon={PaymentsRounded}
+            color="#f59e0b"
+            bgLight="#fef3c7"
+            trend={trends.collection}
+            trendUp={trends.collection >= 0}
+            loading={loading}
+            index={3}
+          />
+        </Grid>
+        <Grid item xs={6} sm={4} md={2.4}>
+          <StatCard
+            title="Pending Dues"
+            value={formatINR(stats.pendingDues || 0)}
+            subtitle={`${stats.pendingMembers || 0} members`}
+            icon={WarningAmberRounded}
+            color="#ef4444"
+            bgLight="#fee2e2"
+            trend={trends.dues}
+            trendUp={trends.dues >= 0}
+            alert={stats.pendingDues > 500000}
+            loading={loading}
+            index={4}
+          />
+        </Grid>
+      </Grid>
 
-        {/* CHARTS SECTION */}
-        <Grid container spacing={3} sx={{ mt: 1 }}>
-          <Grid item xs={12} lg={8}>
-            <Card elevation={4} sx={{ borderRadius: 3, height: "100%" }}>
-              <CardContent sx={{ p: { xs: 2, sm: 3, md: 4 } }}>
-                <Typography variant="h6" fontWeight={700} gutterBottom sx={{ fontSize: { xs: "1rem", sm: "1.25rem" } }}>
-                  Collection Trend
-                </Typography>
-                <Divider sx={{ mb: 3 }} />
-                <Box sx={{ height: collectionTrend.length > 0 ? (window.innerWidth < 600 ? 300 : 420) : 300 }}>
-                  {loading ? (
-                    <Skeleton variant="rectangular" width="100%" height="100%" />
-                  ) : (
+      {/* Charts Section */}
+      {/* <Grid container spacing={2}>
+        <Grid item xs={12} lg={8}>
+          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4, delay: 0.3 }}>
+            <Card elevation={2} sx={{ borderRadius: 2, height: "100%" }}>
+              <CardContent sx={{ p: 2 }}>
+                <Stack direction="row" justifyContent="space-between" alignItems="center" mb={1}>
+                  <Typography variant="subtitle1" fontWeight={600} sx={{ fontSize: "1rem" }}>Collection Trend</Typography>
+                  <Chip label="Last 6 Months" size="small" sx={{ fontSize: "0.65rem", height: 22 }} />
+                </Stack>
+                <Divider sx={{ mb: 2 }} />
+                <Box sx={{ height: 280 }}>
+                  {loading ? <Skeleton variant="rectangular" width="100%" height="100%" /> : (
                     <LineChart
-                      xAxis={[
-                        {
-                          scaleType: "band",
-                          data: collectionTrend.map((d) => d.month),
-                          tickLabelStyle: { 
-                            angle: -35, 
-                            textAnchor: "end", 
-                            fontSize: 11,
-                            fill: "#666"
-                          },
-                        },
-                      ]}
-                      series={[
-                        {
-                          data: collectionTrend.map((d) => d.value),
-                          label: "Collection (₹)",
-                          color: "#2563eb",
-                          area: true,
-                          curve: "natural",
-                          showMark: true,
-                        },
-                      ]}
-                      height={collectionTrend.length > 0 ? (window.innerWidth < 600 ? 300 : 420) : 300}
-                      margin={{ top: 20, right: 20, bottom: 80, left: 60 }}
-                      sx={{
-                        width: "100%",
-                        "& .MuiChartsAxis-label": {
-                          fontSize: "0.75rem",
-                        },
-                      }}
+                      xAxis={[{ scaleType: "band", data: collectionTrend.map((d) => d.month), tickLabelStyle: { angle: -30, textAnchor: "end", fontSize: 10 } }]}
+                      series={[{ data: collectionTrend.map((d) => d.value), label: "Collection", color: "#2563eb", area: true, curve: "natural" }]}
+                      height={280}
+                      margin={{ top: 10, right: 10, bottom: 50, left: 50 }}
                     />
                   )}
                 </Box>
               </CardContent>
             </Card>
-          </Grid>
+          </motion.div>
+        </Grid>
 
-          <Grid item xs={12} lg={4}>
-            <Card 
-              elevation={4} 
-              sx={{ 
-                borderRadius: 3, 
-                height: "100%",
-                minHeight: { xs: 450, lg: "auto" }
-              }}
-            >
-              <CardContent sx={{ p: { xs: 2, sm: 3, md: 4 }, height: "100%", display: "flex", flexDirection: "column" }}>
-                <Typography 
-                  variant="h6" 
-                  fontWeight={700} 
-                  gutterBottom
-                  sx={{ fontSize: { xs: "1rem", sm: "1.25rem" } }}
-                >
-                  Current Chit Status Distribution
-                </Typography>
-                <Divider sx={{ mb: 3 }} />
-                <Box sx={{ 
-                  flex: 1, 
-                  display: "flex", 
-                  alignItems: "center", 
-                  justifyContent: "center",
-                  minHeight: { xs: 300, md: 350 }
-                }}>
-                  {loading ? (
-                    <Skeleton variant="circular" width={250} height={250} />
-                  ) : (
+        <Grid item xs={12} lg={4}>
+          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4, delay: 0.4 }}>
+            <Card elevation={2} sx={{ borderRadius: 2, height: "100%", minHeight: 380 }}>
+              <CardContent sx={{ p: 2, height: "100%", display: "flex", flexDirection: "column" }}>
+                <Typography variant="subtitle1" fontWeight={600} sx={{ fontSize: "1rem", mb: 1 }}>Chit Status</Typography>
+                <Divider sx={{ mb: 2 }} />
+                <Box sx={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", minHeight: 220 }}>
+                  {loading ? <Skeleton variant="circular" width={180} height={180} /> : (
                     <PieChart
-                      series={[
-                        {
-                          data: statusData,
-                          innerRadius: 60,
-                          outerRadius: 100,
-                          paddingAngle: 3,
-                          arcLabel: (item) => `${item.value}`,
-                          arcLabelMinAngle: 45,
-                        },
-                      ]}
-                      sx={{
-                        [`& .${pieArcLabelClasses.root}`]: {
-                          fill: "#fff",
-                          fontWeight: 700,
-                          fontSize: 12,
-                          textShadow: "0 1px 3px rgba(0,0,0,0.7)",
-                        },
-                      }}
-                      height={300}
+                      series={[{ data: statusData, innerRadius: 50, outerRadius: 80, paddingAngle: 2, arcLabel: (item) => `${item.value}`, arcLabelMinAngle: 45 }]}
+                      sx={{ [`& .${pieArcLabelClasses.root}`]: { fill: "#fff", fontWeight: 700, fontSize: 11 } }}
+                      height={220}
                     />
                   )}
                 </Box>
-                {/* Legend */}
-                <Box sx={{ display: "flex", flexWrap: "wrap", justifyContent: "center", gap: 1.5, mt: 2 }}>
+                <Box sx={{ display: "flex", flexWrap: "wrap", justifyContent: "center", gap: 1, mt: 1 }}>
                   {statusData.map((item) => (
-                    <Chip
-                      key={item.id}
-                      size="small"
-                      label={`${item.label}: ${item.value}`}
-                      sx={{
-                        bgcolor: item.color + "20",
-                        color: item.color,
-                        fontWeight: 600,
-                        fontSize: "0.75rem",
-                      }}
-                    />
+                    <Chip key={item.id} size="small" label={`${item.label}: ${item.value}`} sx={{ bgcolor: item.color + "20", color: item.color, fontWeight: 600, fontSize: "0.65rem" }} />
                   ))}
                 </Box>
               </CardContent>
             </Card>
-          </Grid>
+          </motion.div>
         </Grid>
-      </Box>
-    </>
+      </Grid> */}
+
+      {/* Summary Stats */}
+      <Grid container spacing={2} sx={{ mt: 2 }}>
+        <Grid item xs={12}>
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.4, delay: 0.5 }}
+          >
+            <Card
+              elevation={2}
+              sx={{
+                borderRadius: 2,
+                background: "linear-gradient(135deg, #1e293b 0%, #334155 100%)",
+                color: "#fff",
+              }}
+            >
+              <CardContent sx={{ p: 2 }}>
+                <Grid container spacing={2} alignItems="center">
+                  <Grid item xs={12} md={4}>
+                    <Stack direction="row" spacing={1.5} alignItems="center">
+                      <Box
+                        sx={{
+                          width: 40,
+                          height: 40,
+                          borderRadius: 1,
+                          bgcolor: "rgba(255,255,255,0.1)",
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                        }}
+                      >
+                        <TrendingUpRounded
+                          sx={{ fontSize: 22, color: "#22c55e" }}
+                        />
+                      </Box>
+                      <Box>
+                        <Typography variant="h6" fontWeight={700}>
+                          {formatINR(stats.todayCollection || 0)}
+                        </Typography>
+                        <Typography variant="caption" sx={{ opacity: 0.8 }}>
+                          Today's Collection
+                        </Typography>
+                      </Box>
+                    </Stack>
+                  </Grid>
+                  <Grid item xs={12} md={4}>
+                    <Stack direction="row" spacing={1.5} alignItems="center">
+                      <Box
+                        sx={{
+                          width: 40,
+                          height: 40,
+                          borderRadius: 1,
+                          bgcolor: "rgba(255,255,255,0.1)",
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                        }}
+                      >
+                        <PeopleAltRounded
+                          sx={{ fontSize: 22, color: "#0ea5e9" }}
+                        />
+                      </Box>
+                      <Box>
+                        <Typography variant="h6" fontWeight={700}>
+                          {stats.todayMembers || 0}
+                        </Typography>
+                        <Typography variant="caption" sx={{ opacity: 0.8 }}>
+                          Members Paid Today
+                        </Typography>
+                      </Box>
+                    </Stack>
+                  </Grid>
+                  <Grid item xs={12} md={4}>
+                    <Stack direction="row" spacing={1.5} alignItems="center">
+                      <Box
+                        sx={{
+                          width: 40,
+                          height: 40,
+                          borderRadius: 1,
+                          bgcolor: "rgba(255,255,255,0.1)",
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                        }}
+                      >
+                        <WarningAmberRounded
+                          sx={{ fontSize: 22, color: "#f59e0b" }}
+                        />
+                      </Box>
+                      <Box>
+                        <Typography variant="h6" fontWeight={700}>
+                          {stats.pendingInstalments || 0}
+                        </Typography>
+                        <Typography variant="caption" sx={{ opacity: 0.8 }}>
+                          Pending Instalments
+                        </Typography>
+                      </Box>
+                    </Stack>
+                  </Grid>
+                </Grid>
+              </CardContent>
+            </Card>
+          </motion.div>
+        </Grid>
+      </Grid>
+    </Box>
   );
 }
-

@@ -18,9 +18,6 @@ import {
   FormControlLabel,
   Checkbox,
 } from "@mui/material";
-import { DateTimePicker } from "@mui/x-date-pickers/DateTimePicker";
-import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
-import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
 import dayjs from "dayjs";
 import axios from "axios";
 import { successToast, errorToast } from "toastify"; // assuming this exists
@@ -216,216 +213,244 @@ const BusinessMonthlyFinance = () => {
   };
 
   return (
-    <LocalizationProvider dateAdapter={AdapterDayjs}>
-      <Box sx={{ p: { xs: 2, md: 3 }, bgcolor: "#f8fafc", minHeight: "100vh" }}>
-        <Typography variant="h5" component="h1" fontWeight={600} color="primary.dark" gutterBottom>
-          Monthly Finance – Customer Payment
-        </Typography>
+    <Box sx={{ p: { xs: 2, md: 3 }, bgcolor: "#f8fafc", minHeight: "100vh" }}>
+      <Typography variant="h5" component="h1" fontWeight={600} color="primary.dark" gutterBottom>
+        Monthly Finance – Customer Payment
+      </Typography>
 
-        {/* Search & Basic Info */}
-        <Paper elevation={2} sx={{ p: 3, mb: 4, borderRadius: 2 }}>
-          <Grid container spacing={2.5} alignItems="flex-end">
-            <Grid item xs={12} md={5}>
-              <Autocomplete
-                fullWidth
-                options={accountList}
-                getOptionLabel={(option) => option.displayString || ""}
-                inputValue={searchInput}
-                onInputChange={(_, value, reason) => {
-                  if (reason === "input" || reason === "reset") {
-                    setSearchInput(value);
-                  }
-                }}
-                onChange={(_, value) => {
-                  if (value) {
-                    loadLoanInfo(value.loanId);
-                    setSearchInput(value.displayString || "");
-                  } else {
-                    setSelectedLoanId(null);
-                    setForm((p) => ({
-                      ...p,
-                      accountNo: "",
-                      partnerName: "",
-                      guarantorName: "",
-                      balance: 0,
-                      paid: "",
-                      installmentDetailsList: [],
-                    }));
-                  }
-                }}
-                loading={loadingAccounts}
-                renderInput={(params) => (
-                  <TextField
-                    {...params}
-                    label="Search Customer / Account"
-                    placeholder="Name or Account Number..."
-                    size="small"
-                    InputProps={{
-                      ...params.InputProps,
-                      endAdornment: (
-                        <>
-                          {loadingAccounts && <CircularProgress size={20} />}
-                          {params.InputProps.endAdornment}
-                        </>
-                      ),
-                    }}
-                  />
-                )}
-              />
-            </Grid>
-
-            <Grid item xs={6} sm={4} md={2.5}>
-              <TextField label="Account No" value={form.accountNo} size="small" fullWidth InputProps={{ readOnly: true }} />
-            </Grid>
-
-            <Grid item xs={6} sm={4} md={2.5}>
-              <TextField label="Partner Name" value={form.partnerName} size="small" fullWidth InputProps={{ readOnly: true }} />
-            </Grid>
-
-            <Grid item xs={12} sm={4} md={2}>
-              <TextField label="Guarantor" value={form.guarantorName} size="small" fullWidth InputProps={{ readOnly: true }} />
-            </Grid>
-          </Grid>
-        </Paper>
-
-        {/* Loan Summary */}
-        <Paper elevation={2} sx={{ p: 3, mb: 4, borderRadius: 2 }}>
-          <Typography variant="subtitle1" fontWeight={600} color="text.secondary" gutterBottom>
-            Loan Details
-          </Typography>
-          <Grid container spacing={2.5}>
-            <Grid item xs={6} sm={3}>
-              <TextField label="Loan Amount" value={form.loanAmount?.toLocaleString() || 0} size="small" fullWidth InputProps={{ readOnly: true }} />
-            </Grid>
-            <Grid item xs={6} sm={3}>
-              <TextField label="Installment" value={form.installmentAmount?.toLocaleString() || 0} size="small" fullWidth InputProps={{ readOnly: true }} />
-            </Grid>
-            <Grid item xs={6} sm={3}>
-              <TextField label="From" value={form.periodFrom || "-"} size="small" fullWidth InputProps={{ readOnly: true }} />
-            </Grid>
-            <Grid item xs={6} sm={3}>
-              <TextField label="To" value={form.periodTo || "-"} size="small" fullWidth InputProps={{ readOnly: true }} />
-            </Grid>
-          </Grid>
-        </Paper>
-
-        {/* Payment Section */}
-        <Paper elevation={3} sx={{ p: 3, mb: 5, borderRadius: 2, bgcolor: "#fff8e1" }}>
-          <Typography variant="h6" fontWeight={600} color="warning.dark" gutterBottom>
-            Record Payment
-          </Typography>
-
-          <Grid container spacing={2.5} alignItems="flex-end">
-            <Grid item xs={12} sm={6} md={4}>
-              <DateTimePicker
-                label="Payment Date & Time"
-                value={form.date}
-                onChange={(newValue) => setForm((p) => ({ ...p, date: newValue }))}
-                slotProps={{ textField: { size: "small", fullWidth: true } }}
-                ampm={false}
-              />
-            </Grid>
-
-            <Grid item xs={6} sm={3} md={2}>
-              <TextField label="Paid So Far" value={form.paid || 0} size="small" fullWidth InputProps={{ readOnly: true }} />
-            </Grid>
-
-            <Grid item xs={6} sm={3} md={2}>
-              <TextField label="Balance" value={form.balance?.toLocaleString() || 0} size="small" fullWidth InputProps={{ readOnly: true }} />
-            </Grid>
-
-            <Grid item xs={6} md={2}>
-              <TextField
-                label="Principal Paid"
-                value={form.amountPaid}
-                onChange={(e) => setForm((p) => ({ ...p, amountPaid: e.target.value.replace(/[^0-9]/g, "") }))}
-                placeholder="0"
-                size="small"
-                fullWidth
-              />
-            </Grid>
-
-            <Grid item xs={6} md={2}>
-              <TextField
-                label="Late Fee"
-                value={form.lateFeePaid}
-                onChange={(e) => setForm((p) => ({ ...p, lateFeePaid: e.target.value.replace(/[^0-9]/g, "") }))}
-                placeholder="0"
-                size="small"
-                fullWidth
-              />
-            </Grid>
-          </Grid>
-
-          <Box sx={{ mt: 4, display: "flex", justifyContent: "center", gap: 4, flexWrap: "wrap" }}>
-            <FormControlLabel
-              control={<Checkbox checked={printReceipt} onChange={(e) => setPrintReceipt(e.target.checked)} />}
-              label="Print Receipt"
+      {/* Search & Basic Info */}
+      <Paper elevation={2} sx={{ p: 3, mb: 4, borderRadius: 2 }}>
+        <Grid container spacing={2.5} alignItems="flex-end">
+          <Grid item xs={12} md={5}>
+            <Autocomplete
+              fullWidth
+              options={accountList}
+              sx={{ width: 300 }}
+              getOptionLabel={(option) => option.displayString || ""}
+              inputValue={searchInput}
+              onInputChange={(_, value, reason) => {
+                if (reason === "input" || reason === "reset") {
+                  setSearchInput(value);
+                }
+              }}
+              onChange={(_, value) => {
+                if (value) {
+                  loadLoanInfo(value.loanId);
+                  setSearchInput(value.displayString || "");
+                } else {
+                  setSelectedLoanId(null);
+                  setForm((p) => ({
+                    ...p,
+                    accountNo: "",
+                    partnerName: "",
+                    guarantorName: "",
+                    balance: 0,
+                    paid: "",
+                    installmentDetailsList: [],
+                  }));
+                }
+              }}
+              loading={loadingAccounts}
+              renderInput={(params) => (
+                <TextField
+                  {...params}
+                  label="Search Customer / Account"
+                  placeholder="Name or Account Number..."
+                  size="small"
+                  InputProps={{
+                    ...params.InputProps,
+                    endAdornment: (
+                      <>
+                        {loadingAccounts && <CircularProgress size={20} />}
+                        {params.InputProps.endAdornment}
+                      </>
+                    ),
+                  }}
+                />
+              )}
             />
-            <Button
-              variant="contained"
-              color="primary"
-              size="large"
-              onClick={handlePay}
-              disabled={loading || (!form.amountPaid && !form.lateFeePaid) || !form.date?.isValid() || !selectedLoanId}
-              sx={{ minWidth: 200, py: 1.3 }}
-            >
-              {loading ? <CircularProgress size={24} color="inherit" /> : "Record Payment"}
-            </Button>
-          </Box>
-        </Paper>
+          </Grid>
 
-        {/* Installment Table */}
-        <Typography variant="h6" fontWeight={600} gutterBottom sx={{ mt: 4 }}>
-          Installment Schedule
+          <Grid item xs={6} sm={4} md={2.5}>
+            <TextField label="Account No" value={form.accountNo} size="small" fullWidth InputProps={{ readOnly: true }} />
+          </Grid>
+
+          <Grid item xs={6} sm={4} md={2.5}>
+            <TextField label="Partner Name" value={form.partnerName} size="small" fullWidth InputProps={{ readOnly: true }} />
+          </Grid>
+
+          <Grid item xs={12} sm={4} md={2}>
+            <TextField label="Guarantor" value={form.guarantorName} size="small" fullWidth InputProps={{ readOnly: true }} />
+          </Grid>
+        </Grid>
+      </Paper>
+
+      {/* Loan Summary */}
+      <Paper elevation={2} sx={{ p: 3, mb: 4, borderRadius: 2 }}>
+        <Typography variant="subtitle1" fontWeight={600} color="text.secondary" gutterBottom>
+          Loan Details
+        </Typography>
+        <Grid container spacing={2.5}>
+          <Grid item xs={6} sm={3}>
+            <TextField label="Loan Amount" value={form.loanAmount?.toLocaleString() || 0} size="small" fullWidth InputProps={{ readOnly: true }} />
+          </Grid>
+          <Grid item xs={6} sm={3}>
+            <TextField label="Installment" value={form.installmentAmount?.toLocaleString() || 0} size="small" fullWidth InputProps={{ readOnly: true }} />
+          </Grid>
+          <Grid item xs={6} sm={3}>
+            <TextField label="From" value={form.periodFrom || "-"} size="small" fullWidth InputProps={{ readOnly: true }} />
+          </Grid>
+          <Grid item xs={6} sm={3}>
+            <TextField label="To" value={form.periodTo || "-"} size="small" fullWidth InputProps={{ readOnly: true }} />
+          </Grid>
+        </Grid>
+      </Paper>
+
+      {/* Payment Section */}
+      <Paper elevation={3} sx={{ p: 3, mb: 5, borderRadius: 2, bgcolor: "#fff8e1" }}>
+        <Typography variant="h6" fontWeight={600} color="warning.dark" gutterBottom>
+          Record Payment
         </Typography>
 
-        <TableContainer component={Paper} elevation={3} sx={{ borderRadius: 2 }}>
-          <Table size="small">
-            <TableHead sx={{ bgcolor: "primary.light" }}>
-              <TableRow>
-                <TableCell>Inst. No</TableCell>
-                <TableCell>Due Date</TableCell>
-                <TableCell>Late From</TableCell>
-                <TableCell align="right">Installment</TableCell>
-                <TableCell align="right">Late Fee</TableCell>
-                <TableCell align="right">Total</TableCell>
-                <TableCell align="center">Status</TableCell>
-              </TableRow>
-            </TableHead>
-            <TableBody>
-              {form.installmentDetailsList.map((row, index) => {
-                const total = (row.installmentAmount || 0) + (row.lateFee || 0);
-                return (
-                  <TableRow key={index} hover>
-                    <TableCell>{row.installmentNumber}</TableCell>
-                    <TableCell>{row.dueDate || "-"}</TableCell>
-                    <TableCell>{row.lateFeeDate || "-"}</TableCell>
-                    <TableCell align="right">₹{(row.installmentAmount || 0).toLocaleString()}</TableCell>
-                    <TableCell align="right">₹{(row.lateFee || 0).toLocaleString()}</TableCell>
-                    <TableCell align="right">
-                      <strong>₹{total.toLocaleString()}</strong>
-                    </TableCell>
-                    <TableCell align="center">
-                      <Typography color={row.paid ? "success.main" : "error.main"} fontWeight="medium">
-                        {row.paid ? "Paid" : "Pending"}
-                      </Typography>
-                    </TableCell>
-                  </TableRow>
-                );
-              })}
-              {form.installmentDetailsList.length === 0 && (
-                <TableRow>
-                  <TableCell colSpan={7} align="center" sx={{ py: 4, color: "text.secondary" }}>
-                    No installments loaded — select a loan account
+        <Grid container spacing={2.5} alignItems="flex-end">
+          {/* Payment Date - using dayjs with native date/time inputs */}
+          <Grid item xs={12} md={4}>
+            <TextField
+              label="Payment Date"
+              type="date"
+              value={form.date ? form.date.format("YYYY-MM-DD") : ""}
+              onChange={(e) => setForm((prev) => ({ ...prev, date: dayjs(e.target.value) }))}
+              fullWidth
+              size="small"
+              InputLabelProps={{ shrink: true }}
+            />
+          </Grid>
+          <Grid item xs={12} md={4}>
+            <TextField
+              label="Payment Time"
+              type="time"
+              value={form.date ? form.date.format("HH:mm") : ""}
+              onChange={(e) => {
+                const [hours, minutes] = e.target.value.split(":");
+                setForm((prev) => ({
+                  ...prev,
+                  date: prev.date.hour(parseInt(hours) || 0).minute(parseInt(minutes) || 0),
+                }));
+              }}
+              fullWidth
+              size="small"
+              InputLabelProps={{ shrink: true }}
+            />
+          </Grid>
+          <Grid item xs={12} md={4}>
+            <TextField
+              label="Selected Date & Time"
+              value={form.date?.isValid() ? form.date.format("DD-MM-YYYY HH:mm") : "-"}
+              fullWidth
+              size="small"
+              InputProps={{ readOnly: true }}
+            />
+          </Grid>
+
+          <Grid item xs={6} sm={3} md={2}>
+            <TextField label="Paid So Far" value={form.paid || 0} size="small" fullWidth InputProps={{ readOnly: true }} />
+          </Grid>
+
+          <Grid item xs={6} sm={3} md={2}>
+            <TextField label="Balance" value={form.balance?.toLocaleString() || 0} size="small" fullWidth InputProps={{ readOnly: true }} />
+          </Grid>
+
+          <Grid item xs={6} md={2}>
+            <TextField
+              label="Principal Paid"
+              value={form.amountPaid}
+              onChange={(e) => setForm((p) => ({ ...p, amountPaid: e.target.value.replace(/[^0-9]/g, "") }))}
+              placeholder="0"
+              size="small"
+              fullWidth
+            />
+          </Grid>
+
+          <Grid item xs={6} md={2}>
+            <TextField
+              label="Late Fee"
+              value={form.lateFeePaid}
+              onChange={(e) => setForm((p) => ({ ...p, lateFeePaid: e.target.value.replace(/[^0-9]/g, "") }))}
+              placeholder="0"
+              size="small"
+              fullWidth
+            />
+          </Grid>
+        </Grid>
+
+        <Box sx={{ mt: 4, display: "flex", justifyContent: "center", gap: 4, flexWrap: "wrap" }}>
+          <FormControlLabel
+            control={<Checkbox checked={printReceipt} onChange={(e) => setPrintReceipt(e.target.checked)} />}
+            label="Print Receipt"
+          />
+          <Button
+            variant="contained"
+            color="primary"
+            size="large"
+            onClick={handlePay}
+            disabled={loading || (!form.amountPaid && !form.lateFeePaid) || !form.date?.isValid() || !selectedLoanId}
+            sx={{ minWidth: 200, py: 1.3 }}
+          >
+            {loading ? <CircularProgress size={24} color="inherit" /> : "Record Payment"}
+          </Button>
+        </Box>
+      </Paper>
+
+      {/* Installment Table */}
+      <Typography variant="h6" fontWeight={600} gutterBottom sx={{ mt: 4 }}>
+        Installment Schedule
+      </Typography>
+
+      <TableContainer component={Paper} elevation={3} sx={{ borderRadius: 2 }}>
+        <Table size="small">
+          <TableHead sx={{ bgcolor: "primary.light" }}>
+            <TableRow>
+              <TableCell>Inst. No</TableCell>
+              <TableCell>Due Date</TableCell>
+              <TableCell>Late From</TableCell>
+              <TableCell align="right">Installment</TableCell>
+              <TableCell align="right">Late Fee</TableCell>
+              <TableCell align="right">Total</TableCell>
+              <TableCell align="center">Status</TableCell>
+            </TableRow>
+          </TableHead>
+          <TableBody>
+            {form.installmentDetailsList.map((row, index) => {
+              const total = (row.installmentAmount || 0) + (row.lateFee || 0);
+              return (
+                <TableRow key={index} hover>
+                  <TableCell>{row.installmentNumber}</TableCell>
+                  <TableCell>{row.dueDate || "-"}</TableCell>
+                  <TableCell>{row.lateFeeDate || "-"}</TableCell>
+                  <TableCell align="right">₹{(row.installmentAmount || 0).toLocaleString()}</TableCell>
+                  <TableCell align="right">₹{(row.lateFee || 0).toLocaleString()}</TableCell>
+                  <TableCell align="right">
+                    <strong>₹{total.toLocaleString()}</strong>
+                  </TableCell>
+                  <TableCell align="center">
+                    <Typography color={row.paid ? "success.main" : "error.main"} fontWeight="medium">
+                      {row.paid ? "Paid" : "Pending"}
+                    </Typography>
                   </TableCell>
                 </TableRow>
-              )}
-            </TableBody>
-          </Table>
-        </TableContainer>
-      </Box>
-    </LocalizationProvider>
+              );
+            })}
+            {form.installmentDetailsList.length === 0 && (
+              <TableRow>
+                <TableCell colSpan={7} align="center" sx={{ py: 4, color: "text.secondary" }}>
+                  No installments loaded — select a loan account
+                </TableCell>
+              </TableRow>
+            )}
+          </TableBody>
+        </Table>
+      </TableContainer>
+    </Box>
   );
 };
 

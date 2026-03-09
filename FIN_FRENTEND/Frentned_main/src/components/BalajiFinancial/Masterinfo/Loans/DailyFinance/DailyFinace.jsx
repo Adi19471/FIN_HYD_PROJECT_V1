@@ -3,6 +3,7 @@ import { DataGrid } from "@mui/x-data-grid";
 import axios from "axios";
 import { successToast, errorToast } from "toastify";
 import { API_BASE } from "lib/config";
+import LoadingSpinner from "src/LoadingSpinner";
 import { getSession } from "src/utils/session";
 import {
   Button,
@@ -439,6 +440,13 @@ const DailyFinance = () => {
           getRowId={(r) => r.id}
         />
       </Box>
+
+      {/* Loading Spinner Overlay */}
+      {loading && rows.length === 0 && (
+        <Box sx={{ display: "flex", justifyContent: "center", alignItems: "center", height: "300px" }}>
+          <LoadingSpinner />
+        </Box>
+      )}
 
       {/* DIALOG MODAL */}
       <Dialog open={open} onClose={handleClose} maxWidth="md" fullWidth>

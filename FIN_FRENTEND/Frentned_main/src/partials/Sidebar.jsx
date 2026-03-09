@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, memo, useCallback } from "react";
 import { NavLink, useLocation } from "react-router-dom";
 import {
   Close,
@@ -108,10 +108,21 @@ function Sidebar({ sidebarOpen, setSidebarOpen }) {
     }
   }, [pathname]);
 
-  const handleGroupToggle = (groupName) => {
+  // Memoized handler for group toggle
+  const handleGroupToggle = useCallback((groupName) => {
     setOpenGroup((prev) => (prev === groupName ? null : groupName));
     if (!sidebarExpanded) setSidebarExpanded(true);
-  };
+  }, [sidebarExpanded]);
+
+  // Memoized click handler for sidebar toggle
+  const handleSidebarToggle = useCallback(() => {
+    setSidebarOpen(!sidebarOpen);
+  }, [sidebarOpen, setSidebarOpen]);
+
+  // Memoized sidebar expand handler
+  const handleSidebarExpand = useCallback(() => {
+    setSidebarExpanded(!sidebarExpanded);
+  }, [sidebarExpanded]);
 
   return (
     <div className="min-w-fit">
@@ -148,7 +159,7 @@ function Sidebar({ sidebarOpen, setSidebarOpen }) {
 
           <button
             ref={trigger}
-            onClick={() => setSidebarOpen(!sidebarOpen)}
+            onClick={handleSidebarToggle}
             className="lg:hidden p-1 text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white rounded-full transition-colors"
           >
             <Close className="w-6 h-6" />
@@ -164,7 +175,7 @@ function Sidebar({ sidebarOpen, setSidebarOpen }) {
               `flex items-center gap-3 px-3 py-3 rounded-xl transition-all duration-200 font-medium ${
                 isActive
                   ? "bg-gradient-to-r from-sky-600 to-blue-600 text-white shadow-md"
-                  : "text-gray-700 dark:text-gray-300 hover:bg-sky-50 dark:hover:bg-sky-900/20 hover:text-sky-600 dark:hover:text-sky-400"
+                  : "text-gray-700 dark:text-gray-300 hover:bg-sky-100 hover:text-sky-700 dark:hover:bg-sky-900/40 dark:hover:text-sky-300"
               }`
             }
           >
@@ -178,8 +189,8 @@ function Sidebar({ sidebarOpen, setSidebarOpen }) {
           <div
             className={`flex items-center justify-between px-3 py-3 rounded-xl cursor-pointer transition-all duration-200 font-medium ${
               openGroup === "master"
-                ? "bg-sky-50 dark:bg-sky-900/30"
-                : "hover:bg-sky-50 dark:hover:bg-sky-900/20"
+                ? "bg-sky-100 dark:bg-sky-900/40"
+                : "hover:bg-sky-100 dark:hover:bg-sky-900/30"
             }`}
             onClick={() => handleGroupToggle("master")}
           >
@@ -205,7 +216,7 @@ function Sidebar({ sidebarOpen, setSidebarOpen }) {
                     `flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-all duration-200 ${
                       isActive
                         ? "bg-gradient-to-r from-sky-600 to-blue-600 text-white shadow-sm"
-                        : "text-gray-600 dark:text-gray-400 hover:bg-sky-50 dark:hover:bg-sky-900/20 hover:text-sky-600 dark:hover:text-sky-400"
+                        : "text-gray-600 dark:text-gray-400 hover:bg-sky-100 hover:text-sky-700 dark:hover:bg-sky-900/40 dark:hover:text-sky-300"
                     }`
                   }
                 >
@@ -220,7 +231,7 @@ function Sidebar({ sidebarOpen, setSidebarOpen }) {
                     `flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-all duration-200 ${
                       isActive
                         ? "bg-gradient-to-r from-sky-600 to-blue-600 text-white shadow-sm"
-                        : "text-gray-600 dark:text-gray-400 hover:bg-sky-50 dark:hover:bg-sky-900/20 hover:text-sky-600 dark:hover:text-sky-400"
+                        : "text-gray-600 dark:text-gray-400 hover:bg-sky-100 hover:text-sky-700 dark:hover:bg-sky-900/40 dark:hover:text-sky-300"
                     }`
                   }
                 >
@@ -235,8 +246,8 @@ function Sidebar({ sidebarOpen, setSidebarOpen }) {
           <div
             className={`flex items-center justify-between px-3 py-3 rounded-xl cursor-pointer transition-all duration-200 font-medium ${
               openGroup === "transactions"
-                ? "bg-sky-50 dark:bg-sky-900/30"
-                : "hover:bg-sky-50 dark:hover:bg-sky-900/20"
+                ? "bg-sky-100 dark:bg-sky-900/40"
+                : "hover:bg-sky-100 dark:hover:bg-sky-900/30"
             }`}
             onClick={() => handleGroupToggle("transactions")}
           >
@@ -262,7 +273,7 @@ function Sidebar({ sidebarOpen, setSidebarOpen }) {
                     `flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-all duration-200 ${
                       isActive
                         ? "bg-gradient-to-r from-sky-600 to-blue-600 text-white shadow-sm"
-                        : "text-gray-600 dark:text-gray-400 hover:bg-sky-50 dark:hover:bg-sky-900/20 hover:text-sky-600 dark:hover:text-sky-400"
+                        : "text-gray-600 dark:text-gray-400 hover:bg-sky-100 hover:text-sky-700 dark:hover:bg-sky-900/40 dark:hover:text-sky-300"
                     }`
                   }
                 >
@@ -277,7 +288,7 @@ function Sidebar({ sidebarOpen, setSidebarOpen }) {
                     `flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-all duration-200 ${
                       isActive
                         ? "bg-gradient-to-r from-sky-600 to-blue-600 text-white shadow-sm"
-                        : "text-gray-600 dark:text-gray-400 hover:bg-sky-50 dark:hover:bg-sky-900/20 hover:text-sky-600 dark:hover:text-sky-400"
+                        : "text-gray-600 dark:text-gray-400 hover:bg-sky-100 hover:text-sky-700 dark:hover:bg-sky-900/40 dark:hover:text-sky-300"
                     }`
                   }
                 >
@@ -291,8 +302,8 @@ function Sidebar({ sidebarOpen, setSidebarOpen }) {
                   className={({ isActive }) =>
                     `flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-all duration-200 ${
                       isActive
-                        ? "bg-red-50 dark:bg-red-950/50 text-red-600 dark:text-red-400"
-                        : "text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20"
+                        ? "bg-red-100 text-red-700 dark:bg-red-900/50 dark:text-red-300"
+                        : "text-red-600 dark:text-red-400 hover:bg-red-100 hover:text-red-700 dark:hover:bg-red-900/40"
                     }`
                   }
                 >
@@ -306,8 +317,8 @@ function Sidebar({ sidebarOpen, setSidebarOpen }) {
                   className={({ isActive }) =>
                     `flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-all duration-200 ${
                       isActive
-                        ? "bg-sky-50 text-sky-700 dark:bg-sky-950/50 dark:text-sky-300"
-                        : "text-gray-600 hover:text-sky-600 dark:text-gray-400 dark:hover:text-sky-300 hover:bg-sky-50 dark:hover:bg-sky-900/20"
+                        ? "bg-sky-100 text-sky-700 dark:bg-sky-900/50 dark:text-sky-300"
+                        : "text-gray-600 hover:text-sky-700 dark:text-gray-400 dark:hover:text-sky-300 hover:bg-sky-100 dark:hover:bg-sky-900/40"
                     }`
                   }
                 >
@@ -322,8 +333,8 @@ function Sidebar({ sidebarOpen, setSidebarOpen }) {
           <div
             className={`flex items-center justify-between px-3 py-3 rounded-xl cursor-pointer transition-all duration-200 font-medium ${
               openGroup === "accounts"
-                ? "bg-sky-50 dark:bg-sky-900/30"
-                : "hover:bg-sky-50 dark:hover:bg-sky-900/20"
+                ? "bg-sky-100 dark:bg-sky-900/40"
+                : "hover:bg-sky-100 dark:hover:bg-sky-900/30"
             }`}
             onClick={() => handleGroupToggle("accounts")}
           >
@@ -348,8 +359,8 @@ function Sidebar({ sidebarOpen, setSidebarOpen }) {
                   className={({ isActive }) =>
                     `flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-all duration-200 ${
                       isActive
-                        ? "bg-sky-50 text-sky-700 dark:bg-sky-950/50 dark:text-sky-300 shadow-sm"
-                        : "text-gray-600 hover:text-sky-600 dark:text-gray-400 dark:hover:text-sky-300 hover:bg-sky-50 dark:hover:bg-sky-900/20"
+                        ? "bg-sky-100 text-sky-700 dark:bg-sky-900/50 dark:text-sky-300 shadow-sm"
+                        : "text-gray-600 hover:text-sky-700 dark:text-gray-400 dark:hover:text-sky-300 hover:bg-sky-100 dark:hover:bg-sky-900/40"
                     }`
                   }
                 >
@@ -364,8 +375,8 @@ function Sidebar({ sidebarOpen, setSidebarOpen }) {
           <div
             className={`flex items-center justify-between px-3 py-3 rounded-xl cursor-pointer transition-all duration-200 font-medium ${
               openGroup === "accountMaster"
-                ? "bg-sky-50 dark:bg-sky-900/30"
-                : "hover:bg-sky-50 dark:hover:bg-sky-900/20"
+                ? "bg-sky-100 dark:bg-sky-900/40"
+                : "hover:bg-sky-100 dark:hover:bg-sky-900/30"
             }`}
             onClick={() => handleGroupToggle("accountMaster")}
           >
@@ -390,8 +401,8 @@ function Sidebar({ sidebarOpen, setSidebarOpen }) {
                   className={({ isActive }) =>
                     `flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-all duration-200 ${
                       isActive
-                        ? "bg-sky-50 text-sky-700 dark:bg-sky-950/50 dark:text-sky-300 shadow-sm"
-                        : "text-gray-600 hover:text-sky-600 dark:text-gray-400 dark:hover:text-sky-300 hover:bg-sky-50 dark:hover:bg-sky-900/20"
+                        ? "bg-sky-100 text-sky-700 dark:bg-sky-900/50 dark:text-sky-300 shadow-sm"
+                        : "text-gray-600 hover:text-sky-700 dark:text-gray-400 dark:hover:text-sky-300 hover:bg-sky-100 dark:hover:bg-sky-900/40"
                     }`
                   }
                 >
@@ -406,8 +417,8 @@ function Sidebar({ sidebarOpen, setSidebarOpen }) {
                   className={({ isActive }) =>
                     `flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-all duration-200 ${
                       isActive
-                        ? "bg-sky-50 text-sky-700 dark:bg-sky-950/50 dark:text-sky-300 shadow-sm"
-                        : "text-gray-600 hover:text-sky-600 dark:text-gray-400 dark:hover:text-sky-300 hover:bg-sky-50 dark:hover:bg-sky-900/20"
+                        ? "bg-sky-100 text-sky-700 dark:bg-sky-900/50 dark:text-sky-300 shadow-sm"
+                        : "text-gray-600 hover:text-sky-700 dark:text-gray-400 dark:hover:text-sky-300 hover:bg-sky-100 dark:hover:bg-sky-900/40"
                     }`
                   }
                 >
@@ -422,8 +433,8 @@ function Sidebar({ sidebarOpen, setSidebarOpen }) {
           <div
             className={`flex items-center justify-between px-3 py-3 rounded-xl cursor-pointer transition-all duration-200 font-medium ${
               openGroup === "loans"
-                ? "bg-sky-50 dark:bg-sky-900/30"
-                : "hover:bg-sky-50 dark:hover:bg-sky-900/20"
+                ? "bg-sky-100 dark:bg-sky-900/40"
+                : "hover:bg-sky-100 dark:hover:bg-sky-900/30"
             }`}
             onClick={() => handleGroupToggle("loans")}
           >
@@ -449,7 +460,7 @@ function Sidebar({ sidebarOpen, setSidebarOpen }) {
                     `flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-all duration-200 ${
                       isActive
                         ? "bg-gradient-to-r from-sky-600 to-blue-600 text-white shadow-sm"
-                        : "text-gray-600 dark:text-gray-400 hover:bg-sky-50 dark:hover:bg-sky-900/20 hover:text-sky-600 dark:hover:text-sky-400"
+                        : "text-gray-600 dark:text-gray-400 hover:bg-sky-100 hover:text-sky-700 dark:hover:bg-sky-900/40 dark:hover:text-sky-300"
                     }`
                   }
                 >
@@ -464,7 +475,7 @@ function Sidebar({ sidebarOpen, setSidebarOpen }) {
                     `flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-all duration-200 ${
                       isActive
                         ? "bg-gradient-to-r from-sky-600 to-blue-600 text-white shadow-sm"
-                        : "text-gray-600 dark:text-gray-400 hover:bg-sky-50 dark:hover:bg-sky-900/20 hover:text-sky-600 dark:hover:text-sky-400"
+                        : "text-gray-600 dark:text-gray-400 hover:bg-sky-100 hover:text-sky-700 dark:hover:bg-sky-900/40 dark:hover:text-sky-300"
                     }`
                   }
                 >
@@ -479,7 +490,7 @@ function Sidebar({ sidebarOpen, setSidebarOpen }) {
                     `flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-all duration-200 ${
                       isActive
                         ? "bg-gradient-to-r from-sky-600 to-blue-600 text-white shadow-sm"
-                        : "text-gray-600 dark:text-gray-400 hover:bg-sky-50 dark:hover:bg-sky-900/20 hover:text-sky-600 dark:hover:text-sky-400"
+                        : "text-gray-600 dark:text-gray-400 hover:bg-sky-100 hover:text-sky-700 dark:hover:bg-sky-900/40 dark:hover:text-sky-300"
                     }`
                   }
                 >
@@ -494,8 +505,8 @@ function Sidebar({ sidebarOpen, setSidebarOpen }) {
           <div
             className={`flex items-center justify-between px-3 py-3 rounded-xl cursor-pointer transition-all duration-200 font-medium ${
               openGroup === "auth"
-                ? "bg-sky-50 dark:bg-sky-900/30"
-                : "hover:bg-sky-50 dark:hover:bg-sky-900/20"
+                ? "bg-sky-100 dark:bg-sky-900/40"
+                : "hover:bg-sky-100 dark:hover:bg-sky-900/30"
             }`}
             onClick={() => handleGroupToggle("auth")}
           >
@@ -521,7 +532,7 @@ function Sidebar({ sidebarOpen, setSidebarOpen }) {
                     `flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-all duration-200 ${
                       isActive
                         ? "bg-gray-900 text-white dark:bg-white dark:text-gray-900 shadow-sm"
-                        : "text-gray-600 dark:text-gray-400 hover:bg-sky-50 dark:hover:bg-sky-900/20 hover:text-sky-600 dark:hover:text-sky-400"
+                        : "text-gray-600 dark:text-gray-400 hover:bg-sky-100 hover:text-sky-700 dark:hover:bg-sky-900/40 dark:hover:text-sky-300"
                     }`
                   }
                 >
@@ -529,36 +540,8 @@ function Sidebar({ sidebarOpen, setSidebarOpen }) {
                   <span>Sign In</span>
                 </NavLink>
               </li>
-              <li>
-                <NavLink
-                  to="/signup"
-                  className={({ isActive }) =>
-                    `flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-all duration-200 ${
-                      isActive
-                        ? "bg-gray-900 text-white dark:bg-white dark:text-gray-900 shadow-sm"
-                        : "text-gray-600 dark:text-gray-400 hover:bg-sky-50 dark:hover:bg-sky-900/20 hover:text-sky-600 dark:hover:text-sky-400"
-                    }`
-                  }
-                >
-                  <PersonAdd className="w-4 h-4" />
-                  <span>Sign Up</span>
-                </NavLink>
-              </li>
-              <li>
-                <NavLink
-                  to="/reset-password"
-                  className={({ isActive }) =>
-                    `flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-all duration-200 ${
-                      isActive
-                        ? "bg-gray-900 text-white dark:bg-white dark:text-gray-900 shadow-sm"
-                        : "text-gray-600 dark:text-gray-400 hover:bg-sky-50 dark:hover:bg-sky-900/20 hover:text-sky-600 dark:hover:text-sky-400"
-                    }`
-                  }
-                >
-                  <LockReset className="w-4 h-4" />
-                  <span>Reset Password</span>
-                </NavLink>
-              </li>
+              
+              
             </ul>
           )}
         </nav>
@@ -566,7 +549,7 @@ function Sidebar({ sidebarOpen, setSidebarOpen }) {
         {/* Collapse/Expand Button (Desktop only) */}
         <div className="hidden lg:flex items-center justify-center py-4 border-t border-gray-200 dark:border-gray-800">
           <button
-            onClick={() => setSidebarExpanded(!sidebarExpanded)}
+            onClick={handleSidebarExpand}
             className="p-2.5 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
             aria-label={sidebarExpanded ? "Collapse sidebar" : "Expand sidebar"}
           >

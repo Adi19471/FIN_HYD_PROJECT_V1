@@ -82,8 +82,29 @@ const Cbledger = () => {
   };
 
   return (
-    <Box sx={{ p: 2 }}>
+    <Box sx={{ p: 2, position: "relative" }}>
       <Loans />
+
+      {/* Loading Overlay */}
+      {loading && (
+        <Box
+          sx={{
+            position: "absolute",
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            bgcolor: "rgba(255, 255, 255, 0.8)",
+            display: "flex",
+            justifyContent: "center",
+            alignItems: "center",
+            zIndex: 9999,
+            borderRadius: 3,
+          }}
+        >
+          <CircularProgress size={60} thickness={4} />
+        </Box>
+      )}
 
       <Card sx={{ mt: 3, borderRadius: 3, boxShadow: 4 }}>
         <CardContent>

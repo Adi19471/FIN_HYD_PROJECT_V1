@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Paper, Tabs, Tab, Box, Typography } from "@mui/material";
+import { Paper, Tabs, Tab, Box, Typography, CircularProgress } from "@mui/material";
 import { MdCalendarToday, MdCalendarMonth } from "react-icons/md";
 
 import BussinessDailyFinance from "./Bussiness_DailyFinance/BussinessDailyFinance";
@@ -7,13 +7,38 @@ import BussinessMonthlyFinance from "./Bussiness_MonthlyFinance/Bussiness_Monthl
 
 const BussinessCashbook_Main = () => {
   const [value, setValue] = useState(0);
+  const [loading, setLoading] = useState(false);
 
   const handleChange = (event, newValue) => {
+    setLoading(true);
     setValue(newValue);
+    // Simulate loading delay for tab switch
+    setTimeout(() => setLoading(false), 300);
   };
 
   return (
-    <Box>
+    <Box position="relative">
+      {/* Loading Overlay */}
+      {loading && (
+        <Box
+          sx={{
+            position: "absolute",
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            bgcolor: "rgba(255, 255, 255, 0.8)",
+            display: "flex",
+            justifyContent: "center",
+            alignItems: "center",
+            zIndex: 9999,
+            borderRadius: 1,
+          }}
+        >
+          <CircularProgress size={50} thickness={4} />
+        </Box>
+      )}
+
       {/* MAIN BAR */}
       <Paper
         elevation={6}
