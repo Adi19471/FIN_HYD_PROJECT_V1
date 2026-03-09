@@ -248,6 +248,56 @@ public class PersonalInfoService {
 		return toBeReturnedDtoList;
 	}
 
+	// findAll
+	public List<PersonalInfoDto> findByIds(String id) {
+
+		List<String> asList = Arrays.asList(id.split(","));
+
+		List<PersonalInfo> personalInfo = personalInfoRepository.findByIds(asList);
+
+		List<PersonalInfoDto> returnList = new ArrayList<PersonalInfoDto>();
+		for (PersonalInfo personalInfoDbObject : personalInfo) {
+
+			PersonalInfoDto personalInfoDto = new PersonalInfoDto();
+			personalInfoDto.setId(personalInfoDbObject.getPersonalInfoId());
+
+			personalInfoDto.setFirstname(personalInfoDbObject.getFirstName());
+			personalInfoDto.setLastname(personalInfoDbObject.getLastName());
+			personalInfoDto.setGender(personalInfoDbObject.getGender());
+			personalInfoDto.setAge(personalInfoDbObject.getAge());
+
+			personalInfoDto.setFathername(personalInfoDbObject.getFatherName());
+			personalInfoDto.setSpouse(personalInfoDbObject.getSpouse());
+
+			personalInfoDto.setOccupation(personalInfoDbObject.getOccupation());
+
+			personalInfoDto.setAddress(personalInfoDbObject.getAddress());
+			personalInfoDto.setMobile(personalInfoDbObject.getMobile());
+			personalInfoDto.setPhone(personalInfoDbObject.getPhone());
+			personalInfoDto.setAddress2(personalInfoDbObject.getAddress2());
+			personalInfoDto.setMobile2(personalInfoDbObject.getMobile2());
+			personalInfoDto.setPhone2(personalInfoDbObject.getPhone2());
+
+			personalInfoDto.setReference(personalInfoDbObject.getReference());
+			personalInfoDto.setIdproof(personalInfoDbObject.getIdProof());
+			personalInfoDto.setIdprooftype(personalInfoDbObject.getIdProoftype());
+
+			personalInfoDto.setShares(personalInfoDbObject.getShares());
+			personalInfoDto.setLoanlimit(personalInfoDbObject.getLoanlimit());
+
+			personalInfoDto.setBussinessexemption(personalInfoDbObject.isBussinessExemption());
+			personalInfoDto.setIntroname(personalInfoDbObject.getIntroname());
+
+			personalInfoDto.setOldid(personalInfoDbObject.getOldId());
+			personalInfoDto.setCategory(personalInfoDbObject.getCategory());
+			personalInfoDto.setDisable(personalInfoDbObject.isDisable());
+
+			returnList.add(personalInfoDto);
+
+		}
+		return returnList;
+
+	}
 	
 	// findAll
 	public PersonalInfoDto findById(String id) {
@@ -322,7 +372,8 @@ public class PersonalInfoService {
 			personalInfoAutoCompletePojo.setFirstname(p.getFirstName());
 			personalInfoAutoCompletePojo.setLastname(p.getLastName());
 			personalInfoAutoCompletePojo.setGender(p.getGender());
-
+			personalInfoAutoCompletePojo.setMobile(p.getMobile());
+			
 			toBeReturnedDtoList.add(personalInfoAutoCompletePojo);
 
 		});

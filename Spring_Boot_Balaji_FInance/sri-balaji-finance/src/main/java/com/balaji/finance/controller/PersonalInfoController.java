@@ -28,7 +28,7 @@ public class PersonalInfoController {
 	private PersonalInfoService personalInfoService;
 
 	@GetMapping("/createNewPersonalInfoTemplate/{personType}")
-	public ResponseEntity<PersonalInfoDto> createNewPersonalInfoTemplate(String personType) {
+	public ResponseEntity<PersonalInfoDto> createNewPersonalInfoTemplate(@PathVariable String personType) {
 
 		PersonalInfoDto personalInfoDto = personalInfoService.createPersonalInfoDto(personType);
 
@@ -51,21 +51,31 @@ public class PersonalInfoController {
 	}
 
 	@DeleteMapping("/deletePersonalInfo/{id}")
-	public ResponseEntity<String> deletePersonalInfoTemplate(String id) {
+	public ResponseEntity<String> deletePersonalInfoTemplate(@PathVariable String id) {
 
 		String response = personalInfoService.deletePersonalInfoDto(id);
 
 		return ResponseEntity.ok().body(response);
 	}
 
+	@GetMapping("/byIds")
+	public ResponseEntity<List<PersonalInfoDto>> findPersonalInfoByIds(@RequestParam String ids) {
+
+		List<PersonalInfoDto> personalInfoDto = personalInfoService.findByIds(ids);
+
+		return ResponseEntity.ok().body(personalInfoDto);
+	}
+
 	@GetMapping("/findPersonalInfoById/{id}")
-	public ResponseEntity<PersonalInfoDto> findPersonalInfoById(String id) {
+	public ResponseEntity<PersonalInfoDto> findPersonalInfoById(@PathVariable String id) {
 
 		PersonalInfoDto personalInfoDto = personalInfoService.findById(id);
 
 		return ResponseEntity.ok().body(personalInfoDto);
 	}
 
+	
+	
 	@GetMapping("/findAll")
 	public ResponseEntity<List<PersonalInfoDto>> findAll() {
 

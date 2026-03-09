@@ -14,6 +14,10 @@ public interface PersonalInfoRepository extends JpaRepository<PersonalInfo, Stri
 	
 	@Query("SELECT u FROM PersonalInfo u WHERE u.personalInfoId =:personalInfoId")
 	public Optional<PersonalInfo> findById(@Param("personalInfoId") String personalInfoId);
+	
+	@Query("SELECT u FROM PersonalInfo u WHERE u.personalInfoId IN :personalInfoIds")
+	public List<PersonalInfo> findByIds(@Param("personalInfoIds") List<String> personalInfoIds);
+	
 
 	@Query("SELECT u FROM PersonalInfo u WHERE u.disable =:status")
 	public List<PersonalInfo> findAllActiveRecords(@Param("status") boolean status);
@@ -25,6 +29,8 @@ public interface PersonalInfoRepository extends JpaRepository<PersonalInfo, Stri
 			            u.personalInfoId LIKE CONCAT('%', :keyword, '%')
 			         OR u.firstName LIKE CONCAT('%', :keyword, '%')
 			         OR u.lastName LIKE CONCAT('%', :keyword, '%')
+			         OR u.mobile LIKE CONCAT('%', :keyword, '%')
+			         OR u.phone LIKE CONCAT('%', :keyword, '%')
 			      )
 			      AND u.category IN (:categoryList)
 			""")

@@ -316,8 +316,10 @@ const DailyFinance = () => {
       startDate: formData.startDate.format("YYYY-MM-DD HH:mm:ss"),
       endDate: formData.endDate.format("YYYY-MM-DD HH:mm:ss"),
       amount: Number(formData.amount),
-      interest: Number(formData.interestRatePerMonth),
+      interest:Number(formData.interestAmountForAllDays),
+      interestRate: Number(formData.interestRatePerMonth),
       processingFee: Number(formData.processingFee) || 0,
+      installment:Number(formData.installment),
       security: formData.security,
       duration: FIXED_DURATION_DAYS,
     };

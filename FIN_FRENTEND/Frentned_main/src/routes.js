@@ -120,7 +120,7 @@ const Daily_Book = lazy(() =>
 
 const Loansdetailes = lazy(() =>
   import(
-    "./components/BalajiFinancial/AccountsModules/Loansdetailes/Loansdetailes"
+    "./components/BalajiFinancial/AccountsModules/LoansDetailes/Loansdetailes"
   )
 );
 
