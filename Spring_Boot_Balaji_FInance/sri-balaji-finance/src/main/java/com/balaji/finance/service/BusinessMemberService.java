@@ -72,7 +72,8 @@ public class BusinessMemberService {
 
 		BusinessMember businessMember = new BusinessMember();
 		businessMember.setBusinessMemberId(generateId(type));
-
+		businessMember.setLoanType(type);
+		
 		if (businessMemberDto.getCustomerId() != null && !businessMemberDto.getCustomerId().isBlank()) {
 			Optional<PersonalInfo> customerOptional = personalInfoRepository
 					.findById(businessMemberDto.getCustomerId());

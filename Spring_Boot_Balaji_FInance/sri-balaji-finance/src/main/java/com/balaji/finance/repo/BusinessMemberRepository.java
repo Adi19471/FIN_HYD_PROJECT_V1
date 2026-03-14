@@ -8,21 +8,14 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
+import com.balaji.finance.dto.LoanSummaryProjection;
 import com.balaji.finance.entity.BusinessMember;
-import com.balaji.finance.entity.CashBook;
-import com.balaji.finance.entity.PersonalInfo;
 
 public interface BusinessMemberRepository extends JpaRepository<BusinessMember, String> {
-
-	
-	
 
 	@Query("SELECT u FROM BusinessMember u WHERE u.businessMemberId =:businessMemberId")
 	public Optional<BusinessMember> findById(@Param("businessMemberId") String businessMemberId);
 
-	
-	
-	
 	@Query("""
 			    SELECT u FROM BusinessMember u
 			    WHERE
@@ -42,8 +35,6 @@ public interface BusinessMemberRepository extends JpaRepository<BusinessMember, 
 			  """)
 	List<BusinessMember> findAllByLoanType(@Param("starWithString") String starWithString);
 
-	
-	
 	@Query("""
 			    SELECT u FROM BusinessMember u
 			    WHERE
@@ -52,9 +43,7 @@ public interface BusinessMemberRepository extends JpaRepository<BusinessMember, 
 			            OR u.customerId.lastName  LIKE CONCAT('%', :keyword, '%'))
 			""")
 	List<BusinessMember> allbusinessMemberAutoComplete(@Param("keyword") String keyword);
-	
-	
-	
+
 	@Query("""
 			SELECT c
 			FROM BusinessMember c
@@ -63,8 +52,6 @@ public interface BusinessMemberRepository extends JpaRepository<BusinessMember, 
 	List<BusinessMember> findByDateRange(@Param("fromDate") LocalDateTime fromDate,
 			@Param("toDate") LocalDateTime toDate);
 
-	
-	
 	@Query("""
 			SELECT u FROM BusinessMember u
 			          WHERE
@@ -73,8 +60,7 @@ public interface BusinessMemberRepository extends JpaRepository<BusinessMember, 
 			  """)
 	List<BusinessMember> findAllByLoanTypeAndDateRange(@Param("starWithString") String starWithString,
 			@Param("fromDate") LocalDateTime fromDate, @Param("toDate") LocalDateTime toDate);
-	
-	
+
 	@Query("""
 			SELECT u FROM BusinessMember u
 			          WHERE
@@ -83,5 +69,17 @@ public interface BusinessMemberRepository extends JpaRepository<BusinessMember, 
 			  """)
 	List<BusinessMember> findAllByLoanTypeAndEndDateRange(@Param("starWithString") String starWithString,
 			@Param("fromDate") LocalDateTime fromDate, @Param("toDate") LocalDateTime toDate);
+
+	@Query("""
+		   SELECT
+			    loanType as loanType,
+			    SUM(amount) AS loansDisbursed,
+			    SUM(interest) AS interestReceivable
+			FROM BusinessMember
+			WHERE sysDate BETWEEN :fromDate AND :toDate
+			GROUP BY loanType
+						  """)
+	List<LoanSummaryProjection> findAllLoansDisbursedByDateRange(@Param("fromDate") LocalDateTime fromDate,
+			@Param("toDate") LocalDateTime toDate);
 
 }

@@ -11,16 +11,17 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.balaji.finance.dto.RevenueExpenseProjection;
-import com.balaji.finance.service.RevenueExpenseService;
+import com.balaji.finance.pojo.BusinessSharePojo;
+import com.balaji.finance.service.BusinessShareService;
 
 @RestController
-public class RevenueExpenseController {
+public class BusinessShareController {
 
 	@Autowired
-	private RevenueExpenseService revenueExpenseService;
+	private BusinessShareService businessShareService;
 
-	@GetMapping("/revenueExpenseStatement/{fromDate}/{toDate}")
-	public ResponseEntity<List<RevenueExpenseProjection>> getRevenueExpense(@PathVariable String fromDate,
+	@GetMapping("/businessShareStatement/{fromDate}/{toDate}")
+	public ResponseEntity<List<BusinessSharePojo>> getRevenueExpense(@PathVariable String fromDate,
 			@PathVariable String toDate) {
 
 		DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
@@ -28,13 +29,7 @@ public class RevenueExpenseController {
 		LocalDate fromLocalDate = LocalDate.parse(fromDate, formatter);
 		LocalDate toLocalDate = LocalDate.parse(toDate, formatter);
 
-		return ResponseEntity.ok()
-				.body(revenueExpenseService.getRevenueExpenseStatementByTrasncDate(fromLocalDate, toLocalDate));
-	}
-
-	@GetMapping("/revenueExpenseStatement")
-	public ResponseEntity<List<RevenueExpenseProjection>> getRevenueExpense() {
-		return ResponseEntity.ok().body(revenueExpenseService.getRevenueExpenseStatement());
+		return ResponseEntity.ok().body(businessShareService.getBusinessShare(fromLocalDate, toLocalDate));
 	}
 
 }

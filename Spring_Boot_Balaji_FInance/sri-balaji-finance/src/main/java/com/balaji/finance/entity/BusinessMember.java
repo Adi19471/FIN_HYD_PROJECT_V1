@@ -95,8 +95,9 @@ public class BusinessMember {
 
 	@Column(name = "PROCESSING_FEE")
 	private BigDecimal processingFee;
-	
-	
+
+	@Column(name = "LOAN_TYPE")
+	private String loanType;
 
 	public String getLoanStatus() {
 		return loanStatus;
@@ -288,6 +289,14 @@ public class BusinessMember {
 
 	public void setProcessingFee(BigDecimal processingFee) {
 		this.processingFee = processingFee;
+	}
+
+	public String getLoanType() {
+		return loanType;
+	}
+
+	public void setLoanType(String loanType) {
+		this.loanType = loanType;
 	}
 
 }

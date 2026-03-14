@@ -11,6 +11,7 @@ import com.balaji.finance.repo.UserRepo;
 public class DataInitializer implements CommandLineRunner {
 
     private final UserRepo userRepository;
+    
     private final PasswordEncoder passwordEncoder;
 
     public DataInitializer(UserRepo userRepository,
@@ -33,5 +34,8 @@ public class DataInitializer implements CommandLineRunner {
 
             System.out.println("Default admin user created.");
         }
+        
+        
+        
     }
 }
