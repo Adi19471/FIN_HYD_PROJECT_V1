@@ -12,10 +12,10 @@ import org.springframework.data.repository.query.Param;
 
 import com.balaji.finance.dto.DateWiseCashBookProjection;
 import com.balaji.finance.dto.DateWiseCollectionsProjection;
+import com.balaji.finance.dto.RevenueExpenseProjection;
 import com.balaji.finance.dto.SummaryByParticularsProjection;
 import com.balaji.finance.entity.BusinessMember;
 import com.balaji.finance.entity.CashBook;
-import com.balaji.finance.entity.CashBookBackUp;
 
 public interface CashBookRepo extends JpaRepository<CashBook, Long> {
 
@@ -184,4 +184,38 @@ public interface CashBookRepo extends JpaRepository<CashBook, Long> {
     	       "WHERE c.businessMember.businessMemberId = :memberId " +
     	       "AND c.transType IN ('MF LOAN','MF INTEREST')")
 	BigDecimal getTotalPaidForMember(@Param("memberId") String memberId);
+    
+    
+    
+	@Query(value = """
+			SELECT
+			    am.type AS type,
+			    am.code AS code,
+			    COALESCE(SUM(cb.CREDIT),0) - COALESCE(SUM(cb.DEBIT),0) AS amount
+			FROM cash_book cb
+			JOIN accountmaster am
+			    ON am.code = cb.particulars
+			WHERE cb.TRANS_DATE BETWEEN :fromDate AND :toDate
+			GROUP BY am.type, am.code
+			ORDER BY am.type, am.code
+			""", nativeQuery = true)
+	List<RevenueExpenseProjection> getRevenueExpenseStatementByTrasncDate(@Param("fromDate") LocalDateTime fromDate,
+			@Param("toDate") LocalDateTime toDate);
+    
+	
+	@Query(value = """
+			SELECT
+			    am.type AS type,
+			    am.code AS code,
+			    COALESCE(SUM(cb.CREDIT),0) - COALESCE(SUM(cb.DEBIT),0) AS amount
+			FROM cash_book cb
+			JOIN accountmaster am
+			    ON am.code = cb.particulars
+			GROUP BY am.type, am.code
+			ORDER BY am.type, am.code
+			""", nativeQuery = true)
+	List<RevenueExpenseProjection> getRevenueExpenseStatement();
+    
+    
+    
 }

@@ -1,8 +1,9 @@
 # Logs
 logs/
 *.log
+Spring_Boot_Balaji_FInance/sri-balaji-finance/logs/
 
-# Build
+# Build files
 target/
 build/
 
@@ -14,5 +15,5 @@ build/
 # Node
 node_modules/
 
-# OS
+# OS files
 .DS_Store

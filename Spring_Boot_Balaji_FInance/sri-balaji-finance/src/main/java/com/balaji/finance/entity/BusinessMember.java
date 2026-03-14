@@ -90,7 +90,7 @@ public class BusinessMember {
 	@Column(name = "SYS_DATE", updatable = false)
 	private LocalDateTime sysDate;
 
-	@Column(name = "INTeREST_RATE")
+	@Column(name = "INTEREST_RATE")
 	private BigDecimal interestRate;
 
 	@Column(name = "PROCESSING_FEE")
