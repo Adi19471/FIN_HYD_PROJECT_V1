@@ -14,6 +14,7 @@ import com.balaji.finance.dto.BalanceSheetProjection;
 import com.balaji.finance.dto.DateWiseCashBookProjection;
 import com.balaji.finance.dto.DateWiseCollectionsProjection;
 import com.balaji.finance.dto.RevenueExpenseProjection;
+import com.balaji.finance.dto.SumOfCreditsAndDebitsProjection;
 import com.balaji.finance.dto.SummaryByParticularsProjection;
 import com.balaji.finance.entity.BusinessMember;
 import com.balaji.finance.entity.CashBook;
@@ -57,6 +58,16 @@ public interface CashBookRepo extends JpaRepository<CashBook, Long> {
     List<CashBook> findByTransactionDate(
             @Param("startDate") LocalDateTime startDate,
             @Param("endDate") LocalDateTime endDate);
+    
+	@Query(value = """
+			SELECT
+			 COALESCE(SUM(c.DEBIT),0) as credits,
+			 COALESCE(SUM(c.CREDIT),0) as debits
+			FROM cash_book c
+			WHERE c.TRANS_DATE < :endDate
+			""", nativeQuery = true)
+	SumOfCreditsAndDebitsProjection findAllSumOfCreditsAndDebitsTransactionDate(
+			@Param("endDate") LocalDateTime endDate);
 
     @Query(value = """
             SELECT COALESCE(SUM(DEBIT),0) - COALESCE(SUM(CREDIT),0)
@@ -225,30 +236,12 @@ public interface CashBookRepo extends JpaRepository<CashBook, Long> {
 			FROM cash_book cb
 			JOIN accountmaster am
 			    ON am.code = cb.particulars
-			WHERE cb.TRANS_DATE BETWEEN :fromDate AND :toDate
+			WHERE cb.TRANS_DATE < :toDate
 			  and am.type IN (:typeList)
 			GROUP BY am.type, am.code , am.master_code
 			ORDER BY am.type, am.code
 			""", nativeQuery = true)
-	List<BalanceSheetProjection> getBalanceSheetByTrasncDate(@Param("fromDate") LocalDateTime fromDate,
-			@Param("toDate") LocalDateTime toDate,@Param("typeList") List<String> typeList);
-    
-	
-	@Query(value = """
-			SELECT
-			    am.type AS type,
-			    am.master_code AS masterCode,
-			    am.code AS code,
-			    COALESCE(SUM(cb.CREDIT),0) - COALESCE(SUM(cb.DEBIT),0) AS amount
-			FROM cash_book cb
-			JOIN accountmaster am
-			    ON am.code = cb.particulars
-		    WHERE am.type IN (:typeList)
-			GROUP BY am.type, am.code ,am.master_code
-			ORDER BY am.type, am.code
-			""", nativeQuery = true)
-	List<BalanceSheetProjection> getBalanceSheet(@Param("typeList") List<String> typeList);
-    
-    
-    
+	List<BalanceSheetProjection> getBalanceSheetByTrasncDate(@Param("toDate") LocalDateTime toDate,
+			@Param("typeList") List<String> typeList);
+
 }
