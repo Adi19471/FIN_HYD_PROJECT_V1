@@ -10,6 +10,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
+import com.balaji.finance.dto.BalanceSheetProjection;
 import com.balaji.finance.dto.DateWiseCashBookProjection;
 import com.balaji.finance.dto.DateWiseCollectionsProjection;
 import com.balaji.finance.dto.RevenueExpenseProjection;
@@ -179,13 +180,12 @@ public interface CashBookRepo extends JpaRepository<CashBook, Long> {
             """)
     List<CashBook> findByDateRangeAndBusinessNotNull();
     
-    
-    @Query("SELECT COALESCE(SUM(c.credit),0) FROM CashBook c " +
-    	       "WHERE c.businessMember.businessMemberId = :memberId " +
-    	       "AND c.transType IN ('MF LOAN','MF INTEREST')")
+	@Query("""
+			SELECT COALESCE(SUM(c.credit),0) FROM CashBook c
+			WHERE c.businessMember.businessMemberId = :memberId
+			AND c.transType IN ('MF LOAN','MF INTEREST')
+			""")
 	BigDecimal getTotalPaidForMember(@Param("memberId") String memberId);
-    
-    
     
 	@Query(value = """
 			SELECT
@@ -215,6 +215,39 @@ public interface CashBookRepo extends JpaRepository<CashBook, Long> {
 			ORDER BY am.type, am.code
 			""", nativeQuery = true)
 	List<RevenueExpenseProjection> getRevenueExpenseStatement();
+    
+	@Query(value = """
+			SELECT
+			    am.type AS type,
+			    am.master_code as masterCode,
+			    am.code AS code,
+			    COALESCE(SUM(cb.CREDIT),0) - COALESCE(SUM(cb.DEBIT),0) AS amount
+			FROM cash_book cb
+			JOIN accountmaster am
+			    ON am.code = cb.particulars
+			WHERE cb.TRANS_DATE BETWEEN :fromDate AND :toDate
+			  and am.type IN (:typeList)
+			GROUP BY am.type, am.code , am.master_code
+			ORDER BY am.type, am.code
+			""", nativeQuery = true)
+	List<BalanceSheetProjection> getBalanceSheetByTrasncDate(@Param("fromDate") LocalDateTime fromDate,
+			@Param("toDate") LocalDateTime toDate,@Param("typeList") List<String> typeList);
+    
+	
+	@Query(value = """
+			SELECT
+			    am.type AS type,
+			    am.master_code AS masterCode,
+			    am.code AS code,
+			    COALESCE(SUM(cb.CREDIT),0) - COALESCE(SUM(cb.DEBIT),0) AS amount
+			FROM cash_book cb
+			JOIN accountmaster am
+			    ON am.code = cb.particulars
+		    WHERE am.type IN (:typeList)
+			GROUP BY am.type, am.code ,am.master_code
+			ORDER BY am.type, am.code
+			""", nativeQuery = true)
+	List<BalanceSheetProjection> getBalanceSheet(@Param("typeList") List<String> typeList);
     
     
     
