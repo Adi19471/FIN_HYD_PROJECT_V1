@@ -187,6 +187,7 @@ const Cashbook = () => {
 
     const payload = {
       transactionDate: transactionDate,
+      accountMasterCode:masterCode,
       accountCode: code,
       customerId: selectedPerson?.id || name.trim(),
       particulars: particulars.trim() || "Other Payment",
