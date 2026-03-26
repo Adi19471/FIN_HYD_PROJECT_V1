@@ -4,7 +4,10 @@ import {
   Button,
   IconButton,
   TextField,
-  Drawer,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
   Typography,
   Paper,
   Tooltip,
@@ -45,7 +48,7 @@ const TRANS_TYPES = ["CREDIT", "DEBIT"];
 const AccountMasterSetup = () => {
   const [accounts, setAccounts] = useState([]);
   const [loading, setLoading] = useState(false);
-  const [drawerOpen, setDrawerOpen] = useState(false);
+  const [dialogOpen, setDialogOpen] = useState(false);
   const [isEdit, setIsEdit] = useState(false);
 
   const [form, setForm] = useState({
@@ -103,10 +106,12 @@ const AccountMasterSetup = () => {
         transType: [],
       });
     }
-    setDrawerOpen(true);
+    setDialogOpen(true);
   };
 
-  const handleClose = () => setDrawerOpen(false);
+  const handleClose = () => {
+    setDialogOpen(false);
+  };
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -161,9 +166,9 @@ const AccountMasterSetup = () => {
       width: 240,
       renderCell: (params) => (
         <Box sx={{ display: "flex", gap: 0.5, flexWrap: "wrap" }}>
-          {params.value?.split(",").map((pt, i) => pt.trim() && (
-            <Chip key={i} label={pt.trim()} size="small" color="primary" variant="outlined" />
-          ))}
+          {params.value?.split(",").map((pt, i) =>
+            pt.trim() && <Chip key={i} label={pt.trim()} size="small" color="primary" variant="outlined" />
+          )}
         </Box>
       ),
     },
@@ -173,14 +178,16 @@ const AccountMasterSetup = () => {
       width: 160,
       renderCell: (params) => (
         <Box sx={{ display: "flex", gap: 0.5, flexWrap: "wrap" }}>
-          {params.value?.split(",").map((tt, i) => tt.trim() && (
-            <Chip
-              key={i}
-              label={tt.trim()}
-              size="small"
-              color={tt.trim() === "CREDIT" ? "success" : "error"}
-            />
-          ))}
+          {params.value?.split(",").map((tt, i) =>
+            tt.trim() && (
+              <Chip
+                key={i}
+                label={tt.trim()}
+                size="small"
+                color={tt.trim() === "CREDIT" ? "success" : "error"}
+              />
+            )
+          )}
         </Box>
       ),
     },
@@ -255,7 +262,7 @@ const AccountMasterSetup = () => {
               border: "none",
               "& .MuiDataGrid-columnHeaders": {
                 backgroundColor: "primary.main",
-                color: "black",
+                color: "white",           // Changed to white for better contrast
                 fontWeight: 600,
               },
               "& .MuiDataGrid-cell": { borderBottom: "1px solid #eee" },
@@ -264,183 +271,176 @@ const AccountMasterSetup = () => {
         )}
       </Paper>
 
-      {/* Drawer - Improved responsive size */}
-      <Drawer
-        anchor="right"
-        open={drawerOpen}
+      {/* Modal Popup */}
+      <Dialog
+        open={dialogOpen}
         onClose={handleClose}
+        maxWidth="sm"
+        fullWidth
         PaperProps={{
           sx: {
-            width: { xs: "100%", sm: "420px", md: "280px" }, // better size on tablet/desktop
-            maxWidth: "50vw",
-            borderRadius: { xs: 0, sm: "16px 0 0 16px" },
+            borderRadius: 0,
+            boxShadow: 2,
           },
         }}
       >
-        <Box sx={{ height: "100%", display: "flex", flexDirection: "column" }}>
-          {/* Header */}
-          <Box
-            sx={{
-              p: 3,
-              bgcolor: "primary.main",
-              color: "white",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "space-between",
-            }}
+        <DialogTitle sx={{ pb: 1, display: "flex", alignItems: "center", gap: 1 }}>
+          <AccountTreeIcon color="primary" />
+          {isEdit ? "Edit Account Master" : "Create New Account Master"}
+          <IconButton
+            onClick={handleClose}
+            sx={{ ml: "auto" }}
+            size="small"
           >
-            <Typography variant="h6" fontWeight={600}>
-              {isEdit ? "Edit Account Master" : "Create Account Master"}
-            </Typography>
-            <IconButton onClick={handleClose} sx={{ color: "white" }}>
-              <CloseIcon />
-            </IconButton>
-          </Box>
+            <CloseIcon />
+          </IconButton>
+        </DialogTitle>
 
-          {/* Form Content */}
-          <Box sx={{ flex: 1, overflowY: "auto", p: 3 }}>
-            <Grid container spacing={2.5}>
-              <Grid item xs={12}>
-                <TextField
-                  fullWidth
-                  required
-                  label="Type *"
-                  name="type"
-                  value={form.type}
-                  onChange={handleChange}
-                  variant="outlined"
-                  error={!form.type.trim() && form.type !== ""}
-                  helperText={!form.type.trim() && form.type !== "" ? "Required" : ""}
-                />
-              </Grid>
+        <Divider />
 
-              <Grid item xs={12} sm={6}>
-                <TextField
-                  fullWidth
-                  required
-                  label="Master Code *"
-                  name="masterCode"
-                  value={form.masterCode}
-                  onChange={handleChange}
-                  variant="outlined"
-                  error={!form.masterCode.trim() && form.masterCode !== ""}
-                  helperText={!form.masterCode.trim() && form.masterCode !== "" ? "Required" : ""}
-                />
-              </Grid>
-
-              <Grid item xs={12} sm={6}>
-                <TextField
-                  fullWidth
-                  required
-                  label="Code *"
-                  name="code"
-                  value={form.code}
-                  onChange={handleChange}
-                  variant="outlined"
-                  error={!form.code.trim() && form.code !== ""}
-                  helperText={!form.code.trim() && form.code !== "" ? "Required" : ""}
-                />
-              </Grid>
-
-              <Grid item xs={12}>
-                <TextField
-                  fullWidth
-                  label="Master Icon (optional)"
-                  name="masterIcon"
-                  value={form.masterIcon}
-                  onChange={handleChange}
-                  variant="outlined"
-                />
-              </Grid>
-
-              <Grid item xs={12}>
-                <FormControl fullWidth>
-                  <InputLabel>Person Type</InputLabel>
-                  <Select
-                    multiple sx={{width:200}}
-                    value={form.personType}
-                    label="Person Type"
-                    onChange={(e) => setForm((p) => ({ ...p, personType: e.target.value }))}
-                    renderValue={(selected) => (
-                      <Box sx={{ display: "flex", flexWrap: "wrap", gap: 0.5 }}>
-                        {selected.map((value) => (
-                          <Chip key={value} label={value} size="small" color="primary" />
-                        ))}
-                      </Box>
-                    )}
-                  >
-                    {PERSON_TYPES.map((type) => (
-                      <MenuItem key={type} value={type}>
-                        <Checkbox checked={form.personType.includes(type)} />
-                        {type}
-                      </MenuItem>
-                    ))}
-                  </Select>
-                </FormControl>
-              </Grid>
-
-              <Grid item xs={12}>
-                <FormControl fullWidth>
-                  <InputLabel>Transaction Type</InputLabel>
-                  <Select
-                    multiple sx={{width:200}}
-                    value={form.transType}
-                    label="Transaction Type"
-                    onChange={(e) => setForm((p) => ({ ...p, transType: e.target.value }))}
-                    renderValue={(selected) => (
-                      <Box sx={{ display: "flex", flexWrap: "wrap", gap: 0.5 }}>
-                        {selected.map((value) => (
-                          <Chip
-                            key={value}
-                            label={value}
-                            size="small"
-                            color={value === "CREDIT" ? "success" : "error"}
-                          />
-                        ))}
-                      </Box>
-                    )}
-                  >
-                    {TRANS_TYPES.map((type) => (
-                      <MenuItem key={type} value={type}>
-                        <Checkbox checked={form.transType.includes(type)} />
-                        {type}
-                      </MenuItem>
-                    ))}
-                  </Select>
-                </FormControl>
-              </Grid>
-
-              <Grid item xs={12}>
-                <FormControlLabel sx={{width:200}}
-                  control={
-                    <Switch
-                      checked={form.visibility}
-                      onChange={(e) => setForm((p) => ({ ...p, visibility: e.target.checked }))}
-                      color="success"
-                    />
-                  }
-                  label={
-                    <Typography>
-                      {form.visibility ? "Visible in lists" : "Hidden"}
-                    </Typography>
-                  }
-                />
-              </Grid>
+        <DialogContent sx={{ pt: 3 }}>
+          <Grid container spacing={2.5}>
+            <Grid item xs={12}>
+              <TextField
+                fullWidth
+                required
+                label="Type"
+                name="type"
+                value={form.type}
+                onChange={handleChange}
+                variant="outlined"
+              />
             </Grid>
-          </Box>
 
-          {/* Footer */}
-          <Divider />
-          <Box sx={{ p: 3, display: "flex", gap: 2, justifyContent: "flex-end" }}>
-            <Button variant="outlined" onClick={handleClose}>
-              Cancel
-            </Button>
-            <Button variant="contained" startIcon={<SaveIcon />} onClick={handleSubmit}>
-              {isEdit ? "Update" : "Save"}
-            </Button>
-          </Box>
-        </Box>
-      </Drawer>
+            <Grid item xs={12} sm={6}>
+              <TextField
+                fullWidth
+                required
+                label="Master Code"
+                name="masterCode"
+                value={form.masterCode}
+                onChange={handleChange}
+                variant="outlined"
+              />
+            </Grid>
+
+            <Grid item xs={12} sm={6}>
+              <TextField
+                fullWidth
+                required
+                label="Code"
+                name="code"
+                value={form.code}
+                onChange={handleChange}
+                variant="outlined"
+              />
+            </Grid>
+
+            <Grid item xs={12}>
+              <TextField
+                fullWidth
+                label="Master Icon (optional)"
+                name="masterIcon"
+                value={form.masterIcon}
+                onChange={handleChange}
+                variant="outlined"
+                placeholder="e.g., AccountBalance, CreditCard, etc."
+              />
+            </Grid>
+
+            {/* Person Type - Multi Select */}
+            <Grid item xs={12}>
+              <FormControl fullWidth>
+                <InputLabel>Person Type</InputLabel>
+                <Select
+                  multiple
+                  value={form.personType}
+                  label="Person Type"
+                  sx={{width:200}}
+                  onChange={(e) => setForm((p) => ({ ...p, personType: e.target.value }))}
+                  renderValue={(selected) => (
+                    <Box sx={{ display: "flex", flexWrap: "wrap", gap: 0.5 }}>
+                      {selected.map((value) => (
+                        <Chip key={value} label={value} size="small" color="primary" />
+                      ))}
+                    </Box>
+                  )}
+                >
+                  {PERSON_TYPES.map((type) => (
+                    <MenuItem key={type} value={type}>
+                      <Checkbox checked={form.personType.includes(type)} />
+                      {type}
+                    </MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
+            </Grid>
+
+            {/* Transaction Type - Multi Select */}
+            <Grid item xs={12}>
+              <FormControl fullWidth>
+                <InputLabel>Transaction Type</InputLabel>
+                <Select
+                  multiple
+                  value={form.transType}
+                  label="Transaction Type"    sx={{width:200}}
+                  onChange={(e) => setForm((p) => ({ ...p, transType: e.target.value }))}
+                  renderValue={(selected) => (
+                    <Box sx={{ display: "flex", flexWrap: "wrap", gap: 0.5 }}>
+                      {selected.map((value) => (
+                        <Chip
+                          key={value}
+                          label={value}
+                          size="small"
+                          color={value === "CREDIT" ? "success" : "error"}
+                        />
+                      ))}
+                    </Box>
+                  )}
+                >
+                  {TRANS_TYPES.map((type) => (
+                    <MenuItem key={type} value={type}>
+                      <Checkbox checked={form.transType.includes(type)} />
+                      {type}
+                    </MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
+            </Grid>
+
+            <Grid item xs={12}>
+              <FormControlLabel
+                control={
+                  <Switch
+                    checked={form.visibility}
+                    onChange={(e) => setForm((p) => ({ ...p, visibility: e.target.checked }))}
+                    color="success"
+                  />
+                }
+                label={
+                  <Typography variant="body1">
+                    {form.visibility ? "Visible in lists" : "Hidden from lists"}
+                  </Typography>
+                }
+              />
+            </Grid>
+          </Grid>
+        </DialogContent>
+
+        <DialogActions sx={{ p: 3, pt: 1 }}>
+          <Button variant="outlined" onClick={handleClose} sx={{ px: 4 }}>
+            Cancel
+          </Button>
+          <Button
+            variant="contained"
+            startIcon={<SaveIcon />}
+            onClick={handleSubmit}
+            sx={{ px: 4 }}
+          >
+            {isEdit ? "Update" : "Save"}
+          </Button>
+        </DialogActions>
+      </Dialog>
     </Box>
   );
 };

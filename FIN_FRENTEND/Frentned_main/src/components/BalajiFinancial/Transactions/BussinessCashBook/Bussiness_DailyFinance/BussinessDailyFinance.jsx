@@ -239,6 +239,7 @@ const BussinessDailyFinance = () => {
                       {...params}
                       label="Search Customer"
                       size="small"
+                      sx={{width:300}}
                       InputProps={{
                         ...params.InputProps,
                         endAdornment: (

@@ -26,27 +26,7 @@ import { setSession } from "src/utils/session";
 
 const backgroundImages = [
 
-  // ----- Finance Charts & Stock Market -----
-  "https://images.unsplash.com/photo-1640161704729-cbe966a08476?auto=format&fit=crop&q=80&w=2000",
-  "https://images.unsplash.com/photo-1551288049-bebda4e38f71?auto=format&fit=crop&q=80&w=2000",
-  "https://images.unsplash.com/photo-1611974789855-9c2a0a7236a3?auto=format&fit=crop&q=80&w=2000",
-  "https://images.unsplash.com/photo-1559526324-593bc073d938?auto=format&fit=crop&q=80&w=2000",
-
-  // ----- Investment & Money -----
-  "https://images.unsplash.com/photo-1579621970795-87facc2f976d?auto=format&fit=crop&q=80&w=2000",
-  "https://images.unsplash.com/photo-1554224155-1696413565d3?auto=format&fit=crop&q=80&w=2000",
-  "https://images.unsplash.com/photo-1611078489935-0cb964de46d6?auto=format&fit=crop&q=80&w=2000",
-  "https://images.unsplash.com/photo-1604594849809-dfedbc827105?auto=format&fit=crop&q=80&w=2000",
-
-  // ----- Business Meeting / Corporate -----
-  "https://images.unsplash.com/photo-1454165804606-c3d57bc86b40?auto=format&fit=crop&q=80&w=2000",
-  "https://images.unsplash.com/photo-1556745757-8d76bdb6984b?auto=format&fit=crop&q=80&w=2000",
-  "https://images.unsplash.com/photo-1557804506-669a67965ba0?auto=format&fit=crop&q=80&w=2000",
-
-  // ----- Banking & Fintech -----
-  "https://images.unsplash.com/photo-1565514158740-064f34bd6cfd?auto=format&fit=crop&q=80&w=2000",
-  "https://images.unsplash.com/photo-1569025690938-a00729c9e1f9?auto=format&fit=crop&q=80&w=2000",
-  "https://images.unsplash.com/photo-1611971260890-8d52fdf3a21a?auto=format&fit=crop&q=80&w=2000",
+ 
 
   // ----- Daily Business Work / Planning -----
   "https://images.unsplash.com/photo-1554224154-26032ffc0d07?auto=format&fit=crop&q=80&w=2000",
@@ -63,6 +43,56 @@ const backgroundImages = [
   "https://upload.wikimedia.org/wikipedia/commons/4/4a/Sri_Venkateswara_Swamy.jpg",
   "https://upload.wikimedia.org/wikipedia/commons/0/09/Venkateswara_Tirumala_Deity.jpg",
   "https://upload.wikimedia.org/wikipedia/commons/2/2c/Lord_Balaji_Tirupati.jpg",
+
+  
+   // 🛕 Lord Venkateswara (Tirupati Balaji)
+  "https://upload.wikimedia.org/wikipedia/commons/9/9d/Lord_Venkateswara_Tirumala.jpg",
+  "https://upload.wikimedia.org/wikipedia/commons/3/3f/Tirupati_Balaji_Temple_Deity.jpg",
+  "https://upload.wikimedia.org/wikipedia/commons/4/4a/Sri_Venkateswara_Swamy.jpg",
+  "https://upload.wikimedia.org/wikipedia/commons/0/09/Venkateswara_Tirumala_Deity.jpg",
+  "https://upload.wikimedia.org/wikipedia/commons/2/2c/Lord_Balaji_Tirupati.jpg",
+
+  // 🌄 Temple & Darshan Views
+  "https://upload.wikimedia.org/wikipedia/commons/e/e5/Tirumala_Temple_1.jpg",
+  "https://upload.wikimedia.org/wikipedia/commons/5/5e/Tirupati_Temple_View.jpg",
+
+  // ✨ Decorative / Devotional Style
+  "https://upload.wikimedia.org/wikipedia/commons/6/6c/Balaji_Gold_Alankaram.jpg",
+  "https://upload.wikimedia.org/wikipedia/commons/f/f5/Tirumala_Srivari.jpg",
+
+  // 📊 Trading Screens / Charts (Premium)
+  "https://images.unsplash.com/photo-1639322537228-f710d846310a?auto=format&fit=crop&q=80&w=2000",
+  "https://images.unsplash.com/photo-1611078489935-0cb964de46d6?auto=format&fit=crop&q=80&w=2000",
+  "https://images.unsplash.com/photo-1642543492481-44e81e3914a7?auto=format&fit=crop&q=80&w=2000",
+  "https://images.unsplash.com/photo-1621761191319-c6fb62004040?auto=format&fit=crop&q=80&w=2000",
+
+  // 💰 Money / Investment (Clean Look)
+  "https://images.unsplash.com/photo-1624996379697-f01d168b1a52?auto=format&fit=crop&q=80&w=2000",
+  "https://images.unsplash.com/photo-1580519542036-c47de6196ba5?auto=format&fit=crop&q=80&w=2000",
+  "https://images.unsplash.com/photo-1605902711622-cfb43c4437d1?auto=format&fit=crop&q=80&w=2000",
+  "https://images.unsplash.com/photo-1618044733300-9472054094ee?auto=format&fit=crop&q=80&w=2000",
+
+  // 🏦 Fintech / Digital Banking
+  "https://images.unsplash.com/photo-1607082348824-0a96f2a4b9da?auto=format&fit=crop&q=80&w=2000",
+  "https://images.unsplash.com/photo-1611974789855-9c2a0a7236a3?auto=format&fit=crop&q=80&w=2000",
+  "https://images.unsplash.com/photo-1581090700227-1e37b190418e?auto=format&fit=crop&q=80&w=2000",
+
+  // 📈 Growth / Success / Analytics
+  "https://images.unsplash.com/photo-1559523161-0fc0d8b38a7a?auto=format&fit=crop&q=80&w=2000",
+  "https://images.unsplash.com/photo-1454165804606-c3d57bc86b40?auto=format&fit=crop&q=80&w=2000",
+  "https://images.unsplash.com/photo-1508385082359-f48e4c5d1a3d?auto=format&fit=crop&q=80&w=2000",
+
+  // 🤖 AI + Finance (Modern Feel)
+  "https://images.unsplash.com/photo-1534751516642-a1af1ef26a56?auto=format&fit=crop&q=80&w=2000",
+  "https://images.unsplash.com/photo-1550751827-4bd374c3f58b?auto=format&fit=crop&q=80&w=2000",
+
+  // 💼 Corporate / Professional
+  "https://images.unsplash.com/photo-1556745757-8d76bdb6984b?auto=format&fit=crop&q=80&w=2000",
+  "https://images.unsplash.com/photo-1520607162513-77705c0f0d4a?auto=format&fit=crop&q=80&w=2000",
+
+  // 💳 Cards / Payment / Wallet
+  "https://images.unsplash.com/photo-1563013544-824ae1b704d3?auto=format&fit=crop&q=80&w=2000",
+  "https://images.unsplash.com/photo-1601597111158-2fceff292cdc?auto=format&fit=crop&q=80&w=2000",
 
 ];
 

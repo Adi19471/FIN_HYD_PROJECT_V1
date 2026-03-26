@@ -1,10 +1,10 @@
-import React, { useState, useCallback, lazy, Suspense } from "react";
+import React, { useState, useEffect, lazy, Suspense } from "react";
 import axios from "axios";
 import { API_BASE } from "lib/config";
 import { getSession } from "src/utils/session";
 import { successToast, errorToast } from "toastify";
 
-// Lazy load the Loans component for better performance
+// Lazy load
 const Loans = lazy(() => import("../Loans"));
 
 // MUI imports
@@ -12,7 +12,6 @@ import {
   Box,
   Paper,
   Typography,
-  TextField,
   Button,
   CircularProgress,
   Table,
@@ -36,10 +35,11 @@ import { DatePicker } from "@mui/x-date-pickers/DatePicker";
 import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
 import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
 
-// ── Reusable headers ────────────────────────────────────────
+const STORAGE_KEY = "dailyBook_lastSelectedDate";
+
 const getHeaders = () => {
-  const session = getSession();           // ← get once
-  const token = session?.token || "";     // safe access
+  const session = getSession();
+  const token = session?.token || "";
 
   return {
     headers: {
@@ -50,13 +50,29 @@ const getHeaders = () => {
 };
 
 const DailyBook = () => {
-  const [transactionDate, setTransactionDate] = useState(null);
+  // Initialize with last saved date or today
+  const getInitialDate = () => {
+    const savedDate = localStorage.getItem(STORAGE_KEY);
+    if (savedDate) {
+      return dayjs(savedDate);
+    }
+    return dayjs(); // today
+  };
+
+  const [transactionDate, setTransactionDate] = useState(getInitialDate());
   const [loading, setLoading] = useState(false);
   const [openingBalance, setOpeningBalance] = useState(0);
   const [transactions, setTransactions] = useState([]);
   const [credits, setCredits] = useState(0);
   const [debits, setDebits] = useState(0);
   const [closingBalance, setClosingBalance] = useState(0);
+
+  // Save selected date to localStorage whenever it changes
+  useEffect(() => {
+    if (transactionDate) {
+      localStorage.setItem(STORAGE_KEY, transactionDate.format("YYYY-MM-DD"));
+    }
+  }, [transactionDate]);
 
   const fetchDailyBook = async () => {
     if (!transactionDate) {
@@ -69,18 +85,19 @@ const DailyBook = () => {
     try {
       setLoading(true);
 
-      // Use the reusable getHeaders()
       const response = await axios.get(
         `${API_BASE}/loadAllDayWiseTransactionsSummary/${formattedDate}`,
         getHeaders()
       );
 
       const data = response.data;
+
       setOpeningBalance(data.openingBalance || 0);
       setTransactions(data.cashBookSumaryViewPojoList || []);
-      setCredits(data.credits)
-      setDebits(data.debits)
-      setClosingBalance(data.closingBalance)
+      setCredits(data.credits || 0);
+      setDebits(data.debits || 0);
+      setClosingBalance(data.closingBalance || 0);
+
       successToast("Daily book loaded successfully");
     } catch (error) {
       console.error("Failed to load daily book:", error);
@@ -94,7 +111,7 @@ const DailyBook = () => {
     }
   };
 
-  // Total calculations
+  // Total calculations from table data
   const totalCredit = transactions.reduce(
     (sum, item) => sum + (Number(item.credit) || 0),
     0
@@ -104,7 +121,7 @@ const DailyBook = () => {
     0
   );
 
-  // Placeholder export handlers
+  // Export handlers (placeholder)
   const handlePrint = () => successToast("Print feature coming soon 🖨️");
   const handleWord = () => successToast("Word export coming soon 📄");
   const handleExcel = () => successToast("Excel export coming soon 📊");
@@ -202,9 +219,9 @@ const DailyBook = () => {
               ₹ {Number(openingBalance).toLocaleString()}
             </span>
           </Typography>
+
           <Box sx={{ mt: 3 }}>
             <Stack direction={{ xs: "column", md: "row" }} spacing={2}>
-
               <Paper sx={{ p: 2, flex: 1, background: "#e8f5e9" }}>
                 <Typography variant="subtitle2">Opening Balance</Typography>
                 <Typography variant="h6" fontWeight="bold">
@@ -232,16 +249,9 @@ const DailyBook = () => {
                   ₹ {Number(closingBalance).toLocaleString()}
                 </Typography>
               </Paper>
-
             </Stack>
           </Box>
         </Paper>
-
-        {loading && (
-          <Box sx={{ display: "flex", justifyContent: "center", my: 5 }}>
-            <CircularProgress />
-          </Box>
-        )}
 
         {!loading && transactions.length > 0 && (
           <TableContainer
@@ -320,4 +330,3 @@ const DailyBook = () => {
 };
 
 export default DailyBook;
-
