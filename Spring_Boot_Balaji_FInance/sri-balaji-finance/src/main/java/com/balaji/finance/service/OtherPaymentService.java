@@ -56,7 +56,7 @@ public class OtherPaymentService {
 		}
 
 		cashBookForPrinciplePaid.setTransType(otherPaymentSaveReq.getAccountCode());
-		cashBookForPrinciplePaid.setParticulars(otherPaymentSaveReq.getParticulars());
+		cashBookForPrinciplePaid.setParticulars(otherPaymentSaveReq.getAccountCode());
 
 		cashBookForPrinciplePaid.setBmRemarks(""); // doubt
 		cashBookForPrinciplePaid.setReceiptRemarks(""); // doubt
