@@ -30,5 +30,14 @@ public interface AccountMasterRepo extends JpaRepository<AccountMaster, Long> {
 			SELECT DISTINCT a.personType FROM AccountMaster a where a.masterCode=:masterCode and a.code=:code
 			""")
 	String findPersonTypeByMasterCodeAndCode(@Param("masterCode") String masterCode, @Param("code") String code);
+	
+	
+	@Query("""
+			FROM AccountMaster a
+			WHERE a.masterCode = :masterCode
+			  AND a.code = :code
+			""")
+	AccountMaster findAccountMasterByMasterCodeAndCode(@Param("masterCode") String masterCode, @Param("code") String code);
+
 
 }

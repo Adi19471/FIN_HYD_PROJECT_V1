@@ -13,12 +13,14 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
 import com.balaji.finance.dto.BusinessMemberDto;
+import com.balaji.finance.entity.AccountMaster;
 import com.balaji.finance.entity.BusinessMember;
 import com.balaji.finance.entity.CashBook;
 import com.balaji.finance.entity.EMI;
 import com.balaji.finance.entity.LoanStatus;
 import com.balaji.finance.entity.PersonalInfo;
 import com.balaji.finance.pojo.BusinessMemberAutoCompletePojo;
+import com.balaji.finance.repo.AccountMasterRepo;
 import com.balaji.finance.repo.BusinessMemberRepository;
 import com.balaji.finance.repo.CashBookRepo;
 import com.balaji.finance.repo.EmiRepo;
@@ -39,11 +41,14 @@ public class BusinessMemberService {
 
 	@Autowired
 	private CashBookRepo cashBookRepo;
+	
+	@Autowired
+	private AccountMasterRepo accountMasterRepo;
 
 	@Autowired
 	private EmiRepo emiRepo;
 
-	public String generateId(String type) {
+	public String generateId(String type,LocalDateTime startDate) {
 
 		String prefix;
 		long seq = 0;
@@ -62,7 +67,7 @@ public class BusinessMemberService {
 			throw new IllegalArgumentException("Unknown type: " + type);
 		}
 
-		int year = LocalDate.now().getYear();
+		int year = startDate.getYear();
 
 		return prefix + year + "-" + seq;
 	}
@@ -71,7 +76,7 @@ public class BusinessMemberService {
 	public String saveBusinessMember(BusinessMemberDto businessMemberDto, String type) {
 
 		BusinessMember businessMember = new BusinessMember();
-		businessMember.setBusinessMemberId(generateId(type));
+		businessMember.setBusinessMemberId(generateId(type,businessMemberDto.getStartDate()));
 		businessMember.setLoanType(type);
 		
 		if (businessMemberDto.getCustomerId() != null && !businessMemberDto.getCustomerId().isBlank()) {
@@ -142,42 +147,53 @@ public class BusinessMemberService {
 
 		switch (type) {
 		case "DAILY_FINANCE":
+			
+			AccountMaster accountMaster = accountMasterRepo.findAccountMasterByMasterCodeAndCode("LOANS", "DF LOAN");
 
 			CashBook dfLoanCashBook = new CashBook();
 			dfLoanCashBook.setBusinessMember(businessMember);
 			dfLoanCashBook.setPersonalInfo(businessMember.getCustomerId());
 			dfLoanCashBook.setCredit(BigDecimal.ZERO);
 			dfLoanCashBook.setDebit(businessMember.getAmount());
-			dfLoanCashBook.setTransType("DF LOAN");
-			dfLoanCashBook.setParticulars("DF LOAN");
+			
+			dfLoanCashBook.setAccountMastertype(accountMaster.getType());
+			dfLoanCashBook.setAccountMasterMasterCode(accountMaster.getMasterCode());
+			dfLoanCashBook.setAccountMastercode(accountMaster.getCode());
+			
 			dfLoanCashBook.setBmRemarks("");
 			dfLoanCashBook.setReceiptRemarks("");
 
 			dfLoanCashBook.setLineNo(1);
 			dfLoanCashBook.setUser(currentUser);
 
-			dfLoanCashBook.setTransDate(currentDate);
+			dfLoanCashBook.setTransDate(businessMemberDto.getStartDate());
 			dfLoanCashBook.setSysDate(currentDate);
 
 			cashBookRepo.save(dfLoanCashBook);
 
 			if (businessMemberDto.getProcessingFee() != null && businessMemberDto.getProcessingFee() != null
 					&& businessMemberDto.getProcessingFee().compareTo(BigDecimal.ZERO) > 0) {
+				AccountMaster accountMasterProcessingFee = accountMasterRepo.findAccountMasterByMasterCodeAndCode("DOCUMENT CHARGES", "DF DOC CHARGES");
 
+				
 				CashBook dfProcessingFeeCashBook = new CashBook();
 				dfProcessingFeeCashBook.setBusinessMember(businessMember);
 				dfProcessingFeeCashBook.setPersonalInfo(businessMember.getCustomerId());
 				dfProcessingFeeCashBook.setCredit(businessMemberDto.getProcessingFee());
 				dfProcessingFeeCashBook.setDebit(BigDecimal.ZERO);
-				dfProcessingFeeCashBook.setTransType("DF DOC CHARGES");
-				dfProcessingFeeCashBook.setParticulars("DF DOC CHARGES");
+				
+				dfProcessingFeeCashBook.setAccountMastertype(accountMasterProcessingFee.getType());
+				dfProcessingFeeCashBook.setAccountMasterMasterCode(accountMasterProcessingFee.getMasterCode());
+				dfProcessingFeeCashBook.setAccountMastercode(accountMasterProcessingFee.getCode());
+				
+
 				dfProcessingFeeCashBook.setBmRemarks("");
 				dfProcessingFeeCashBook.setReceiptRemarks("");
 
 				dfProcessingFeeCashBook.setLineNo(2);
 				dfProcessingFeeCashBook.setUser(currentUser);
 
-				dfProcessingFeeCashBook.setTransDate(currentDate);
+				dfProcessingFeeCashBook.setTransDate(businessMemberDto.getStartDate());
 				dfProcessingFeeCashBook.setSysDate(currentDate);
 
 				cashBookRepo.save(dfProcessingFeeCashBook);
@@ -197,21 +213,27 @@ public class BusinessMemberService {
 					RoundingMode.HALF_UP);
 
 			if (interestAmount.compareTo(BigDecimal.ZERO) > 0) {
+				
+				AccountMaster accountMasterInterest = accountMasterRepo.findAccountMasterByMasterCodeAndCode("INTEREST", "DF INTEREST");
+
 
 				CashBook dfIntrestCashBook = new CashBook();
 				dfIntrestCashBook.setBusinessMember(businessMember);
 				dfIntrestCashBook.setPersonalInfo(businessMember.getCustomerId());
 				dfIntrestCashBook.setCredit(interestAmount);
 				dfIntrestCashBook.setDebit(BigDecimal.ZERO);
-				dfIntrestCashBook.setTransType("DF INTEREST");
-				dfIntrestCashBook.setParticulars("DF INTEREST");
+				
+				dfIntrestCashBook.setAccountMastertype(accountMasterInterest.getType());
+				dfIntrestCashBook.setAccountMasterMasterCode(accountMasterInterest.getMasterCode());
+				dfIntrestCashBook.setAccountMastercode(accountMasterInterest.getCode());
+				
 				dfIntrestCashBook.setBmRemarks("");
 				dfIntrestCashBook.setReceiptRemarks("");
 
 				dfIntrestCashBook.setLineNo(3);
 				dfIntrestCashBook.setUser(currentUser);
 
-				dfIntrestCashBook.setTransDate(currentDate);
+				dfIntrestCashBook.setTransDate(businessMemberDto.getStartDate());
 				dfIntrestCashBook.setSysDate(currentDate);
 
 				cashBookRepo.save(dfIntrestCashBook);
@@ -222,42 +244,57 @@ public class BusinessMemberService {
 			break;
 
 		case "MONTHLY_FINANCE":
+			
+			AccountMaster accountMasterMonthlyLoan = accountMasterRepo.findAccountMasterByMasterCodeAndCode("LOANS", "MF LOAN");
 
 			CashBook mFLoanCashBook = new CashBook();
 			mFLoanCashBook.setBusinessMember(businessMember);
 			mFLoanCashBook.setPersonalInfo(businessMember.getCustomerId());
 			mFLoanCashBook.setCredit(BigDecimal.ZERO);
 			mFLoanCashBook.setDebit(businessMember.getAmount());
-			mFLoanCashBook.setTransType("MF LOAN");
-			mFLoanCashBook.setParticulars("MF LOAN");
+		
+			mFLoanCashBook.setAccountMastertype(accountMasterMonthlyLoan.getType());
+			mFLoanCashBook.setAccountMasterMasterCode(accountMasterMonthlyLoan.getMasterCode());
+			mFLoanCashBook.setAccountMastercode(accountMasterMonthlyLoan.getCode());
+			
+			
+			
 			mFLoanCashBook.setBmRemarks("");
 			mFLoanCashBook.setReceiptRemarks("");
 
 			mFLoanCashBook.setLineNo(1);
 			mFLoanCashBook.setUser(currentUser);
 
-			mFLoanCashBook.setTransDate(currentDate);
+			mFLoanCashBook.setTransDate(businessMemberDto.getStartDate());
 			mFLoanCashBook.setSysDate(currentDate);
 
 			cashBookRepo.save(mFLoanCashBook);
 
 			if (businessMemberDto.getProcessingFee() != null && businessMemberDto.getProcessingFee() != null
 					&& businessMemberDto.getProcessingFee().compareTo(BigDecimal.ZERO) > 0) {
+				
+				
+				AccountMaster accountMasterProcessingFee = accountMasterRepo
+						.findAccountMasterByMasterCodeAndCode("DOCUMENT CHARGES", "MF DOC CHARGES");
 
 				CashBook dfProcessingFeeCashBook = new CashBook();
 				dfProcessingFeeCashBook.setBusinessMember(businessMember);
 				dfProcessingFeeCashBook.setPersonalInfo(businessMember.getCustomerId());
 				dfProcessingFeeCashBook.setCredit(businessMemberDto.getProcessingFee());
 				dfProcessingFeeCashBook.setDebit(BigDecimal.ZERO);
-				dfProcessingFeeCashBook.setTransType("MF DOC CHARGES");
-				dfProcessingFeeCashBook.setParticulars("MF DOC CHARGES");
+				
+				dfProcessingFeeCashBook.setAccountMastertype(accountMasterProcessingFee.getType());
+				dfProcessingFeeCashBook.setAccountMasterMasterCode(accountMasterProcessingFee.getMasterCode());
+				dfProcessingFeeCashBook.setAccountMastercode(accountMasterProcessingFee.getCode());
+				
+			
 				dfProcessingFeeCashBook.setBmRemarks("");
 				dfProcessingFeeCashBook.setReceiptRemarks("");
 
 				dfProcessingFeeCashBook.setLineNo(2);
 				dfProcessingFeeCashBook.setUser(currentUser);
 
-				dfProcessingFeeCashBook.setTransDate(currentDate);
+				dfProcessingFeeCashBook.setTransDate(businessMemberDto.getStartDate());
 				dfProcessingFeeCashBook.setSysDate(currentDate);
 
 				cashBookRepo.save(dfProcessingFeeCashBook);

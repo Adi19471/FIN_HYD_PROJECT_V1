@@ -14,6 +14,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
+import com.balaji.finance.entity.AccountMaster;
 import com.balaji.finance.entity.BusinessMember;
 import com.balaji.finance.entity.CashBook;
 import com.balaji.finance.entity.EMI;
@@ -21,6 +22,7 @@ import com.balaji.finance.entity.LoanStatus;
 import com.balaji.finance.pojo.InstallmentDetails;
 import com.balaji.finance.pojo.LoanInformation;
 import com.balaji.finance.pojo.QuickCashBookRow;
+import com.balaji.finance.repo.AccountMasterRepo;
 import com.balaji.finance.repo.BusinessMemberRepository;
 import com.balaji.finance.repo.CashBookRepo;
 import com.balaji.finance.repo.EmiRepo;
@@ -39,6 +41,8 @@ public class MonthlyLoanInstallmentPaymentService {
 	@Autowired
 	private EmiRepo emiRepo;
 
+	@Autowired
+	private AccountMasterRepo accountMasterRepo;
 
 	private static final DateTimeFormatter DATE_FORMAT = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
 	
@@ -141,8 +145,8 @@ public class MonthlyLoanInstallmentPaymentService {
 		
 		for (CashBook cb : paidList) {
 
-			if (cb.getParticulars().equalsIgnoreCase("MF LOAN INSTALLMENT")
-					|| cb.getParticulars().equalsIgnoreCase("MF INTEREST")) {
+			if (cb.getAccountMastercode().equalsIgnoreCase("MF LOAN INSTALLMENT")
+					|| cb.getAccountMastercode().equalsIgnoreCase("MF INTEREST")) {
 
 				totalAmountPaid = totalAmountPaid.add(cb.getCredit() != null ? cb.getCredit() : BigDecimal.ZERO);
 
@@ -194,13 +198,21 @@ public class MonthlyLoanInstallmentPaymentService {
 
 		// 🔹 Save Principal Entry
 		if (principalPaid.compareTo(BigDecimal.ZERO) > 0) {
+			
+			
+			AccountMaster accountMaster = accountMasterRepo.findAccountMasterByMasterCodeAndCode("MF LOAN INSTALLMENT", "MF LOAN INSTALLMENT");
+
+
 
 			CashBook cb = new CashBook();
 			cb.setBusinessMember(bm);
 			cb.setCredit(principalPaid);
 			cb.setDebit(BigDecimal.ZERO);
-			cb.setTransType("MF LOAN");
-			cb.setParticulars("MF LOAN INSTALLMENT");
+			
+			cb.setAccountMastertype(accountMaster.getType());
+			cb.setAccountMasterMasterCode(accountMaster.getMasterCode());
+			cb.setAccountMastercode(accountMaster.getCode());
+			
 			cb.setUser(currentUser);
 			cb.setTransDate(transactionDate);
 			cb.setSysDate(LocalDateTime.now());
@@ -212,13 +224,19 @@ public class MonthlyLoanInstallmentPaymentService {
 
 		// 🔹 Save Interest Entry
 		if (interestPaid.compareTo(BigDecimal.ZERO) > 0) {
+			
+			AccountMaster accountMaster = accountMasterRepo.findAccountMasterByMasterCodeAndCode("INTEREST", "MF INTEREST");
+
 
 			CashBook cb = new CashBook();
 			cb.setBusinessMember(bm);
 			cb.setCredit(interestPaid);
 			cb.setDebit(BigDecimal.ZERO);
-			cb.setTransType("MF INTEREST");
-			cb.setParticulars("MF INTEREST");
+		
+			cb.setAccountMastertype(accountMaster.getType());
+			cb.setAccountMasterMasterCode(accountMaster.getMasterCode());
+			cb.setAccountMastercode(accountMaster.getCode());
+			
 			cb.setUser(currentUser);
 			cb.setTransDate(transactionDate);
 			cb.setSysDate(LocalDateTime.now());
@@ -230,13 +248,20 @@ public class MonthlyLoanInstallmentPaymentService {
 
 		// 🔹 Save Late Fee
 		if (lateFee != null && lateFee.compareTo(BigDecimal.ZERO) > 0) {
+			
+
+			AccountMaster accountMaster = accountMasterRepo.findAccountMasterByMasterCodeAndCode("LATE FEE", "MF LATE FEE");
+
 
 			CashBook cb = new CashBook();
 			cb.setBusinessMember(bm);
 			cb.setCredit(lateFee);
 			cb.setDebit(BigDecimal.ZERO);
-			cb.setTransType("MF LATE FEE");
-			cb.setParticulars("MF LATE FEE");
+			
+			cb.setAccountMastertype(accountMaster.getType());
+			cb.setAccountMasterMasterCode(accountMaster.getMasterCode());
+			cb.setAccountMastercode(accountMaster.getCode());
+			
 			cb.setUser(currentUser);
 			cb.setTransDate(transactionDate);
 			cb.setSysDate(LocalDateTime.now());

@@ -7,6 +7,7 @@ import java.util.List;
 public class OtherPaymentSaveReq {
 
 	private String transactionDate;
+	private String accountMasterCode;
 	private String accountCode;
 	private String customerId;
 	private String particulars;
@@ -62,4 +63,13 @@ public class OtherPaymentSaveReq {
 		this.amount = amount;
 	}
 
+	public String getAccountMasterCode() {
+		return accountMasterCode;
+	}
+
+	public void setAccountMasterCode(String accountMasterCode) {
+		this.accountMasterCode = accountMasterCode;
+	}
+
+	
 }

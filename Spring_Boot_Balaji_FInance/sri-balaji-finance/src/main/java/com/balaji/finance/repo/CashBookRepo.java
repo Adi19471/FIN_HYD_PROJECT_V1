@@ -27,15 +27,15 @@ public interface CashBookRepo extends JpaRepository<CashBook, Long> {
 
 	List<CashBook> findByBusinessMember(BusinessMember businessMember);
 
-	List<CashBook> findByTransType(String transType);
+	List<CashBook> findByAccountMastercode(String accountMastercode);
 
-	List<CashBook> findByTransTypeAndTransDateBetween(String transType, LocalDateTime fromDate, LocalDateTime toDate);
+	List<CashBook> findByAccountMastercodeAndTransDateBetween(String accountMastercode, LocalDateTime fromDate, LocalDateTime toDate);
 
 	@Query("""
 			SELECT COALESCE(SUM(cb.credit), 0)
 			FROM CashBook cb
 			WHERE cb.businessMember.businessMemberId = :accountNo
-			AND cb.transType = 'MF LOAN'
+			AND cb.accountMastercode = 'MF LOAN'
 			""")
 	BigDecimal sumPrincipal(@Param("accountNo") String accountNo);
 
@@ -43,7 +43,7 @@ public interface CashBookRepo extends JpaRepository<CashBook, Long> {
 			SELECT COALESCE(SUM(cb.credit), 0)
 			FROM CashBook cb
 			WHERE cb.businessMember.businessMemberId = :accountNo
-			AND cb.transType = 'MF INTEREST'
+			AND cb.accountMastercode = 'MF INTEREST'
 			""")
 	BigDecimal sumInterest(@Param("accountNo") String accountNo);
 
@@ -67,7 +67,7 @@ public interface CashBookRepo extends JpaRepository<CashBook, Long> {
 			@Param("endDate") LocalDateTime endDate);
 
 	@Query(value = """
-			SELECT COALESCE(SUM(DEBIT),0) - COALESCE(SUM(CREDIT),0)
+			SELECT COALESCE(SUM(CREDIT),0) - COALESCE(SUM(DEBIT),0)
 			FROM cash_book
 			WHERE TRANS_DATE < :givenDate
 			""", nativeQuery = true)
@@ -90,10 +90,10 @@ public interface CashBookRepo extends JpaRepository<CashBook, Long> {
 	@Query(value = """
 			SELECT
 			    DATE(TRANS_DATE) AS txnDate,
-			    SUM(CASE WHEN PARTICULARS IN
+			    SUM(CASE WHEN ACCOUNT_MASTER_CODE IN
 			        ('DF LOAN INSTALLMENT','DF LATE FEE','DF DOC CHARGES','DF INTEREST')
 			        THEN CREDIT ELSE 0 END) AS dailyTotal,
-			    SUM(CASE WHEN PARTICULARS IN
+			    SUM(CASE WHEN ACCOUNT_MASTER_CODE IN
 			        ('MF LOAN INSTALLMENT','MF INTEREST','MF LATE FEE','MF DOC CHARGES')
 			        THEN CREDIT ELSE 0 END) AS monthlyTotal
 			FROM cash_book
@@ -107,10 +107,10 @@ public interface CashBookRepo extends JpaRepository<CashBook, Long> {
 	@Query(value = """
 			SELECT
 			    DATE(TRANS_DATE) AS txnDate,
-			    SUM(CASE WHEN PARTICULARS IN
+			    SUM(CASE WHEN ACCOUNT_MASTER_CODE IN
 			        ('DF LOAN INSTALLMENT','DF LATE FEE','DF DOC CHARGES','DF INTEREST')
 			        THEN CREDIT ELSE 0 END) AS dailyTotal,
-			    SUM(CASE WHEN PARTICULARS IN
+			    SUM(CASE WHEN ACCOUNT_MASTER_CODE IN
 			        ('MF LOAN INSTALLMENT','MF INTEREST','MF LATE FEE','MF DOC CHARGES')
 			        THEN CREDIT ELSE 0 END) AS monthlyTotal
 			FROM cash_book
@@ -126,10 +126,10 @@ public interface CashBookRepo extends JpaRepository<CashBook, Long> {
 	@Query(value = """
 			SELECT
 			    DATE(TRANS_DATE) AS txnDate,
-			    SUM(CASE WHEN PARTICULARS IN
+			    SUM(CASE WHEN ACCOUNT_MASTER_CODE IN
 			        ('DF LOAN INSTALLMENT','DF LATE FEE','DF DOC CHARGES','DF INTEREST')
 			        THEN CREDIT ELSE 0 END) AS dailyTotal,
-			    SUM(CASE WHEN PARTICULARS IN
+			    SUM(CASE WHEN ACCOUNT_MASTER_CODE IN
 			        ('MF LOAN INSTALLMENT','MF INTEREST','MF LATE FEE','MF DOC CHARGES')
 			        THEN CREDIT ELSE 0 END) AS monthlyTotal
 			FROM cash_book
@@ -144,11 +144,11 @@ public interface CashBookRepo extends JpaRepository<CashBook, Long> {
 			    COALESCE(SUM(CREDIT), 0) AS credit,
 			    COALESCE(SUM(DEBIT), 0) AS debit,
 			    COALESCE(SUM(CREDIT), 0) - COALESCE(SUM(DEBIT), 0) AS balance,
-			    PARTICULARS AS particulars
+			    ACCOUNT_MASTER_CODE AS particulars
 			FROM cash_book
 			WHERE TRANS_DATE BETWEEN :fromDate AND :toDate
-			GROUP BY PARTICULARS
-			ORDER BY PARTICULARS
+			GROUP BY ACCOUNT_MASTER_CODE
+			ORDER BY ACCOUNT_MASTER_CODE
 			""", nativeQuery = true)
 	List<SummaryByParticularsProjection> getSummaryByParticulars(@Param("fromDate") LocalDateTime fromDate,
 			@Param("toDate") LocalDateTime toDate);
@@ -158,10 +158,10 @@ public interface CashBookRepo extends JpaRepository<CashBook, Long> {
 			    COALESCE(SUM(CREDIT), 0) AS credit,
 			    COALESCE(SUM(DEBIT), 0) AS debit,
 			    COALESCE(SUM(CREDIT), 0) - COALESCE(SUM(DEBIT), 0) AS balance,
-			    PARTICULARS AS particulars
+			    ACCOUNT_MASTER_CODE AS particulars
 			FROM cash_book
-			GROUP BY PARTICULARS
-			ORDER BY PARTICULARS
+			GROUP BY ACCOUNT_MASTER_CODE
+			ORDER BY ACCOUNT_MASTER_CODE
 			""", nativeQuery = true)
 	List<SummaryByParticularsProjection> getSummaryByParticulars();
 
@@ -184,51 +184,45 @@ public interface CashBookRepo extends JpaRepository<CashBook, Long> {
 	@Query("""
 			SELECT COALESCE(SUM(c.credit),0) FROM CashBook c
 			WHERE c.businessMember.businessMemberId = :memberId
-			AND c.transType IN ('MF LOAN','MF INTEREST')
+			AND c.accountMastercode IN ('MF LOAN','MF INTEREST')
 			""")
 	BigDecimal getTotalPaidForMember(@Param("memberId") String memberId);
 
 	@Query(value = """
 			SELECT
-			    am.type AS type,
-			    am.code AS code,
+			    cb.ACCOUNT_MASTER_TYPE AS type,
+			    cb.ACCOUNT_MASTER_CODE AS code,
 			    COALESCE(SUM(cb.CREDIT),0) - COALESCE(SUM(cb.DEBIT),0) AS amount
 			FROM cash_book cb
-			JOIN accountmaster am
-			    ON am.code = cb.particulars
 			WHERE cb.TRANS_DATE BETWEEN :fromDate AND :toDate
-			GROUP BY am.type, am.code
-			ORDER BY am.type, am.code
+			GROUP BY cb.ACCOUNT_MASTER_TYPE, cb.ACCOUNT_MASTER_CODE
+			ORDER BY cb.ACCOUNT_MASTER_TYPE, cb.ACCOUNT_MASTER_CODE
 			""", nativeQuery = true)
 	List<RevenueExpenseProjection> getRevenueExpenseStatementByTrasncDate(@Param("fromDate") LocalDateTime fromDate,
 			@Param("toDate") LocalDateTime toDate);
 
 	@Query(value = """
 			SELECT
-			    am.type AS type,
-			    am.code AS code,
+			    cb.ACCOUNT_MASTER_TYPE AS type,
+			    cb.ACCOUNT_MASTER_CODE AS code,
 			    COALESCE(SUM(cb.CREDIT),0) - COALESCE(SUM(cb.DEBIT),0) AS amount
 			FROM cash_book cb
-			JOIN accountmaster am
-			    ON am.code = cb.particulars
-			GROUP BY am.type, am.code
-			ORDER BY am.type, am.code
+			GROUP BY cb.ACCOUNT_MASTER_TYPE, cb.ACCOUNT_MASTER_CODE
+			ORDER BY cb.ACCOUNT_MASTER_TYPE, cb.ACCOUNT_MASTER_CODE
 			""", nativeQuery = true)
 	List<RevenueExpenseProjection> getRevenueExpenseStatement();
 
 	@Query(value = """
 			SELECT
-			    am.type AS type,
-			    am.master_code as masterCode,
-			    am.code AS code,
+			    cb.ACCOUNT_MASTER_TYPE AS type,
+			    cb.ACCOUNT_MASTER_MASTER_CODE as masterCode,
+			    cb.ACCOUNT_MASTER_CODE AS code,
 			    COALESCE(SUM(cb.CREDIT),0) - COALESCE(SUM(cb.DEBIT),0) AS amount
 			FROM cash_book cb
-			JOIN accountmaster am
-			    ON am.code = cb.particulars
 			WHERE cb.TRANS_DATE < :toDate
 			  and am.type IN (:typeList)
-			GROUP BY am.type, am.code , am.master_code
-			ORDER BY am.type, am.code
+			GROUP BY cb.ACCOUNT_MASTER_TYPE, cb.ACCOUNT_MASTER_MASTER_CODE , cb.ACCOUNT_MASTER_CODE
+			ORDER BY cb.ACCOUNT_MASTER_TYPE, cb.ACCOUNT_MASTER_CODE
 			""", nativeQuery = true)
 	List<BalanceSheetProjection> getBalanceSheetByTrasncDate(@Param("toDate") LocalDateTime toDate,
 			@Param("typeList") List<String> typeList);
@@ -236,24 +230,24 @@ public interface CashBookRepo extends JpaRepository<CashBook, Long> {
 	@Query(value = """
 			SELECT
 			    SUM(CASE
-			        WHEN PARTICULARS = 'DF LOAN INSTALLMENT'
+			        WHEN ACCOUNT_MASTER_CODE = 'DF LOAN INSTALLMENT'
 			        THEN CREDIT ELSE 0 END) AS dailyLoanInstallmentsReceived,
 
 			    SUM(CASE
-			        WHEN PARTICULARS = 'DF INTEREST'
+			        WHEN ACCOUNT_MASTER_CODE = 'DF INTEREST'
 			        THEN CREDIT ELSE 0 END) AS dailyLoanInterestReceived,
 
 			    SUM(CASE
-			        WHEN PARTICULARS = 'MF LOAN INSTALLMENT'
+			        WHEN ACCOUNT_MASTER_CODE = 'MF LOAN INSTALLMENT'
 			        THEN CREDIT ELSE 0 END) AS monthlyLoanInstallmentsReceived,
 
 			    SUM(CASE
-			        WHEN PARTICULARS = 'MF INTEREST'
+			        WHEN ACCOUNT_MASTER_CODE = 'MF INTEREST'
 			        THEN CREDIT ELSE 0 END) AS monthlyLoanInterestReceived
 
 			FROM cash_book
 			WHERE TRANS_DATE BETWEEN :fromDate AND :toDate
-			AND PARTICULARS IN (
+			AND CODE IN (
 			    'DF LOAN INSTALLMENT',
 			    'DF INTEREST',
 			    'MF LOAN INSTALLMENT',

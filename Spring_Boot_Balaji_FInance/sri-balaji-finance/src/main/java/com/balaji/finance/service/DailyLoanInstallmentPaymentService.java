@@ -13,6 +13,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
+import com.balaji.finance.entity.AccountMaster;
 import com.balaji.finance.entity.BusinessMember;
 import com.balaji.finance.entity.CashBook;
 import com.balaji.finance.entity.EMI;
@@ -20,6 +21,7 @@ import com.balaji.finance.entity.LoanStatus;
 import com.balaji.finance.pojo.InstallmentDetails;
 import com.balaji.finance.pojo.LoanInformation;
 import com.balaji.finance.pojo.QuickCashBookRow;
+import com.balaji.finance.repo.AccountMasterRepo;
 import com.balaji.finance.repo.BusinessMemberRepository;
 import com.balaji.finance.repo.CashBookRepo;
 import com.balaji.finance.repo.EmiRepo;
@@ -40,6 +42,10 @@ public class DailyLoanInstallmentPaymentService {
 	
 	@Autowired
 	private EmiRepo emiRepo;
+	
+	@Autowired
+	private AccountMasterRepo accountMasterRepo;
+
 
 
 	public LoanInformation loadDFLoanPaidInfo(String id) {
@@ -124,8 +130,8 @@ public class DailyLoanInstallmentPaymentService {
 		
 		for (CashBook cb : paidList) {
 
-			if (cb.getParticulars().equalsIgnoreCase("DF LOAN INSTALLMENT")
-					|| cb.getParticulars().equalsIgnoreCase("DF INTEREST")) {
+			if (cb.getAccountMastercode().equalsIgnoreCase("DF LOAN INSTALLMENT")
+					|| cb.getAccountMastercode().equalsIgnoreCase("DF INTEREST")) {
 
 				totalAmountPaid = totalAmountPaid.add(cb.getCredit() != null ? cb.getCredit() : BigDecimal.ZERO);
 
@@ -171,13 +177,21 @@ public class DailyLoanInstallmentPaymentService {
 		
 		
 		if (paidAmount.compareTo(BigDecimal.ZERO) > 0) {
+			
+			
+			
+			AccountMaster accountMaster = accountMasterRepo.findAccountMasterByMasterCodeAndCode("DF LOAN INSTALLMENT", "DF LOAN INSTALLMENT");
+
 
 			CashBook cb = new CashBook();
 			cb.setBusinessMember(bm);
 			cb.setCredit(paidAmount);
 			cb.setDebit(BigDecimal.ZERO);
-			cb.setTransType("DF LOAN");
-			cb.setParticulars("DF LOAN INSTALLMENT");
+			
+			cb.setAccountMastertype(accountMaster.getType());
+			cb.setAccountMasterMasterCode(accountMaster.getMasterCode());
+			cb.setAccountMastercode(accountMaster.getCode());
+			
 			cb.setLineNo(1);
 			cb.setUser(currentUser);
 			cb.setTransDate(transDate);
@@ -188,13 +202,16 @@ public class DailyLoanInstallmentPaymentService {
 
 		BigDecimal lateFee = info.getLateFee() != null ? info.getLateFee() : BigDecimal.ZERO;
 		if (lateFee.compareTo(BigDecimal.ZERO) > 0) {
+			
+			AccountMaster accountMaster = accountMasterRepo.findAccountMasterByMasterCodeAndCode("LATE FEE", "DF LATE FEE");
 
 			CashBook lateCb = new CashBook();
 			lateCb.setBusinessMember(bm);
 			lateCb.setCredit(lateFee);
 			lateCb.setDebit(BigDecimal.ZERO);
-			lateCb.setTransType("DF LATE FEE");
-			lateCb.setParticulars("DF LATE FEE");
+			lateCb.setAccountMastertype(accountMaster.getType());
+			lateCb.setAccountMasterMasterCode(accountMaster.getMasterCode());
+			lateCb.setAccountMastercode(accountMaster.getCode());
 			lateCb.setLineNo(2);
 			lateCb.setUser(currentUser);
 			lateCb.setTransDate(transDate);
@@ -275,13 +292,20 @@ public class DailyLoanInstallmentPaymentService {
 		}
 
 		if (paidAmount.compareTo(BigDecimal.ZERO) > 0) {
+			
+			AccountMaster accountMaster = accountMasterRepo.findAccountMasterByMasterCodeAndCode("DF LOAN INSTALLMENT", "DF LOAN INSTALLMENT");
+
+
 
 			CashBook cb = new CashBook();
 			cb.setBusinessMember(bm);
 			cb.setCredit(paidAmount);
 			cb.setDebit(BigDecimal.ZERO);
-			cb.setTransType("DF LOAN");
-			cb.setParticulars("DF LOAN INSTALLMENT");
+			
+			cb.setAccountMastertype(accountMaster.getType());
+			cb.setAccountMasterMasterCode(accountMaster.getMasterCode());
+			cb.setAccountMastercode(accountMaster.getCode());
+			
 			cb.setLineNo(1);
 			cb.setUser(currentUser);
 			cb.setTransDate(transactionDate);
@@ -292,13 +316,19 @@ public class DailyLoanInstallmentPaymentService {
 
 		BigDecimal lateFee = quickRow.getLateFee() != null ? quickRow.getLateFee() : BigDecimal.ZERO;
 		if (lateFee.compareTo(BigDecimal.ZERO) > 0) {
+			
+			AccountMaster accountMaster = accountMasterRepo.findAccountMasterByMasterCodeAndCode("LATE FEE", "DF LATE FEE");
+
 
 			CashBook lateCb = new CashBook();
 			lateCb.setBusinessMember(bm);
 			lateCb.setCredit(lateFee);
 			lateCb.setDebit(BigDecimal.ZERO);
-			lateCb.setTransType("DF LATE FEE");
-			lateCb.setParticulars("DF LATE FEE");
+			
+			lateCb.setAccountMastertype(accountMaster.getType());
+			lateCb.setAccountMasterMasterCode(accountMaster.getMasterCode());
+			lateCb.setAccountMastercode(accountMaster.getCode());
+			
 			lateCb.setLineNo(2);
 			lateCb.setUser(currentUser);
 			lateCb.setTransDate(transactionDate);

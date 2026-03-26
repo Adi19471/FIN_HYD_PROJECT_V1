@@ -61,15 +61,15 @@ public class LoanReportService {
 
 				List<CashBook> payments = cashBookRepo.findByBusinessMember(bm);
 				totalPaid = payments.stream()
-						.filter(cb -> "MF LOAN INSTALLMENT".equalsIgnoreCase(cb.getParticulars())
-								|| "MF INTEREST".equalsIgnoreCase(cb.getParticulars()))
+						.filter(cb -> "MF LOAN INSTALLMENT".equalsIgnoreCase(cb.getAccountMastercode())
+								|| "MF INTEREST".equalsIgnoreCase(cb.getAccountMastercode()))
 						.map(cb -> cb.getCredit() != null ? cb.getCredit() : BigDecimal.ZERO)
 						.reduce(BigDecimal.ZERO, BigDecimal::add);
 
 				dto.setAmountPaid(totalPaid);
 
 				int installmentsPaid = (int) payments.stream()
-						.filter(cb -> "MF LOAN INSTALLMENT".equalsIgnoreCase(cb.getParticulars())).count();
+						.filter(cb -> "MF LOAN INSTALLMENT".equalsIgnoreCase(cb.getAccountMastercode())).count();
 
 				dto.setNoofInstallmentsPaid(installmentsPaid);
 
@@ -77,15 +77,15 @@ public class LoanReportService {
 
 				List<CashBook> payments = cashBookRepo.findByBusinessMember(bm);
 				totalPaid = payments.stream()
-						.filter(cb -> "DF LOAN INSTALLMENT".equalsIgnoreCase(cb.getParticulars())
-								|| "DF INTEREST".equalsIgnoreCase(cb.getParticulars()))
+						.filter(cb -> "DF LOAN INSTALLMENT".equalsIgnoreCase(cb.getAccountMastercode())
+								|| "DF INTEREST".equalsIgnoreCase(cb.getAccountMastercode()))
 						.map(cb -> cb.getCredit() != null ? cb.getCredit() : BigDecimal.ZERO)
 						.reduce(BigDecimal.ZERO, BigDecimal::add);
 
 				dto.setAmountPaid(totalPaid);
 
 				int installmentsPaid = (int) payments.stream()
-						.filter(cb -> "MF LOAN INSTALLMENT".equalsIgnoreCase(cb.getParticulars())).count();
+						.filter(cb -> "MF LOAN INSTALLMENT".equalsIgnoreCase(cb.getAccountMastercode())).count();
 
 				dto.setNoofInstallmentsPaid(installmentsPaid);
 

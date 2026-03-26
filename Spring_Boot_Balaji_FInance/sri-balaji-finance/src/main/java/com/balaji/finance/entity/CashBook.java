@@ -42,12 +42,6 @@ public class CashBook {
 	@JoinColumn(name = "BUSINESS_MEMBER_ID")
 	private BusinessMember businessMember;
 
-	@Column(name = "TRANS_TYPE")
-	private String transType;
-
-	@Column(name = "PARTICULARS")
-	private String particulars;
-
 	@Column(name = "CREDIT", nullable = false)
 	private BigDecimal credit = BigDecimal.ZERO;
 
@@ -62,6 +56,15 @@ public class CashBook {
 
 	@Column(name = "BM_REMARKS")
 	private String bmRemarks;
+
+	@Column(name = "ACCOUNT_MASTER_TYPE")
+	private String accountMastertype;
+
+	@Column(name = "ACCOUNT_MASTER_MASTER_CODE")
+	private String accountMasterMasterCode;
+
+	@Column(name = "ACCOUNT_MASTER_CODE")
+	private String accountMastercode;
 
 	public Long getCashBookId() {
 		return cashBookId;
@@ -111,22 +114,6 @@ public class CashBook {
 		this.businessMember = businessMember;
 	}
 
-	public String getTransType() {
-		return transType;
-	}
-
-	public void setTransType(String transType) {
-		this.transType = transType;
-	}
-
-	public String getParticulars() {
-		return particulars;
-	}
-
-	public void setParticulars(String particulars) {
-		this.particulars = particulars;
-	}
-
 	public BigDecimal getCredit() {
 		return credit;
 	}
@@ -167,4 +154,29 @@ public class CashBook {
 		this.bmRemarks = bmRemarks;
 	}
 
+	public String getAccountMastertype() {
+		return accountMastertype;
+	}
+
+	public void setAccountMastertype(String accountMastertype) {
+		this.accountMastertype = accountMastertype;
+	}
+
+	public String getAccountMasterMasterCode() {
+		return accountMasterMasterCode;
+	}
+
+	public void setAccountMasterMasterCode(String accountMasterMasterCode) {
+		this.accountMasterMasterCode = accountMasterMasterCode;
+	}
+
+	public String getAccountMastercode() {
+		return accountMastercode;
+	}
+
+	public void setAccountMastercode(String accountMastercode) {
+		this.accountMastercode = accountMastercode;
+	}
+
+	
 }

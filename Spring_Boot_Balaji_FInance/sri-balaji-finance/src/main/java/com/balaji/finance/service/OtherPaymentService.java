@@ -9,9 +9,11 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
+import com.balaji.finance.entity.AccountMaster;
 import com.balaji.finance.entity.CashBook;
 import com.balaji.finance.entity.PersonalInfo;
 import com.balaji.finance.pojo.OtherPaymentSaveReq;
+import com.balaji.finance.repo.AccountMasterRepo;
 import com.balaji.finance.repo.BusinessMemberRepository;
 import com.balaji.finance.repo.CashBookRepo;
 import com.balaji.finance.repo.PersonalInfoRepository;
@@ -24,6 +26,8 @@ public class OtherPaymentService {
 	@Autowired
 	private CashBookRepo cashBookRepo;
 	
+	@Autowired
+	private AccountMasterRepo accountMasterRepo;
 
 	@Autowired
 	private PersonalInfoRepository personalInfoRepository;
@@ -54,11 +58,18 @@ public class OtherPaymentService {
 		default:
 			break;
 		}
+		
+		AccountMaster accountMaster = accountMasterRepo.findAccountMasterByMasterCodeAndCode(otherPaymentSaveReq.getAccountMasterCode(), otherPaymentSaveReq.getAccountCode());
 
-		cashBookForPrinciplePaid.setTransType(otherPaymentSaveReq.getAccountCode());
-		cashBookForPrinciplePaid.setParticulars(otherPaymentSaveReq.getParticulars());
 
-		cashBookForPrinciplePaid.setBmRemarks(""); // doubt
+		
+		String transactionTypeByMasterCodeAndCode = accountMasterRepo.findTransactionTypeByMasterCodeAndCode(otherPaymentSaveReq.getAccountMasterCode(), otherPaymentSaveReq.getAccountCode());
+
+		cashBookForPrinciplePaid.setAccountMastertype(accountMaster.getType());
+		cashBookForPrinciplePaid.setAccountMasterMasterCode(accountMaster.getMasterCode());
+		cashBookForPrinciplePaid.setAccountMastercode(accountMaster.getCode());
+
+		cashBookForPrinciplePaid.setBmRemarks(otherPaymentSaveReq.getParticulars()); // doubt
 		cashBookForPrinciplePaid.setReceiptRemarks(""); // doubt
 
 		cashBookForPrinciplePaid.setLineNo(1);

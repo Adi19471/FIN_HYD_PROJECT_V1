@@ -68,8 +68,8 @@ public class CashBookService {
 			cashBookViewPojo.setName(cashBook.getPersonalInfo() != null
 					? cashBook.getPersonalInfo().getPersonalInfoId() + " - " + cashBook.getPersonalInfo().getFirstName()
 					: "");
-			cashBookViewPojo.setParticulars(cashBook.getParticulars());
-			cashBookViewPojo.setTransactionType(cashBook.getTransType());
+			cashBookViewPojo.setParticulars(cashBook.getAccountMastercode());
+			cashBookViewPojo.setTransactionType(cashBook.getAccountMasterMasterCode());
 			cashBookViewPojo.setCredit(cashBook.getCredit());
 			cashBookViewPojo.setDebit(cashBook.getDebit());
 
@@ -139,12 +139,12 @@ public class CashBookService {
 
 				cashBookBk.setCashBookOldId(cashBook.getCashBookId());
 				cashBookBk.setLineNo(cashBook.getLineNo());
-				cashBookBk.setParticulars(cashBook.getParticulars());
+				cashBookBk.setParticulars(cashBook.getAccountMastercode());
 				cashBookBk.setReceiptRemarks(cashBook.getReceiptRemarks());
 				cashBookBk.setSysDate(cashBook.getSysDate());
 				cashBookBk.setTransDate(cashBook.getTransDate());
 				cashBookBk.setEntryUser(cashBook.getUser());
-				cashBookBk.setTransType(cashBook.getTransType());
+				cashBookBk.setTransType(cashBook.getAccountMasterMasterCode());
 
 				cashBookBk.setDeletedBy(currentUser);
 				cashBookBk.setDeletedDate(LocalDateTime.now());
@@ -194,8 +194,8 @@ public class CashBookService {
 					+ " - " + cashBook.getPersonalInfo().getFirstName() + " - "
 					+ (cashBook.getPersonalInfo().getMobile() != null ? cashBook.getPersonalInfo().getMobile() : "")
 					: "");
-			cashBookViewPojo.setParticulars(cashBook.getParticulars());
-			cashBookViewPojo.setTransactionType(cashBook.getTransType());
+			cashBookViewPojo.setParticulars(cashBook.getAccountMastercode());
+			cashBookViewPojo.setTransactionType(cashBook.getAccountMasterMasterCode());
 			cashBookViewPojo.setCredit(cashBook.getCredit());
 			cashBookViewPojo.setDebit(cashBook.getDebit());
 			cashBookViewPojo.setUser(cashBook.getUser());
@@ -350,14 +350,14 @@ public class CashBookService {
 
 		if (fromDate == null && toDate == null) {
 
-			rows = cashBookRepo.findByTransType(transacType);
+			rows = cashBookRepo.findByAccountMastercode(transacType);
 
 		} else {
 
 			LocalDateTime from = fromDate.atStartOfDay();
 			LocalDateTime to = toDate.atTime(23, 59, 59);
 
-			rows = cashBookRepo.findByTransTypeAndTransDateBetween(transacType, from, to);
+			rows = cashBookRepo.findByAccountMastercodeAndTransDateBetween(transacType, from, to);
 
 		}
 
@@ -371,8 +371,8 @@ public class CashBookService {
 			accountsMasterLedgerPojo.setName(r.getPersonalInfo() != null
 					? r.getPersonalInfo().getPersonalInfoId() + " - " + r.getPersonalInfo().getFirstName()
 					: "");
-			accountsMasterLedgerPojo.setParticulars(r.getParticulars());
-			accountsMasterLedgerPojo.setTransCode(r.getTransType());
+			accountsMasterLedgerPojo.setParticulars(r.getAccountMastercode());
+			accountsMasterLedgerPojo.setTransCode(r.getAccountMasterMasterCode());
 			accountsMasterLedgerPojo.setCredit(r.getCredit());
 			accountsMasterLedgerPojo.setDebit(r.getDebit());
 			accountsMasterLedgerPojo.setDate(r.getTransDate().toLocalDate());
@@ -483,7 +483,7 @@ public class CashBookService {
 			cashBookLedger.setCurrentInstallmentNumber(currentCashBook_beforeEMis.size());
 			cashBookLedger.setBalanceInstallmentNumber(currentCashBook_afterEMis.size());
 
-			cashBookLedger.setParticulars(r.getParticulars());
+			cashBookLedger.setParticulars(r.getAccountMastercode());
 
 			result.add(cashBookLedger);
 		}
