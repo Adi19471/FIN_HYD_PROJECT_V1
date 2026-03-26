@@ -60,11 +60,6 @@ public class OtherPaymentService {
 		}
 		
 		AccountMaster accountMaster = accountMasterRepo.findAccountMasterByMasterCodeAndCode(otherPaymentSaveReq.getAccountMasterCode(), otherPaymentSaveReq.getAccountCode());
-
-
-		
-		String transactionTypeByMasterCodeAndCode = accountMasterRepo.findTransactionTypeByMasterCodeAndCode(otherPaymentSaveReq.getAccountMasterCode(), otherPaymentSaveReq.getAccountCode());
-
 		cashBookForPrinciplePaid.setAccountMastertype(accountMaster.getType());
 		cashBookForPrinciplePaid.setAccountMasterMasterCode(accountMaster.getMasterCode());
 		cashBookForPrinciplePaid.setAccountMastercode(accountMaster.getCode());
