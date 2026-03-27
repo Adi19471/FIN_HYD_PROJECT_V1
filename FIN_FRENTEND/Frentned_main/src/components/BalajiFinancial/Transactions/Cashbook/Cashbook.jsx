@@ -422,28 +422,34 @@ const Cashbook = () => {
             </FormControl>
           </Grid>
 
-          {/* Amount */}
-          <Grid item xs={12} sm={6}>
-            <TextField
-              fullWidth
-              required
-              label="Amount"
-              type="number"
-              value={amount}
-              onChange={(e) => setAmount(e.target.value)}
-              variant="outlined"
-              disabled={submitting}
-              InputProps={{
-                startAdornment: (
-                  <InputAdornment position="start">
-                    <Typography color="text.secondary" sx={{ fontWeight: 500 }}>
-                      ₹
-                    </Typography>
-                  </InputAdornment>
-                ),
-              }}
-            />
-          </Grid>
+         
+         <Grid item xs={12} sm={6}>
+  <TextField
+    fullWidth
+    required
+    label="Amount"
+    value={
+      amount
+        ? Number(amount).toLocaleString('en-IN')
+        : ''
+    }
+    onChange={(e) => {
+      const rawValue = e.target.value.replace(/[^0-9]/g, "");
+      setAmount(rawValue);
+    }}
+    variant="outlined"
+    disabled={submitting}
+    InputProps={{
+      startAdornment: (
+        <InputAdornment position="start">
+          <Typography color="text.secondary" sx={{ fontWeight: 500 }}>
+            ₹
+          </Typography>
+        </InputAdornment>
+      ),
+    }}
+  />
+</Grid>
 
           {/* Submit Button */}
           <Grid item xs={12}>

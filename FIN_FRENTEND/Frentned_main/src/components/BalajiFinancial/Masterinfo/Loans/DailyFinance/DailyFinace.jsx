@@ -507,17 +507,29 @@ const DailyFinance = () => {
           <Chip label="LOAN DETAILS" sx={{ mt: 3, mb: 2 }} />
 
           <Grid container spacing={2}>
-            <Grid item xs={12} md={6}>
-              <TextField
-                fullWidth
-                label="Amount *"
-                type="number"
-                value={formData.amount}
-                onChange={(e) =>
-                  setFormData((p) => ({ ...p, amount: e.target.value }))
-                }
-              />
-            </Grid>
+          <Grid item xs={12} md={6}>
+    <TextField
+      fullWidth
+      label="Loan Amount *"
+      type="text"                    // Changed to text for better control
+      value={formData.amount 
+        ? Number(formData.amount).toLocaleString('en-IN') 
+        : ""
+      }
+      onChange={(e) => {
+        // Remove commas and non-numeric characters
+        const rawValue = e.target.value.replace(/[^0-9]/g, '');
+        setFormData((p) => ({ 
+          ...p, 
+          amount: rawValue 
+        }));
+      }}
+      InputProps={{
+        startAdornment: <Typography sx={{ mr: 1, color: 'text.secondary' }}>₹</Typography>,
+      }}
+      placeholder="0"
+    />
+  </Grid>
 
             <Grid item xs={12} md={6}>
               <TextField
@@ -534,21 +546,25 @@ const DailyFinance = () => {
               />
             </Grid>
 
-            <Grid item xs={12} md={6}>
-              <TextField
-                fullWidth
-                label="Intrest Amount %"
-                type="number"
-                value={formData.interestAmountForAllDays}
-                onChange={(e) =>
-                  setFormData((p) => ({
-                    ...p,
-                    interestAmountForAllDays: e.target.value,
-                  }))
-                }
-                InputProps={{ readOnly: true }}
-              />
-            </Grid>
+           
+           <Grid item xs={12} md={6}>
+  <TextField
+    fullWidth
+    label="Total Interest Amount (100 Days)"
+    type="text"                    // Changed from number to text for better formatting
+    value={
+      formData.interestAmountForAllDays 
+        ? `₹${Number(formData.interestAmountForAllDays).toLocaleString("en-IN")}` 
+        : ""
+    }
+    InputProps={{ 
+      readOnly: true,
+      startAdornment: (
+        <Typography sx={{ mr: 1, color: 'text.secondary' }}>₹</Typography>
+      )
+    }}
+  />
+</Grid>
 
             <Grid item xs={12} md={6}>
               <TextField

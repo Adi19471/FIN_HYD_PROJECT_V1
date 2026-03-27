@@ -18,6 +18,7 @@ import {
   Alert,
   CircularProgress,
   Chip,
+  Grid,
 } from '@mui/material';
 import {
   DeleteForever as DeleteIcon,
@@ -216,36 +217,47 @@ const DeleteTransactions = () => {
           )}
         </Box>
 
-        <Box sx={{ mt: 3, display: 'flex', flexDirection: 'column', gap: 2 }}>
-          <TextField
-            fullWidth
-            label="Search"
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            placeholder="Search by name, ID, account, type..."
-            InputProps={{
-              startAdornment: (
-                <InputAdornment position="start">
-                  <SearchIcon />
-                </InputAdornment>
-              ),
-            }}
-          />
 
-          {!showDeleted && (
-            <TextField
-              fullWidth
-              label="Comments (Required for Deletion)"
-              multiline
-              rows={2}
-              value={comments}
-              onChange={(e) => setComments(e.target.value)}
-              placeholder="Enter reason for deletion..."
-              error={!!error && error.includes('Comments')}
-              helperText={error.includes('Comments') ? error : ''}
-            />
-          )}
-        </Box>
+        <Grid container spacing={2} sx={{ mt: 2 }}>
+  
+  {/* Search Field */}
+  <Grid item xs={12} md={6}>
+    <TextField
+      fullWidth
+      label="Search"
+      value={search}
+      onChange={(e) => setSearch(e.target.value)}
+      placeholder="Search by name, ID, account, type..."
+      size="small"
+      InputProps={{
+        startAdornment: (
+          <InputAdornment position="start">
+            <SearchIcon />
+          </InputAdornment>
+        ),
+      }}
+    />
+  </Grid>
+
+  {/* Comments Field */}
+  {!showDeleted && (
+    <Grid item xs={12} md={6}>
+      <TextField
+        fullWidth
+        label="Comments (Required for Deletion)"
+       sx={{width:300}}
+      
+        value={comments}
+        onChange={(e) => setComments(e.target.value)}
+        placeholder="Enter reason for deletion..."
+        size="small"
+        error={!!error && error.includes('Comments')}
+        helperText={error.includes('Comments') ? error : ''}
+      />
+    </Grid>
+  )}
+
+</Grid>
    
 
       {success && <Alert severity="success" sx={{ mb: 3 }}>{success}</Alert>}
@@ -253,12 +265,12 @@ const DeleteTransactions = () => {
 
       <Paper elevation={2}>
         {loading ? (
-          <Box sx={{ p: 8, display: 'flex', justifyContent: 'center' }}>
+          <Box sx={{ p: 8, display: 'flex', justifyContent: 'center', }}>
             <CircularProgress />
           </Box>
         ) : (
           <>
-            <TableContainer sx={{ maxHeight: 600 }}>
+            <TableContainer sx={{ maxHeight: 600,marginTop:"20px" }}>
               <Table stickyHeader size="small">
                 <TableHead>
                   <TableRow>

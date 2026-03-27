@@ -298,15 +298,19 @@ const BussinessDailyFinance = () => {
 
             <Grid container spacing={2}>
 
-              <Grid item xs={12} md={4}>
-                <TextField
-                  label="Loan Amount"
-                  value={form.loanAmount}
-                  size="small"
-                  fullWidth
-                  InputProps={{ readOnly: true }}
-                />
-              </Grid>
+<Grid item xs={12} md={4}>
+  <TextField
+    label="Loan Amount"
+    value={
+      form.loanAmount
+        ? Number(form.loanAmount).toLocaleString('en-IN')
+        : ''
+    }
+    size="small"
+    fullWidth
+    InputProps={{ readOnly: true }}
+  />
+</Grid>
 
               <Grid item xs={12} md={4}>
                 <TextField
@@ -371,45 +375,62 @@ const BussinessDailyFinance = () => {
                 />
               </Grid>
 
-              <Grid item xs={12} sm={6} md={3}>
-                <TextField
-                  label="Current Balance"
-                  value={form.balance}
-                  fullWidth
-                  size="small"
-                  InputProps={{ readOnly: true }}
-                />
-              </Grid>
+            
+            <Grid item xs={12} sm={6} md={3}>
+  <TextField
+    label="Current Balance"
+    value={
+      form.balance
+        ? Number(form.balance).toLocaleString('en-IN')
+        : ''
+    }
+    fullWidth
+    size="small"
+    InputProps={{ readOnly: true }}
+  />
+</Grid>
 
-              <Grid item xs={12} md={4}>
-                <TextField
-                  label="Amount Paid"
-                  value={form.amountPaid}
-                  size="small"
-                  fullWidth
-                  onChange={(e) =>
-                    setForm({
-                      ...form,
-                      amountPaid: e.target.value.replace(/[^0-9]/g, ""),
-                    })
-                  }
-                />
-              </Grid>
+           
+           <Grid item xs={12} md={4}>
+  <TextField
+    label="Amount Paid"
+    value={
+      form.amountPaid
+        ? Number(form.amountPaid).toLocaleString('en-IN')
+        : ''
+    }
+    size="small"
+    fullWidth
+    onChange={(e) => {
+      const rawValue = e.target.value.replace(/[^0-9]/g, "");
+      setForm({
+        ...form,
+        amountPaid: rawValue,
+      });
+    }}
+  />
+</Grid>
 
-              <Grid item xs={12} md={4}>
-                <TextField
-                  label="Late Fee"
-                  value={form.lateFeePaid}
-                  size="small"
-                  fullWidth
-                  onChange={(e) =>
-                    setForm({
-                      ...form,
-                      lateFeePaid: e.target.value.replace(/[^0-9]/g, ""),
-                    })
-                  }
-                />
-              </Grid>
+            
+            <Grid item xs={12} md={4}>
+  <TextField
+    label="Late Fee"
+    value={
+      form.lateFeePaid
+        ? Number(form.lateFeePaid).toLocaleString('en-IN')
+        : ''
+    }
+    size="small"
+    fullWidth
+    onChange={(e) => {
+      const rawValue = e.target.value.replace(/[^0-9]/g, "");
+      setForm({
+        ...form,
+        lateFeePaid: rawValue,
+      });
+    }}
+  />
+</Grid>
 
             </Grid>
 

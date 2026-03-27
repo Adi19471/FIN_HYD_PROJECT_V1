@@ -105,6 +105,7 @@ const InstalmentDues = () => {
               label="Loan Type"
               fullWidth
               size="small"
+              sx={{width:250}}
               value={loanType}
               onChange={(e) => setLoanType(e.target.value)}
             >

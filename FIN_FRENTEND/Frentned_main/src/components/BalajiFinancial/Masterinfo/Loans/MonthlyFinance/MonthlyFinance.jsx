@@ -542,30 +542,39 @@ const MonthlyFinance = () => {
           </Box>
 
           <Grid container spacing={3} sx={{ mt: 1 }}>
-            <Grid item xs={12} sm={6}>
-              <TextField
-                fullWidth
-                label="Loan Amount *"
-                type="number"
-                variant="outlined"
-                value={formData.amount}
-                onChange={(e) =>
-                  setFormData((p) => ({ ...p, amount: e.target.value }))
-                }
-              />
-            </Grid>
-            <Grid item xs={12} sm={6}>
-              <TextField
-                fullWidth
-                label="Interest %"
-                type="number"
-                variant="outlined"
-                value={formData.interestRate}
-                onChange={(e) =>
-                  setFormData((p) => ({ ...p, interestRate: e.target.value }))
-                }
-              />
-            </Grid>
+           
+
+           <Grid item xs={12} sm={6}>
+  <TextField
+    fullWidth
+    label="Loan Amount *"
+    type="number"
+    variant="outlined"
+    value={formData.amount}
+    inputProps={{ min: 0 }}
+    onChange={(e) => {
+      const value = e.target.value;
+      if (value >= 0) {
+        setFormData((p) => ({ ...p, amount: value }));
+      }
+    }}
+  />
+</Grid>
+
+          
+          <Grid item xs={12} sm={6}>
+  <TextField
+    fullWidth
+    label="Interest %"
+    type="number"
+    variant="outlined"
+    value={formData.interestRate || 3}
+    inputProps={{ min: 0, max: 100, step: 0.1 }}
+    onChange={(e) =>
+      setFormData((p) => ({ ...p, interestRate: e.target.value }))
+    }
+  />
+</Grid>
             <Grid item xs={12} sm={6}>
               <TextField
                 fullWidth

@@ -3,7 +3,11 @@ import React, { useEffect, useState } from "react";
 import { DataGrid, GridToolbar } from "@mui/x-data-grid";
 import {
   Button,
-  Drawer,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  Divider,
   TextField,
   IconButton,
   Box,
@@ -50,7 +54,7 @@ const Registration_creation = () => {
   const [rows, setRows] = useState([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  const [drawerOpen, setDrawerOpen] = useState(false);
+  const [modalOpen, setModalOpen] = useState(false);
   const [form, setForm] = useState({
     id: "",
     name: "",
@@ -98,11 +102,11 @@ const Registration_creation = () => {
     } else {
       setForm({ id: "", name: "", password: "", role: "" });
     }
-    setDrawerOpen(true);
+    setModalOpen(true);
   };
 
   const handleClose = () => {
-    setDrawerOpen(false);
+    setModalOpen(false);
     setForm({ id: "", name: "", password: "", role: "" });
   };
 
@@ -361,169 +365,143 @@ const Registration_creation = () => {
         )}
       </Paper>
 
-      {/* Drawer */}
-      <Drawer
-        anchor="right"
-        open={drawerOpen}
+      {/* Modal */}
+      <Dialog
+        open={modalOpen}
         onClose={handleClose}
+        maxWidth="sm"
+        fullWidth
         PaperProps={{
           sx: {
-            width: { xs: "100%", sm: DRAWER_WIDTH },
-            borderRadius: { xs: 0, sm: "16px 0 0 16px" },
+            borderRadius: 2,
+            boxShadow: 3,
           },
         }}
       >
-        <Box sx={{ display: "flex", flexDirection: "column", height: "100%" }}>
-          {/* Header */}
-          <Box
-            sx={{
-              p: 2,
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "space-between",
-              borderBottom: "1px solid",
-              borderColor: "divider",
-              background: "linear-gradient(135deg, #1976d2 0%, #1565c0 100%)",
-              color: "black",
-            }}
-          >
-            <Typography variant="h6" sx={{ fontWeight: 600, display: "flex", alignItems: "center", gap: 1 }}>
-              {form.id ? "Edit User" : "Create New User"}
-            </Typography>
-            <IconButton onClick={handleClose} sx={{ color: "white" }}>
-              <CloseIcon />
-            </IconButton>
-          </Box>
-
-          {/* Form Content */}
-          <Box sx={{ flex: 1, overflowY: "auto", p: 3 }}>
-            <Grid container spacing={2.5}>
-              <Grid item xs={12}>
-                <TextField
-                  fullWidth
-                  label="Name"
-                  name="name"
-                  value={form.name}
-                  onChange={(e) => setForm({ ...form, name: e.target.value })}
-                  required
-                  variant="outlined"
-                  InputProps={{
-                    startAdornment: (
-                      <InputAdornment position="start">
-                        <PersonIcon color="primary" />
-                      </InputAdornment>
-                    ),
-                  }}
-                  sx={{
-                    "& .MuiOutlinedInput-root": {
-                      borderRadius: 1.5,
-                    },
-                  }}
-                  placeholder="Enter user name"
-                />
-              </Grid>
-
-              <Grid item xs={12}>
-                <TextField
-                  fullWidth
-                  label={form.id ? "New Password (optional)" : "Password"}
-                  name="password"
-                  type="password"
-                  value={form.password}
-                  onChange={(e) => setForm({ ...form, password: e.target.value })}
-                  required={!form.id}
-                  variant="outlined"
-                  InputProps={{
-                    startAdornment: (
-                      <InputAdornment position="start">
-                        <LockIcon color="primary" />
-                      </InputAdornment>
-                    ),
-                  }}
-                  sx={{
-                    "& .MuiOutlinedInput-root": {
-                      borderRadius: 1.5,
-                    },
-                  }}
-                  helperText={
-                    form.id
-                      ? "Leave blank to keep current password"
-                      : "Required for new users"
-                  }
-                  placeholder={form.id ? "Enter new password" : "Enter password"}
-                />
-              </Grid>
-
-              <Grid item xs={12}>
-                <TextField
-                  fullWidth
-                  label="Role"
-                  name="role"
-                  value={form.role}
-                  onChange={(e) => setForm({ ...form, role: e.target.value })}
-                  variant="outlined"
-                  InputProps={{
-                    startAdornment: (
-                      <InputAdornment position="start">
-                        <BadgeIcon color="primary" />
-                      </InputAdornment>
-                    ),
-                  }}
-                  sx={{
-                    "& .MuiOutlinedInput-root": {
-                      borderRadius: 1.5,
-                    },
-                  }}
-                  placeholder="e.g. admin, user, developer"
-                />
-              </Grid>
+        <DialogTitle sx={{ pb: 1, display: "flex", alignItems: "center", gap: 1 }}>
+          <Typography variant="h6" sx={{ fontWeight: 600, flex: 1 }}>
+            {form.id ? "Edit User" : "Create New User"}
+          </Typography>
+          <IconButton onClick={handleClose} sx={{ color: "text.secondary" }}>
+            <CloseIcon />
+          </IconButton>
+        </DialogTitle>
+        <Divider />
+        <DialogContent sx={{ pt: 3 }}>
+          <Grid container spacing={2.5}>
+            <Grid item xs={12}>
+              <TextField
+                fullWidth
+                label="Name"
+                name="name"
+                value={form.name}
+                onChange={(e) => setForm({ ...form, name: e.target.value })}
+                required
+                variant="outlined"
+                InputProps={{
+                  startAdornment: (
+                    <InputAdornment position="start">
+                      <PersonIcon color="primary" />
+                    </InputAdornment>
+                  ),
+                }}
+                sx={{
+                  "& .MuiOutlinedInput-root": {
+                    borderRadius: 1.5,
+                  },
+                }}
+                placeholder="Enter user name"
+              />
             </Grid>
-          </Box>
 
-          {/* Footer Actions */}
-          <Box
-            sx={{
-              p: 2,
-              borderTop: "1px solid",
-              borderColor: "divider",
-              display: "flex",
-              gap: 2,
-              justifyContent: "flex-end",
-              bgcolor: "background.paper",
+            <Grid item xs={12}>
+              <TextField
+                fullWidth
+                label={form.id ? "New Password (optional)" : "Password"}
+                name="password"
+                type="password"
+                value={form.password}
+                onChange={(e) => setForm({ ...form, password: e.target.value })}
+                required={!form.id}
+                variant="outlined"
+                InputProps={{
+                  startAdornment: (
+                    <InputAdornment position="start">
+                      <LockIcon color="primary" />
+                    </InputAdornment>
+                  ),
+                }}
+                sx={{
+                  "& .MuiOutlinedInput-root": {
+                    borderRadius: 1.5,
+                  },
+                }}
+                helperText={
+                  form.id
+                    ? "Leave blank to keep current password"
+                    : "Required for new users"
+                }
+                placeholder={form.id ? "Enter new password" : "Enter password"}
+              />
+            </Grid>
+
+            <Grid item xs={12}>
+              <TextField
+                fullWidth
+                label="Role"
+                name="role"
+                value={form.role}
+                onChange={(e) => setForm({ ...form, role: e.target.value })}
+                variant="outlined"
+                InputProps={{
+                  startAdornment: (
+                    <InputAdornment position="start">
+                      <BadgeIcon color="primary" />
+                    </InputAdornment>
+                  ),
+                }}
+                sx={{
+                  "& .MuiOutlinedInput-root": {
+                    borderRadius: 1.5,
+                  },
+                }}
+                placeholder="e.g. admin, user, developer"
+              />
+            </Grid>
+          </Grid>
+        </DialogContent>
+        <DialogActions sx={{ px: 3, py: 2, borderTop: "1px solid", borderColor: "divider" }}>
+          <Button
+            onClick={handleClose}
+            variant="outlined"
+            startIcon={<CloseIcon />}
+            disabled={saving}
+            sx={{ 
+              borderRadius: 1.5,
+              textTransform: "none",
+              px: 3
             }}
           >
-            <Button
-              onClick={handleClose}
-              variant="outlined"
-              startIcon={<CloseIcon />}
-              disabled={saving}
-              sx={{ 
-                borderRadius: 1.5,
-                textTransform: "none",
-                px: 3
-              }}
-            >
-              Cancel
-            </Button>
-            <Button
-              variant="contained"
-              onClick={handleSave}
-              disabled={saving}
-              startIcon={
-                saving ? <CircularProgress size={20} color="inherit" /> : <SaveIcon />
-              }
-              sx={{ 
-                borderRadius: 1.5,
-                textTransform: "none",
-                px: 3,
-                boxShadow: "0 4px 14px rgba(25, 118, 210, 0.3)"
-              }}
-            >
-              {saving ? "Saving..." : form.id ? "Update" : "Create"}
-            </Button>
-          </Box>
-        </Box>
-      </Drawer>
+            Cancel
+          </Button>
+          <Button
+            variant="contained"
+            onClick={handleSave}
+            disabled={saving}
+            startIcon={
+              saving ? <CircularProgress size={20} color="inherit" /> : <SaveIcon />
+            }
+            sx={{ 
+              borderRadius: 1.5,
+              textTransform: "none",
+              px: 3,
+              boxShadow: "0 4px 14px rgba(25, 118, 210, 0.3)"
+            }}
+          >
+            {saving ? "Saving..." : form.id ? "Update" : "Create"}
+          </Button>
+        </DialogActions>
+      </Dialog>
     </Box>
   );
 };

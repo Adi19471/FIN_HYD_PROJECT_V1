@@ -268,7 +268,7 @@ const Login = () => {
             <TextField
               margin="normal"
               fullWidth
-              label="Username / Email"
+              label="Username"
               value={formData.username}
               onChange={handleChange("username")}
               error={!!errors.username}
