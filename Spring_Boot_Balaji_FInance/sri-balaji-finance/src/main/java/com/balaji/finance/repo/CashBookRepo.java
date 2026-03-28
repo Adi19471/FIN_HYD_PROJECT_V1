@@ -58,8 +58,8 @@ public interface CashBookRepo extends JpaRepository<CashBook, Long> {
 
 	@Query(value = """
 			SELECT
-			 COALESCE(SUM(c.DEBIT),0) as credits,
-			 COALESCE(SUM(c.CREDIT),0) as debits
+			 COALESCE(SUM(c.CREDIT),0) as credits,
+			 COALESCE(SUM(c.DEBIT),0) as debits
 			FROM cash_book c
 			WHERE c.TRANS_DATE < :endDate
 			""", nativeQuery = true)
@@ -220,7 +220,7 @@ public interface CashBookRepo extends JpaRepository<CashBook, Long> {
 			    COALESCE(SUM(cb.CREDIT),0) - COALESCE(SUM(cb.DEBIT),0) AS amount
 			FROM cash_book cb
 			WHERE cb.TRANS_DATE < :toDate
-			  and am.type IN (:typeList)
+			  and cb.ACCOUNT_MASTER_TYPE IN (:typeList)
 			GROUP BY cb.ACCOUNT_MASTER_TYPE, cb.ACCOUNT_MASTER_MASTER_CODE , cb.ACCOUNT_MASTER_CODE
 			ORDER BY cb.ACCOUNT_MASTER_TYPE, cb.ACCOUNT_MASTER_CODE
 			""", nativeQuery = true)

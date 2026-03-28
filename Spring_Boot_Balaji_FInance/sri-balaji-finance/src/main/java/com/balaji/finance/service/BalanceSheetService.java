@@ -25,16 +25,9 @@ public class BalanceSheetService {
 
 		LocalDateTime to = toDate.atTime(23, 59, 59);
 
-		BigDecimal openingBalanceForToDate = Optional.ofNullable(cashBookRepo.findOpeningBalanceForDate(toDate))
+		BigDecimal openingBalanceForToDatePlusOneDay = Optional.ofNullable(cashBookRepo.findOpeningBalanceForDate(toDate.plusDays(1)))
 				.orElse(BigDecimal.ZERO);
-
-		SumOfCreditsAndDebitsProjection allSumOfCreditsAndDebitsTransactionDate = cashBookRepo
-				.findAllSumOfCreditsAndDebitsTransactionDate(to);
-
-		// Closing Balance = Opening + Credits - Debits
-		BigDecimal cashOnHand = openingBalanceForToDate.add(allSumOfCreditsAndDebitsTransactionDate.getCredits())
-				.subtract(allSumOfCreditsAndDebitsTransactionDate.getDebits());
-
+		
 		List<BalanceSheetProjection> balanceSheetByTrasncDate = cashBookRepo.getBalanceSheetByTrasncDate(to,
 				Arrays.asList("ASSETS", "LIABILITIES"));
 
@@ -57,7 +50,7 @@ public class BalanceSheetService {
 
 			@Override
 			public BigDecimal getAmount() {
-				return cashOnHand;
+				return openingBalanceForToDatePlusOneDay;
 			}
 		};
 
