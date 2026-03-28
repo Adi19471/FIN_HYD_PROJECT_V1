@@ -27,6 +27,8 @@ public interface CashBookRepo extends JpaRepository<CashBook, Long> {
 
 	List<CashBook> findByBusinessMember(BusinessMember businessMember);
 
+	Optional<CashBook> findByBusinessMemberAndAccountMastercode(BusinessMember businessMember, String masterCode);
+
 	List<CashBook> findByAccountMastercode(String accountMastercode);
 
 	List<CashBook> findByAccountMastercodeAndTransDateBetween(String accountMastercode, LocalDateTime fromDate, LocalDateTime toDate);
@@ -127,10 +129,10 @@ public interface CashBookRepo extends JpaRepository<CashBook, Long> {
 			SELECT
 			    DATE(TRANS_DATE) AS txnDate,
 			    SUM(CASE WHEN ACCOUNT_MASTER_CODE IN
-			        ('DF LOAN INSTALLMENT','DF LATE FEE','DF DOC CHARGES','DF INTEREST')
+			        ('DF LOAN INSTALLMENT')
 			        THEN CREDIT ELSE 0 END) AS dailyTotal,
 			    SUM(CASE WHEN ACCOUNT_MASTER_CODE IN
-			        ('MF LOAN INSTALLMENT','MF INTEREST','MF LATE FEE','MF DOC CHARGES')
+			        ('MF LOAN INSTALLMENT')
 			        THEN CREDIT ELSE 0 END) AS monthlyTotal
 			FROM cash_book
 			WHERE ENTRY_USER = :user

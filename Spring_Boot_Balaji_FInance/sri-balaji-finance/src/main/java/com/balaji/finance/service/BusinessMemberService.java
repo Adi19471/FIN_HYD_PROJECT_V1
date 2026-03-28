@@ -379,6 +379,44 @@ public class BusinessMemberService {
 
 		
 			businessMemberRepository.save(businessMember);
+			
+			if (businessMember.getProcessingFee() != null && businessMemberDto.getProcessingFee() != null
+					&& businessMember.getProcessingFee().compareTo(businessMemberDto.getProcessingFee()) != 0) {
+
+
+				String currentUser = SecurityContextHolder.getContext().getAuthentication().getName();
+				LocalDateTime currentDate = LocalDateTime.now();
+
+				CashBook dfProcessingFeeCashBook = null;
+				Optional<CashBook> optionalCashbook = null;
+				
+				switch (businessMember.getLoanType()) {
+				case "DAILY_FINANCE":
+
+					optionalCashbook = cashBookRepo.findByBusinessMemberAndAccountMastercode(businessMember,
+							"DF DOC CHARGES");
+
+				case "MONTHLY_FINANCE":
+
+					optionalCashbook = cashBookRepo.findByBusinessMemberAndAccountMastercode(businessMember,
+							"MF DOC CHARGES");
+
+				}
+
+				if (optionalCashbook.isPresent()) {
+					
+					dfProcessingFeeCashBook = optionalCashbook.get();
+
+					dfProcessingFeeCashBook.setCredit(businessMemberDto.getProcessingFee());
+					dfProcessingFeeCashBook.setDebit(BigDecimal.ZERO);
+					dfProcessingFeeCashBook.setUser(currentUser);
+					dfProcessingFeeCashBook.setSysDate(currentDate);
+
+					cashBookRepo.save(dfProcessingFeeCashBook);
+
+				}
+
+			}
 
 			return "Sucessfully Updated ";
 
@@ -442,6 +480,8 @@ public class BusinessMemberService {
 			businessMemberDto.setCustomerId(p.getCustomerId() != null ? p.getCustomerId().getPersonalInfoId() : null);
 			businessMemberDto.setGuarantor1(p.getGuarantor1() != null ? p.getGuarantor1().getPersonalInfoId() : null);
 			businessMemberDto.setGuarantor2(p.getGuarantor2() != null ? p.getGuarantor2().getPersonalInfoId() : null);
+			businessMemberDto.setGuarantor3(p.getGuarantor3() != null ? p.getGuarantor3().getPersonalInfoId() : null);
+			
 			businessMemberDto.setPartnerId(p.getPartnerId() != null ? p.getPartnerId().getPersonalInfoId() : null);
 
 			businessMemberDto.setStartDate(p.getStartDate());
@@ -484,6 +524,8 @@ public class BusinessMemberService {
 			businessMemberDto.setCustomerId(p.getCustomerId() != null ? p.getCustomerId().getPersonalInfoId() : null);
 			businessMemberDto.setGuarantor1(p.getGuarantor1() != null ? p.getGuarantor1().getPersonalInfoId() : null);
 			businessMemberDto.setGuarantor2(p.getGuarantor2() != null ? p.getGuarantor2().getPersonalInfoId() : null);
+			businessMemberDto.setGuarantor3(p.getGuarantor3() != null ? p.getGuarantor3().getPersonalInfoId() : null);
+			
 			businessMemberDto.setPartnerId(p.getPartnerId() != null ? p.getPartnerId().getPersonalInfoId() : null);
 
 			businessMemberDto.setStartDate(p.getStartDate());
@@ -570,6 +612,14 @@ public class BusinessMemberService {
 		return pojoList;
 	}
 
+	public List<String> allLoanIdsAutoComplete(String keyWord) {
+
+		List<String> loanList = businessMemberRepository.allLoanIdsAutoComplete(keyWord);
+
+		return loanList;
+	}
+	
+	
 	public void generateEMIScheduleForMonth(BusinessMember member) {
 
 		int months = member.getDuration(); // Loan duration in months

@@ -45,12 +45,12 @@ const Cashbook = () => {
   const [particulars, setParticulars] = useState("");
   const [transactionType, setTransactionType] = useState("");
   const [amount, setAmount] = useState("");
-  
+
   const [masterCodes, setMasterCodes] = useState([]);
   const [codes, setCodes] = useState([]);
   const [personOptions, setPersonOptions] = useState([]);
   const [transactionTypes, setTransactionTypes] = useState([]);
-  
+
   const [loadingMaster, setLoadingMaster] = useState(false);
   const [initialLoading, setInitialLoading] = useState(true);
   const [loadingCodes, setLoadingCodes] = useState(false);
@@ -95,7 +95,7 @@ const Cashbook = () => {
       setTransactionType("");
       return;
     }
-    
+
     const fetchCodes = async () => {
       setLoadingCodes(true);
       try {
@@ -112,7 +112,7 @@ const Cashbook = () => {
         setLoadingCodes(false);
       }
     };
-    
+
     fetchCodes();
   }, [masterCode, getAuthHeader]);
 
@@ -149,7 +149,7 @@ const Cashbook = () => {
       setPersonOptions([]);
       return;
     }
-    
+
     const timeoutId = setTimeout(async () => {
       setLoadingPersons(true);
       try {
@@ -170,7 +170,7 @@ const Cashbook = () => {
         setLoadingPersons(false);
       }
     }, 300); // Debounce 300ms
-    
+
     return () => clearTimeout(timeoutId);
   }, [name, masterCode, code, getAuthHeader]);
 
@@ -187,7 +187,7 @@ const Cashbook = () => {
 
     const payload = {
       transactionDate: transactionDate,
-      accountMasterCode:masterCode,
+      accountMasterCode: masterCode,
       accountCode: code,
       customerId: selectedPerson?.id || name.trim(),
       particulars: particulars.trim() || "Other Payment",
@@ -202,7 +202,7 @@ const Cashbook = () => {
       successToast("Transaction recorded successfully!");
 
       // Reset form
-      setTransactionDate(getCurrentDateTime());
+      setTransactionDate(transactionDate);
       setMasterCode("");
       setCode("");
       setName("");
@@ -230,252 +230,175 @@ const Cashbook = () => {
   }
 
   return (
-    <Box>
-      <Typography variant="h5" color="primary" gutterBottom sx={{ mb: 4 }}>
-        New Transaction / Payment
-      </Typography>
+    <Box sx={{ width: "100%", mt: 3, display: "flex", justifyContent: "center" }}>
+      <Paper
+        elevation={3}
+        sx={{
+          p: 4,
+          width: "100%",
+          maxWidth: 900,
+          borderRadius: 2,
+        }}
+      >
+        <Typography
+          variant="h5"
+          sx={{ mb: 4, fontWeight: 600 }}
+          color="primary"
+        >
+          New Transaction / Payment
+        </Typography>
 
-      <form onSubmit={handleSubmit}>
-        <Grid container spacing={3}>
-          {/* Date & Time - using dayjs with native date/time inputs */}
-          <Grid item xs={12} sm={6}>
-            <TextField
-              label="Date"
-              type="date"
-              value={dayjs(transactionDate).format("YYYY-MM-DD")}
-              onChange={(e) => setTransactionDate(dayjs(e.target.value).format("YYYY-MM-DD HH:mm:ss"))}
-              disabled={submitting}
-              fullWidth
-              required
-              variant="outlined"
-              InputLabelProps={{ shrink: true }}
-              InputProps={{
-                startAdornment: (
-                  <InputAdornment position="start">
-                    <CalendarIcon color="action" />
-                  </InputAdornment>
-                ),
-              }}
-            />
-          </Grid>
-          <Grid item xs={12} sm={6}>
-            <TextField
-              label="Time"
-              type="time"
-              value={dayjs(transactionDate).format("HH:mm")}
-              onChange={(e) => {
-                const [hours, minutes] = e.target.value.split(":");
-                setTransactionDate(dayjs().hour(parseInt(hours) || 0).minute(parseInt(minutes) || 0).format("YYYY-MM-DD HH:mm:ss"));
-              }}
-              disabled={submitting}
-              fullWidth
-              variant="outlined"
-              InputLabelProps={{ shrink: true }}
-            />
-          </Grid>
+        <form onSubmit={handleSubmit}>
+          <Grid container spacing={3} justifyContent="center">
 
-          {/* Account Group */}
-          <Grid item xs={12} sm={6}>
-            <FormControl fullWidth required variant="outlined">
-              <InputLabel>Account Group</InputLabel>
-              <Select
-                value={masterCode}
-                label="Account Group"
-                onChange={(e) => setMasterCode(e.target.value)}
-                disabled={loadingMaster || submitting}
+            {/* Date Time */}
+            <Grid item xs={12} display="flex" justifyContent="center">
+              <TextField
+                label="Transaction Date & Time"
+                type="datetime-local"
+                value={dayjs(transactionDate).format("YYYY-MM-DDTHH:mm")}
+                onChange={(e) =>
+                  setTransactionDate(
+                    dayjs(e.target.value).format("YYYY-MM-DD HH:mm:ss")
+                  )
+                }
+                sx={{ width: 300 }}
+                InputLabelProps={{ shrink: true }}
+              />
+            </Grid>
+
+            {/* Account Group + Code */}
+            <Grid item>
+              <FormControl sx={{ width: 220 }}>
+                <InputLabel>Account Group</InputLabel>
+                <Select
+                  value={masterCode}
+                  label="Account Group"
+                  onChange={(e) => setMasterCode(e.target.value)}
+                >
+                  {masterCodes.map((g) => (
+                    <MenuItem key={g} value={g}>
+                      {g}
+                    </MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
+            </Grid>
+
+            <Grid item>
+              <FormControl sx={{ width: 220 }}>
+                <InputLabel>Account Code</InputLabel>
+                <Select
+                  value={code}
+                  label="Account Code"
+                  onChange={(e) => setCode(e.target.value)}
+                >
+                  {codes.map((c) => (
+                    <MenuItem key={c} value={c}>
+                      {c}
+                    </MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
+            </Grid>
+
+            {/* Name + Particulars */}
+            <Grid item>
+              <Autocomplete
+                sx={{ width: 280 }}
+                freeSolo
+                value={name}
+                inputValue={name}
+                onInputChange={(e, val) => setName(val)}
+                onChange={(e, val) => {
+                  if (typeof val === "string") {
+                    setName(val);
+                    setSelectedPerson(null);
+                  } else {
+                    setName(val?.label || "");
+                    setSelectedPerson(val?.data || null);
+                  }
+                }}
+                options={personOptions}
+                getOptionLabel={(o) =>
+                  typeof o === "string" ? o : o.label || ""
+                }
+                forcePopupIcon={true} 
+                renderInput={(params) => (
+                  <TextField {...params} label="Name" />
+                )}
+              />
+            </Grid>
+
+            <Grid item>
+              <TextField
+                label="Particulars"
+                value={particulars}
+                onChange={(e) => setParticulars(e.target.value)}
+                sx={{ width: 280 }}
+              />
+            </Grid>
+
+            {/* Amount + Transaction Type (LAST ROW) */}
+            <Grid item>
+              <TextField
+                label="Amount"
+                value={
+                  amount ? Number(amount).toLocaleString("en-IN") : ""
+                }
+                onChange={(e) =>
+                  setAmount(e.target.value.replace(/[^0-9]/g, ""))
+                }
                 sx={{ width: 180 }}
-                endAdornment={
-                  loadingMaster ? <CircularProgress size={20} sx={{ mr: 2 }} /> : null
-                }
-              >
-                {masterCodes.map((group) => (
-                  <MenuItem key={group} value={group}>
-                    {group}
-                  </MenuItem>
-                ))}
-              </Select>
-            </FormControl>
-          </Grid>
+                InputProps={{
+                  startAdornment: (
+                    <InputAdornment position="start">₹</InputAdornment>
+                  ),
+                }}
+              />
+            </Grid>
 
-          {/* Account Code */}
-          <Grid item xs={12} sm={6}>
-            <FormControl fullWidth required variant="outlined">
-              <InputLabel>Account Code</InputLabel>
-              <Select
-                value={code}
-                label="Account Code"
-                onChange={(e) => setCode(e.target.value)}
-                disabled={loadingCodes || !masterCode || submitting}
-                sx={{ width: 180 }}
-                endAdornment={
-                  loadingCodes ? <CircularProgress size={20} sx={{ mr: 2 }} /> : null
-                }
-              >
-                {codes.map((accCode) => (
-                  <MenuItem key={accCode} value={accCode}>
-                    {accCode}
-                  </MenuItem>
-                ))}
-              </Select>
-            </FormControl>
-          </Grid>
-
-          {/* Name Autocomplete */}
-          <Grid item xs={12}>
-            <Autocomplete
-              fullWidth
-              freeSolo
-              disableClearable
-              value={name}
-              sx={{ width: 180 }}
-              onChange={(event, newValue) => {
-                if (typeof newValue === "string") {
-                  setName(newValue);
-                  setSelectedPerson(null);
-                } else {
-                  setName(newValue?.label || "");
-                  setSelectedPerson(newValue?.data || null);
-                }
-              }}
-              inputValue={name}
-              onInputChange={(event, newInputValue) => {
-                setName(newInputValue);
-                if (newInputValue !== name) setSelectedPerson(null);
-              }}
-              options={personOptions}
-              getOptionLabel={(option) =>
-                typeof option === "string" ? option : option.label || ""
-              }
-              loading={loadingPersons}
-              disabled={submitting || !masterCode || !code}
-              renderInput={(params) => (
-                <TextField
-                  {...params}
-                  fullWidth
-                  required
-                  label="Name (Payer/Receiver)"
-                  placeholder="Search or type manually..."
-                  variant="outlined"
-                  InputProps={{
-                    ...params.InputProps,
-                    endAdornment: (
-                      <>
-                        {loadingPersons ? (
-                          <CircularProgress color="inherit" size={20} />
-                        ) : null}
-                        {params.InputProps.endAdornment}
-                      </>
-                    ),
-                  }}
-                />
-              )}
-            />
-          </Grid>
-
-          {/* Particulars */}
-          <Grid item xs={12}>
-            <TextField
-              fullWidth
-              sx={{ width: 180 }}
-              label="Particulars / Description"
-              value={particulars}
-              onChange={(e) => setParticulars(e.target.value)}
-              variant="outlined"
-              disabled={submitting}
-            />
-          </Grid>
-
-          {/* Transaction Type */}
-          <Grid item xs={12}>
-            <FormControl
-              component="fieldset"
-              disabled={loadingTypes || submitting || transactionTypes.length === 0}
-            >
-              <FormLabel component="legend" sx={{ mb: 1 }}>
-                Transaction Type{" "}
-                {loadingTypes && <CircularProgress size={16} sx={{ ml: 2 }} />}
-              </FormLabel>
-              {transactionTypes.length === 0 && !loadingTypes ? (
-                <Typography variant="body2" color="text.secondary">
-                  Select Account Group & Code to see available types
-                </Typography>
-              ) : (
-                <RadioGroup
-                  row
+            <Grid item>
+              <FormControl sx={{ width: 220 }}>
+                <InputLabel>Transaction Type</InputLabel>
+                <Select
                   value={transactionType}
+                  label="Transaction Type"
                   onChange={(e) => setTransactionType(e.target.value)}
                 >
                   {transactionTypes.map((type) => (
-                    <FormControlLabel
-                      key={type}
-                      value={type}
-                      control={
-                        <Radio
-                          color={type.toLowerCase().includes("credit") ? "success" : "error"}
-                        />
-                      }
-                      label={type}
-                    />
+                    <MenuItem key={type} value={type}>
+                      {type}
+                    </MenuItem>
                   ))}
-                </RadioGroup>
-              )}
-            </FormControl>
-          </Grid>
+                </Select>
+              </FormControl>
+            </Grid>
 
-         
-         <Grid item xs={12} sm={6}>
-  <TextField
-    fullWidth
-    required
-    label="Amount"
-    value={
-      amount
-        ? Number(amount).toLocaleString('en-IN')
-        : ''
-    }
-    onChange={(e) => {
-      const rawValue = e.target.value.replace(/[^0-9]/g, "");
-      setAmount(rawValue);
-    }}
-    variant="outlined"
-    disabled={submitting}
-    InputProps={{
-      startAdornment: (
-        <InputAdornment position="start">
-          <Typography color="text.secondary" sx={{ fontWeight: 500 }}>
-            ₹
-          </Typography>
-        </InputAdornment>
-      ),
-    }}
-  />
-</Grid>
+            {/* Submit */}
+            <Grid item xs={12}>
+              <Divider sx={{ my: 2 }} />
+              <Box sx={{ display: "flex", justifyContent: "center" }}>
+                <Button
+                  type="submit"
+                  variant="contained"
+                  size="large"
+                  sx={{
+                    px: 6,
+                    py: 1.3,
+                    borderRadius: 2,
+                    fontWeight: 600,
+                  }}
+                  startIcon={<PaymentsIcon />}
+                >
+                  Record Transaction
+                </Button>
+              </Box>
+            </Grid>
 
-          {/* Submit Button */}
-          <Grid item xs={12}>
-            <Divider sx={{ mb: 3 }} />
-            <Box sx={{ display: "flex", justifyContent: "center", gap: 2 }}>
-              <Button
-                type="submit"
-                variant="contained"
-                color="primary"
-                size="large"
-                disabled={submitting}
-                startIcon={
-                  submitting ? (
-                    <CircularProgress size={24} color="inherit" />
-                  ) : (
-                    <PaymentsIcon />
-                  )
-                }
-                sx={{ px: 6, py: 1.5, minWidth: 250, fontWeight: 600 }}
-              >
-                {submitting ? "Saving..." : "Record Transaction"}
-              </Button>
-            </Box>
           </Grid>
-        </Grid>
-      </form>
+        </form>
+      </Paper>
     </Box>
   );
 };

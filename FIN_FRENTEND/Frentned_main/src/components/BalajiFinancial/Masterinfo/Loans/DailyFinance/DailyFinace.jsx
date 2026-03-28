@@ -36,6 +36,7 @@ import dayjs from "dayjs";
 
 const LOAN_TYPE = { DAILY_FINANCE: "DAILY_FINANCE" };
 const FIXED_DURATION_DAYS = 100;
+const BASE_PROCESSING_FEE = 200;
 
 const DailyFinance = () => {
   const [rows, setRows] = useState([]);
@@ -48,18 +49,19 @@ const DailyFinance = () => {
   // FORM STATE (with Interest default = 3%)
   // ------------------------------
   const [formData, setFormData] = useState({
+    id: null,
     customerId: null,
     guarantor1: null,
     guarantor2: null,
     guarantor3: null,
-    partnerId: "",
+    partnerId: null,
     startDate: dayjs(),
     endDate: dayjs().add(FIXED_DURATION_DAYS, "day"),
     amount: "",
     interestRatePerMonth: "3",
     interestAmountForAllDays: 0,
     installment: "",
-    processingFee: "",
+    processingFee: BASE_PROCESSING_FEE,
     security: "",
   });
 
@@ -127,7 +129,9 @@ const DailyFinance = () => {
         g3Name: loan.guarantor3
           ? memberMap[loan.guarantor3] || `G3: ${loan.guarantor3}`
           : "-",
-        partnerId: loan.partnerId || "-",
+        partnerId: loan.partnerId
+          ? memberMap[loan.partnerId] || `G4: ${loan.partnerId}`
+          : "-",
       }));
 
       setRows(enriched);
@@ -165,17 +169,33 @@ const DailyFinance = () => {
     const monthlyInterestRate = Number(formData.interestRatePerMonth) / 100;
     const dailyInterestRate = monthlyInterestRate / 30;
 
-   
+
     const totalInterest = principal * dailyInterestRate * FIXED_DURATION_DAYS;
     const dailyInstallment = Math.round(principal / FIXED_DURATION_DAYS);
-    
+
     setFormData((prev) => ({
       ...prev,
       installment: dailyInstallment.toString(),
-      interestAmountForAllDays: totalInterest.toFixed(2), 
+      interestAmountForAllDays: totalInterest.toFixed(2)
     }));
   }, [formData.amount, formData.interestRatePerMonth]);
 
+
+  useEffect(() => {
+    const amount = Number(formData.amount);
+    const rate = Number(formData.interestRate);
+    let extraFee = 0;
+    if (amount > 20000) {
+      extraFee = Math.ceil((amount - 20000) / 10000) * 100;
+    }
+    const finalProcessingFee = BASE_PROCESSING_FEE + extraFee;
+
+    setFormData(prev => ({
+      ...prev,
+      processingFee: finalProcessingFee
+    }));
+
+  }, [formData.amount]);
 
 
 
@@ -195,9 +215,8 @@ const DailyFinance = () => {
 
         const list = (res.data || []).map((item) => ({
           id: item.id,
-          label: `${item.firstname || ""} ${item.lastname || ""} - ${
-            item.mobile || "No Mobile"
-          } (${item.id})`,
+          label: `${item.firstname || ""} ${item.lastname || ""} - ${item.mobile || "No Mobile"
+            } (${item.id})`,
         }));
 
         setOptions(list);
@@ -213,18 +232,19 @@ const DailyFinance = () => {
 
   const resetForm = () => {
     setFormData({
+      id: null,
       customerId: null,
       guarantor1: null,
       guarantor2: null,
       guarantor3: null,
-      partnerId: "",
+      partnerId: null,
       startDate: dayjs(),
       endDate: dayjs().add(FIXED_DURATION_DAYS, "day"),
       amount: "",
       interestRatePerMonth: "3",
       interestAmountForAllDays: 0,
       installment: "",
-      processingFee: "",
+      processingFee: BASE_PROCESSING_FEE,
       security: "",
     });
     setIsEditMode(false);
@@ -258,23 +278,24 @@ const DailyFinance = () => {
         mRes.data.forEach((m) => {
           map[m.id] = {
             id: m.id,
-            label: `${m.firstname || ""} ${m.lastname || ""} - ${
-              m.mobile || ""
-            }`,
+            label: `${m.firstname || ""} ${m.lastname || ""} - ${m.mobile || ""
+              }`,
           };
         });
       }
 
       setFormData({
+        id: l.id,
         customerId: map[l.customerId] || null,
         guarantor1: map[l.guarantor1] || null,
         guarantor2: map[l.guarantor2] || null,
         guarantor3: map[l.guarantor3] || null,
-        partnerId: l.partnerId,
+        partnerId: map[l.partnerId] || null,
         startDate: dayjs(l.startDate),
         endDate: dayjs(l.endDate),
         amount: l.amount.toString(),
-        interestRatePerMonth: l.interest.toString(),
+        interestRatePerMonth: l.interestRate.toString(),
+        interestAmountForAllDays: l.interest,
         installment: l.installment?.toString() || "",
         processingFee: l.processingFee?.toString() || "",
         security: l.security || "",
@@ -288,45 +309,33 @@ const DailyFinance = () => {
     }
   };
 
-  // DELETE LOAN
-  const handleDelete = async (id) => {
-    if (!window.confirm("Delete this loan permanently?")) return;
 
-    try {
-      await axios.delete(`${API_BASE}/BusinessMember/delete/${id}`, {
-        headers,
-      });
-      successToast("Loan deleted!");
-      fetchData();
-    } catch (err) {
-      errorToast("Delete failed");
-    }
-  };
 
   // SAVE / UPDATE LOAN
   const handleSave = async () => {
     if (!formData.customerId?.id) return errorToast("Customer is required");
 
     const payload = {
+      id: formData.id,
       customerId: formData.customerId.id,
       guarantor1: formData.guarantor1?.id || "",
       guarantor2: formData.guarantor2?.id || "",
       guarantor3: formData.guarantor3?.id || "",
-      partnerId: formData.partnerId,
+      partnerId: formData.partnerId?.id || "",
       startDate: formData.startDate.format("YYYY-MM-DD HH:mm:ss"),
       endDate: formData.endDate.format("YYYY-MM-DD HH:mm:ss"),
       amount: Number(formData.amount),
-      interest:Number(formData.interestAmountForAllDays),
+      interest: Number(formData.interestAmountForAllDays),
       interestRate: Number(formData.interestRatePerMonth),
       processingFee: Number(formData.processingFee) || 0,
-      installment:Number(formData.installment),
+      installment: Number(formData.installment),
       security: formData.security,
       duration: FIXED_DURATION_DAYS,
     };
 
     try {
       if (isEditMode) {
-        await axios.put(
+        await axios.post(
           `${API_BASE}/BusinessMember/update/${currentLoanId}`,
           payload,
           { headers }
@@ -368,13 +377,6 @@ const DailyFinance = () => {
             onClick={() => handleEdit(params.row.id)}
           >
             <EditIcon fontSize="small" />
-          </IconButton>
-          <IconButton
-            size="small"
-            color="error"
-            onClick={() => handleDelete(params.row.id)}
-          >
-            <DeleteIcon fontSize="small" />
           </IconButton>
         </Box>
       ),
@@ -504,32 +506,37 @@ const DailyFinance = () => {
           </Grid>
 
           {/* LOAN DETAILS */}
-          <Chip label="LOAN DETAILS" sx={{ mt: 3, mb: 2 }} />
+          <Box sx={{ mt: 4 }}>
+            <Chip
+              label="LOAN DETAILS"
+              sx={{ bgcolor: "#14b8a6", color: "white", fontWeight: 600 }}
+            />
+          </Box>
 
-          <Grid container spacing={2}>
-          <Grid item xs={12} md={6}>
-    <TextField
-      fullWidth
-      label="Loan Amount *"
-      type="text"                    // Changed to text for better control
-      value={formData.amount 
-        ? Number(formData.amount).toLocaleString('en-IN') 
-        : ""
-      }
-      onChange={(e) => {
-        // Remove commas and non-numeric characters
-        const rawValue = e.target.value.replace(/[^0-9]/g, '');
-        setFormData((p) => ({ 
-          ...p, 
-          amount: rawValue 
-        }));
-      }}
-      InputProps={{
-        startAdornment: <Typography sx={{ mr: 1, color: 'text.secondary' }}>₹</Typography>,
-      }}
-      placeholder="0"
-    />
-  </Grid>
+          <Grid container spacing={3} sx={{ mt: 1 }}>
+            <Grid item xs={12} md={6}>
+              <TextField
+                fullWidth
+                label="Loan Amount *"
+                type="text"                    // Changed to text for better control
+                value={formData.amount
+                  ? Number(formData.amount).toLocaleString('en-IN')
+                  : ""
+                }
+                onChange={(e) => {
+                  // Remove commas and non-numeric characters
+                  const rawValue = e.target.value.replace(/[^0-9]/g, '');
+                  setFormData((p) => ({
+                    ...p,
+                    amount: rawValue
+                  }));
+                }}
+                InputProps={{
+                  startAdornment: <Typography sx={{ mr: 1, color: 'text.secondary' }}>₹</Typography>,
+                }}
+                placeholder="0"
+              />
+            </Grid>
 
             <Grid item xs={12} md={6}>
               <TextField
@@ -546,25 +553,25 @@ const DailyFinance = () => {
               />
             </Grid>
 
-           
-           <Grid item xs={12} md={6}>
-  <TextField
-    fullWidth
-    label="Total Interest Amount (100 Days)"
-    type="text"                    // Changed from number to text for better formatting
-    value={
-      formData.interestAmountForAllDays 
-        ? `₹${Number(formData.interestAmountForAllDays).toLocaleString("en-IN")}` 
-        : ""
-    }
-    InputProps={{ 
-      readOnly: true,
-      startAdornment: (
-        <Typography sx={{ mr: 1, color: 'text.secondary' }}>₹</Typography>
-      )
-    }}
-  />
-</Grid>
+
+            <Grid item xs={12} md={6}>
+              <TextField
+                fullWidth
+                label="Total Interest Amount (100 Days)"
+                type="text"                    // Changed from number to text for better formatting
+                value={
+                  formData.interestAmountForAllDays
+                    ? `₹${Number(formData.interestAmountForAllDays).toLocaleString("en-IN")}`
+                    : ""
+                }
+                InputProps={{
+                  readOnly: true,
+                  startAdornment: (
+                    <Typography sx={{ mr: 1, color: 'text.secondary' }}>₹</Typography>
+                  )
+                }}
+              />
+            </Grid>
 
             <Grid item xs={12} md={6}>
               <TextField
@@ -612,12 +619,16 @@ const DailyFinance = () => {
             </Grid>
           </Grid>
 
-          {/* GUARANTORS */}
-          <Chip label="GUARANTORS" sx={{ mt: 3, mb: 2 }} />
-
-          <Grid container spacing={2}>
+          {/* Guarantors */}
+          <Box sx={{ mt: 4 }}>
+            <Chip
+              label="GUARANTORS"
+              sx={{ bgcolor: "#8b5cf6", color: "white", fontWeight: 600 }}
+            />
+          </Box>
+          <Grid container spacing={3} sx={{ mt: 1 }}>
             {["guarantor1", "guarantor2", "guarantor3"].map((field, idx) => (
-              <Grid item xs={12} key={field}>
+              <Grid item xs={12} md={6} key={field}>
                 <Autocomplete
                   fullWidth
                   sx={{ width: "230px" }}
@@ -632,6 +643,7 @@ const DailyFinance = () => {
                     <TextField
                       {...params}
                       label={`Guarantor ${idx + 1}${idx === 0 ? " *" : ""}`}
+                      fullWidth
                     />
                   )}
                 />
@@ -639,15 +651,27 @@ const DailyFinance = () => {
             ))}
           </Grid>
 
-          <TextField
-            fullWidth
-            label="Partner / Agent"
-            sx={{ mt: 3 }}
-            value={formData.partnerId}
-            onChange={(e) =>
-              setFormData((p) => ({ ...p, partnerId: e.target.value }))
-            }
-          />
+          {/* PARTNER */}
+          <Grid container spacing={2} sx={{ mt: 1 }}>
+            <Grid item xs={12} md={6}>
+              <Autocomplete
+                fullWidth
+                sx={{ width: "230px" }}
+                options={options}
+                loading={loadingSearch}
+                value={formData.partnerId}
+                onInputChange={(e, v) => searchMembers(v)}
+                onChange={(e, v) =>
+                  setFormData((p) => ({ ...p, partnerId: v }))
+                }
+                getOptionLabel={(o) => o?.label || ""}
+                renderInput={(params) => (
+                  <TextField {...params} label="Partner / Agent *" fullWidth />
+                )}
+              />
+            </Grid>
+          </Grid>
+
         </DialogContent>
 
         <DialogActions sx={{ p: 2 }}>
@@ -659,7 +683,7 @@ const DailyFinance = () => {
           </Button>
         </DialogActions>
       </Dialog>
-    </LocalizationProvider>
+    </LocalizationProvider >
   );
 };
 

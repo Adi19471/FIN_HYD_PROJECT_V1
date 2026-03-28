@@ -41,7 +41,7 @@ const STORAGE_KEY = "dailyBook_lastSelectedDate";
 const getHeaders = () => {
   // Prefer context token, fallback to session
   const token = user?.token || getSession()?.token || "";
-  
+
   return {
     headers: {
       Authorization: `Bearer ${token}`,
@@ -66,12 +66,12 @@ const DailyBook = () => {
 
 
 
-     const token = getSession()?.token || getSession("token") || "";
-  
-        if (!token) {
-          errorToast("Authentication token not found. Please login again.");
-          return;
-        }
+  const token = getSession()?.token || getSession("token") || "";
+
+  if (!token) {
+    errorToast("Authentication token not found. Please login again.");
+    return;
+  }
 
 
 
@@ -102,13 +102,14 @@ const DailyBook = () => {
       setLoading(true);
 
       const response = await axios.get(
-        `${API_BASE}/loadAllDayWiseTransactionsSummary/${formattedDate}`,{
+        `${API_BASE}/loadAllDayWiseTransactionsSummary/${formattedDate}`, {
         // getHeaders()
 
-         headers: {
+        headers: {
           Authorization: `Bearer ${token}`,
           "Content-Type": "application/json",
-        },}
+        },
+      }
       );
 
       const data = response.data;
@@ -231,8 +232,96 @@ const DailyBook = () => {
               </Tooltip>
             </Box>
           </Stack>
+        </Paper>
 
-          <Divider sx={{ my: 2 }} />
+
+
+        {!loading && transactions.length > 0 && (
+          <TableContainer
+            component={Paper}
+            elevation={2}
+            sx={{
+              mt: 3,
+              mb: 3,
+              borderRadius: 2,
+              maxHeight: 400,
+              overflow: "auto",
+            }}
+          >
+            <Table stickyHeader>
+              <TableHead>
+                <TableRow>
+                  <TableCell sx={{ backgroundColor: "#bbdefb" }}>S.No</TableCell>
+                  <TableCell sx={{ backgroundColor: "#bbdefb" }}>Trans ID</TableCell>
+                  <TableCell sx={{ backgroundColor: "#bbdefb" }}>Acc. No</TableCell>
+                  <TableCell sx={{ backgroundColor: "#bbdefb" }}>Name</TableCell>
+                  <TableCell sx={{ backgroundColor: "#bbdefb" }}>Type</TableCell>
+                  <TableCell sx={{ backgroundColor: "#bbdefb" }}>AccountMasterCode</TableCell>
+                  <TableCell sx={{ backgroundColor: "#bbdefb" }}>Particulars</TableCell>
+                  <TableCell sx={{ backgroundColor: "#bbdefb" }} align="right">Credit</TableCell>
+                  <TableCell sx={{ backgroundColor: "#bbdefb" }} align="right">Debit</TableCell>
+                  <TableCell sx={{ backgroundColor: "#bbdefb" }}>User</TableCell>
+                </TableRow>
+              </TableHead>
+              <TableBody>
+                {transactions.map((item, index) => (
+                  <TableRow
+                    key={item.transactionId || index}
+                    sx={{
+                      backgroundColor: index % 2 === 0 ? "#ffffff" : "#f5fbff",
+                    }}
+                  >
+                    <TableCell>{index + 1}</TableCell>
+                    <TableCell>{item.transactionId || "-"}</TableCell>
+                    <TableCell>{item.accountNumber || "-"}</TableCell>
+                    <TableCell>{item.name || "-"}</TableCell>
+                    <TableCell>{item.transactionType || "-"}</TableCell>
+                    <TableCell>{item.accountMastercode || "-"}</TableCell>
+                    <TableCell>{item.particulars || "-"}</TableCell>
+                    <TableCell align="right">
+                      {item.credit ? Number(item.credit).toLocaleString() : "0"}
+                    </TableCell>
+                    <TableCell align="right">
+                      {item.debit ? Number(item.debit).toLocaleString() : "0"}
+                    </TableCell>
+                    <TableCell>{item.user || "-"}</TableCell>
+                  </TableRow>
+                ))}
+
+                <TableRow sx={{
+                  position: "sticky",
+                  bottom: 0,
+                  backgroundColor: "#bbdefb",
+                  zIndex: 2,
+                }} >
+                  <TableCell colSpan={7} align="right">
+                    <b>Total</b>
+                  </TableCell>
+                  <TableCell align="right">
+                    <b>{totalCredit.toLocaleString()}</b>
+                  </TableCell>
+                  <TableCell align="right">
+                    <b>{totalDebit.toLocaleString()}</b>
+                  </TableCell>
+                  <TableCell />
+                </TableRow>
+              </TableBody>
+            </Table>
+          </TableContainer>
+        )}
+
+        {!loading && transactions.length === 0 && transactionDate && (
+          <Typography
+            variant="body1"
+            color="text.secondary"
+            align="center"
+            sx={{ mt: 4 }}
+          >
+            No records found for the selected date.
+          </Typography>
+        )}
+
+        <Paper elevation={2} sx={{ p: 2, borderRadius: 2 }}>
 
           <Typography variant="subtitle1" fontWeight="bold">
             Opening Balance :{" "}
@@ -273,78 +362,6 @@ const DailyBook = () => {
             </Stack>
           </Box>
         </Paper>
-
-        {!loading && transactions.length > 0 && (
-          <TableContainer
-            component={Paper}
-            elevation={2}
-            sx={{ mt: 3, borderRadius: 2 }}
-          >
-            <Table>
-              <TableHead>
-                <TableRow sx={{ backgroundColor: "#cfe8ff" }}>
-                  <TableCell><b>S.No</b></TableCell>
-                  <TableCell><b>Trans ID</b></TableCell>
-                  <TableCell><b>Acc. No</b></TableCell>
-                  <TableCell><b>Name</b></TableCell>
-                  <TableCell><b>Type</b></TableCell>
-                  <TableCell><b>Particulars</b></TableCell>
-                  <TableCell align="right"><b>Credit</b></TableCell>
-                  <TableCell align="right"><b>Debit</b></TableCell>
-                  <TableCell><b>User</b></TableCell>
-                </TableRow>
-              </TableHead>
-              <TableBody>
-                {transactions.map((item, index) => (
-                  <TableRow
-                    key={item.transactionId || index}
-                    sx={{
-                      backgroundColor: index % 2 === 0 ? "#ffffff" : "#f5fbff",
-                    }}
-                  >
-                    <TableCell>{index + 1}</TableCell>
-                    <TableCell>{item.transactionId || "-"}</TableCell>
-                    <TableCell>{item.accountNumber || "-"}</TableCell>
-                    <TableCell>{item.name || "-"}</TableCell>
-                    <TableCell>{item.transactionType || "-"}</TableCell>
-                    <TableCell>{item.particulars || "-"}</TableCell>
-                    <TableCell align="right">
-                      {item.credit ? Number(item.credit).toLocaleString() : "0"}
-                    </TableCell>
-                    <TableCell align="right">
-                      {item.debit ? Number(item.debit).toLocaleString() : "0"}
-                    </TableCell>
-                    <TableCell>{item.user || "-"}</TableCell>
-                  </TableRow>
-                ))}
-
-                <TableRow sx={{ backgroundColor: "#bbdefb" }}>
-                  <TableCell colSpan={6} align="right">
-                    <b>Total</b>
-                  </TableCell>
-                  <TableCell align="right">
-                    <b>{totalCredit.toLocaleString()}</b>
-                  </TableCell>
-                  <TableCell align="right">
-                    <b>{totalDebit.toLocaleString()}</b>
-                  </TableCell>
-                  <TableCell />
-                </TableRow>
-              </TableBody>
-            </Table>
-          </TableContainer>
-        )}
-
-        {!loading && transactions.length === 0 && transactionDate && (
-          <Typography
-            variant="body1"
-            color="text.secondary"
-            align="center"
-            sx={{ mt: 4 }}
-          >
-            No records found for the selected date.
-          </Typography>
-        )}
       </Box>
     </LocalizationProvider>
   );

@@ -18,19 +18,25 @@ import {
   TableRow,
   Paper,
   CircularProgress,
+  Divider,
+  TablePagination,
 } from "@mui/material";
 
 import { API_BASE } from "lib/config";
 import { getSession } from "src/utils/session";
-import { successToast, errorToast } from "toastify";
+import { errorToast } from "toastify";
 import Loans from "../Loans";
 
 const Cbledger = () => {
   const [fromDate, setFromDate] = useState("");
   const [toDate, setToDate] = useState("");
-  const [showAllData, setShowAllData] = useState(false);
+  const [collectionOnly, setCollectionOnly] = useState(false);
   const [ledgerData, setLedgerData] = useState([]);
   const [loading, setLoading] = useState(false);
+
+  // Pagination state
+  const [page, setPage] = useState(0);
+  const [rowsPerPage, setRowsPerPage] = useState(10);
 
   const fetchLedgerData = async () => {
     if (!fromDate || !toDate) {
@@ -43,77 +49,81 @@ const Cbledger = () => {
     try {
       const token = getSession()?.token || getSession("token") || "";
 
-      if (!token) {
-        errorToast("Authentication token not found. Please login again.");
-        return;
-      }
-
-      const url = showAllData
-        ? `${API_BASE}/getAllCBLedgerData/${fromDate}/${toDate}`
-        : `${API_BASE}/getCollectionsCBLedgerData/${fromDate}/${toDate}`;
+      const url = collectionOnly
+        ? `${API_BASE}/getCollectionsCBLedgerData/${fromDate}/${toDate}`
+        : `${API_BASE}/getAllCBLedgerData/${fromDate}/${toDate}`;
 
       const response = await axios.get(url, {
         headers: {
           Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json",
         },
       });
 
-      const data = response?.data || [];
-
-      if (Array.isArray(data) && data.length > 0) {
-        setLedgerData(data);
-        successToast("Ledger Data Loaded Successfully!");
-      } else {
-        setLedgerData([]);
-        successToast("No records found for the selected period");
-      }
-    } catch (error) {
-      console.error("Ledger fetch error:", error);
-      const message =
-        error.response?.data?.message ||
-        error.message ||
-        "Failed to fetch Ledger Data";
-      errorToast(message);
+      setLedgerData(response?.data || []);
+      setPage(0); // reset page
+    } catch (err) {
+      errorToast("Failed to fetch data");
       setLedgerData([]);
     } finally {
       setLoading(false);
     }
   };
 
+  // Pagination handlers
+  const handleChangePage = (event, newPage) => {
+    setPage(newPage);
+  };
+
+  const handleChangeRowsPerPage = (event) => {
+    setRowsPerPage(parseInt(event.target.value, 10));
+    setPage(0);
+  };
+
+  // Paginated Data
+  const paginatedData = ledgerData.slice(
+    page * rowsPerPage,
+    page * rowsPerPage + rowsPerPage
+  );
+
+  // Totals
+  const totals = ledgerData.reduce(
+    (acc, row) => {
+      if (collectionOnly) {
+        acc.monthly += row.monthlyFinanceCollections || 0;
+        acc.daily += row.dailyFinanceCollections || 0;
+        acc.total += row.total || 0;
+      } else {
+        acc.credit += row.credit || 0;
+        acc.debit += row.debit || 0;
+        acc.balance += row.balance || 0;
+        acc.closing += row.closingBalance || 0;
+      }
+      return acc;
+    },
+    {
+      monthly: 0,
+      daily: 0,
+      total: 0,
+      credit: 0,
+      debit: 0,
+      balance: 0,
+      closing: 0,
+    }
+  );
+
   return (
-    <Box sx={{ p: 2, position: "relative" }}>
+    <Box sx={{ p: 3 }}>
       <Loans />
 
-      {/* Loading Overlay */}
-      {loading && (
-        <Box
-          sx={{
-            position: "absolute",
-            top: 0,
-            left: 0,
-            right: 0,
-            bottom: 0,
-            bgcolor: "rgba(255, 255, 255, 0.8)",
-            display: "flex",
-            justifyContent: "center",
-            alignItems: "center",
-            zIndex: 9999,
-            borderRadius: 3,
-          }}
-        >
-          <CircularProgress size={60} thickness={4} />
-        </Box>
-      )}
-
-      <Card sx={{ mt: 3, borderRadius: 3, boxShadow: 4 }}>
+      <Card sx={{ mt: 3, borderRadius: 4, boxShadow: 6 }}>
         <CardContent>
-          <Typography variant="h5" fontWeight="bold" gutterBottom>
+          <Typography variant="h5" fontWeight="bold" mb={2}>
             CB Ledger Report
           </Typography>
 
-          <Grid container spacing={2} alignItems="center">
-            <Grid item xs={12} sm={6} md={3}>
+          {/* Filters */}
+          <Grid container spacing={2}>
+            <Grid item xs={12} md={3}>
               <TextField
                 fullWidth
                 label="From Date"
@@ -121,11 +131,10 @@ const Cbledger = () => {
                 value={fromDate}
                 onChange={(e) => setFromDate(e.target.value)}
                 InputLabelProps={{ shrink: true }}
-                inputProps={{ max: toDate || new Date().toISOString().split("T")[0] }}
               />
             </Grid>
 
-            <Grid item xs={12} sm={6} md={3}>
+            <Grid item xs={12} md={3}>
               <TextField
                 fullWidth
                 label="To Date"
@@ -133,127 +142,182 @@ const Cbledger = () => {
                 value={toDate}
                 onChange={(e) => setToDate(e.target.value)}
                 InputLabelProps={{ shrink: true }}
-                inputProps={{ min: fromDate }}
               />
             </Grid>
 
-            <Grid item xs={12} sm={6} md={3}>
+            <Grid item xs={12} md={3}>
               <FormControlLabel
                 control={
                   <Checkbox
-                    checked={showAllData}
-                    onChange={(e) => setShowAllData(e.target.checked)}
-                    color="primary"
+                    checked={collectionOnly}
+                    onChange={(e) => setCollectionOnly(e.target.checked)}
                   />
                 }
-                label="Show All Data (Collections + Others)"
+                label="Collection Only"
               />
             </Grid>
 
-            <Grid item xs={12} sm={6} md={3}>
+            <Grid item xs={12} md={3}>
               <Button
                 fullWidth
                 variant="contained"
-                color="primary"
                 onClick={fetchLedgerData}
-                disabled={loading || !fromDate || !toDate}
+                disabled={loading}
                 sx={{ height: "56px", fontWeight: "bold" }}
               >
-                {loading ? <CircularProgress size={24} color="inherit" /> : "Fetch Ledger"}
+                {loading ? <CircularProgress size={24} /> : "Fetch"}
               </Button>
             </Grid>
           </Grid>
 
-          {/* Results Table */}
-          <Box sx={{ mt: 4 }}>
-            <Typography variant="h6" fontWeight="bold" gutterBottom>
-              Ledger Summary
-              {ledgerData.length > 0 && ` (${ledgerData.length})`}
-            </Typography>
+          <Divider sx={{ my: 3 }} />
 
-            <TableContainer
-              component={Paper}
-              sx={{ borderRadius: 2, overflow: "auto", maxHeight: 500 }}
-            >
-              <Table stickyHeader>
-                <TableHead>
-                  <TableRow sx={{ backgroundColor: "#1976d2" }}>
-                    <TableCell sx={{ color: "black", fontWeight: "bold" }}>
-                      S.No
-                    </TableCell>
-                    <TableCell sx={{ color: "black", fontWeight: "bold" }}>
-                      Date
-                    </TableCell>
+          {/* Table */}
+          <TableContainer
+            component={Paper}
+            sx={{
+              maxHeight: 450,
+              overflow: "auto",
+              borderRadius: 3,
+            }}
+          >
+            <Table stickyHeader>
+              <TableHead>
+                <TableRow>
+                  {["S.No", "Date"].map((h) => (
                     <TableCell
-                      align="right"
-                      sx={{ color: "black", fontWeight: "bold" }}
+                      key={h}
+                      sx={{
+                        backgroundColor: "#1976d2",
+                        color: "#fff",
+                        fontWeight: "bold",
+                        position: "sticky",
+                        top: 0,
+                        zIndex: 2,
+                      }}
                     >
-                      Monthly Collections
+                      {h}
                     </TableCell>
-                    <TableCell
-                      align="right"
-                      sx={{ color: "black", fontWeight: "bold" }}
-                    >
-                      Daily Collections
-                    </TableCell>
-                    <TableCell
-                      align="right"
-                      sx={{ color: "black", fontWeight: "bold" }}
-                    >
-                      Total
-                    </TableCell>
-                  </TableRow>
-                </TableHead>
+                  ))}
 
-                <TableBody>
-                  {loading ? (
-                    <TableRow>
-                      <TableCell colSpan={5} align="center" sx={{ py: 4 }}>
-                        <CircularProgress />
+                  {collectionOnly ? (
+                    ["Monthly", "Daily", "Total"].map((h) => (
+                      <TableCell
+                        key={h}
+                        align="right"
+                        sx={{
+                          backgroundColor: "#1976d2",
+                          color: "#fff",
+                          fontWeight: "bold",
+                          position: "sticky",
+                          top: 0,
+                          zIndex: 2,
+                        }}
+                      >
+                        {h}
                       </TableCell>
-                    </TableRow>
-                  ) : ledgerData.length > 0 ? (
-                    ledgerData.map((row, index) => (
-                      <TableRow key={index} hover>
-                        <TableCell>{row.sno ?? index + 1}</TableCell>
-                        <TableCell>{row.date || "-"}</TableCell>
-                        <TableCell align="right">
-                          {row.monthlyFinanceCollections != null
-                            ? Number(row.monthlyFinanceCollections).toLocaleString("en-IN", {
-                                minimumFractionDigits: 2,
-                                maximumFractionDigits: 2,
-                              })
-                            : "-"}
-                        </TableCell>
-                        <TableCell align="right">
-                          {row.dailyFinanceCollections != null
-                            ? Number(row.dailyFinanceCollections).toLocaleString("en-IN", {
-                                minimumFractionDigits: 2,
-                                maximumFractionDigits: 2,
-                              })
-                            : "-"}
-                        </TableCell>
-                        <TableCell align="right" sx={{ fontWeight: "medium" }}>
-                          {row.total != null
-                            ? Number(row.total).toLocaleString("en-IN", {
-                                minimumFractionDigits: 2,
-                                maximumFractionDigits: 2,
-                              })
-                            : "-"}
-                        </TableCell>
-                      </TableRow>
                     ))
                   ) : (
-                    <TableRow>
-                      <TableCell colSpan={5} align="center" sx={{ py: 4 }}>
-                        No data available for selected period
+                    ["Credit", "Debit", "Balance", "Closing"].map((h) => (
+                      <TableCell
+                        key={h}
+                        align="right"
+                        sx={{
+                          backgroundColor: "#1976d2",
+                          color: "#fff",
+                          fontWeight: "bold",
+                          position: "sticky",
+                          top: 0,
+                          zIndex: 2,
+                        }}
+                      >
+                        {h}
                       </TableCell>
-                    </TableRow>
+                    ))
                   )}
-                </TableBody>
-              </Table>
-            </TableContainer>
-          </Box>
+                </TableRow>
+              </TableHead>
+
+              <TableBody>
+                {loading ? (
+                  <TableRow>
+                    <TableCell colSpan={6} align="center">
+                      <CircularProgress />
+                    </TableCell>
+                  </TableRow>
+                ) : paginatedData.length > 0 ? (
+                  <>
+                    {paginatedData.map((row, i) => (
+                      <TableRow key={i} hover>
+                        <TableCell>{page * rowsPerPage + i + 1}</TableCell>
+                        <TableCell>{row.date}</TableCell>
+
+                        {collectionOnly ? (
+                          <>
+                            <TableCell align="right">
+                              {row.monthlyFinanceCollections}
+                            </TableCell>
+                            <TableCell align="right">
+                              {row.dailyFinanceCollections}
+                            </TableCell>
+                            <TableCell align="right">{row.total}</TableCell>
+                          </>
+                        ) : (
+                          <>
+                            <TableCell align="right">{row.credit}</TableCell>
+                            <TableCell align="right">{row.debit}</TableCell>
+                            <TableCell align="right">{row.balance}</TableCell>
+                            <TableCell align="right">
+                              {row.closingBalance}
+                            </TableCell>
+                          </>
+                        )}
+                      </TableRow>
+                    ))}
+
+                    {/* Totals Row */}
+                    <TableRow sx={{ backgroundColor: "#f5f5f5" }}>
+                      <TableCell colSpan={2} sx={{ fontWeight: "bold" }}>
+                        Total
+                      </TableCell>
+
+                      {collectionOnly ? (
+                        <>
+                          <TableCell align="right">{totals.monthly}</TableCell>
+                          <TableCell align="right">{totals.daily}</TableCell>
+                          <TableCell align="right">{totals.total}</TableCell>
+                        </>
+                      ) : (
+                        <>
+                          <TableCell align="right">{totals.credit}</TableCell>
+                          <TableCell align="right">{totals.debit}</TableCell>
+                          <TableCell align="right">{totals.balance}</TableCell>
+                          <TableCell align="right">{totals.closing}</TableCell>
+                        </>
+                      )}
+                    </TableRow>
+                  </>
+                ) : (
+                  <TableRow>
+                    <TableCell colSpan={6} align="center">
+                      No Data Available
+                    </TableCell>
+                  </TableRow>
+                )}
+              </TableBody>
+            </Table>
+          </TableContainer>
+
+          {/* Pagination */}
+          <TablePagination
+            component="div"
+            count={ledgerData.length}
+            page={page}
+            onPageChange={handleChangePage}
+            rowsPerPage={rowsPerPage}
+            onRowsPerPageChange={handleChangeRowsPerPage}
+            rowsPerPageOptions={[5, 10, 25, 50]}
+          />
         </CardContent>
       </Card>
     </Box>

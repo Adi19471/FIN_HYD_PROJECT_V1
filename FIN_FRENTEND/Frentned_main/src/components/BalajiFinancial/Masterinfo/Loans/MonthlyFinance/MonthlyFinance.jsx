@@ -35,6 +35,7 @@ import dayjs from "dayjs";
 
 const FIXED_DURATION_MONTHS = 10;
 const TOTAL_INSTALLMENTS = FIXED_DURATION_MONTHS;
+const BASE_PROCESSING_FEE = 200;
 
 const MonthlyFinance = () => {
   const [rows, setRows] = useState([]);
@@ -44,18 +45,19 @@ const MonthlyFinance = () => {
   const [currentLoanId, setCurrentLoanId] = useState(null);
 
   const [formData, setFormData] = useState({
+    id: null,
     customerId: null,
     guarantor1: null,
     guarantor2: null,
     guarantor3: null,
-    partnerId: "",
+    partnerId: null,
     startDate: dayjs(),
     endDate: dayjs().add(FIXED_DURATION_MONTHS, "month"),
     amount: "",
     interestRate: "",
     interestAmount: "",
     installment: "",
-    processingFee: "",
+    processingFee: BASE_PROCESSING_FEE,
     security: "",
     duration: FIXED_DURATION_MONTHS,
   });
@@ -125,7 +127,9 @@ const MonthlyFinance = () => {
         g3Name: loan.guarantor3
           ? memberMap[loan.guarantor3] || `G3: ${loan.guarantor3}`
           : "-",
-        partnerId: loan.partnerId || "-",
+        partnerId: loan.partnerId
+          ? memberMap[loan.partnerId] || `G4: ${loan.partnerId}`
+          : "-",
       }));
 
       setRows(enriched);
@@ -172,6 +176,26 @@ const MonthlyFinance = () => {
 
   }, [formData.amount, formData.interestRate]);
 
+
+
+  useEffect(() => {
+    const amount = Number(formData.amount);
+    const rate = Number(formData.interestRate);
+    let extraFee = 0;
+    if (amount > 20000) {
+      extraFee = Math.ceil((amount - 20000) / 10000) * 100;
+    }
+    const finalProcessingFee = BASE_PROCESSING_FEE + extraFee;
+
+    setFormData(prev => ({
+      ...prev,
+      processingFee: finalProcessingFee
+    }));
+
+  }, [formData.amount]);
+
+
+
   const searchMembers = useCallback(
     async (query) => {
       if (!query || query.trim().length < 2) {
@@ -202,17 +226,18 @@ const MonthlyFinance = () => {
 
   const resetForm = () => {
     setFormData({
+      id: null,
       customerId: null,
       guarantor1: null,
       guarantor2: null,
       guarantor3: null,
-      partnerId: "",
+      partnerId: null,
       startDate: dayjs(),
       endDate: dayjs().add(FIXED_DURATION_MONTHS, "month"),
       amount: "",
       interestRate: "",
       installment: "",
-      processingFee: "",
+      processingFee: BASE_PROCESSING_FEE,
       security: "",
     });
     setIsEditMode(false);
@@ -251,12 +276,13 @@ const MonthlyFinance = () => {
       }
 
       setFormData({
+        id: l.id,
         customerId: map[l.customerId] || null,
         guarantor1: map[l.guarantor1] || null,
         guarantor2: map[l.guarantor2] || null,
         guarantor3: map[l.guarantor3] || null,
 
-        partnerId: l.partnerId || "",
+        partnerId: map[l.partnerId] || null,
 
         startDate: l.startDate ? dayjs(l.startDate) : null,
         endDate: l.endDate ? dayjs(l.endDate) : null,
@@ -283,28 +309,18 @@ const MonthlyFinance = () => {
     }
   };
 
-  const handleDelete = async (id) => {
-    if (!window.confirm("Delete this loan permanently?")) return;
-    try {
-      await axios.delete(`${API_BASE}/BusinessMember/delete/${id}`, {
-        headers,
-      });
-      successToast("Loan deleted!");
-      fetchData();
-    } catch (err) {
-      errorToast("Delete failed");
-    }
-  };
+
 
   const handleSave = async () => {
     if (!formData.customerId?.id) return errorToast("Customer is required");
 
     const payload = {
+      id: formData.id,
       customerId: formData.customerId.id,
       guarantor1: formData.guarantor1?.id || "",
       guarantor2: formData.guarantor2?.id || "",
       guarantor3: formData.guarantor3?.id || "",
-      partnerId: formData.partnerId,
+      partnerId: formData.partnerId?.id || "",
       startDate: formData.startDate.format("YYYY-MM-DD HH:mm:ss"),
       endDate: formData.endDate.format("YYYY-MM-DD HH:mm:ss"),
       amount: Number(formData.amount),
@@ -360,13 +376,7 @@ const MonthlyFinance = () => {
           >
             <EditIcon fontSize="small" />
           </IconButton>
-          <IconButton
-            size="small"
-            color="error"
-            onClick={() => handleDelete(params.row.id)}
-          >
-            <DeleteIcon fontSize="small" />
-          </IconButton>
+
         </Box>
       ),
     },
@@ -542,39 +552,39 @@ const MonthlyFinance = () => {
           </Box>
 
           <Grid container spacing={3} sx={{ mt: 1 }}>
-           
 
-           <Grid item xs={12} sm={6}>
-  <TextField
-    fullWidth
-    label="Loan Amount *"
-    type="number"
-    variant="outlined"
-    value={formData.amount}
-    inputProps={{ min: 0 }}
-    onChange={(e) => {
-      const value = e.target.value;
-      if (value >= 0) {
-        setFormData((p) => ({ ...p, amount: value }));
-      }
-    }}
-  />
-</Grid>
 
-          
-          <Grid item xs={12} sm={6}>
-  <TextField
-    fullWidth
-    label="Interest %"
-    type="number"
-    variant="outlined"
-    value={formData.interestRate || 3}
-    inputProps={{ min: 0, max: 100, step: 0.1 }}
-    onChange={(e) =>
-      setFormData((p) => ({ ...p, interestRate: e.target.value }))
-    }
-  />
-</Grid>
+            <Grid item xs={12} sm={6}>
+              <TextField
+                fullWidth
+                label="Loan Amount *"
+                type="number"
+                variant="outlined"
+                value={formData.amount}
+                inputProps={{ min: 0 }}
+                onChange={(e) => {
+                  const value = e.target.value;
+                  if (value >= 0) {
+                    setFormData((p) => ({ ...p, amount: value }));
+                  }
+                }}
+              />
+            </Grid>
+
+
+            <Grid item xs={12} sm={6}>
+              <TextField
+                fullWidth
+                label="Interest %"
+                type="number"
+                variant="outlined"
+                value={formData.interestRate || 3}
+                inputProps={{ min: 0, max: 100, step: 0.1 }}
+                onChange={(e) =>
+                  setFormData((p) => ({ ...p, interestRate: e.target.value }))
+                }
+              />
+            </Grid>
             <Grid item xs={12} sm={6}>
               <TextField
                 fullWidth
@@ -670,16 +680,26 @@ const MonthlyFinance = () => {
             ))}
           </Grid>
 
-          <TextField
-            fullWidth
-            label="Partner / Agent"
-            variant="outlined"
-            value={formData.partnerId}
-            onChange={(e) =>
-              setFormData((p) => ({ ...p, partnerId: e.target.value }))
-            }
-            sx={{ mt: 3 }}
-          />
+          {/* PARTNER */}
+          <Grid container spacing={2} sx={{ mt: 1 }}>
+            <Grid item xs={12} md={6}>
+              <Autocomplete
+                fullWidth
+                sx={{ width: "230px" }}
+                options={options}
+                loading={loadingSearch}
+                value={formData.partnerId}
+                onInputChange={(e, v) => searchMembers(v)}
+                onChange={(e, v) =>
+                  setFormData((p) => ({ ...p, partnerId: v }))
+                }
+                getOptionLabel={(o) => o?.label || ""}
+                renderInput={(params) => (
+                  <TextField {...params} label="Partner / Agent *" fullWidth />
+                )}
+              />
+            </Grid>
+          </Grid>
         </DialogContent>
 
         <DialogActions sx={{ p: 3, bgcolor: "#f1f5f9" }}>

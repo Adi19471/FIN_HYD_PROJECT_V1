@@ -24,6 +24,7 @@ public class BusinessMemberController {
 	@Autowired
 	private BusinessMemberService businessMemberService;
 
+
 	@PostMapping("/update/{loanType}")
 	public ResponseEntity<String> update(@RequestBody BusinessMemberDto businessMemberDto,
 			@PathVariable String loanType) {

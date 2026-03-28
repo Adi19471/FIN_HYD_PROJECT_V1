@@ -9,6 +9,7 @@ public class CashBookSumaryViewPojo {
 	private String name;
 	private String transactionType;
 	private String particulars;
+	private String accountMastercode;
 	private BigDecimal credit;
 	private BigDecimal debit;
 	private String user;
@@ -77,4 +78,13 @@ public class CashBookSumaryViewPojo {
 		this.user = user;
 	}
 
+	public String getAccountMastercode() {
+		return accountMastercode;
+	}
+
+	public void setAccountMastercode(String accountMastercode) {
+		this.accountMastercode = accountMastercode;
+	}
+
+	
 }

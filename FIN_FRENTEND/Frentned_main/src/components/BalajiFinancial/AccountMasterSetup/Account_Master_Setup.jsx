@@ -10,35 +10,35 @@ import {
   DialogActions,
   Typography,
   Paper,
-  Tooltip,
-  Grid,
-  MenuItem,
   CircularProgress,
+  MenuItem,
   Select,
   Checkbox,
   Chip,
   InputLabel,
   FormControl,
-  FormControlLabel,
   Switch,
   Divider,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
+  TablePagination,
 } from "@mui/material";
 
 import {
   Add as AddIcon,
   Edit as EditIcon,
-  Delete as DeleteIcon,
   Save as SaveIcon,
   Close as CloseIcon,
-  AccountTree as AccountTreeIcon,
   Visibility,
   VisibilityOff,
 } from "@mui/icons-material";
 
-import { DataGrid, GridToolbar } from "@mui/x-data-grid";
 import axios from "axios";
 import { toast } from "react-toastify";
-
 import { API_BASE } from "lib/config";
 import { getSession } from "src/utils/session";
 
@@ -48,6 +48,12 @@ const TRANS_TYPES = ["CREDIT", "DEBIT"];
 const AccountMasterSetup = () => {
   const [accounts, setAccounts] = useState([]);
   const [loading, setLoading] = useState(false);
+
+  const [search, setSearch] = useState(""); // ✅ FIXED
+
+  const [page, setPage] = useState(0);
+  const rowsPerPage = 20;
+
   const [dialogOpen, setDialogOpen] = useState(false);
   const [isEdit, setIsEdit] = useState(false);
 
@@ -64,7 +70,7 @@ const AccountMasterSetup = () => {
 
   const getHeaders = () => ({
     headers: {
-      Authorization: `Bearer ${getSession()?.token || getSession("token") || ""}`,
+      Authorization: `Bearer ${getSession()?.token || ""}`,
       "Content-Type": "application/json",
     },
   });
@@ -72,10 +78,13 @@ const AccountMasterSetup = () => {
   const fetchData = async () => {
     setLoading(true);
     try {
-      const res = await axios.get(`${API_BASE}/account-master-setup/findAll`, getHeaders());
+      const res = await axios.get(
+        `${API_BASE}/account-master-setup/findAll`,
+        getHeaders()
+      );
       setAccounts(res.data || []);
-    } catch (err) {
-      toast.error("Failed to load account masters");
+    } catch {
+      toast.error("Failed to load data");
     } finally {
       setLoading(false);
     }
@@ -85,13 +94,31 @@ const AccountMasterSetup = () => {
     fetchData();
   }, []);
 
+  // ✅ RESET PAGE ON SEARCH
+  useEffect(() => {
+    setPage(0);
+  }, [search]);
+
+  // ✅ FILTERED DATA
+  const filteredAccounts = accounts.filter((row) => {
+    const s = search.toLowerCase().trim();
+
+    return (
+      row.type?.toLowerCase().includes(s) ||
+      row.masterCode?.toLowerCase().includes(s) ||
+      row.code?.toLowerCase().includes(s) ||
+      row.personType?.toLowerCase().includes(s) ||
+      row.transType?.toLowerCase().includes(s)
+    );
+  });
+
   const handleOpen = (row = null) => {
     if (row) {
       setIsEdit(true);
       setForm({
         ...row,
-        personType: row.personType ? row.personType.split(",").map((v) => v.trim()) : [],
-        transType: row.transType ? row.transType.split(",").map((v) => v.trim()) : [],
+        personType: row.personType ? row.personType.split(",") : [],
+        transType: row.transType ? row.transType.split(",") : [],
       });
     } else {
       setIsEdit(false);
@@ -106,191 +133,171 @@ const AccountMasterSetup = () => {
         transType: [],
       });
     }
+
     setDialogOpen(true);
   };
 
-  const handleClose = () => {
-    setDialogOpen(false);
-  };
-
-  const handleChange = (e) => {
-    const { name, value } = e.target;
-    setForm((prev) => ({ ...prev, [name]: value }));
-  };
+  const handleClose = () => setDialogOpen(false);
 
   const handleSubmit = async () => {
-    if (!form.type.trim() || !form.masterCode.trim() || !form.code.trim()) {
-      toast.warn("Type, Master Code and Code are required fields");
-      return;
-    }
-
     const payload = {
       ...form,
       personType: form.personType.join(","),
       transType: form.transType.join(","),
     };
 
-    try {
-      const url = isEdit
-        ? "/account-master-setup/UpdateAccountMaster"
-        : "/account-master-setup/saveAccountMaster";
+    const url = isEdit
+      ? "/account-master-setup/UpdateAccountMaster"
+      : "/account-master-setup/saveAccountMaster";
 
+    try {
       await axios.post(`${API_BASE}${url}`, payload, getHeaders());
-      toast.success(isEdit ? "Updated successfully" : "Created successfully");
+      toast.success(isEdit ? "Updated successfully" : "Saved successfully");
       handleClose();
       fetchData();
-    } catch (err) {
-      toast.error(err?.response?.data?.message || "Save failed");
+    } catch {
+      toast.error("Error saving data");
     }
   };
-
-  const handleDelete = async (id) => {
-    if (!window.confirm("Are you sure you want to delete this record?")) return;
-    try {
-      await axios.get(`${API_BASE}/account-master-setup/deleteAccountMasterById/${id}`, getHeaders());
-      toast.success("Deleted successfully");
-      fetchData();
-    } catch (err) {
-      toast.error("Delete failed");
-    }
-  };
-
-  const columns = [
-    { field: "id", headerName: "ID", width: 70, align: "center", headerAlign: "center" },
-    { field: "type", headerName: "Type", flex: 1, minWidth: 130 },
-    { field: "masterCode", headerName: "Master Code", width: 140 },
-    { field: "code", headerName: "Code", width: 110 },
-    {
-      field: "personType",
-      headerName: "Person Type",
-      width: 240,
-      renderCell: (params) => (
-        <Box sx={{ display: "flex", gap: 0.5, flexWrap: "wrap" }}>
-          {params.value?.split(",").map((pt, i) =>
-            pt.trim() && <Chip key={i} label={pt.trim()} size="small" color="primary" variant="outlined" />
-          )}
-        </Box>
-      ),
-    },
-    {
-      field: "transType",
-      headerName: "Transaction",
-      width: 160,
-      renderCell: (params) => (
-        <Box sx={{ display: "flex", gap: 0.5, flexWrap: "wrap" }}>
-          {params.value?.split(",").map((tt, i) =>
-            tt.trim() && (
-              <Chip
-                key={i}
-                label={tt.trim()}
-                size="small"
-                color={tt.trim() === "CREDIT" ? "success" : "error"}
-              />
-            )
-          )}
-        </Box>
-      ),
-    },
-    {
-      field: "visibility",
-      headerName: "Visible",
-      width: 90,
-      align: "center",
-      headerAlign: "center",
-      renderCell: ({ value }) =>
-        value ? <Visibility color="success" /> : <VisibilityOff color="disabled" />,
-    },
-    {
-      field: "actions",
-      headerName: "Actions",
-      width: 110,
-      sortable: false,
-      renderCell: ({ row }) => (
-        <Box>
-          <Tooltip title="Edit">
-            <IconButton onClick={() => handleOpen(row)} color="primary" size="small">
-              <EditIcon fontSize="small" />
-            </IconButton>
-          </Tooltip>
-          <Tooltip title="Delete">
-            <IconButton onClick={() => handleDelete(row.id)} color="error" size="small">
-              <DeleteIcon fontSize="small" />
-            </IconButton>
-          </Tooltip>
-        </Box>
-      ),
-    },
-  ];
 
   return (
-    <Box sx={{ p: { xs: 2, md: 3 } }}>
-      <Paper sx={{ p: 2, mb: 3, borderRadius: 2, boxShadow: 1 }}>
-        <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 2 }}>
-          <Box sx={{ display: "flex", alignItems: "center", gap: 1.5 }}>
-            <AccountTreeIcon color="primary" sx={{ fontSize: 32 }} />
-            <Typography variant="h5" fontWeight={600}>
-              Account Master Setup
-            </Typography>
-          </Box>
+    <Box p={3}>
+      {/* HEADER */}
+      <Paper sx={{ p: 2, mb: 2 }}>
+        <Box display="flex" justifyContent="space-between">
+          <Typography variant="h5">Account Master Setup</Typography>
           <Button
             variant="contained"
             startIcon={<AddIcon />}
             onClick={() => handleOpen()}
-            sx={{ borderRadius: 2, textTransform: "none" }}
           >
-            Add New
+            Add
           </Button>
         </Box>
       </Paper>
 
-      <Paper sx={{ height: 620, borderRadius: 2, overflow: "hidden", boxShadow: 1 }}>
+      {/* TABLE */}
+      <Paper>
         {loading ? (
-          <Box sx={{ height: "100%", display: "flex", alignItems: "center", justifyContent: "center" }}>
+          <Box p={5} textAlign="center">
             <CircularProgress />
           </Box>
         ) : (
-          <DataGrid
-            rows={accounts}
-            columns={columns}
-            getRowId={(row) => row.id}
-            slots={{ toolbar: GridToolbar }}
-            slotProps={{
-              toolbar: { showQuickFilter: true, quickFilterProps: { debounceMs: 500 } },
-            }}
-            pageSizeOptions={[10, 25, 50]}
-            sx={{
-              border: "none",
-              "& .MuiDataGrid-columnHeaders": {
-                backgroundColor: "primary.main",
-                color: "white",           // Changed to white for better contrast
-                fontWeight: 600,
-              },
-              "& .MuiDataGrid-cell": { borderBottom: "1px solid #eee" },
-            }}
-          />
+          <>
+            {/* SEARCH */}
+            <Box sx={{ p: 2 }}>
+              <TextField
+                fullWidth
+                placeholder="Search..."
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                size="small"
+              />
+            </Box>
+
+            <TableContainer sx={{ maxHeight: 500 }}>
+              <Table stickyHeader>
+                <TableHead>
+                  <TableRow>
+                    {[
+                      "ID",
+                      "Type",
+                      "Master Code",
+                      "Code",
+                      "Person Type",
+                      "Transaction",
+                      "Visible",
+                      "Actions",
+                    ].map((h) => (
+                      <TableCell
+                        key={h}
+                        sx={{
+                          backgroundColor: "#1976d2",
+                          color: "#fff",
+                          fontWeight: "bold",
+                        }}
+                      >
+                        {h}
+                      </TableCell>
+                    ))}
+                  </TableRow>
+                </TableHead>
+
+                <TableBody>
+                  {filteredAccounts
+                    .slice(
+                      page * rowsPerPage,
+                      page * rowsPerPage + rowsPerPage
+                    )
+                    .map((row) => (
+                      <TableRow key={row.id} hover>
+                        <TableCell>{row.id}</TableCell>
+                        <TableCell>{row.type}</TableCell>
+                        <TableCell>{row.masterCode}</TableCell>
+                        <TableCell>{row.code}</TableCell>
+
+                        <TableCell>
+                          {row.personType?.split(",").map((p, i) => (
+                            <Chip
+                              key={i}
+                              label={p}
+                              size="small"
+                              sx={{ mr: 0.5 }}
+                            />
+                          ))}
+                        </TableCell>
+
+                        <TableCell>
+                          {row.transType?.split(",").map((t, i) => (
+                            <Chip
+                              key={i}
+                              label={t}
+                              size="small"
+                              color={t === "CREDIT" ? "success" : "error"}
+                              sx={{ mr: 0.5 }}
+                            />
+                          ))}
+                        </TableCell>
+
+                        <TableCell>
+                          {row.visibility ? (
+                            <Visibility color="success" />
+                          ) : (
+                            <VisibilityOff />
+                          )}
+                        </TableCell>
+
+                        <TableCell>
+                          <IconButton onClick={() => handleOpen(row)}>
+                            <EditIcon />
+                          </IconButton>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                </TableBody>
+              </Table>
+            </TableContainer>
+
+            {/* PAGINATION */}
+            <TablePagination
+              component="div"
+              count={filteredAccounts.length} // ✅ FIXED
+              page={page}
+              onPageChange={(e, newPage) => setPage(newPage)}
+              rowsPerPage={rowsPerPage}
+              rowsPerPageOptions={[20]}
+            />
+          </>
         )}
       </Paper>
 
-      {/* Modal Popup */}
-      <Dialog
-        open={dialogOpen}
-        onClose={handleClose}
-        maxWidth="sm"
-        fullWidth
-        PaperProps={{
-          sx: {
-            borderRadius: 0,
-            boxShadow: 2,
-          },
-        }}
-      >
-        <DialogTitle sx={{ pb: 1, display: "flex", alignItems: "center", gap: 1 }}>
-          <AccountTreeIcon color="primary" />
-          {isEdit ? "Edit Account Master" : "Create New Account Master"}
+      {/* DIALOG */}
+      <Dialog open={dialogOpen} onClose={handleClose} maxWidth="md" fullWidth>
+        <DialogTitle>
+          {isEdit ? "Edit Account Master" : "Add Account Master"}
           <IconButton
             onClick={handleClose}
-            sx={{ ml: "auto" }}
-            size="small"
+            sx={{ position: "absolute", right: 10, top: 10 }}
           >
             <CloseIcon />
           </IconButton>
@@ -298,145 +305,97 @@ const AccountMasterSetup = () => {
 
         <Divider />
 
-        <DialogContent sx={{ pt: 3 }}>
-          <Grid container spacing={2.5}>
-            <Grid item xs={12}>
-              <TextField
-                fullWidth
-                required
-                label="Type"
-                name="type"
-                value={form.type}
-                onChange={handleChange}
-                variant="outlined"
-              />
-            </Grid>
+        <DialogContent sx={{ mt: 2 }}>
+          <Box display="flex" flexDirection="column" alignItems="center" gap={2}>
+            <TextField
+              label="Type"
+              value={form.type}
+              onChange={(e) => setForm({ ...form, type: e.target.value })}
+              sx={{ width: 400 }}
+            />
 
-            <Grid item xs={12} sm={6}>
+            <Box display="flex" gap={2}>
               <TextField
-                fullWidth
-                required
                 label="Master Code"
-                name="masterCode"
                 value={form.masterCode}
-                onChange={handleChange}
-                variant="outlined"
+                onChange={(e) =>
+                  setForm({ ...form, masterCode: e.target.value })
+                }
+                sx={{ width: 190 }}
               />
-            </Grid>
-
-            <Grid item xs={12} sm={6}>
               <TextField
-                fullWidth
-                required
                 label="Code"
-                name="code"
                 value={form.code}
-                onChange={handleChange}
-                variant="outlined"
-              />
-            </Grid>
-
-            <Grid item xs={12}>
-              <TextField
-                fullWidth
-                label="Master Icon (optional)"
-                name="masterIcon"
-                value={form.masterIcon}
-                onChange={handleChange}
-                variant="outlined"
-                placeholder="e.g., AccountBalance, CreditCard, etc."
-              />
-            </Grid>
-
-            {/* Person Type - Multi Select */}
-            <Grid item xs={12}>
-              <FormControl fullWidth>
-                <InputLabel>Person Type</InputLabel>
-                <Select
-                  multiple
-                  value={form.personType}
-                  label="Person Type"
-                  sx={{width:200}}
-                  onChange={(e) => setForm((p) => ({ ...p, personType: e.target.value }))}
-                  renderValue={(selected) => (
-                    <Box sx={{ display: "flex", flexWrap: "wrap", gap: 0.5 }}>
-                      {selected.map((value) => (
-                        <Chip key={value} label={value} size="small" color="primary" />
-                      ))}
-                    </Box>
-                  )}
-                >
-                  {PERSON_TYPES.map((type) => (
-                    <MenuItem key={type} value={type}>
-                      <Checkbox checked={form.personType.includes(type)} />
-                      {type}
-                    </MenuItem>
-                  ))}
-                </Select>
-              </FormControl>
-            </Grid>
-
-            {/* Transaction Type - Multi Select */}
-            <Grid item xs={12}>
-              <FormControl fullWidth>
-                <InputLabel>Transaction Type</InputLabel>
-                <Select
-                  multiple
-                  value={form.transType}
-                  label="Transaction Type"    sx={{width:200}}
-                  onChange={(e) => setForm((p) => ({ ...p, transType: e.target.value }))}
-                  renderValue={(selected) => (
-                    <Box sx={{ display: "flex", flexWrap: "wrap", gap: 0.5 }}>
-                      {selected.map((value) => (
-                        <Chip
-                          key={value}
-                          label={value}
-                          size="small"
-                          color={value === "CREDIT" ? "success" : "error"}
-                        />
-                      ))}
-                    </Box>
-                  )}
-                >
-                  {TRANS_TYPES.map((type) => (
-                    <MenuItem key={type} value={type}>
-                      <Checkbox checked={form.transType.includes(type)} />
-                      {type}
-                    </MenuItem>
-                  ))}
-                </Select>
-              </FormControl>
-            </Grid>
-
-            <Grid item xs={12}>
-              <FormControlLabel
-                control={
-                  <Switch
-                    checked={form.visibility}
-                    onChange={(e) => setForm((p) => ({ ...p, visibility: e.target.checked }))}
-                    color="success"
-                  />
+                onChange={(e) =>
+                  setForm({ ...form, code: e.target.value })
                 }
-                label={
-                  <Typography variant="body1">
-                    {form.visibility ? "Visible in lists" : "Hidden from lists"}
-                  </Typography>
+                sx={{ width: 190 }}
+              />
+            </Box>
+
+            <FormControl sx={{ width: 400 }}>
+              <InputLabel>Person Type</InputLabel>
+              <Select
+                multiple
+                value={form.personType}
+                label="Person Type"
+                onChange={(e) =>
+                  setForm({ ...form, personType: e.target.value })
+                }
+                renderValue={(selected) => selected.join(", ")}
+              >
+                {PERSON_TYPES.map((type) => (
+                  <MenuItem key={type} value={type}>
+                    <Checkbox checked={form.personType.includes(type)} />
+                    {type}
+                  </MenuItem>
+                ))}
+              </Select>
+            </FormControl>
+
+            <FormControl sx={{ width: 400 }}>
+              <InputLabel>Transaction Type</InputLabel>
+              <Select
+                multiple
+                value={form.transType}
+                label="Transaction Type"
+                onChange={(e) =>
+                  setForm({ ...form, transType: e.target.value })
+                }
+                renderValue={(selected) => selected.join(", ")}
+              >
+                {TRANS_TYPES.map((type) => (
+                  <MenuItem key={type} value={type}>
+                    <Checkbox checked={form.transType.includes(type)} />
+                    {type}
+                  </MenuItem>
+                ))}
+              </Select>
+            </FormControl>
+
+            <Box
+              sx={{
+                width: 400,
+                display: "flex",
+                justifyContent: "space-between",
+              }}
+            >
+              <Typography>
+                {form.visibility ? "Visible" : "Hidden"}
+              </Typography>
+              <Switch
+                checked={form.visibility}
+                onChange={(e) =>
+                  setForm({ ...form, visibility: e.target.checked })
                 }
               />
-            </Grid>
-          </Grid>
+            </Box>
+          </Box>
         </DialogContent>
 
-        <DialogActions sx={{ p: 3, pt: 1 }}>
-          <Button variant="outlined" onClick={handleClose} sx={{ px: 4 }}>
-            Cancel
-          </Button>
-          <Button
-            variant="contained"
-            startIcon={<SaveIcon />}
-            onClick={handleSubmit}
-            sx={{ px: 4 }}
-          >
+        <DialogActions sx={{ justifyContent: "center" }}>
+          <Button variant="contained"  onClick={handleClose}>Cancel</Button>
+          <Button variant="contained" onClick={handleSubmit}>
             {isEdit ? "Update" : "Save"}
           </Button>
         </DialogActions>

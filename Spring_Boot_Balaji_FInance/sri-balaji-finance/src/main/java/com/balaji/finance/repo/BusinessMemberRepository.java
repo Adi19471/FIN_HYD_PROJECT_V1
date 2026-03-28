@@ -36,14 +36,21 @@ public interface BusinessMemberRepository extends JpaRepository<BusinessMember, 
 	List<BusinessMember> findAllByLoanType(@Param("starWithString") String starWithString);
 
 	@Query("""
-			    SELECT u FROM BusinessMember u
+			        SELECT u FROM BusinessMember u
 			    WHERE
-			          (u.customerId.personalInfoId LIKE CONCAT('%', :keyword, '%')
-			            OR u.customerId.firstName LIKE CONCAT('%', :keyword, '%')
-			            OR u.customerId.lastName  LIKE CONCAT('%', :keyword, '%'))
+			        u.businessMemberId LIKE CONCAT('%', :keyword, '%')
 			""")
 	List<BusinessMember> allbusinessMemberAutoComplete(@Param("keyword") String keyword);
 
+	@Query("""
+	        SELECT u.businessMemberId FROM BusinessMember u
+	    WHERE
+	        u.businessMemberId LIKE CONCAT('%', :keyword, '%')
+	""")
+	List<String> allLoanIdsAutoComplete(@Param("keyword") String keyword);
+
+	
+	
 	@Query("""
 			SELECT c
 			FROM BusinessMember c
@@ -71,7 +78,7 @@ public interface BusinessMemberRepository extends JpaRepository<BusinessMember, 
 			@Param("fromDate") LocalDateTime fromDate, @Param("toDate") LocalDateTime toDate);
 
 	@Query("""
-		   SELECT
+			  SELECT
 			    loanType as loanType,
 			    SUM(amount) AS loansDisbursed,
 			    SUM(interest) AS interestReceivable
