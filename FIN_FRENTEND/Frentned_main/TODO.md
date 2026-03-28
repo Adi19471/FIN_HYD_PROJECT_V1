@@ -1,15 +1,13 @@
-# TODO: Improve Dashboard UI ✅
+# Task: Fix missing src/utils/toast import in BalanceSheet.jsx
 
-## Previous Tasks
-- [x] Modal in Registraion_creation.jsx
-- [x] Read charts
+## Steps:
 
-**Dashboard Enhanced:**
-- [x] Imports: LineChart01, DoughnutChart, DataTable, icons
-- [x] Uncommented charts: LineChart01 (collection), DoughnutChart (status)
-- [x] Added welcome header (greeting, overview)
-- [x] Recent transactions DataTable (mock data)
-- [x] Enhanced stats: Added Loans, Maturity
-- [x] Full layout: Quick actions → Stats → Charts → Table → Summary
+- ✅ 1. Created `src/utils/toast.js` re-exporting `{ errorToast, successToast, confirmToast }` from `../../toastify.js`
 
-Ready for `npm run dev` test.
+- ⏳ 2. Verify resolution: Restart Vite dev server (`npm run dev`) and confirm no more import error in BalanceSheet.jsx
+
+- ⏳ 3. Test errorToast: Load BalanceSheet without login or trigger API error to see toast
+
+- ⏳ 4. Scan for other missing toast imports if any
+
+- ⏳ 5. Complete

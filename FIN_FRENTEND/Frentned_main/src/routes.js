@@ -143,6 +143,12 @@ const Maturity = lazy (()  => import("./components/BalajiFinancial/Loans/Maturit
 ;
 
 
+// Bussines Code data 
+
+const RevenueExpenseStatment  = lazy(() =>import("./components/BalajiFinancial/Business/RevenueExpenseStatment"))
+const BalanceSheetimport  = lazy(() =>import("./components/BalajiFinancial/Business/BalanceSheet"))
+const BussinessOverviewimport =lazy(() =>import("./components/BalajiFinancial/Business/BussinessOverview"))
+const BussinessCollectionReportsimport =lazy(() =>import('./components/BalajiFinancial/Business/BussinessCollectionReports'))
 
 
 const routes = [
@@ -160,7 +166,7 @@ const routes = [
   { path: "/partner", element: Partner, exact: true },
   { path: "/vendor", element: Vender, exact: true },
 
-  // ⭐ Added Path Param Here
+  // â­ Added Path Param Here
   { path: "/Loan", element: LoanMainPage },
 
   { path: "/Monthly-Finance", element: MonthlyFinance },
@@ -196,6 +202,14 @@ const routes = [
   // Account Master Setup
   { path: "/AccountMasterSetup/Account_Master_Setup", element: Account_Master_Setup },
   { path: "/AccountMasterSetup/Registraion_creation", element: Registraion_creation },
+
+
+  // Bussiness views
+   { path: "/Bussiness/RevenueExpenseStatment", element: RevenueExpenseStatment },
+   { path: "/Bussiness/BalanceSheetimport", element: BalanceSheetimport },
+   { path: "/Bussiness/BussinessOverviewimport", element: BussinessOverviewimport },
+   { path: "/Bussiness/BussinessCollectionReportsimport", element: BussinessCollectionReportsimport },
+
 ];
 
 export default routes;

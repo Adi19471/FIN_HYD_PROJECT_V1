@@ -1,4 +1,5 @@
 import React, { useState, useEffect, lazy, Suspense } from "react";
+import { useAuth } from "src/utils/AuthContext";
 import axios from "axios";
 import { API_BASE } from "lib/config";
 import { getSession } from "src/utils/session";
@@ -38,9 +39,9 @@ import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
 const STORAGE_KEY = "dailyBook_lastSelectedDate";
 
 const getHeaders = () => {
-  const session = getSession();
-  const token = session?.token || "";
-
+  // Prefer context token, fallback to session
+  const token = user?.token || getSession()?.token || "";
+  
   return {
     headers: {
       Authorization: `Bearer ${token}`,
@@ -49,7 +50,10 @@ const getHeaders = () => {
   };
 };
 
+
+
 const DailyBook = () => {
+  const { user, isAuthenticated } = useAuth();
   // Initialize with last saved date or today
   const getInitialDate = () => {
     const savedDate = localStorage.getItem(STORAGE_KEY);
@@ -58,6 +62,18 @@ const DailyBook = () => {
     }
     return dayjs(); // today
   };
+
+
+
+
+     const token = getSession()?.token || getSession("token") || "";
+  
+        if (!token) {
+          errorToast("Authentication token not found. Please login again.");
+          return;
+        }
+
+
 
   const [transactionDate, setTransactionDate] = useState(getInitialDate());
   const [loading, setLoading] = useState(false);
@@ -86,8 +102,13 @@ const DailyBook = () => {
       setLoading(true);
 
       const response = await axios.get(
-        `${API_BASE}/loadAllDayWiseTransactionsSummary/${formattedDate}`,
-        getHeaders()
+        `${API_BASE}/loadAllDayWiseTransactionsSummary/${formattedDate}`,{
+        // getHeaders()
+
+         headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },}
       );
 
       const data = response.data;
@@ -181,7 +202,7 @@ const DailyBook = () => {
             <Button
               variant="contained"
               onClick={fetchDailyBook}
-              disabled={loading || !transactionDate}
+              disabled={loading || !transactionDate || !isAuthenticated}
               sx={{ minWidth: 120 }}
             >
               {loading ? "Loading..." : "Generate"}

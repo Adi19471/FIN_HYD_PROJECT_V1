@@ -100,6 +100,10 @@ function Sidebar({ sidebarOpen, setSidebarOpen }) {
     } else if (pathname.toLowerCase().startsWith("/accountmastersetup")) {
       setOpenGroup("accountMaster");
     } else if (
+      pathname.toLowerCase().startsWith("/bussiness/")
+    ) {
+      setOpenGroup("business");
+    } else if (
       ["/login", "/signup", "/reset-password"].some((p) =>
         pathname.startsWith(p)
       )
@@ -501,7 +505,95 @@ function Sidebar({ sidebarOpen, setSidebarOpen }) {
             </ul>
           )}
 
+          {/* Business */}
+          <div
+            className={`flex items-center justify-between px-3 py-3 rounded-xl cursor-pointer transition-all duration-200 font-medium ${
+              openGroup === "business"
+                ? "bg-sky-100 dark:bg-sky-900/40"
+                : "hover:bg-sky-100 dark:hover:bg-sky-900/30"
+            }`}
+            onClick={() => handleGroupToggle("business")}
+          >
+            <div className="flex items-center gap-3">
+              <AccountBalance className="w-5 h-5 text-sky-600 dark:text-sky-400" />
+              <span className="text-sm lg:opacity-0 lg:sidebar-expanded:opacity-100 2xl:opacity-100 transition-opacity duration-200">
+                Business
+              </span>
+            </div>
+            <ExpandMore
+              className={`w-5 h-5 transition-transform duration-300 ${
+                openGroup === "business" ? "rotate-180" : ""
+              }`}
+            />
+          </div>
+
+          {openGroup === "business" && (
+            <ul className="pl-11 mt-1 space-y-1">
+              <li>
+                <NavLink
+                  to="/Bussiness/RevenueExpenseStatment"
+                  className={({ isActive }) =>
+                    `flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-all duration-200 ${
+                      isActive
+                        ? "bg-gradient-to-r from-sky-600 to-blue-600 text-white shadow-sm"
+                        : "text-gray-600 dark:text-gray-400 hover:bg-sky-100 hover:text-sky-700 dark:hover:bg-sky-900/40 dark:hover:text-sky-300"
+                    }`
+                  }
+                >
+                  <EventNote className="w-4 h-4" />
+                  <span>Revenue Expense Statement</span>
+                </NavLink>
+              </li>
+              <li>
+                <NavLink
+                  to="/Bussiness/BalanceSheetimport"
+                  className={({ isActive }) =>
+                    `flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-all duration-200 ${
+                      isActive
+                        ? "bg-gradient-to-r from-sky-600 to-blue-600 text-white shadow-sm"
+                        : "text-gray-600 dark:text-gray-400 hover:bg-sky-100 hover:text-sky-700 dark:hover:bg-sky-900/40 dark:hover:text-sky-300"
+                    }`
+                  }
+                >
+                  <AccountBalance className="w-4 h-4" />
+                  <span>Balance Sheet</span>
+                </NavLink>
+              </li>
+              <li>
+                <NavLink
+                  to="/Bussiness/BussinessOverviewimport"
+                  className={({ isActive }) =>
+                    `flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-all duration-200 ${
+                      isActive
+                        ? "bg-gradient-to-r from-sky-600 to-blue-600 text-white shadow-sm"
+                        : "text-gray-600 dark:text-gray-400 hover:bg-sky-100 hover:text-sky-700 dark:hover:bg-sky-900/40 dark:hover:text-sky-300"
+                    }`
+                  }
+                >
+                  <Info className="w-4 h-4" />
+                  <span>Business Overview</span>
+                </NavLink>
+              </li>
+              <li>
+                <NavLink
+                  to="/Bussiness/BussinessCollectionReportsimport"
+                  className={({ isActive }) =>
+                    `flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-all duration-200 ${
+                      isActive
+                        ? "bg-gradient-to-r from-sky-600 to-blue-600 text-white shadow-sm"
+                        : "text-gray-600 dark:text-gray-400 hover:bg-sky-100 hover:text-sky-700 dark:hover:bg-sky-900/40 dark:hover:text-sky-300"
+                    }`
+                  }
+                >
+                  <ReceiptLong className="w-4 h-4" />
+                  <span>Business Collection Reports</span>
+                </NavLink>
+              </li>
+            </ul>
+          )}
+
           {/* Authentication */}
+
           <div
             className={`flex items-center justify-between px-3 py-3 rounded-xl cursor-pointer transition-all duration-200 font-medium ${
               openGroup === "auth"
