@@ -2,7 +2,6 @@ package com.balaji.finance.service;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -25,7 +24,8 @@ import com.balaji.finance.repo.BusinessMemberRepository;
 import com.balaji.finance.repo.CashBookRepo;
 import com.balaji.finance.repo.EmiRepo;
 import com.balaji.finance.repo.PersonalInfoRepository;
-import com.balaji.finance.util.BusinessMemersSequenceService;
+import com.balaji.finance.util.DfNumberService;
+import com.balaji.finance.util.MfNumberService;
 
 @Service
 public class BusinessMemberService {
@@ -34,51 +34,51 @@ public class BusinessMemberService {
 	private BusinessMemberRepository businessMemberRepository;
 
 	@Autowired
-	private BusinessMemersSequenceService businessMemersSequenceService;
-
-	@Autowired
 	private PersonalInfoRepository personalInfoRepository;
 
 	@Autowired
 	private CashBookRepo cashBookRepo;
-	
+
 	@Autowired
 	private AccountMasterRepo accountMasterRepo;
 
 	@Autowired
 	private EmiRepo emiRepo;
 
-	public String generateId(String type,LocalDateTime startDate) {
+	@Autowired
+	private MfNumberService mfNumberService;
 
-		String prefix;
-		long seq = 0;
+	@Autowired
+	private DfNumberService dfNumberService;
+
+	public String generateId(String type, LocalDateTime startDate) {
+
+		int year = startDate.getYear();
+		String generatedId = null;
+
 		switch (type) {
 		case "DAILY_FINANCE":
-			prefix = "DF";
-			seq = businessMemersSequenceService.getNextBusinessMemberDailyFinanceSequenceSeqId();
+			generatedId = dfNumberService.generateDfNumber(year);
 			break;
 
 		case "MONTHLY_FINANCE":
-			prefix = "MF";
-			seq = businessMemersSequenceService.getNextBusinessMemberMonthlyFinanceSequenceSeqId();
+			generatedId = mfNumberService.generateMfNumber(year);
 			break;
 
 		default:
 			throw new IllegalArgumentException("Unknown type: " + type);
 		}
 
-		int year = startDate.getYear();
-
-		return prefix + year + "-" + seq;
+		return generatedId;
 	}
 
 	// Creating Loan Account
 	public String saveBusinessMember(BusinessMemberDto businessMemberDto, String type) {
 
 		BusinessMember businessMember = new BusinessMember();
-		businessMember.setBusinessMemberId(generateId(type,businessMemberDto.getStartDate()));
+		businessMember.setBusinessMemberId(generateId(type, businessMemberDto.getStartDate()));
 		businessMember.setLoanType(type);
-		
+
 		if (businessMemberDto.getCustomerId() != null && !businessMemberDto.getCustomerId().isBlank()) {
 			Optional<PersonalInfo> customerOptional = personalInfoRepository
 					.findById(businessMemberDto.getCustomerId());
@@ -118,15 +118,20 @@ public class BusinessMemberService {
 		businessMember.setStartDate(businessMemberDto.getStartDate());
 		businessMember.setEndDate(businessMemberDto.getEndDate());
 
-		businessMember.setAmount(businessMemberDto.getAmount() != null ? businessMemberDto.getAmount() : BigDecimal.ZERO);
+		businessMember
+				.setAmount(businessMemberDto.getAmount() != null ? businessMemberDto.getAmount() : BigDecimal.ZERO);
 		businessMember.setDuration(businessMemberDto.getDuration() != null ? businessMemberDto.getDuration() : 0);
-		businessMember.setInterest(businessMemberDto.getInterest() != null ? businessMemberDto.getInterest() : BigDecimal.ZERO);
+		businessMember.setInterest(
+				businessMemberDto.getInterest() != null ? businessMemberDto.getInterest() : BigDecimal.ZERO);
 
-		businessMember.setInstallment(businessMemberDto.getInstallment() != null ? businessMemberDto.getInstallment() : BigDecimal.ZERO);
+		businessMember.setInstallment(
+				businessMemberDto.getInstallment() != null ? businessMemberDto.getInstallment() : BigDecimal.ZERO);
 		businessMember.setStatus(businessMemberDto.isStatus());
 
-		businessMember.setPartPrincipal(businessMemberDto.getPartPrincipal() != null ? businessMemberDto.getPartPrincipal() : 0);
-		businessMember.setPartInterest(businessMemberDto.getPartInterest() != null ? businessMemberDto.getPartInterest() : 0);
+		businessMember.setPartPrincipal(
+				businessMemberDto.getPartPrincipal() != null ? businessMemberDto.getPartPrincipal() : 0);
+		businessMember
+				.setPartInterest(businessMemberDto.getPartInterest() != null ? businessMemberDto.getPartInterest() : 0);
 
 		businessMember.setChequeReminder(businessMemberDto.isChequeReminder());
 		businessMember.setBusinessId(businessMemberDto.getBusinessId());
@@ -134,9 +139,9 @@ public class BusinessMemberService {
 
 		businessMember.setPaidInstallments(0);
 		businessMember.setUnpaidLateFee(BigDecimal.ZERO);
-		
+
 		businessMember.setLoanStatus(LoanStatus.ACTIVE.toString());
-		
+
 		businessMember.setProcessingFee(businessMemberDto.getProcessingFee());
 		businessMember.setInterestRate(businessMemberDto.getInterestRate());
 
@@ -147,7 +152,7 @@ public class BusinessMemberService {
 
 		switch (type) {
 		case "DAILY_FINANCE":
-			
+
 			AccountMaster accountMaster = accountMasterRepo.findAccountMasterByMasterCodeAndCode("LOANS", "DF LOAN");
 
 			CashBook dfLoanCashBook = new CashBook();
@@ -155,11 +160,11 @@ public class BusinessMemberService {
 			dfLoanCashBook.setPersonalInfo(businessMember.getCustomerId());
 			dfLoanCashBook.setCredit(BigDecimal.ZERO);
 			dfLoanCashBook.setDebit(businessMember.getAmount());
-			
+
 			dfLoanCashBook.setAccountMastertype(accountMaster.getType());
 			dfLoanCashBook.setAccountMasterMasterCode(accountMaster.getMasterCode());
 			dfLoanCashBook.setAccountMastercode(accountMaster.getCode());
-			
+
 			dfLoanCashBook.setBmRemarks("");
 			dfLoanCashBook.setReceiptRemarks("");
 
@@ -173,19 +178,18 @@ public class BusinessMemberService {
 
 			if (businessMemberDto.getProcessingFee() != null && businessMemberDto.getProcessingFee() != null
 					&& businessMemberDto.getProcessingFee().compareTo(BigDecimal.ZERO) > 0) {
-				AccountMaster accountMasterProcessingFee = accountMasterRepo.findAccountMasterByMasterCodeAndCode("DOCUMENT CHARGES", "DF DOC CHARGES");
+				AccountMaster accountMasterProcessingFee = accountMasterRepo
+						.findAccountMasterByMasterCodeAndCode("DOCUMENT CHARGES", "DF DOC CHARGES");
 
-				
 				CashBook dfProcessingFeeCashBook = new CashBook();
 				dfProcessingFeeCashBook.setBusinessMember(businessMember);
 				dfProcessingFeeCashBook.setPersonalInfo(businessMember.getCustomerId());
 				dfProcessingFeeCashBook.setCredit(businessMemberDto.getProcessingFee());
 				dfProcessingFeeCashBook.setDebit(BigDecimal.ZERO);
-				
+
 				dfProcessingFeeCashBook.setAccountMastertype(accountMasterProcessingFee.getType());
 				dfProcessingFeeCashBook.setAccountMasterMasterCode(accountMasterProcessingFee.getMasterCode());
 				dfProcessingFeeCashBook.setAccountMastercode(accountMasterProcessingFee.getCode());
-				
 
 				dfProcessingFeeCashBook.setBmRemarks("");
 				dfProcessingFeeCashBook.setReceiptRemarks("");
@@ -213,20 +217,20 @@ public class BusinessMemberService {
 					RoundingMode.HALF_UP);
 
 			if (interestAmount.compareTo(BigDecimal.ZERO) > 0) {
-				
-				AccountMaster accountMasterInterest = accountMasterRepo.findAccountMasterByMasterCodeAndCode("INTEREST", "DF INTEREST");
 
+				AccountMaster accountMasterInterest = accountMasterRepo.findAccountMasterByMasterCodeAndCode("INTEREST",
+						"DF INTEREST");
 
 				CashBook dfIntrestCashBook = new CashBook();
 				dfIntrestCashBook.setBusinessMember(businessMember);
 				dfIntrestCashBook.setPersonalInfo(businessMember.getCustomerId());
 				dfIntrestCashBook.setCredit(interestAmount);
 				dfIntrestCashBook.setDebit(BigDecimal.ZERO);
-				
+
 				dfIntrestCashBook.setAccountMastertype(accountMasterInterest.getType());
 				dfIntrestCashBook.setAccountMasterMasterCode(accountMasterInterest.getMasterCode());
 				dfIntrestCashBook.setAccountMastercode(accountMasterInterest.getCode());
-				
+
 				dfIntrestCashBook.setBmRemarks("");
 				dfIntrestCashBook.setReceiptRemarks("");
 
@@ -240,25 +244,24 @@ public class BusinessMemberService {
 			}
 
 			generateEMIScheduleForDays(businessMember);
-			
+
 			break;
 
 		case "MONTHLY_FINANCE":
-			
-			AccountMaster accountMasterMonthlyLoan = accountMasterRepo.findAccountMasterByMasterCodeAndCode("LOANS", "MF LOAN");
+
+			AccountMaster accountMasterMonthlyLoan = accountMasterRepo.findAccountMasterByMasterCodeAndCode("LOANS",
+					"MF LOAN");
 
 			CashBook mFLoanCashBook = new CashBook();
 			mFLoanCashBook.setBusinessMember(businessMember);
 			mFLoanCashBook.setPersonalInfo(businessMember.getCustomerId());
 			mFLoanCashBook.setCredit(BigDecimal.ZERO);
 			mFLoanCashBook.setDebit(businessMember.getAmount());
-		
+
 			mFLoanCashBook.setAccountMastertype(accountMasterMonthlyLoan.getType());
 			mFLoanCashBook.setAccountMasterMasterCode(accountMasterMonthlyLoan.getMasterCode());
 			mFLoanCashBook.setAccountMastercode(accountMasterMonthlyLoan.getCode());
-			
-			
-			
+
 			mFLoanCashBook.setBmRemarks("");
 			mFLoanCashBook.setReceiptRemarks("");
 
@@ -272,8 +275,7 @@ public class BusinessMemberService {
 
 			if (businessMemberDto.getProcessingFee() != null && businessMemberDto.getProcessingFee() != null
 					&& businessMemberDto.getProcessingFee().compareTo(BigDecimal.ZERO) > 0) {
-				
-				
+
 				AccountMaster accountMasterProcessingFee = accountMasterRepo
 						.findAccountMasterByMasterCodeAndCode("DOCUMENT CHARGES", "MF DOC CHARGES");
 
@@ -282,12 +284,11 @@ public class BusinessMemberService {
 				dfProcessingFeeCashBook.setPersonalInfo(businessMember.getCustomerId());
 				dfProcessingFeeCashBook.setCredit(businessMemberDto.getProcessingFee());
 				dfProcessingFeeCashBook.setDebit(BigDecimal.ZERO);
-				
+
 				dfProcessingFeeCashBook.setAccountMastertype(accountMasterProcessingFee.getType());
 				dfProcessingFeeCashBook.setAccountMasterMasterCode(accountMasterProcessingFee.getMasterCode());
 				dfProcessingFeeCashBook.setAccountMastercode(accountMasterProcessingFee.getCode());
-				
-			
+
 				dfProcessingFeeCashBook.setBmRemarks("");
 				dfProcessingFeeCashBook.setReceiptRemarks("");
 
@@ -300,7 +301,7 @@ public class BusinessMemberService {
 				cashBookRepo.save(dfProcessingFeeCashBook);
 
 			}
-			
+
 			generateEMIScheduleForMonth(businessMember);
 
 			break;
@@ -308,8 +309,6 @@ public class BusinessMemberService {
 		default:
 			break;
 		}
-		
-		
 
 		return "Sucessfully Saved ";
 	}
@@ -373,23 +372,21 @@ public class BusinessMemberService {
 			businessMember.setChequeReminder(businessMemberDto.isChequeReminder());
 			businessMember.setBusinessId(businessMemberDto.getBusinessId());
 			businessMember.setSecurity(businessMemberDto.getSecurity());
-			
+
 			businessMember.setProcessingFee(businessMemberDto.getProcessingFee());
 			businessMember.setInterestRate(businessMemberDto.getInterestRate());
 
-		
 			businessMemberRepository.save(businessMember);
-			
+
 			if (businessMember.getProcessingFee() != null && businessMemberDto.getProcessingFee() != null
 					&& businessMember.getProcessingFee().compareTo(businessMemberDto.getProcessingFee()) != 0) {
-
 
 				String currentUser = SecurityContextHolder.getContext().getAuthentication().getName();
 				LocalDateTime currentDate = LocalDateTime.now();
 
 				CashBook dfProcessingFeeCashBook = null;
 				Optional<CashBook> optionalCashbook = null;
-				
+
 				switch (businessMember.getLoanType()) {
 				case "DAILY_FINANCE":
 
@@ -404,7 +401,7 @@ public class BusinessMemberService {
 				}
 
 				if (optionalCashbook.isPresent()) {
-					
+
 					dfProcessingFeeCashBook = optionalCashbook.get();
 
 					dfProcessingFeeCashBook.setCredit(businessMemberDto.getProcessingFee());
@@ -436,8 +433,6 @@ public class BusinessMemberService {
 		if (businessMemberInDb.isPresent()) {
 
 			BusinessMember businessMember = businessMemberInDb.get();
-			
-			
 
 			businessMemberRepository.delete(businessMember);
 
@@ -481,7 +476,7 @@ public class BusinessMemberService {
 			businessMemberDto.setGuarantor1(p.getGuarantor1() != null ? p.getGuarantor1().getPersonalInfoId() : null);
 			businessMemberDto.setGuarantor2(p.getGuarantor2() != null ? p.getGuarantor2().getPersonalInfoId() : null);
 			businessMemberDto.setGuarantor3(p.getGuarantor3() != null ? p.getGuarantor3().getPersonalInfoId() : null);
-			
+
 			businessMemberDto.setPartnerId(p.getPartnerId() != null ? p.getPartnerId().getPersonalInfoId() : null);
 
 			businessMemberDto.setStartDate(p.getStartDate());
@@ -499,7 +494,7 @@ public class BusinessMemberService {
 			businessMemberDto.setUnpaidLateFee(p.getUnpaidLateFee());
 			businessMemberDto.setChequeReminder(p.isChequeReminder());
 			businessMemberDto.setBusinessId(p.getBusinessId());
-			
+
 			businessMemberDto.setInterestRate(p.getInterestRate());
 			businessMemberDto.setProcessingFee(p.getProcessingFee());
 
@@ -525,7 +520,7 @@ public class BusinessMemberService {
 			businessMemberDto.setGuarantor1(p.getGuarantor1() != null ? p.getGuarantor1().getPersonalInfoId() : null);
 			businessMemberDto.setGuarantor2(p.getGuarantor2() != null ? p.getGuarantor2().getPersonalInfoId() : null);
 			businessMemberDto.setGuarantor3(p.getGuarantor3() != null ? p.getGuarantor3().getPersonalInfoId() : null);
-			
+
 			businessMemberDto.setPartnerId(p.getPartnerId() != null ? p.getPartnerId().getPersonalInfoId() : null);
 
 			businessMemberDto.setStartDate(p.getStartDate());
@@ -543,7 +538,7 @@ public class BusinessMemberService {
 			businessMemberDto.setUnpaidLateFee(p.getUnpaidLateFee());
 			businessMemberDto.setChequeReminder(p.isChequeReminder());
 			businessMemberDto.setBusinessId(p.getBusinessId());
-			
+
 			businessMemberDto.setInterestRate(p.getInterestRate());
 			businessMemberDto.setProcessingFee(p.getProcessingFee());
 
@@ -618,8 +613,7 @@ public class BusinessMemberService {
 
 		return loanList;
 	}
-	
-	
+
 	public void generateEMIScheduleForMonth(BusinessMember member) {
 
 		int months = member.getDuration(); // Loan duration in months
@@ -649,8 +643,7 @@ public class BusinessMemberService {
 			emi.setPaidAmount(BigDecimal.ZERO);
 			emi.setDueDate(member.getStartDate().plusMonths(i));
 			emi.setStatus("PENDING");
-			
-			
+
 			emiRepo.save(emi);
 
 		}
@@ -674,8 +667,7 @@ public class BusinessMemberService {
 			emi.setPaidAmount(BigDecimal.ZERO);
 			emi.setDueDate(member.getStartDate().plusMonths(i));
 			emi.setStatus("PENDING");
-			
-			
+
 			emiRepo.save(emi);
 
 		}
