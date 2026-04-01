@@ -81,13 +81,11 @@ const DailyFinance = () => {
     try {
       const res = await axios.get(
         `${API_BASE}/BusinessMember/findAll/${LOAN_TYPE.DAILY_FINANCE}`,
-        {
-          headers,
-        }
+        { headers }
       );
+
       const loans = Array.isArray(res.data) ? res.data : [];
 
-      // Collect all member IDs
       const memberIds = new Set();
       loans.forEach((l) => {
         if (l.customerId) memberIds.add(l.customerId);
@@ -96,49 +94,53 @@ const DailyFinance = () => {
         );
       });
 
-      // Fetch member names
       const memberMap = {};
+
       if (memberIds.size > 0) {
-        try {
-          const mRes = await axios.get(`${API_BASE}/PersonalInfo/byIds`, {
-            headers,
-            params: { ids: Array.from(memberIds).join(",") },
-          });
-          mRes.data.forEach((m) => {
-            memberMap[m.id] =
-              `${m.firstname || ""} ${m.lastname || ""}`.trim() ||
-              `ID: ${m.id}`;
-          });
-        } catch (e) {
-          console.warn("Name fetch failed", e);
-        }
+        const mRes = await axios.get(`${API_BASE}/PersonalInfo/byIds`, {
+          headers,
+          params: { ids: Array.from(memberIds).join(",") },
+        });
+
+        mRes.data.forEach((m) => {
+          memberMap[m.id] =
+            `${m.firstname || ""} ${m.lastname || ""}`.trim() ||
+            `ID: ${m.id}`;
+        });
       }
 
+      //  DEFINE HERE (AFTER memberMap)
+      const getMemberName = (id, label = "ID") => {
+        if (!id) return "-";
+        return memberMap[id] || `${label}: ${id}`;
+      };
+
+      //  USE HERE
       const enriched = loans.map((loan) => ({
-        id: loan.id || "N/A",
-        customerName:
-          memberMap[loan.customerId] || `ID: ${loan.customerId || "N/A"}`,
-        amount: loan.amount || 0,
-        interestRatePerMonth: loan.interest || 0,
-        installment: loan.installment || 0,
-        startDate: loan.startDate,
-        endDate: loan.endDate,
-        g1Name: loan.guarantor1
-          ? memberMap[loan.guarantor1] || `G1: ${loan.guarantor1}`
-          : "-",
-        g2Name: loan.guarantor2
-          ? memberMap[loan.guarantor2] || `G2: ${loan.guarantor2}`
-          : "-",
-        g3Name: loan.guarantor3
-          ? memberMap[loan.guarantor3] || `G3: ${loan.guarantor3}`
-          : "-",
-        partnerId: loan.partnerId
-          ? memberMap[loan.partnerId] || `G4: ${loan.partnerId}`
-          : "-",
+        id: loan?.id ?? "N/A",
+
+        customerName: getMemberName(loan?.customerId),
+
+        g1Name: getMemberName(loan?.guarantor1, "G1"),
+        g2Name: getMemberName(loan?.guarantor2, "G2"),
+        g3Name: getMemberName(loan?.guarantor3, "G3"),
+
+        partnerId: getMemberName(loan?.partnerId, "G4"),
+
+        amount: Number(loan?.amount) || 0,
+        duration: loan?.duration ?? 0,
+        interest: Number(loan?.interest) || 0,
+        interestRate: Number(loan?.interestRate) || 0,
+        installment: Number(loan?.installment) || 0,
+        processingFee: Number(loan?.processingFee) || 0,
+
+        startDate: loan?.startDate ?? null,
+        endDate: loan?.endDate ?? null,
       }));
 
       setRows(enriched);
-    } catch (err) {
+    } catch (e) {
+      console.error("Error fetching loans:", e);
       errorToast("Failed to load loans");
     } finally {
       setLoading(false);
@@ -368,57 +370,90 @@ const DailyFinance = () => {
     setOpen(false);
     resetForm();
   };
+ 
+ 
   // TABLE COLUMNS
   const columns = [
+    // 🔥 Actions
     {
       field: "actions",
       headerName: "Actions",
       width: 110,
+      sortable: false,
       renderCell: (params) => (
-        <Box sx={{ display: "flex", gap: 1 }}>
-          <IconButton
-            size="small"
-            color="primary"
-            onClick={() => handleEdit(params.row.id)}
-          >
-            <EditIcon fontSize="small" />
-          </IconButton>
-        </Box>
+        <IconButton
+          color="primary"
+          onClick={() => handleEdit(params.row.id)} // ✅ proper edit
+        >
+          <EditIcon fontSize="small" />
+        </IconButton>
       ),
     },
-    { field: "id", headerName: "Acc No", width: 100 },
-    { field: "customerName", headerName: "Customer Name", width: 260 },
+
+    // 🔹 Basic Info
+    { field: "id", headerName: "Acc No", width: 110 },
+    { field: "customerName", headerName: "Customer", width: 240 },
+
+   
+    // 🔹 Financials
     {
       field: "amount",
       headerName: "Amount",
-      width: 140,
+      width: 150,
+
     },
     {
-      field: "interestRatePerMonth",
+      field: "interestRate",
       headerName: "Interest %",
-      width: 100,
+      width: 130,
+
+    },
+    {
+      field: "interest",
+      headerName: "Total Interest",
+      width: 170,
+
     },
     {
       field: "installment",
-      headerName: "Installment",
+      headerName: "Daily EMI",
       width: 150,
+
     },
     {
+      field: "processingFee",
+      headerName: "Processing Fee",
+      width: 170,
+
+    },
+
+    // 🔹 Duration
+    {
+      field: "duration",
+      headerName: "Duration (Days)",
+      width: 160,
+
+    },
+
+    // 🔹 Dates
+    {
       field: "startDate",
-      headerName: "Loan Date",
-      width: 140,
-      valueFormatter: (v) => dayjs(v.value).format("DD-MMM-YYYY"),
+      headerName: "Start Date",
+      width: 160,
     },
     {
       field: "endDate",
-      headerName: "Maturity Date",
-      width: 140,
-      valueFormatter: (v) => dayjs(v.value).format("DD-MMM-YYYY"),
+      headerName: "End Date",
+      width: 160,
     },
+
+
+     // 🔹 Guarantors & Partner
     { field: "g1Name", headerName: "Guarantor 1", width: 200 },
     { field: "g2Name", headerName: "Guarantor 2", width: 200 },
     { field: "g3Name", headerName: "Guarantor 3", width: 200 },
-    { field: "partnerId", headerName: "Partner", width: 150 },
+    { field: "partnerId", headerName: "Partner", width: 180 },
+
   ];
 
   return (
