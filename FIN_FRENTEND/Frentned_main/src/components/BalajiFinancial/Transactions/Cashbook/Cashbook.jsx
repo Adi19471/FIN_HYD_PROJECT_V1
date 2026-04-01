@@ -236,8 +236,8 @@ const Cashbook = () => {
         sx={{
           p: 4,
           width: "100%",
-          maxWidth: 900,
-          borderRadius: 2,
+          maxWidth: 1200,
+          borderRadius: 0,
         }}
       >
         <Typography
@@ -377,16 +377,16 @@ const Cashbook = () => {
 
             {/* Submit */}
             <Grid item xs={12}>
-              <Divider sx={{ my: 2 }} />
+            
               <Box sx={{ display: "flex", justifyContent: "center" }}>
                 <Button
                   type="submit"
                   variant="contained"
-                  size="large"
+                  size="small"
                   sx={{
                     px: 6,
                     py: 1.3,
-                    borderRadius: 2,
+                    borderRadius: 0,
                     fontWeight: 600,
                   }}
                   startIcon={<PaymentsIcon />}

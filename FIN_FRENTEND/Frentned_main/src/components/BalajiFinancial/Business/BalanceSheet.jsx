@@ -89,16 +89,23 @@ const BalanceSheet = () => {
       .flat()
       .reduce((sum, i) => sum + (i.amount || 0), 0);
 
-  return (
-    <Box p={2}>
-      <Typography variant="h5" gutterBottom>
-        Balance Sheet
-      </Typography>
+ 
 
-      {/* DATE FILTER */}
-      <Grid container spacing={2} mb={2}>
-        <Grid item>
+      return (
+  <Box sx={{ p: 3 }}>
+
+    {/* HEADER */}
+    <Typography variant="h6" fontWeight={700} mb={3}>
+      Balance Sheet
+    </Typography>
+
+    {/* FILTER */}
+    <Paper sx={{ p: 3, mb: 3, borderRadius: 2 }}>
+      <Grid container spacing={2} alignItems="center">
+
+        <Grid item xs={12} md={4}>
           <TextField
+            fullWidth
             type="date"
             label="As On Date"
             InputLabelProps={{ shrink: true }}
@@ -107,86 +114,157 @@ const BalanceSheet = () => {
           />
         </Grid>
 
-        <Grid item>
+        <Grid item xs={12} md={4}>
           <Button
+            fullWidth
             variant="contained"
+            size="large"
             onClick={fetchData}
             disabled={!toDate || loading}
           >
-            {loading ? "Generating..." : "Generate"}
+            {loading ? "Generating..." : "Generate Balance Sheet"}
           </Button>
         </Grid>
+
       </Grid>
+    </Paper>
 
-      {/* TABLE */}
-      {loading ? (
-        <LoadingSpinner />
-      ) : data.length === 0 ? (
-        <Typography variant="body1" color="text.secondary" align="center" py={4}>
-          No data available. Please select a date and click Generate.
+    {/* CONTENT */}
+    {loading ? (
+      <LoadingSpinner />
+    ) : data.length === 0 ? (
+      <Paper sx={{ p: 5, textAlign: "center" }}>
+        <Typography color="text.secondary">
+          No data available. Please select a date.
         </Typography>
-      ) : (
-        <TableContainer component={Paper}>
-          <Table>
-            <TableBody>
-              {Object.keys(groupedData).map((type) => {
-                const mainGroup = groupedData[type];
-                const mainTotal = getMainTotal(mainGroup);
+      </Paper>
+    ) : (
+      <>
+        {/* TOTAL CARDS */}
+        <Grid container spacing={2} mb={3}>
+          {["Assets", "Liabilities"].map((type) => {
+            const total = getMainTotal(groupedData[type] || {});
+            return (
+              <Grid item xs={12} md={6} key={type}>
+                <Paper
+                  sx={{
+                    p: 2,
+                    borderLeft: `5px solid ${
+                      type === "Assets" ? "green" : "red"
+                    }`,
+                  }}
+                >
+                  <Typography variant="subtitle2">{type}</Typography>
+                  <Typography variant="h6" fontWeight={700}>
+                    ₹ {total.toLocaleString()}
+                  </Typography>
+                </Paper>
+              </Grid>
+            );
+          })}
+        </Grid>
 
-                return (
-                  <React.Fragment key={type}>
-                    {/* MAIN HEADER (ASSETS / LIABILITIES) */}
-                    <TableRow sx={{ backgroundColor: "#e0e0e0" }}>
-                      <TableCell colSpan={3}>
-                        <strong>{type.toUpperCase()}</strong>
-                      </TableCell>
-                      <TableCell align="right">
-                        <strong>Total: {mainTotal.toLocaleString()}</strong>
-                      </TableCell>
-                    </TableRow>
+        {/* SIDE BY SIDE */}
+        <Grid container spacing={2}>
 
-                    {/* SUB GROUPS */}
-                    {Object.keys(mainGroup).map((sub) => {
-                      const items = mainGroup[sub];
-                      const subTotal = getSubTotal(items);
+          {/* ASSETS */}
+          <Grid item xs={12} md={6}>
+            <Paper sx={{ p: 2, borderRadius: 2 }}>
+              <Typography variant="h6" fontWeight={700} mb={2} color="green">
+                Assets
+              </Typography>
 
-                      return (
-                        <React.Fragment key={sub}>
-                          {/* SUB HEADER */}
-                          <TableRow sx={{ backgroundColor: "#90caf9" }}>
-                            <TableCell colSpan={3}>
-                              <strong>{sub}</strong>
-                            </TableCell>
-                            <TableCell align="right">
-                              <strong>{subTotal.toLocaleString()}</strong>
-                            </TableCell>
-                          </TableRow>
+              {Object.entries(groupedData["Assets"] || {}).map(
+                ([sub, items]) => (
+                  <Box key={sub} mb={2}>
+                    <Typography fontWeight={600}>
+                      {sub} (₹ {getSubTotal(items).toLocaleString()})
+                    </Typography>
 
-                          {/* DETAIL ROWS */}
-                          {items.map((row, index) => (
-                            <TableRow key={index} hover>
-                              <TableCell width="50px" align="center">
-                                {index + 1}
-                              </TableCell>
-                              <TableCell>{row.code}</TableCell>
-                              <TableCell>{row.description || ""}</TableCell>
-                              <TableCell align="right">
-                                {row.amount?.toLocaleString() || "0"}
-                              </TableCell>
-                            </TableRow>
-                          ))}
-                        </React.Fragment>
-                      );
-                    })}
-                  </React.Fragment>
-                );
-              })}
-            </TableBody>
-          </Table>
-        </TableContainer>
-      )}
-    </Box>
-  );
+                    {items.map((row, i) => (
+                      <Box
+                        key={i}
+                        sx={{
+                          display: "flex",
+                          justifyContent: "space-between",
+                          py: 0.5,
+                          borderBottom: "1px dashed #ddd",
+                        }}
+                      >
+                        <Typography variant="body2">
+                          {row.description}
+                        </Typography>
+                        <Typography variant="body2">
+                          ₹ {row.amount?.toLocaleString()}
+                        </Typography>
+                      </Box>
+                    ))}
+                  </Box>
+                )
+              )}
+            </Paper>
+          </Grid>
+
+          {/* LIABILITIES */}
+          <Grid item xs={12} md={6}>
+            <Paper sx={{ p: 2, borderRadius: 2 }}>
+              <Typography variant="h6" fontWeight={700} mb={2} color="red">
+                Liabilities
+              </Typography>
+
+              {Object.entries(groupedData["Liabilities"] || {}).map(
+                ([sub, items]) => (
+                  <Box key={sub} mb={2}>
+                    <Typography fontWeight={600}>
+                      {sub} (₹ {getSubTotal(items).toLocaleString()})
+                    </Typography>
+
+                    {items.map((row, i) => (
+                      <Box
+                        key={i}
+                        sx={{
+                          display: "flex",
+                          justifyContent: "space-between",
+                          py: 0.5,
+                          borderBottom: "1px dashed #ddd",
+                        }}
+                      >
+                        <Typography variant="body2">
+                          {row.description}
+                        </Typography>
+                        <Typography variant="body2">
+                          ₹ {row.amount?.toLocaleString()}
+                        </Typography>
+                      </Box>
+                    ))}
+                  </Box>
+                )
+              )}
+            </Paper>
+          </Grid>
+
+        </Grid>
+
+        {/* BALANCE CHECK */}
+        <Box mt={3} textAlign="center">
+          <Paper sx={{ p: 2 }}>
+            <Typography fontWeight={700}>
+              Balance Check:
+              {" "}
+              ₹{" "}
+              {(
+                getMainTotal(groupedData["Assets"] || {}) -
+                getMainTotal(groupedData["Liabilities"] || {})
+              ).toLocaleString()}
+            </Typography>
+          </Paper>
+        </Box>
+
+      </>
+    )}
+
+  </Box>
+);
 };
 
 export default BalanceSheet;

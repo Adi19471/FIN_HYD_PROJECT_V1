@@ -231,7 +231,7 @@ const Login = () => {
             p: { xs: 4, sm: 5, md: 6 },
             width: "100%",
             maxWidth: 480,
-            borderRadius: 4,
+            borderRadius: 0,
             bgcolor: "rgba(255, 255, 255, 0.91)",
             backdropFilter: "blur(14px)",
             border: "1px solid rgba(255,255,255,0.35)",
@@ -322,7 +322,7 @@ const Login = () => {
                 py: 1.8,
                 fontSize: "1.18rem",
                 fontWeight: 700,
-                borderRadius: 3,
+                borderRadius: 0,
                 background: "linear-gradient(90deg, #8b0000 0%, #c41e3a 100%)",
                 boxShadow: "0 8px 25px rgba(139,0,0,0.4)",
                 "&:hover": {

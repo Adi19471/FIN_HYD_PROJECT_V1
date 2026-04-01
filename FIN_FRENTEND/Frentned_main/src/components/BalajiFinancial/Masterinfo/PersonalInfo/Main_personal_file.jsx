@@ -111,7 +111,7 @@ const MainPersonalFile = () => {
           }}
         >
           {loading ? (
-            <Box sx={{ display: "flex", justifyContent: "center", py: 8 }}>
+            <Box sx={{ display: "flex", justifyContent: "center", py: 1 }}>
               <LoadingSpinner />
             </Box>
           ) : (

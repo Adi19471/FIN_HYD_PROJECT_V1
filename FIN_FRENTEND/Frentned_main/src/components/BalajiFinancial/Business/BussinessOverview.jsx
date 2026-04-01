@@ -93,33 +93,35 @@ const BusinessOverview = () => {
     );
   }, [data]);
 
-  return (
-    <Box p={2}>
-      <Typography variant="h5" gutterBottom>
-        Business Overview
-      </Typography>
 
-      {/* FILTER SECTION */}
-      <Grid container spacing={2} mb={3} alignItems="center">
-        <Grid item>
+  return (
+  <Box sx={{ p: 3 }}>
+
+    {/* HEADER */}
+    <Typography variant="h6" fontWeight={700} mb={3}>
+      Business Overview
+    </Typography>
+
+    {/* FILTER CARD */}
+    <Paper sx={{ p: 3, mb: 3, borderRadius: 2 }}>
+      <Grid container spacing={2} alignItems="center">
+
+        <Grid item xs={12} md={4}>
           <RadioGroup
             row
             value={filterType}
             onChange={(e) => setFilterType(e.target.value)}
           >
-            <FormControlLabel value="ALL" control={<Radio />} label="All Records" />
-            <FormControlLabel
-              value="RANGE"
-              control={<Radio />}
-              label="Date Range"
-            />
+            <FormControlLabel value="ALL" control={<Radio />} label="All" />
+            <FormControlLabel value="RANGE" control={<Radio />} label="Date Range" />
           </RadioGroup>
         </Grid>
 
         {filterType === "RANGE" && (
           <>
-            <Grid item>
+            <Grid item xs={12} md={3}>
               <TextField
+                fullWidth
                 type="date"
                 label="From Date"
                 InputLabelProps={{ shrink: true }}
@@ -128,8 +130,9 @@ const BusinessOverview = () => {
               />
             </Grid>
 
-            <Grid item>
+            <Grid item xs={12} md={3}>
               <TextField
+                fullWidth
                 type="date"
                 label="To Date"
                 InputLabelProps={{ shrink: true }}
@@ -140,99 +143,162 @@ const BusinessOverview = () => {
           </>
         )}
 
-        <Grid item>
+        <Grid item xs={12} md={2}>
           <Button
+            fullWidth
             variant="contained"
+            size="large"
             onClick={fetchData}
             disabled={loading || (filterType === "RANGE" && (!fromDate || !toDate))}
           >
-            {loading ? "Loading..." : "Generate Report"}
+            {loading ? "Loading..." : "Generate"}
           </Button>
         </Grid>
+
       </Grid>
+    </Paper>
 
-      {/* TABLE SECTION */}
-      {loading ? (
-        <LoadingSpinner />
-      ) : data.length === 0 ? (
-        <Typography 
-          variant="body1" 
-          color="text.secondary" 
-          align="center" 
-          py={6}
-        >
-          No records found. Please select filter and click Generate Report.
+    {/* SUMMARY CARDS */}
+    {data.length > 0 && (
+      <Grid container spacing={2} mb={3}>
+        <Grid item xs={12} md={4}>
+          <Paper sx={{ p: 2, borderLeft: "5px solid blue" }}>
+            <Typography variant="subtitle2">Total Amount</Typography>
+            <Typography variant="h6" fontWeight={700}>
+              ₹ {totals.amount.toLocaleString()}
+            </Typography>
+          </Paper>
+        </Grid>
+
+        <Grid item xs={12} md={4}>
+          <Paper sx={{ p: 2, borderLeft: "5px solid green" }}>
+            <Typography variant="subtitle2">Amount Paid</Typography>
+            <Typography variant="h6" fontWeight={700}>
+              ₹ {totals.paid.toLocaleString()}
+            </Typography>
+          </Paper>
+        </Grid>
+
+        <Grid item xs={12} md={4}>
+          <Paper sx={{ p: 2, borderLeft: "5px solid red" }}>
+            <Typography variant="subtitle2">Total Due</Typography>
+            <Typography variant="h6" fontWeight={700}>
+              ₹ {totals.due.toLocaleString()}
+            </Typography>
+          </Paper>
+        </Grid>
+      </Grid>
+    )}
+
+    {/* TABLE */}
+    {loading ? (
+      <LoadingSpinner />
+    ) : data.length === 0 ? (
+      <Paper sx={{ p: 5, textAlign: "center" }}>
+        <Typography color="text.secondary">
+          No records found. Please generate report.
         </Typography>
-      ) : (
-        <TableContainer component={Paper}>
-          <Table size="small">
-            <TableHead>
-              <TableRow sx={{ backgroundColor: "#e0e0e0" }}>
-                <TableCell>S.No</TableCell>
-                <TableCell>Loan ID</TableCell>
-                <TableCell>Customer</TableCell>
-                <TableCell>Guarantor</TableCell>
-                <TableCell>Partner</TableCell>
-                <TableCell>Start Date</TableCell>
-                <TableCell>End Date</TableCell>
-                <TableCell align="right">Amount</TableCell>
-                <TableCell align="right">Paid</TableCell>
-                <TableCell align="right">Due</TableCell>
-                <TableCell>Status</TableCell>
+      </Paper>
+    ) : (
+      <TableContainer component={Paper} sx={{ borderRadius: 2 }}>
+        <Table size="small">
+
+          <TableHead>
+            <TableRow sx={{ backgroundColor: "#f5f5f5" }}>
+              <TableCell>S.No</TableCell>
+              <TableCell>Loan ID</TableCell>
+              <TableCell>Customer</TableCell>
+              <TableCell>Guarantor</TableCell>
+              <TableCell>Partner</TableCell>
+              <TableCell>Start</TableCell>
+              <TableCell>End</TableCell>
+              <TableCell align="right">Amount</TableCell>
+              <TableCell align="right">Paid</TableCell>
+              <TableCell align="right">Due</TableCell>
+              <TableCell>Status</TableCell>
+            </TableRow>
+          </TableHead>
+
+          <TableBody>
+            {data.map((row, index) => (
+              <TableRow key={index} hover>
+
+                <TableCell>{index + 1}</TableCell>
+                <TableCell>{row.loanId}</TableCell>
+                <TableCell>{row.customerName}</TableCell>
+                <TableCell>{row.guarentorName}</TableCell>
+                <TableCell>{row.partnerName}</TableCell>
+
+                <TableCell>
+                  {row.startDate && dayjs(row.startDate).format("DD-MMM-YY")}
+                </TableCell>
+
+                <TableCell>
+                  {row.endDate && dayjs(row.endDate).format("DD-MMM-YY")}
+                </TableCell>
+
+                <TableCell align="right">
+                  ₹ {row.amount?.toLocaleString()}
+                </TableCell>
+
+                <TableCell align="right" sx={{ color: "green" }}>
+                  ₹ {row.amountPaid?.toLocaleString()}
+                </TableCell>
+
+                <TableCell align="right" sx={{ color: "red" }}>
+                  ₹ {row.installmentDue?.toLocaleString()}
+                </TableCell>
+
+                {/* STATUS BADGE */}
+                <TableCell>
+                  <Box
+                    sx={{
+                      px: 1.5,
+                      py: 0.5,
+                      borderRadius: 1,
+                      textAlign: "center",
+                      fontSize: 12,
+                      fontWeight: 600,
+                      color: "#fff",
+                      backgroundColor:
+                        row.status === "Closed"
+                          ? "green"
+                          : row.status === "Active"
+                          ? "blue"
+                          : "orange",
+                    }}
+                  >
+                    {row.status}
+                  </Box>
+                </TableCell>
+
               </TableRow>
-            </TableHead>
+            ))}
 
-            <TableBody>
-              {data.map((row, index) => (
-                <TableRow key={index} hover>
-                  <TableCell>{row.sno || index + 1}</TableCell>
-                  <TableCell>{row.loanId}</TableCell>
-                  <TableCell>{row.customerName}</TableCell>
-                  <TableCell>{row.guarentorName}</TableCell>
-                  <TableCell>{row.partnerName}</TableCell>
-                  <TableCell>
-                    {row.startDate ? dayjs(row.startDate).format("DD-MMM-YYYY") : ""}
-                  </TableCell>
-                  <TableCell>
-                    {row.endDate ? dayjs(row.endDate).format("DD-MMM-YYYY") : ""}
-                  </TableCell>
-                  <TableCell align="right">
-                    {row.amount?.toLocaleString() || "0"}
-                  </TableCell>
-                  <TableCell align="right">
-                    {row.amountPaid?.toLocaleString() || "0"}
-                  </TableCell>
-                  <TableCell align="right">
-                    {row.installmentDue?.toLocaleString() || "0"}
-                  </TableCell>
-                  <TableCell>{row.status}</TableCell>
-                </TableRow>
-              ))}
+            {/* TOTAL ROW */}
+            <TableRow sx={{ backgroundColor: "#e3f2fd" }}>
+              <TableCell colSpan={7}>
+                <strong>Total</strong>
+              </TableCell>
+              <TableCell align="right">
+                <strong>₹ {totals.amount.toLocaleString()}</strong>
+              </TableCell>
+              <TableCell align="right">
+                <strong>₹ {totals.paid.toLocaleString()}</strong>
+              </TableCell>
+              <TableCell align="right">
+                <strong>₹ {totals.due.toLocaleString()}</strong>
+              </TableCell>
+              <TableCell />
+            </TableRow>
 
-              {/* TOTAL ROW */}
-              {data.length > 0 && (
-                <TableRow sx={{ backgroundColor: "#bbdefb", fontWeight: "bold" }}>
-                  <TableCell colSpan={7}>
-                    <strong>Total</strong>
-                  </TableCell>
-                  <TableCell align="right">
-                    <strong>{totals.amount.toLocaleString()}</strong>
-                  </TableCell>
-                  <TableCell align="right">
-                    <strong>{totals.paid.toLocaleString()}</strong>
-                  </TableCell>
-                  <TableCell align="right">
-                    <strong>{totals.due.toLocaleString()}</strong>
-                  </TableCell>
-                  <TableCell />
-                </TableRow>
-              )}
-            </TableBody>
-          </Table>
-        </TableContainer>
-      )}
-    </Box>
-  );
+          </TableBody>
+        </Table>
+      </TableContainer>
+    )}
+
+  </Box>
+);
 };
 
 export default BusinessOverview;

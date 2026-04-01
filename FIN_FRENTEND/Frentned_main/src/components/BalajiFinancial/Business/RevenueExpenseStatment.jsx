@@ -88,16 +88,22 @@ const RevenueExpenseStatement = () => {
     return data.reduce((sum, item) => sum + (item.amount || 0), 0);
   }, [data]);
 
-  return (
-    <Box p={2}>
-      <Typography variant="h5" gutterBottom>
-        Revenue & Expense Statement
-      </Typography>
 
-      {/* DATE FILTER */}
-      <Grid container spacing={2} mb={3} alignItems="center">
-        <Grid item>
+  return (
+  <Box sx={{ p: 3 }}>
+
+    {/* HEADER */}
+    <Typography variant="h6" fontWeight={700} mb={1}>
+      Revenue & Expense Statement
+    </Typography>
+
+    {/* FILTER CARD */}
+    <Paper sx={{ p: 3, mb: 3, borderRadius: 2 }}>
+      <Grid container spacing={2} alignItems="center">
+
+        <Grid item xs={12} md={3}>
           <TextField
+            fullWidth
             type="date"
             label="From Date"
             InputLabelProps={{ shrink: true }}
@@ -106,8 +112,9 @@ const RevenueExpenseStatement = () => {
           />
         </Grid>
 
-        <Grid item>
+        <Grid item xs={12} md={3}>
           <TextField
+            fullWidth
             type="date"
             label="To Date"
             InputLabelProps={{ shrink: true }}
@@ -116,83 +123,132 @@ const RevenueExpenseStatement = () => {
           />
         </Grid>
 
-        <Grid item>
+        <Grid item xs={12} md={3}>
           <Button
+            fullWidth
             variant="contained"
+            size="large"
             onClick={fetchData}
             disabled={loading || !fromDate || !toDate}
           >
-            {loading ? "Generating..." : "Generate"}
+            {loading ? "Generating..." : "Generate Report"}
           </Button>
         </Grid>
+
       </Grid>
+    </Paper>
 
-      {/* TABLE */}
-      {loading ? (
-        <LoadingSpinner />
-      ) : data.length === 0 ? (
-        <Typography 
-          variant="body1" 
-          color="text.secondary" 
-          align="center" 
-          py={6}
-        >
-          No data found. Please select date range and click Generate.
+    {/* SUMMARY CARDS */}
+    {data.length > 0 && (
+      <Grid container spacing={2} mb={3}>
+        <Grid item xs={12} md={4}>
+          <Paper sx={{ p: 2, borderLeft: "5px solid green" }}>
+            <Typography variant="subtitle2">Total Revenue</Typography>
+            <Typography variant="h6" fontWeight={700}>
+              ₹ {getTotal(groupedData["Revenue"] || []).toLocaleString()}
+            </Typography>
+          </Paper>
+        </Grid>
+
+        <Grid item xs={12} md={4}>
+          <Paper sx={{ p: 2, borderLeft: "5px solid red" }}>
+            <Typography variant="subtitle2">Total Expense</Typography>
+            <Typography variant="h6" fontWeight={700}>
+              ₹ {getTotal(groupedData["Expense"] || []).toLocaleString()}
+            </Typography>
+          </Paper>
+        </Grid>
+
+        <Grid item xs={12} md={4}>
+          <Paper sx={{ p: 2, borderLeft: "5px solid blue" }}>
+            <Typography variant="subtitle2">Net Profit / Loss</Typography>
+            <Typography variant="h6" fontWeight={700}>
+              ₹{" "}
+              {(
+                getTotal(groupedData["Revenue"] || []) -
+                getTotal(groupedData["Expense"] || [])
+              ).toLocaleString()}
+            </Typography>
+          </Paper>
+        </Grid>
+      </Grid>
+    )}
+
+    {/* TABLE */}
+    {loading ? (
+      <LoadingSpinner />
+    ) : data.length === 0 ? (
+      <Paper sx={{ p: 5, textAlign: "center" }}>
+        <Typography color="text.secondary">
+          No data found. Select date range and generate report.
         </Typography>
-      ) : (
-        <TableContainer component={Paper}>
-          <Table>
-            <TableBody>
-              {Object.keys(groupedData).map((type) => {
-                const items = groupedData[type];
-                const total = getTotal(items);
+      </Paper>
+    ) : (
+      <TableContainer component={Paper} sx={{ borderRadius: 2 }}>
+        <Table>
+          <TableBody>
 
-                return (
-                  <React.Fragment key={type}>
-                    {/* SECTION HEADER (Revenue / Expense) */}
-                    <TableRow sx={{ backgroundColor: "#bbdefb" }}>
-                      <TableCell colSpan={3}>
-                        <strong>{type}</strong>
-                      </TableCell>
+            {Object.keys(groupedData).map((type) => {
+              const items = groupedData[type];
+              const total = getTotal(items);
+
+              return (
+                <React.Fragment key={type}>
+
+                  {/* SECTION HEADER */}
+                  <TableRow
+                    sx={{
+                      backgroundColor:
+                        type === "Revenue" ? "#e8f5e9" : "#ffebee",
+                    }}
+                  >
+                    <TableCell colSpan={3}>
+                      <Typography fontWeight={700}>
+                        {type}
+                      </Typography>
+                    </TableCell>
+                    <TableCell align="right">
+                      <Typography fontWeight={700}>
+                        ₹ {total.toLocaleString()}
+                      </Typography>
+                    </TableCell>
+                  </TableRow>
+
+                  {/* ROWS */}
+                  {items.map((row, index) => (
+                    <TableRow key={index} hover>
+                      <TableCell width="50px">{index + 1}</TableCell>
+                      <TableCell>{row.code}</TableCell>
+                      <TableCell>{row.description}</TableCell>
                       <TableCell align="right">
-                        <strong>{total.toLocaleString()}</strong>
+                        ₹ {row.amount?.toLocaleString()}
                       </TableCell>
                     </TableRow>
+                  ))}
 
-                    {/* DETAIL ROWS */}
-                    {items.map((row, index) => (
-                      <TableRow key={index} hover>
-                        <TableCell width="50px" align="center">
-                          {index + 1}
-                        </TableCell>
-                        <TableCell>{row.code}</TableCell>
-                        <TableCell>{row.description || ""}</TableCell>
-                        <TableCell align="right">
-                          {row.amount?.toLocaleString() || "0"}
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                  </React.Fragment>
-                );
-              })}
+                </React.Fragment>
+              );
+            })}
 
-              {/* GRAND TOTAL */}
-              {data.length > 0 && (
-                <TableRow sx={{ backgroundColor: "#e0e0e0", fontWeight: "bold" }}>
-                  <TableCell colSpan={3}>
-                    <strong>Grand Total</strong>
-                  </TableCell>
-                  <TableCell align="right">
-                    <strong>{grandTotal.toLocaleString()}</strong>
-                  </TableCell>
-                </TableRow>
-              )}
-            </TableBody>
-          </Table>
-        </TableContainer>
-      )}
-    </Box>
-  );
+            {/* GRAND TOTAL */}
+            <TableRow sx={{ backgroundColor: "#eeeeee" }}>
+              <TableCell colSpan={3}>
+                <Typography fontWeight={700}>Grand Total</Typography>
+              </TableCell>
+              <TableCell align="right">
+                <Typography fontWeight={700}>
+                  ₹ {grandTotal.toLocaleString()}
+                </Typography>
+              </TableCell>
+            </TableRow>
+
+          </TableBody>
+        </Table>
+      </TableContainer>
+    )}
+
+  </Box>
+);
 };
 
 export default RevenueExpenseStatement;

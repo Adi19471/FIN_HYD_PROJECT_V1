@@ -220,9 +220,9 @@ const QuickCashBook = () => {
   };
   return (
     <Box>
-      <Paper elevation={2} sx={{ p: 2, mb: 2, borderRadius: 2, display: "flex", justifyContent: "space-between", alignItems: "center", gap: 2 }}>
+      <Paper elevation={2} sx={{ p: 2, mb: 2, borderRadius: 0, display: "flex", justifyContent: "space-between", alignItems: "center", gap: 2 }}>
         <Typography variant="h5" fontWeight={700} color="primary.main">
-          Quick Business Cash Book
+          Quick Business 
         </Typography>
 
         <Stack direction="row" spacing={2}>
@@ -233,7 +233,7 @@ const QuickCashBook = () => {
           }} size="small" sx={{ width: 120 }} InputLabelProps={{ shrink: true }} />
         </Stack>
 
-        <Button variant="contained" color="success" startIcon={<Save />} onClick={handleSaveAll} disabled={loading}>
+        <Button variant="contained" color="info" startIcon={<Save />} onClick={handleSaveAll} disabled={loading}>
           {loading ? "Saving..." : "Save All"}
         </Button>
       </Paper>
