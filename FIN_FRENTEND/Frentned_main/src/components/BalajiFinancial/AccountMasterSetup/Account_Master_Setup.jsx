@@ -68,19 +68,17 @@ const AccountMasterSetup = () => {
     transType: [],
   });
 
-  const getHeaders = () => ({
-    headers: {
-      Authorization: `Bearer ${getSession()?.token || ""}`,
-      "Content-Type": "application/json",
-    },
-  });
+  const headers = {
+    Authorization: `Bearer ${getSession("token") || ""}`,
+    "Content-Type": "application/json",
+  };
 
   const fetchData = async () => {
     setLoading(true);
     try {
       const res = await axios.get(
         `${API_BASE}/account-master-setup/findAll`,
-        getHeaders()
+        headers
       );
       setAccounts(res.data || []);
     } catch {
@@ -151,7 +149,7 @@ const AccountMasterSetup = () => {
       : "/account-master-setup/saveAccountMaster";
 
     try {
-      await axios.post(`${API_BASE}${url}`, payload, getHeaders());
+      await axios.post(`${API_BASE}${url}`, payload, headers);
       toast.success(isEdit ? "Updated successfully" : "Saved successfully");
       handleClose();
       fetchData();
@@ -394,7 +392,7 @@ const AccountMasterSetup = () => {
         </DialogContent>
 
         <DialogActions sx={{ justifyContent: "center" }}>
-          <Button variant="contained"  onClick={handleClose}>Cancel</Button>
+          <Button variant="contained" onClick={handleClose}>Cancel</Button>
           <Button variant="contained" onClick={handleSubmit}>
             {isEdit ? "Update" : "Save"}
           </Button>
