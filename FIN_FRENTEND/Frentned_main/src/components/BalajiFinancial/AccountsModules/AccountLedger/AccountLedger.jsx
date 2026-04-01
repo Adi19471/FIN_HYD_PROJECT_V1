@@ -27,14 +27,16 @@ import { getSession } from "src/utils/session";
 
 
 
-const getHeaders = () => ({
-  headers: {
-    Authorization: `Bearer ${getSession()?.token || getSession("token") || ""}`,
-    "Content-Type": "application/json",
-  },
-});
+
+
 
 const AccountLedger = () => {
+
+  const headers = {
+  Authorization: `Bearer ${getSession("token") || ""}`,
+  "Content-Type": "application/json",
+};
+
   const [filterType, setFilterType] = useState("ALL");
   const [fromDate, setFromDate] = useState("");
   const [toDate, setToDate] = useState("");
@@ -62,7 +64,7 @@ const AccountLedger = () => {
         url = `${API_BASE}/getAccountsLedger/${fromDate}/${toDate}`;
       }
 
-      const res = await axios.get(url, getHeaders());
+      const res = await axios.get(url, headers);
 
       if (res?.data?.length > 0) {
         const formatted = res.data.map((item, index) => ({
@@ -122,19 +124,19 @@ const AccountLedger = () => {
   ];
 
   // ✅ Export Buttons Dummy
-const handlePrint = () => toast.info(`Print feature under development 🖨️`);
-const handleWord  = () => toast.info(`Word export under development 📄`);
-const handleExcel = () => toast.info(`Excel export under development 📊`);
-const handlePdf   = () => toast.info(`PDF export under development 📑`);
+  const handlePrint = () => toast.info(`Print feature under development 🖨️`);
+  const handleWord = () => toast.info(`Word export under development 📄`);
+  const handleExcel = () => toast.info(`Excel export under development 📊`);
+  const handlePdf = () => toast.info(`PDF export under development 📑`);
 
   return (
     <Box sx={{ p: 2 }}>
       <Paper sx={{ p: 2.5, borderRadius: 0 }}>
-    
 
 
 
-      
+
+
 
         {/* TOP FILTER BAR */}
         <Box

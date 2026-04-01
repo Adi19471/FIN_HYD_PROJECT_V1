@@ -23,6 +23,11 @@ import { successToast, errorToast } from "toastify";
 
 const AccountMasterLedger = () => {
 
+  const headers = {
+    Authorization: `Bearer ${getSession("token") || ""}`,
+    "Content-Type": "application/json",
+  };
+
   const [masterCodes, setMasterCodes] = useState([]);
   const [masterName, setMasterName] = useState("");
   const [dateMode, setDateMode] = useState("all");
@@ -89,7 +94,7 @@ const AccountMasterLedger = () => {
     try {
       const res = await axios.get(
         `${API_BASE}/account-master-droddown/findAllMasterCodes`,
-        getHeaders()
+        headers
       );
 
       setMasterCodes(res.data || []);
@@ -129,7 +134,7 @@ const AccountMasterLedger = () => {
         url = `${API_BASE}/getRecordsByAccountMasterCode/${masterName}/${fromDate}/${toDate}`;
       }
 
-      const res = await axios.get(url, getHeaders());
+      const res = await axios.get(url, headers);
 
       console.log("Ledger Response:", res.data);
 
@@ -192,22 +197,22 @@ const AccountMasterLedger = () => {
             value={masterName}
             onChange={(e) => setMasterName(e.target.value)}
             sx={{ minWidth: 250 }}
-             SelectProps={{
-    MenuProps: {
-      PaperProps: {
-        sx: {
-          maxHeight: 250,   // 👈 controls height
-        },
-      },
-    },
-  }}
+            SelectProps={{
+              MenuProps: {
+                PaperProps: {
+                  sx: {
+                    maxHeight: 250,   // 👈 controls height
+                  },
+                },
+              },
+            }}
           >
-         
-              {masterCodes.map((item, index) => (
-        <MenuItem key={index} value={item}>
-          {item}
-        </MenuItem>
-      ))}
+
+            {masterCodes.map((item, index) => (
+              <MenuItem key={index} value={item}>
+                {item}
+              </MenuItem>
+            ))}
           </TextField>
 
           {/* Radio Buttons */}
