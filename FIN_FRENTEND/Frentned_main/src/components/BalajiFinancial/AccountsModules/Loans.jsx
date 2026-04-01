@@ -50,29 +50,7 @@ const Loans = () => {
         <Button variant="contained">+ New Loan</Button>
       </Box>
 
-      {/* FILTERS */}
-      <Paper sx={{ p: 2, mb: 3, borderRadius: 3 }}>
-        <Grid container spacing={2}>
-          <Grid item xs={12} md={3}>
-            <TextField fullWidth label="From Date" type="date" InputLabelProps={{ shrink: true }} />
-          </Grid>
-          <Grid item xs={12} md={3}>
-            <TextField fullWidth label="To Date" type="date" InputLabelProps={{ shrink: true }} />
-          </Grid>
-          <Grid item xs={12} md={3}>
-            <TextField select fullWidth label="Loan Type">
-              <MenuItem value="all">All</MenuItem>
-              <MenuItem value="daily">Daily</MenuItem>
-              <MenuItem value="monthly">Monthly</MenuItem>
-            </TextField>
-          </Grid>
-          <Grid item xs={12} md={3}>
-            <Button fullWidth variant="contained" sx={{ height: "100%" }}>
-              Apply Filters
-            </Button>
-          </Grid>
-        </Grid>
-      </Paper>
+   
 
       {/* STATS CARDS */}
       <Grid container spacing={3} mb={3}>

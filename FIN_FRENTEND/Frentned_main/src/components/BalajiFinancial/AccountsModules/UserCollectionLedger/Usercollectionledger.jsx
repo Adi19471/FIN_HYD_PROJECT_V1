@@ -178,6 +178,15 @@ const Usercollectionledger = () => {
             value={userName}
             onChange={(e) => setUserName(e.target.value)}
             sx={{ minWidth: 200 }}
+             SelectProps={{
+    MenuProps: {
+      PaperProps: {
+        sx: {
+          maxHeight: 250,   // 👈 controls height
+        },
+      },
+    },
+  }}
           >
 {users.map((user, index) => (
   <MenuItem key={index} value={user}>

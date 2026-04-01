@@ -129,12 +129,12 @@ const handlePdf   = () => toast.info(`PDF export under development 📑`);
 
   return (
     <Box sx={{ p: 2 }}>
-      <Paper sx={{ p: 2.5, borderRadius: 2 }}>
+      <Paper sx={{ p: 2.5, borderRadius: 0 }}>
     
 
 
 
-        <Divider sx={{ my: 2 }} />
+      
 
         {/* TOP FILTER BAR */}
         <Box
@@ -207,7 +207,7 @@ const handlePdf   = () => toast.info(`PDF export under development 📑`);
           </Box>
         </Box>
 
-        <Divider sx={{ my: 2 }} />
+
 
         {/* REPORT TABLE */}
         <Box sx={{ height: 520, width: "100%" }}>

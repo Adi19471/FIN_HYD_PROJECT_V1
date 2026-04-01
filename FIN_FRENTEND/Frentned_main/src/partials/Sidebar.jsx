@@ -23,6 +23,19 @@ import {
   EventAvailable,
   People,
   Description,
+  AttachMoney,
+  Business,
+  Calculate,
+  CheckCircle,
+  DashboardCustomize,
+  FlashOn,
+  FolderSpecial,
+  Payment,
+  Send,
+  Settings,
+  Summarize,
+  Today,
+  TrendingUp,
 } from "@mui/icons-material";
 
 import { useThemeProvider } from "../utils/ThemeContext";
@@ -298,7 +311,7 @@ function Sidebar({ sidebarOpen, setSidebarOpen }) {
                     }`
                   }
                 >
-                  <ReceiptLong className="w-4 h-4" />
+                  <FlashOn className="w-4 h-4" />
                   <span>Quick Cash Book</span>
                 </NavLink>
               </li>
@@ -369,7 +382,7 @@ function Sidebar({ sidebarOpen, setSidebarOpen }) {
             : "text-gray-600 dark:text-gray-400 hover:bg-sky-100 hover:text-sky-700 dark:hover:bg-sky-900/40 dark:hover:text-sky-300"
         }`
       }>
-        <AccountBalanceWallet className="w-4 h-4" />
+        <AccountBalance className="w-4 h-4" />
         <span>Loans Main</span>
       </NavLink>
     </li>
@@ -385,7 +398,7 @@ function Sidebar({ sidebarOpen, setSidebarOpen }) {
             : "text-gray-600 dark:text-gray-400 hover:bg-sky-100 hover:text-sky-700 dark:hover:bg-sky-900/40 dark:hover:text-sky-300"
         }`
       }>
-        <AccountBalanceWallet className="w-4 h-4" />
+        <Today className="w-4 h-4" />
         <span>Daily Book</span>
       </NavLink>
     </li>
@@ -398,7 +411,7 @@ function Sidebar({ sidebarOpen, setSidebarOpen }) {
             : "text-gray-600 dark:text-gray-400 hover:bg-sky-100 hover:text-sky-700 dark:hover:bg-sky-900/40 dark:hover:text-sky-300"
         }`
       }>
-        <AccountBalanceWallet className="w-4 h-4" />
+        <Calculate className="w-4 h-4" />
         <span>CB Ledger</span>
       </NavLink>
     </li>
@@ -422,7 +435,7 @@ function Sidebar({ sidebarOpen, setSidebarOpen }) {
             : "text-gray-600 dark:text-gray-400 hover:bg-sky-100 hover:text-sky-700 dark:hover:bg-sky-900/40 dark:hover:text-sky-300"
         }`
       }>
-        <AccountBalanceWallet className="w-4 h-4" />
+        <FolderSpecial className="w-4 h-4" />
         <span>Account Master Ledger</span>
       </NavLink>
     </li>
@@ -491,7 +504,7 @@ function Sidebar({ sidebarOpen, setSidebarOpen }) {
                     }`
                   }
                 >
-                  <AccountBalanceWallet className="w-4 h-4" />
+                  <Settings className="w-4 h-4" />
                   <span>Account Master Setup</span>
                 </NavLink>
               </li>
@@ -507,7 +520,7 @@ function Sidebar({ sidebarOpen, setSidebarOpen }) {
                     }`
                   }
                 >
-                  <AccountBalanceWallet className="w-4 h-4" />
+                  <PersonAdd className="w-4 h-4" />
                   <span>User Registration</span>
                 </NavLink>
               </li>
@@ -524,7 +537,7 @@ function Sidebar({ sidebarOpen, setSidebarOpen }) {
             onClick={() => handleGroupToggle("loans")}
           >
             <div className="flex items-center gap-3">
-              <AccountBalance className="w-5 h-5 text-sky-600 dark:text-sky-400" />
+              <AttachMoney className="w-5 h-5 text-sky-600 dark:text-sky-400" />
               <span className="text-sm lg:opacity-0 lg:sidebar-expanded:opacity-100 2xl:opacity-100 transition-opacity duration-200">
                 Loans
               </span>
@@ -549,7 +562,7 @@ function Sidebar({ sidebarOpen, setSidebarOpen }) {
                     }`
                   }
                 >
-                  <MonetizationOn className="w-4 h-4" />
+                  <Send className="w-4 h-4" />
                   <span>Distributed Loans</span>
                 </NavLink>
               </li>
@@ -564,7 +577,7 @@ function Sidebar({ sidebarOpen, setSidebarOpen }) {
                     }`
                   }
                 >
-                  <EventNote className="w-4 h-4" />
+                  <Payment className="w-4 h-4" />
                   <span>Instalment Dues</span>
                 </NavLink>
               </li>
@@ -579,7 +592,7 @@ function Sidebar({ sidebarOpen, setSidebarOpen }) {
                     }`
                   }
                 >
-                  <EventAvailable className="w-4 h-4" />
+                  <CheckCircle className="w-4 h-4" />
                   <span>Maturity</span>
                 </NavLink>
               </li>
@@ -596,7 +609,7 @@ function Sidebar({ sidebarOpen, setSidebarOpen }) {
             onClick={() => handleGroupToggle("business")}
           >
             <div className="flex items-center gap-3">
-              <AccountBalance className="w-5 h-5 text-sky-600 dark:text-sky-400" />
+              <Business className="w-5 h-5 text-sky-600 dark:text-sky-400" />
               <span className="text-sm lg:opacity-0 lg:sidebar-expanded:opacity-100 2xl:opacity-100 transition-opacity duration-200">
                 Business
               </span>
@@ -621,7 +634,7 @@ function Sidebar({ sidebarOpen, setSidebarOpen }) {
                     }`
                   }
                 >
-                  <EventNote className="w-4 h-4" />
+                  <TrendingUp className="w-4 h-4" />
                   <span>Revenue Expense Statement</span>
                 </NavLink>
               </li>
@@ -651,7 +664,7 @@ function Sidebar({ sidebarOpen, setSidebarOpen }) {
                     }`
                   }
                 >
-                  <Info className="w-4 h-4" />
+                  <DashboardCustomize className="w-4 h-4" />
                   <span>Business Overview</span>
                 </NavLink>
               </li>
@@ -666,7 +679,7 @@ function Sidebar({ sidebarOpen, setSidebarOpen }) {
                     }`
                   }
                 >
-                  <ReceiptLong className="w-4 h-4" />
+                  <Summarize className="w-4 h-4" />
                   <span>Business Collection Reports</span>
                 </NavLink>
               </li>

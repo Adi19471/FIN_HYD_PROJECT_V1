@@ -21,16 +21,6 @@ import { API_BASE } from "lib/config";
 import { getSession } from "src/utils/session";
 import { successToast, errorToast } from "toastify";
 
-/* -------------------- COMMON AUTH HEADER -------------------- */
-const getHeaders = () => ({
-  headers: {
-    Authorization: `Bearer ${
-      getSession()?.token || getSession("token") || ""
-    }`,
-    "Content-Type": "application/json"
-  }
-});
-
 const AccountMasterLedger = () => {
 
   const [masterCodes, setMasterCodes] = useState([]);
@@ -202,13 +192,22 @@ const AccountMasterLedger = () => {
             value={masterName}
             onChange={(e) => setMasterName(e.target.value)}
             sx={{ minWidth: 250 }}
+             SelectProps={{
+    MenuProps: {
+      PaperProps: {
+        sx: {
+          maxHeight: 250,   // 👈 controls height
+        },
+      },
+    },
+  }}
           >
          
-         {masterCodes.map((item, index) => (
-  <MenuItem key={index} value={item}>
-    {item}
-  </MenuItem>
-))}
+              {masterCodes.map((item, index) => (
+        <MenuItem key={index} value={item}>
+          {item}
+        </MenuItem>
+      ))}
           </TextField>
 
           {/* Radio Buttons */}

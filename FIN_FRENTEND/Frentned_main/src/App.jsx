@@ -15,14 +15,18 @@ function App() {
   const location = useLocation();
   const { isAuthenticated } = useAuth();
 
-  // ✅ Scroll Effect
+  /* =========================
+     Scroll to Top on Route Change
+  ========================== */
   useEffect(() => {
-    document.querySelector("html").style.scrollBehavior = "auto";
-    window.scroll({ top: 0 });
-    document.querySelector("html").style.scrollBehavior = "";
+    document.documentElement.style.scrollBehavior = "auto";
+    window.scrollTo({ top: 0 });
+    document.documentElement.style.scrollBehavior = "smooth";
   }, [location.pathname]);
 
-  // ✅ Title Rotation Effect (ADD HERE)
+  /* =========================
+     Dynamic Title Rotation
+  ========================== */
   useEffect(() => {
     const titles = [
       "💰 Sri Balaji Finance",
@@ -31,7 +35,7 @@ function App() {
       "🗓️ Monthly Chit Schemes",
       "🤝 Trusted Chit Fund Services",
       "📈 Smart Savings • Better Returns",
-      "🏦 Secure Finance Solutions"
+      "🏦 Secure Finance Solutions",
     ];
 
     let index = 0;
@@ -44,22 +48,35 @@ function App() {
     return () => clearInterval(interval);
   }, []);
 
-  const isAuthRoute =
-    location.pathname === "/login" || location.pathname === "/unauthorized";
+  /* =========================
+     Route Conditions
+  ========================== */
+  const isAuthPage = ["/login", "/unauthorized"].includes(location.pathname);
 
-  const routesTree = (
+  /* =========================
+     Route Builder
+  ========================== */
+  const renderRoutes = () => (
     <Suspense fallback={<LoadingSpinner />}>
       <Routes>
         {routes.map((route, index) => {
+          const Element = route.element;
+
+          // 🔹 Public Routes
+          if (route.public || route.path === "/login") {
+            return <Route key={index} path={route.path} element={<Element />} />;
+          }
+
+          // 🔹 Root Route ("/")
           if (route.path === "/") {
             return (
               <Route
                 key={index}
-                path={route.path}
+                path="/"
                 element={
                   isAuthenticated ? (
                     <PrivateRoute>
-                      <route.element />
+                      <Element />
                     </PrivateRoute>
                   ) : (
                     <Navigate to="/login" replace />
@@ -69,23 +86,14 @@ function App() {
             );
           }
 
-          if (route.path === "/login" || route.public) {
-            return (
-              <Route
-                key={index}
-                path={route.path}
-                element={<route.element />}
-              />
-            );
-          }
-
+          // 🔹 Protected Routes with Role
           return (
             <Route
               key={index}
               path={route.path}
               element={
                 <PrivateRoute allowedRoles={route.roles}>
-                  <route.element />
+                  <Element />
                 </PrivateRoute>
               }
             />
@@ -95,7 +103,10 @@ function App() {
     </Suspense>
   );
 
-  return isAuthRoute ? routesTree : <Layout>{routesTree}</Layout>;
+  /* =========================
+     Layout Handling
+  ========================== */
+  return isAuthPage ? renderRoutes() : <Layout>{renderRoutes()}</Layout>;
 }
 
 export default App;

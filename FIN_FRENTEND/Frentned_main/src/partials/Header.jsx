@@ -173,7 +173,7 @@ function Header({ sidebarOpen, setSidebarOpen }) {
                       letterSpacing: '-0.04em',
                     }}
                   >
-                    BF
+                    B/F
                   </Typography>
                 </Box>
 

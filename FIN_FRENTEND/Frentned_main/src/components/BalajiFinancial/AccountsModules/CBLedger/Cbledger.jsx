@@ -116,7 +116,7 @@ const Cbledger = () => {
     <Box sx={{ p: 3 }}>
       
 
-      <Card sx={{ mt: 3, borderRadius: 4, boxShadow: 6 }}>
+      <Card sx={{ mt: 3, borderRadius: 0, boxShadow: 0 }}>
         <CardContent>
           <Typography variant="h5" fontWeight="bold" mb={2}>
             CB Ledger Report

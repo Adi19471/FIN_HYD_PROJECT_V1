@@ -1,12 +1,13 @@
-# Loans Page Sidebar Integration - TODO
+# Sidebar Icons Update - Progress Tracker
 
-## Steps:
-- [x] 1. Analyze files (Sidebar.jsx, Loans.jsx) - complete
-- [x] 2. Confirm edit plan with user - complete (user approved)
-- [x] 3. Edit Sidebar.jsx to add/enhance Loans entry in Accounts dropdown
-- [x] 4. Update TODO.md with progress
-- [x] 5. Verified: Routes.js confirms /AccountsModules/LoansMainpage → Loans.jsx. Sidebar now has "Loans" as first item in Accounts dropdown, auto-opens group, consistent styling. Loans.jsx is dashboard with no tabs data needed.
-- [ ] 6. Complete task with attempt_completion
+## Plan Steps:
+- [x] 1. Create this TODO.md (done)
+- [ ] 2. Update imports in Sidebar.jsx to add new Material-UI icons
+- [ ] 3. Replace repetitive AccountBalanceWallet icons with semantic alternatives across all sub-menu items
+- [ ] 4. Update group-level icons (Loans → AttachMoney, Business → Business)
+- [ ] 5. Verify no breakage (indentation, imports, logic preserved via exact matches)
+- [ ] 6. Test sidebar functionality (toggle, active states, responsive, dark mode)
+- [ ] 7. Mark complete and cleanup TODO.md
 
-**Status:** All edits complete. Ready for completion.
+**Current status:** Ready for step 2-5 implementation via batched edit_file calls.
 
