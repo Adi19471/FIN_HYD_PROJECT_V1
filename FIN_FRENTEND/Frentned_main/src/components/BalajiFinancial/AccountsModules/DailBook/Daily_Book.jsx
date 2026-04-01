@@ -5,8 +5,7 @@ import { API_BASE } from "lib/config";
 import { getSession } from "src/utils/session";
 import { successToast, errorToast } from "toastify";
 
-// Lazy load
-const Loans = lazy(() => import("../Loans"));
+
 
 // MUI imports
 import {
@@ -152,7 +151,7 @@ const DailyBook = () => {
   return (
     <LocalizationProvider dateAdapter={AdapterDayjs}>
       <Box sx={{ p: 2, maxWidth: 1500, mx: "auto", position: "relative" }}>
-        <Loans />
+ 
 
         {/* Loading Overlay */}
         {loading && (

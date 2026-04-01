@@ -1,13 +1,12 @@
-# Task: Fix missing src/utils/toast import in BalanceSheet.jsx
+# Loans Page Sidebar Integration - TODO
 
 ## Steps:
+- [x] 1. Analyze files (Sidebar.jsx, Loans.jsx) - complete
+- [x] 2. Confirm edit plan with user - complete (user approved)
+- [x] 3. Edit Sidebar.jsx to add/enhance Loans entry in Accounts dropdown
+- [x] 4. Update TODO.md with progress
+- [x] 5. Verified: Routes.js confirms /AccountsModules/LoansMainpage → Loans.jsx. Sidebar now has "Loans" as first item in Accounts dropdown, auto-opens group, consistent styling. Loans.jsx is dashboard with no tabs data needed.
+- [ ] 6. Complete task with attempt_completion
 
-- ✅ 1. Created `src/utils/toast.js` re-exporting `{ errorToast, successToast, confirmToast }` from `../../toastify.js`
+**Status:** All edits complete. Ready for completion.
 
-- ⏳ 2. Verify resolution: Restart Vite dev server (`npm run dev`) and confirm no more import error in BalanceSheet.jsx
-
-- ⏳ 3. Test errorToast: Load BalanceSheet without login or trigger API error to see toast
-
-- ⏳ 4. Scan for other missing toast imports if any
-
-- ⏳ 5. Complete

@@ -1,16 +1,9 @@
-
-import Loans from './../Loans';
-
+import React from 'react'
 
 const Loansdetailes = () => {
   return (
     <div>
- 
-      <Loans />
-
-<h4>Hello Loadn Detailes</h4>
-
-
+      <p>loan detaiesl pages</p>
     </div>
   )
 }

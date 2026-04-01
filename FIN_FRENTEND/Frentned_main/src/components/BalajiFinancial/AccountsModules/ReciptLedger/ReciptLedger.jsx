@@ -13,7 +13,7 @@ import axios from "axios";
 import { API_BASE } from "lib/config";
 import { getSession } from "src/utils/session";
 import { successToast, errorToast } from "toastify";
-import Loans from "../Loans";
+
 
 const ReceiptLedger = () => {
 
@@ -162,7 +162,7 @@ const ReceiptLedger = () => {
   return (
     <Box p={3}>
 
-      <Loans />
+  
 
       <Paper elevation={3} sx={{ p: 3 }}>
 

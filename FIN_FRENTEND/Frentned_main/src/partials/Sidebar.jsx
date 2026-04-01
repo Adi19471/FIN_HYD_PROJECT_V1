@@ -21,6 +21,8 @@ import {
   Construction,
   EventNote,
   EventAvailable,
+  People,
+  Description,
 } from "@mui/icons-material";
 
 import { useThemeProvider } from "../utils/ThemeContext";
@@ -95,7 +97,7 @@ function Sidebar({ sidebarOpen, setSidebarOpen }) {
       pathname.toLowerCase().startsWith("/transactions/")
     ) {
       setOpenGroup("transactions");
-    } else if (pathname.toLowerCase().startsWith("/loans/")) {
+    } else if (pathname.toLowerCase().startsWith("/loans/") || pathname.toLowerCase().includes("loansmainpage")) {
       setOpenGroup("accounts");
     } else if (pathname.toLowerCase().startsWith("/accountmastersetup")) {
       setOpenGroup("accountMaster");
@@ -355,25 +357,101 @@ function Sidebar({ sidebarOpen, setSidebarOpen }) {
             />
           </div>
 
-          {openGroup === "accounts" && (
-            <ul className="pl-11 mt-1 space-y-1">
-              <li>
-                <NavLink
-                  to="/AccountsModules/LoansMainpage"
-                  className={({ isActive }) =>
-                    `flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-all duration-200 ${
-                      isActive
-                        ? "bg-sky-100 text-sky-700 dark:bg-sky-900/50 dark:text-sky-300 shadow-sm"
-                        : "text-gray-600 hover:text-sky-700 dark:text-gray-400 dark:hover:text-sky-300 hover:bg-sky-100 dark:hover:bg-sky-900/40"
-                    }`
-                  }
-                >
-                  <AccountBalanceWallet className="w-4 h-4" />
-                  <span>Daily Book</span>
-                </NavLink>
-              </li>
-            </ul>
-          )}
+{openGroup === "accounts" && (
+  <ul className="pl-11 mt-1 space-y-1">
+
+   
+    <li>
+      <NavLink to="/AccountsModules/LoansMainpage" className={({ isActive }) =>
+        `flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-all duration-200 ${
+          isActive
+            ? "bg-gradient-to-r from-sky-600 to-blue-600 text-white shadow-sm"
+            : "text-gray-600 dark:text-gray-400 hover:bg-sky-100 hover:text-sky-700 dark:hover:bg-sky-900/40 dark:hover:text-sky-300"
+        }`
+      }>
+        <AccountBalanceWallet className="w-4 h-4" />
+        <span>Loans Main</span>
+      </NavLink>
+    </li>
+
+    <li>
+      <NavLink to="/AccountsModules/DailyBook" className={({ isActive }) =>
+        `flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-all duration-200 ${
+          isActive
+            ? "bg-gradient-to-r from-sky-600 to-blue-600 text-white shadow-sm"
+            : "text-gray-600 dark:text-gray-400 hover:bg-sky-100 hover:text-sky-700 dark:hover:bg-sky-900/40 dark:hover:text-sky-300"
+        }`
+      }>
+        <AccountBalanceWallet className="w-4 h-4" />
+        <span>Daily Book</span>
+      </NavLink>
+    </li>
+
+    <li>
+      <NavLink to="/AccountsModules/Cbledger" className={({ isActive }) =>
+        `flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-all duration-200 ${
+          isActive
+            ? "bg-gradient-to-r from-sky-600 to-blue-600 text-white shadow-sm"
+            : "text-gray-600 dark:text-gray-400 hover:bg-sky-100 hover:text-sky-700 dark:hover:bg-sky-900/40 dark:hover:text-sky-300"
+        }`
+      }>
+        <AccountBalanceWallet className="w-4 h-4" />
+        <span>CB Ledger</span>
+      </NavLink>
+    </li>
+
+    <li>
+      <NavLink to="/AccountsModules/AccountLedger" className={({ isActive }) =>
+        `flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm ${
+          isActive ? "bg-sky-100 text-sky-700" : "text-gray-600 hover:bg-sky-100"
+        }`
+      }>
+        <ReceiptLong className="w-4 h-4" />
+        <span>Account Ledger</span>
+      </NavLink>
+    </li>
+
+    <li>
+      <NavLink to="/AccountsModules/AccountMasterLedger" className={({ isActive }) =>
+        `flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-all duration-200 ${
+          isActive
+            ? "bg-gradient-to-r from-sky-600 to-blue-600 text-white shadow-sm"
+            : "text-gray-600 dark:text-gray-400 hover:bg-sky-100 hover:text-sky-700 dark:hover:bg-sky-900/40 dark:hover:text-sky-300"
+        }`
+      }>
+        <AccountBalanceWallet className="w-4 h-4" />
+        <span>Account Master Ledger</span>
+      </NavLink>
+    </li>
+
+    <li>
+      <NavLink to="/AccountsModules/Usercollectionledger" className={({ isActive }) =>
+        `flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-all duration-200 ${
+          isActive
+            ? "bg-gradient-to-r from-sky-600 to-blue-600 text-white shadow-sm"
+            : "text-gray-600 dark:text-gray-400 hover:bg-sky-100 hover:text-sky-700 dark:hover:bg-sky-900/40 dark:hover:text-sky-300"
+        }`
+      }>
+        <People className="w-4 h-4" />
+        <span>User Collection Ledger</span>
+      </NavLink>
+    </li>
+
+    <li>
+      <NavLink to="/AccountsModules/ReciptLedger" className={({ isActive }) =>
+        `flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-all duration-200 ${
+          isActive
+            ? "bg-gradient-to-r from-sky-600 to-blue-600 text-white shadow-sm"
+            : "text-gray-600 dark:text-gray-400 hover:bg-sky-100 hover:text-sky-700 dark:hover:bg-sky-900/40 dark:hover:text-sky-300"
+        }`
+      }>
+        <Description className="w-4 h-4" />
+        <span>Receipt Ledger</span>
+      </NavLink>
+    </li>
+
+  </ul>
+)}
 
           {/* Account Master Setup */}
           <div

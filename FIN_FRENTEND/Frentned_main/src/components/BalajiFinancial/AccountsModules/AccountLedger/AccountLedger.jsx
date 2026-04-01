@@ -26,7 +26,6 @@ import { API_BASE } from "lib/config";
 import { getSession } from "src/utils/session";
 
 
-import Loans from "../Loans";
 
 const getHeaders = () => ({
   headers: {
@@ -134,7 +133,7 @@ const handlePdf   = () => toast.info(`PDF export under development 📑`);
     
 
 
-<Loans />
+
         <Divider sx={{ my: 2 }} />
 
         {/* TOP FILTER BAR */}

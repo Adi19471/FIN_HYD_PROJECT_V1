@@ -16,7 +16,7 @@ import {
 
 import { DataGrid } from "@mui/x-data-grid";
 import axios from "axios";
-import Loans from "../Loans";
+
 
 import { API_BASE } from "lib/config";
 import { getSession } from "src/utils/session";
@@ -160,7 +160,7 @@ const Usercollectionledger = () => {
   return (
     <Box p={3}>
 
-      <Loans />
+   
 
       <Paper elevation={3} sx={{ p: 3 }}>
 

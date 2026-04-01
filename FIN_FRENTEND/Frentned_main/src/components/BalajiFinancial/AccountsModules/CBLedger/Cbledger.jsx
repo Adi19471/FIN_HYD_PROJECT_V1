@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import axios from "axios";
+
 import {
   Box,
   Card,
@@ -25,7 +26,7 @@ import {
 import { API_BASE } from "lib/config";
 import { getSession } from "src/utils/session";
 import { errorToast } from "toastify";
-import Loans from "../Loans";
+
 
 const Cbledger = () => {
   const [fromDate, setFromDate] = useState("");
@@ -113,7 +114,7 @@ const Cbledger = () => {
 
   return (
     <Box sx={{ p: 3 }}>
-      <Loans />
+      
 
       <Card sx={{ mt: 3, borderRadius: 4, boxShadow: 6 }}>
         <CardContent>
