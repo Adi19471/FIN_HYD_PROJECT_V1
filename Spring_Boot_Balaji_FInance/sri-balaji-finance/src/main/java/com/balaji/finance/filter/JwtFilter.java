@@ -12,6 +12,8 @@ import org.springframework.web.filter.OncePerRequestFilter;
 import com.balaji.finance.config.util.JwtUtil;
 import com.balaji.finance.config.util.MyOwnUserDetails;
 
+import io.jsonwebtoken.ExpiredJwtException;
+import io.jsonwebtoken.JwtException;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -31,24 +33,37 @@ public class JwtFilter extends OncePerRequestFilter {
 			throws ServletException, IOException {
 
 		String header = request.getHeader("Authorization");
+		try {
+			if (header != null && header.startsWith("Bearer ")) {
 
-		if (header != null && header.startsWith("Bearer ")) {
-			
-			
-			String token = header.substring(7);
-			String username = jwtUtil.extractUsername(token);
+				String token = header.substring(7);
+				String username = jwtUtil.extractUsername(token);
 
-			if (username != null
-					&& jwtUtil.validateToken(token)
-					&& SecurityContextHolder.getContext().getAuthentication() == null) {
+				if (username != null && jwtUtil.validateToken(token)
+						&& SecurityContextHolder.getContext().getAuthentication() == null) {
 
-				UserDetails userDetails = userDetailsService.loadUserByUsername(username);
+					UserDetails userDetails = userDetailsService.loadUserByUsername(username);
 
-				UsernamePasswordAuthenticationToken auth = new UsernamePasswordAuthenticationToken(userDetails, null,
-						userDetails.getAuthorities());
+					UsernamePasswordAuthenticationToken auth = new UsernamePasswordAuthenticationToken(userDetails,
+							null, userDetails.getAuthorities());
 
-				SecurityContextHolder.getContext().setAuthentication(auth);
+					SecurityContextHolder.getContext().setAuthentication(auth);
+				}
 			}
+
+		} catch (ExpiredJwtException ex) {
+			
+			response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+			response.setContentType("application/json");
+			response.getWriter().write("{\"message\": \"Token expired\", \"code\": \"TOKEN_EXPIRED\"}");
+			return;
+
+		} catch (JwtException ex) {
+			
+			response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+			response.setContentType("application/json");
+			response.getWriter().write("{\"message\": \"Invalid token\", \"code\": \"INVALID_TOKEN\"}");
+			return;
 		}
 
 		filterChain.doFilter(request, response);

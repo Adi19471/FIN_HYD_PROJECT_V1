@@ -27,6 +27,8 @@ import com.balaji.finance.repo.PersonalInfoRepository;
 import com.balaji.finance.util.DfNumberService;
 import com.balaji.finance.util.MfNumberService;
 
+import jakarta.transaction.Transactional;
+
 @Service
 public class BusinessMemberService {
 
@@ -204,19 +206,9 @@ public class BusinessMemberService {
 
 			}
 
-			BigDecimal principal = businessMember.getAmount();
+		
 
-			BigDecimal ratePerMonth = businessMember.getInterest().divide(BigDecimal.valueOf(100), 10,
-					RoundingMode.HALF_UP);
-
-			BigDecimal days = BigDecimal.valueOf(businessMember.getDuration());
-
-			BigDecimal timeInMonths = days.divide(BigDecimal.valueOf(30), 10, RoundingMode.HALF_UP);
-
-			BigDecimal interestAmount = principal.multiply(ratePerMonth).multiply(timeInMonths).setScale(2,
-					RoundingMode.HALF_UP);
-
-			if (interestAmount.compareTo(BigDecimal.ZERO) > 0) {
+			if (businessMember.getInterest().compareTo(BigDecimal.ZERO) > 0) {
 
 				AccountMaster accountMasterInterest = accountMasterRepo.findAccountMasterByMasterCodeAndCode("INTEREST",
 						"DF INTEREST");
@@ -224,7 +216,7 @@ public class BusinessMemberService {
 				CashBook dfIntrestCashBook = new CashBook();
 				dfIntrestCashBook.setBusinessMember(businessMember);
 				dfIntrestCashBook.setPersonalInfo(businessMember.getCustomerId());
-				dfIntrestCashBook.setCredit(interestAmount);
+				dfIntrestCashBook.setCredit(businessMember.getInterest());
 				dfIntrestCashBook.setDebit(BigDecimal.ZERO);
 
 				dfIntrestCashBook.setAccountMastertype(accountMasterInterest.getType());
@@ -614,41 +606,63 @@ public class BusinessMemberService {
 		return loanList;
 	}
 
+	
+	@Transactional
 	public void generateEMIScheduleForMonth(BusinessMember member) {
 
-		int months = member.getDuration(); // Loan duration in months
+	    int months = member.getDuration();
 
-		// Step 1: Calculate total interest for the loan
-		BigDecimal totalInterest = member.getInterest();
+	    BigDecimal principal = member.getAmount();
+	    BigDecimal totalInterest = member.getInterest();
 
-		// Step 2: Calculate total payable amount = principal + total interest
-		BigDecimal totalPayable = member.getAmount().add(totalInterest);
+	    BigDecimal totalPayable = principal.add(totalInterest);
 
-		// Step 3: Calculate equal monthly EMI
-		BigDecimal emiAmount = totalPayable.divide(BigDecimal.valueOf(months), 2, RoundingMode.HALF_UP);
+	    // EMI calculation
+	    BigDecimal emiAmount = totalPayable.divide(
+	            BigDecimal.valueOf(months), 2, RoundingMode.HALF_UP);
 
-		// Step 4: Calculate monthly principal and interest
-		BigDecimal principalPerEMI = member.getAmount().divide(BigDecimal.valueOf(months), 2, RoundingMode.HALF_UP);
-		BigDecimal interestPerEMI = totalInterest.divide(BigDecimal.valueOf(months), 2, RoundingMode.HALF_UP);
+	    BigDecimal principalPerEMI = principal.divide(
+	            BigDecimal.valueOf(months), 2, RoundingMode.HALF_UP);
 
-		// Step 5: Generate EMI schedule
-		for (int i = 1; i <= months; i++) {
-			EMI emi = new EMI();
-			emi.setBusinessMember(member);
-			emi.setInstallmentNumber(i);
-			emi.setPrincipalAmount(principalPerEMI);
-			emi.setInterestAmount(interestPerEMI);
+	    BigDecimal interestPerEMI = totalInterest.divide(
+	            BigDecimal.valueOf(months), 2, RoundingMode.HALF_UP);
 
-			emi.setTotalAmount(emiAmount);
-			emi.setPaidAmount(BigDecimal.ZERO);
-			emi.setDueDate(member.getStartDate().plusMonths(i));
-			emi.setStatus("PENDING");
+	    List<EMI> emiList = new ArrayList<>(months);
 
-			emiRepo.save(emi);
+	    BigDecimal totalPrincipalAssigned = BigDecimal.ZERO;
+	    BigDecimal totalInterestAssigned = BigDecimal.ZERO;
 
-		}
+	    for (int i = 1; i <= months; i++) {
+
+	        EMI emi = new EMI();
+	        emi.setBusinessMember(member);
+	        emi.setInstallmentNumber(i);
+
+	        // Adjust last EMI for rounding difference
+	        if (i == months) {
+	            emi.setPrincipalAmount(principal.subtract(totalPrincipalAssigned));
+	            emi.setInterestAmount(totalInterest.subtract(totalInterestAssigned));
+	            emi.setTotalAmount(
+	                    emi.getPrincipalAmount().add(emi.getInterestAmount())
+	            );
+	        } else {
+	            emi.setPrincipalAmount(principalPerEMI);
+	            emi.setInterestAmount(interestPerEMI);
+	            emi.setTotalAmount(emiAmount);
+
+	            totalPrincipalAssigned = totalPrincipalAssigned.add(principalPerEMI);
+	            totalInterestAssigned = totalInterestAssigned.add(interestPerEMI);
+	        }
+
+	        emi.setPaidAmount(BigDecimal.ZERO);
+	        emi.setDueDate(member.getStartDate().plusMonths(i));
+	        emi.setStatus("PENDING");
+
+	        emiList.add(emi);
+	    }
+
+	    emiRepo.saveAll(emiList);
 	}
-
 	public void generateEMIScheduleForDays(BusinessMember member) {
 
 		int days = member.getDuration(); // Loan duration in months

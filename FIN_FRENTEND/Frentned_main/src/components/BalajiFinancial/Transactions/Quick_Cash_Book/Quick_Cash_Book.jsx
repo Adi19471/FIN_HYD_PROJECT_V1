@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useEffect, useCallback } from "react";
+import React, { useState, useMemo, useEffect, useCallback, useRef } from "react";
 import dayjs from "dayjs";
 import axios from "axios";
 import { successToast, errorToast } from "toastify";
@@ -14,144 +14,178 @@ import {
   Paper,
   Alert,
   Divider,
-  Autocomplete,
   CircularProgress,
   IconButton,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
 } from "@mui/material";
 
-import { DataGrid } from "@mui/x-data-grid";
-import { Save, Delete } from "@mui/icons-material";
+import { Save, Delete, Add } from "@mui/icons-material";
+import { Autocomplete as MuiAutocomplete } from "@mui/material";
 
 const QuickCashBook = () => {
   const [transactionDate, setTransactionDate] = useState(dayjs());
-  const [collectionRows, setCollectionRows] = useState([]);
-  const [accountOptions, setAccountOptions] = useState([]);
-  const [inputValue, setInputValue] = useState("");
-  const [selectedAccount, setSelectedAccount] = useState(null);
-  const [alertMsg, setAlertMsg] = useState({ text: "", severity: "info" });
+  const [rows, setRows] = useState([]);
+  const [accountSuggestions, setAccountSuggestions] = useState([]);
   const [loading, setLoading] = useState(false);
   const [fetchingAccount, setFetchingAccount] = useState(null);
+  const [alertMsg, setAlertMsg] = useState({ text: "", severity: "info" });
+  const [isAddingRow, setIsAddingRow] = useState(false);   // ← Protection flag
 
   const token = getSession("token");
+  const inputRefs = useRef({});
 
-  /* ------------------ Auto Complete ------------------ */
+  // Get list of already used account numbers
+  const usedAccounts = useMemo(() => {
+    return new Set(rows.map(r => r.accountNo?.trim()).filter(Boolean));
+  }, [rows]);
+
+  // Initialize with exactly ONE row
   useEffect(() => {
-    const fetchSuggestions = async () => {
-      if (inputValue.length < 2 && inputValue !== "*") return;
+    if (rows.length === 0) {
+      const initialRow = {
+        id: Date.now(),
+        accountNo: "",
+        name: "",
+        installment: 0,
+        dueAmount: 0,
+        lateFee: 0,
+        paidAmount: 0,
+        paidLateFee: 0,
+      };
+      setRows([initialRow]);
 
-      try {
-        const res = await axios.get(
-          `${API_BASE}/BusinessMember/allLoanDetailsAutoComplete`,
-          {
-            params: { q: inputValue || "*" },
-            headers: { Authorization: `Bearer ${token}` },
-          }
-        );
+      setTimeout(() => inputRefs.current[initialRow.id]?.focus(), 200);
+    }
+  }, []);
 
-        if (Array.isArray(res.data)) {
-          setAccountOptions(res.data);
-        }
-      } catch {
-        errorToast("Failed to load account suggestions");
-      }
+  const addNewRowWithPrefix = (basePrefix = "") => {
+    if (isAddingRow) return;   // Prevent multiple calls
+
+    setIsAddingRow(true);
+
+    const newRow = {
+      id: Date.now(),
+      accountNo: basePrefix,
+      name: "",
+      installment: 0,
+      dueAmount: 0,
+      lateFee: 0,
+      paidAmount: 0,
+      paidLateFee: 0,
     };
 
-    fetchSuggestions();
-  }, [inputValue, token]);
+    setRows((prev) => [...prev, newRow]);
 
-  /* ------------------ Add Row ------------------ */
-  const addRow = useCallback(
-    async (selectedOption = null) => {
-      const loanId = selectedOption?.loanId || inputValue.trim();
-      if (!loanId) return;
+    setTimeout(() => {
+      inputRefs.current[newRow.id]?.focus();
+      setIsAddingRow(false);
+    }, 150);
+  };
 
-      if (collectionRows.some((r) => r.accountNo === loanId)) {
-        setAlertMsg({
-          text: `Account ${loanId} already added`,
-          severity: "warning",
+  /* Fetch Suggestions */
+  const fetchSuggestions = useCallback(async (searchText) => {
+    if (!searchText || searchText.length < 2) return setAccountSuggestions([]);
+    try {
+      const res = await axios.get(`${API_BASE}/BusinessMember/allLoanDetailsAutoComplete`, {
+        params: { q: searchText },
+        headers: { Authorization: `Bearer ${token}` },
+      });
+
+      if (Array.isArray(res.data)) {
+        // Filter out already used accounts
+        const filtered = res.data.filter(option => {
+          const accNo = option.loanId || option.displayString || "";
+          return !usedAccounts.has(accNo.trim());
         });
-        return;
+        setAccountSuggestions(filtered);
       }
+    } catch { }
+  }, [token, usedAccounts]);
 
-      const tempId = Date.now();
+  /* Fetch Record */
+  const fetchAccountRecord = async (loanId, rowId) => {
+    console.log("🔥 FETCH API CALLED for:", loanId);
 
-      setCollectionRows((prev) => [
-        ...prev,
-        {
-          id: tempId,
-          accountNo: loanId,
-          name: "Loading...",
-          installment: 0,
-          dueAmount: 0,
-          lateFee: 0,
-          paidAmount: 0,
-          paidLateFee: 0,
-        },
-      ]);
+    if (!loanId?.trim()) return;
 
-      setFetchingAccount(loanId);
-      setInputValue("");
-      setSelectedAccount(null);
+    setFetchingAccount(loanId);
 
-      try {
-        const res = await axios.get(
-          `${API_BASE}/retriveQuickCashBookRecord/${loanId}`,
-          { headers: { Authorization: `Bearer ${token}` } }
+    try {
+      const res = await axios.get(
+        `${API_BASE}/retriveQuickCashBookRecord/${loanId.trim()}`,
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+
+      if (res.data) {
+        setRows((prev) =>
+          prev.map((row) =>
+            row.id === rowId
+              ? {
+                ...row,
+                accountNo: loanId.trim(),
+                name: res.data.name || "Unknown",
+                installment: Number(res.data.installment || 0),
+                dueAmount: Number(res.data.dueAmount || 0),
+                lateFee: Number(res.data.lateFee || 0),
+                paidAmount: 0,
+                paidLateFee: 0,
+              }
+              : row
+          )
         );
 
-        if (res.data) {
-          setCollectionRows((prev) =>
-            prev.map((row) =>
-              row.id === tempId
-                ? {
-                    ...row,
-                    name: res.data.name,
-                    installment: Number(res.data.installment || 0),
-                    dueAmount: Number(res.data.dueAmount || 0),
-                    lateFee: Number(res.data.lateFee || 0),
-                  }
-                : row
-            )
-          );
-        }
-      } catch {
-        setAlertMsg({
-          text: `No previous record for ${loanId}`,
-          severity: "info",
-        });
-      } finally {
-        setFetchingAccount(null);
+       
+
+        // Add only ONE row
+        // setTimeout(() => addNewRowWithPrefix(basePrefix), 250);
       }
-    },
-    [inputValue, collectionRows, token]
-  );
-
-  /* ------------------ DataGrid Edit Fix ------------------ */
-  const processRowUpdate = useCallback((newRow) => {
-    setCollectionRows((prev) =>
-      prev.map((row) => (row.id === newRow.id ? newRow : row))
-    );
-    return newRow;
-  }, []);
-
-  /* ------------------ Delete Row ------------------ */
-  const handleDeleteRow = useCallback((id) => {
-    setCollectionRows((prev) => prev.filter((row) => row.id !== id));
-  }, []);
-
-  /* ------------------ Save ------------------ */
-  const handleSaveAll = async () => {
-    if (!collectionRows.length) {
-      errorToast("No records to save");
-      return;
+    } catch (err) {
+      console.error(err);
+      setAlertMsg({ text: `No record found for ${loanId}`, severity: "warning" });
+    } finally {
+      setFetchingAccount(null);
     }
+  };
+
+  const handleAccountCommit = (rowId, value) => {
+    const finalValue = value?.trim();
+    if (!finalValue) return;
+
+    setRows((prev) =>
+      prev.map((row) => (row.id === rowId ? { ...row, accountNo: finalValue } : row))
+    );
+
+    fetchAccountRecord(finalValue, rowId);
+  };
+
+  const updateRow = (rowId, field, newValue) => {
+    setRows((prev) =>
+      prev.map((row) => (row.id === rowId ? { ...row, [field]: newValue } : row))
+    );
+  };
+
+  const deleteRow = (id) => {
+    setRows((prev) => prev.filter((row) => row.id !== id));
+  };
+
+  const handleSaveAll = async () => {
+    const rowsToSave = rows.filter((r) => r.accountNo?.trim());
+    if (!rowsToSave.length) return errorToast("No valid records to save");
 
     setLoading(true);
-
     try {
       const payload = {
         transactionDate: transactionDate.format("YYYY-MM-DD HH:mm:ss"),
-        quickCashBookRows: collectionRows.map((r) => ({
+        quickCashBookRows: rowsToSave.filter(
+          (r) =>
+            Number(r.paidAmount || 0) > 0 ||
+            Number(r.paidLateFee || 0) > 0
+        ).map((r) => ({
           accountNo: r.accountNo,
           name: r.name,
           installment: Number(r.installment || 0),
@@ -167,7 +201,7 @@ const QuickCashBook = () => {
       });
 
       successToast("Saved successfully");
-      setCollectionRows([]);
+      setRows([]);
     } catch {
       errorToast("Save failed");
     } finally {
@@ -175,182 +209,177 @@ const QuickCashBook = () => {
     }
   };
 
-  /* ------------------ Columns ------------------ */
-  const columns = [
-    { field: "accountNo", headerName: "Loan / A/c", width: 160 },
-    {
-      field: "name",
-      headerName: "Customer",
-      width: 260,
-      renderCell: (params) =>
-        fetchingAccount === params.row.accountNo ? (
-          <Box display="flex" gap={1}>
-            <CircularProgress size={16} />
-            Loading...
-          </Box>
-        ) : (
-          params.value
-        ),
-    },
-    { field: "installment", headerName: "Installment", width: 120 },
-    { field: "dueAmount", headerName: "Due", width: 120 },
-    { field: "lateFee", headerName: "Late Fee", width: 120 },
-    {
-      field: "paidAmount",
-      headerName: "Paid Amount",
-      width: 150,
-      editable: true,
-      type: "number",
-    },
-    {
-      field: "paidLateFee",
-      headerName: "Paid Late Fee",
-      width: 150,
-      editable: true,
-      type: "number",
-    },
-    {
-      field: "actions",
-      headerName: "Action",
-      width: 80,
-      sortable: false,
-      renderCell: (params) => (
-        <IconButton
-          color="error"
-          size="small"
-          onClick={() => handleDeleteRow(params.row.id)}
-        >
-          <Delete fontSize="small" />
-        </IconButton>
-      ),
-    },
-  ];
+  const totalCollected = useMemo(() => rows.reduce((sum, r) => sum + Number(r.paidAmount || 0), 0), [rows]);
+  const formatNumber = (val) => {
+    if (val === "" || val === null || val === undefined) return "";
+    return Number(val).toLocaleString("en-IN");
+  };
 
-  const totalCollected = useMemo(
-    () => collectionRows.reduce((s, r) => s + Number(r.paidAmount || 0), 0),
-    [collectionRows]
-  );
-
-  /* ------------------ UI ------------------ */
+  const parseNumber = (val) => {
+    return val.replace(/,/g, "");
+  };
   return (
     <Box>
-      <Paper
-        elevation={2}
-        sx={{
-          p: 2,
-          mb: 2,
-          borderRadius: 2,
-          background: "linear-gradient(180deg, #ffffff 0%, #f9fbff 100%)",
-          display: 'flex',
-          flexDirection: { xs: 'column', md: 'row' },
-          justifyContent: 'space-between',
-          alignItems: 'center',
-          gap: 2,
-          flexWrap: 'wrap'
-        }}
-      >
-        <Typography
-          variant="h5"
-          fontWeight={700}
-          sx={{
-            color: "primary.main",
-            whiteSpace: "nowrap",
-          }}
-        >
+      <Paper elevation={2} sx={{ p: 2, mb: 2, borderRadius: 2, display: "flex", justifyContent: "space-between", alignItems: "center", gap: 2 }}>
+        <Typography variant="h5" fontWeight={700} color="primary.main">
           Quick Business Cash Book
         </Typography>
 
-        <Stack
-          direction="row"
-          spacing={2}
-          alignItems="center"
-          sx={{ flexWrap: "wrap" }}
-        >
-          {/* Transaction Date - using dayjs with native date/time inputs */}
-          <TextField
-            label="Transaction Date"
-            type="date"
-            value={transactionDate ? transactionDate.format("YYYY-MM-DD") : ""}
-            onChange={(e) => setTransactionDate(dayjs(e.target.value))}
-            size="small"
-            sx={{ width: 150 }}
-            InputLabelProps={{ shrink: true }}
-          />
-          <TextField
-            label="Time"
-            type="time"
-            value={transactionDate ? transactionDate.format("HH:mm") : ""}
-            onChange={(e) => {
-              const [hours, minutes] = e.target.value.split(":");
-              setTransactionDate((prev) => prev.hour(parseInt(hours) || 0).minute(parseInt(minutes) || 0));
-            }}
-            size="small"
-            sx={{ width: 120 }}
-            InputLabelProps={{ shrink: true }}
-          />
-
-          <Autocomplete
-            freeSolo
-            sx={{ width: 260 }}
-            options={accountOptions}
-            value={selectedAccount}
-            inputValue={inputValue}
-            getOptionLabel={(o) => o.displayString || o.loanId || ""}
-            onInputChange={(e, v) => setInputValue(v)}
-            onChange={(e, v) => v && addRow(v)}
-            renderInput={(params) => (
-              <TextField
-                {...params}
-                size="small"
-                label="Loan / Account No"
-                placeholder="Type or scan account"
-                onKeyDown={(e) => {
-                  if (e.key === "Enter" && inputValue.trim()) {
-                    addRow();
-                  }
-                }}
-              />
-            )}
-          />
+        <Stack direction="row" spacing={2}>
+          <TextField label="Date" type="date" value={transactionDate.format("YYYY-MM-DD")} onChange={(e) => setTransactionDate(dayjs(e.target.value))} size="small" sx={{ width: 150 }} InputLabelProps={{ shrink: true }} />
+          <TextField label="Time" type="time" value={transactionDate.format("HH:mm")} onChange={(e) => {
+            const [h, m] = e.target.value.split(":");
+            setTransactionDate((prev) => prev.hour(parseInt(h) || 0).minute(parseInt(m) || 0));
+          }} size="small" sx={{ width: 120 }} InputLabelProps={{ shrink: true }} />
         </Stack>
 
-        <Button
-          variant="contained"
-          color="success"
-          startIcon={<Save />}
-          onClick={handleSaveAll}
-          disabled={loading}
-          sx={{
-            px: 3,
-            height: 40,
-            fontWeight: 600,
-            boxShadow: 2,
-            textTransform: "none",
-          }}
-        >
-          {loading ? "Saving..." : "Save"}
+        <Button variant="contained" color="success" startIcon={<Save />} onClick={handleSaveAll} disabled={loading}>
+          {loading ? "Saving..." : "Save All"}
         </Button>
       </Paper>
 
       <Divider sx={{ my: 2 }} />
-      {alertMsg.text && (
-        <Alert severity={alertMsg.severity}>{alertMsg.text}</Alert>
-      )}
+      {alertMsg.text && <Alert severity={alertMsg.severity}>{alertMsg.text}</Alert>}
 
-      <Paper sx={{ height: 520, mt: 2 }}>
-        <DataGrid
-          rows={collectionRows}
-          columns={columns}
-          editMode="cell"
-          processRowUpdate={processRowUpdate}
-          onProcessRowUpdateError={() =>
-            errorToast("Edit failed")
-          }
-        />
+      <Paper sx={{ mt: 2 }}>
+        <TableContainer>
+          <Table>
+            <TableHead>
+              <TableRow>
+                <TableCell align="center"><strong>Action</strong></TableCell>
+                <TableCell><strong>Loan / A/c</strong></TableCell>
+                <TableCell><strong>Customer</strong></TableCell>
+                <TableCell><strong>Installment</strong></TableCell>
+                <TableCell><strong>Due</strong></TableCell>
+                <TableCell><strong>Late Fee</strong></TableCell>
+                <TableCell><strong>Paid Amount</strong></TableCell>
+                <TableCell><strong>Paid Late Fee</strong></TableCell>
+              </TableRow>
+            </TableHead>
+            <TableBody>
+              {rows.map((row) => (
+                <TableRow key={row.id}>
+
+                  <TableCell align="center">
+                    <IconButton color="error" onClick={() => deleteRow(row.id)}>
+                      <Delete />
+                    </IconButton>
+                  </TableCell>
+
+
+                  <TableCell sx={{ width: 220 }}>
+                    <MuiAutocomplete
+                      freeSolo
+                      fullWidth
+                      size="small"
+                      options={accountSuggestions}
+                      value={row.accountNo || null}
+                      inputValue={row.accountNo || ""}
+                      getOptionLabel={(option) => typeof option === "string" ? option : option.displayString || option.loanId || ""}
+                      onInputChange={(e, newInput) => {
+                        fetchSuggestions(newInput);
+                        updateRow(row.id, "accountNo", newInput);
+                      }}
+                      onChange={(e, newValue) => {
+                        let selected = typeof newValue === "string" ? newValue : newValue?.loanId || newValue || "";
+                        handleAccountCommit(row.id, selected);
+                      }}
+                      onBlur={() => handleAccountCommit(row.id, row.accountNo)}
+                      onKeyDown={(e) => e.key === "Enter" && handleAccountCommit(row.id, row.accountNo)}
+                      renderInput={(params) => (
+                        <TextField {...params} placeholder="Enter Account No" inputRef={(el) => (inputRefs.current[row.id] = el)} variant="outlined" size="small" />
+                      )}
+                    />
+                  </TableCell>
+
+                  <TableCell>{row.name || "-"}</TableCell>
+                  <TableCell>{row.installment}</TableCell>
+                  <TableCell>{row.dueAmount}</TableCell>
+                  <TableCell>{row.lateFee}</TableCell>
+
+                  <TableCell>
+                    <TextField
+                      size="small"
+                      type="text"
+                      value={formatNumber(row.paidAmount)}
+                      onFocus={() => {
+                        if (row.paidAmount === 0) {
+                          updateRow(row.id, "paidAmount", "");
+                        }
+                      }}
+                      onChange={(e) => {
+                        let val = e.target.value;
+
+                        // remove commas
+                        val = parseNumber(val);
+
+                        // allow only numbers
+                        if (!/^\d*$/.test(val)) return;
+
+                        updateRow(row.id, "paidAmount", val === "" ? "" : Number(val));
+                      }}
+                      onBlur={(e) => {
+                        if (e.target.value === "") {
+                          updateRow(row.id, "paidAmount", 0);
+                        }
+                      }}
+
+
+                      fullWidth
+                    />
+                  </TableCell>
+
+                  <TableCell>
+                    <TextField
+                      size="small"
+                      type="text"
+                      value={formatNumber(row.paidLateFee)}
+                      onFocus={() => {
+                        if (row.paidLateFee === 0) {
+                          updateRow(row.id, "paidLateFee", "");
+                        }
+                      }}
+                      onChange={(e) => {
+                        let val = e.target.value;
+
+                        val = parseNumber(val);
+
+                        if (!/^\d*$/.test(val)) return;
+
+                        updateRow(row.id, "paidLateFee", val === "" ? "" : Number(val));
+                      }}
+                      onBlur={(e) => {
+                        if (e.target.value === "") {
+                          updateRow(row.id, "paidLateFee", 0);
+                        }
+                      }}
+
+                      onKeyDown={(e) => {
+                        if ((e.key === "Enter" || e.key === "Tab") && !e.shiftKey) {
+                          if (Number(row.paidAmount || 0) > 0) {
+                            e.preventDefault(); // prevents weird double triggers
+                             const basePrefix = row.accountNo.trim().replace(/\d+$/, "");
+                            addNewRowWithPrefix(basePrefix)
+                          }
+                        }
+                      }}
+                      fullWidth
+                    />
+                  </TableCell>
+
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </TableContainer>
       </Paper>
 
-      <Typography mt={2} fontWeight="bold">
-        Total Collected: ₹{totalCollected}
+      <Button variant="outlined" startIcon={<Add />} onClick={() => addNewRowWithPrefix("")} sx={{ mt: 2 }}>
+        Add New Row
+      </Button>
+
+      <Typography mt={2} fontWeight="bold" fontSize="1.1rem">
+        Total Collected: ₹{totalCollected.toFixed(2)}
       </Typography>
     </Box>
   );

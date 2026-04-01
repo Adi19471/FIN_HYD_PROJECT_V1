@@ -5,6 +5,7 @@ import { successToast, errorToast } from "toastify";
 import { API_BASE } from "lib/config";
 import LoadingSpinner from "src/LoadingSpinner";
 import { getSession } from "src/utils/session";
+import { CircularProgress } from "@mui/material";
 import {
   Button,
   TextField,
@@ -37,6 +38,8 @@ import dayjs from "dayjs";
 const LOAN_TYPE = { DAILY_FINANCE: "DAILY_FINANCE" };
 const FIXED_DURATION_DAYS = 100;
 const BASE_PROCESSING_FEE = 200;
+
+
 
 const DailyFinance = () => {
   const [rows, setRows] = useState([]);
@@ -309,8 +312,6 @@ const DailyFinance = () => {
     }
   };
 
-
-
   // SAVE / UPDATE LOAN
   const handleSave = async () => {
     if (!formData.customerId?.id) return errorToast("Customer is required");
@@ -334,6 +335,8 @@ const DailyFinance = () => {
     };
 
     try {
+      setLoading(true); // 🔥 START LOADING
+
       if (isEditMode) {
         await axios.post(
           `${API_BASE}/BusinessMember/update/${currentLoanId}`,
@@ -355,14 +358,16 @@ const DailyFinance = () => {
       resetForm();
     } catch (err) {
       errorToast(err.response?.data?.message || "Save failed");
+    } finally {
+      setLoading(false); // 🔥 STOP LOADING (VERY IMPORTANT)
     }
   };
 
   const handleClose = () => {
+    if (loading) return; // prevent close during API
     setOpen(false);
     resetForm();
   };
-
   // TABLE COLUMNS
   const columns = [
     {
@@ -678,8 +683,19 @@ const DailyFinance = () => {
           <Button variant="outlined" onClick={handleClose}>
             Cancel
           </Button>
-          <Button variant="contained" onClick={handleSave}>
-            {isEditMode ? "Update Loan" : "Create Loan"}
+          <Button
+            variant="contained"
+            onClick={handleSave}
+            disabled={loading}
+            startIcon={
+              loading ? <CircularProgress size={20} color="inherit" /> : null
+            }
+          >
+            {loading
+              ? "Processing..."
+              : isEditMode
+                ? "Update Loan"
+                : "Create Loan"}
           </Button>
         </DialogActions>
       </Dialog>

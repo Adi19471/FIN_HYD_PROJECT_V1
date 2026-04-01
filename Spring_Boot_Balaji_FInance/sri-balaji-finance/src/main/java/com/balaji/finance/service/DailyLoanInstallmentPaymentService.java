@@ -88,35 +88,36 @@ public class DailyLoanInstallmentPaymentService {
 		
 		List<EMI> listOfEMI = emiRepo.findByBusinessMember(bm);
 
-		List<InstallmentDetails> pending = new ArrayList<>();
+		List<InstallmentDetails> allInstallmentDetails = new ArrayList<>();
 
-		listOfEMI.stream().filter(p -> !p.getStatus().equalsIgnoreCase("PAID")).forEach(p -> {
+		for (EMI emi : listOfEMI) {
 
 			InstallmentDetails inst = new InstallmentDetails();
-			inst.setEmiId(p.getEmiId());
-			inst.setInstallmentNumber(p.getInstallmentNumber());
-			inst.setDueDate(p.getDueDate().format(DATE_FORMAT));
-			inst.setInstallmentAmount(p.getRemainingAmount());
+			inst.setEmiId(emi.getEmiId());
+			inst.setInstallmentNumber(emi.getInstallmentNumber());
+			inst.setPrincipleAmount(emi.getPrincipalAmount());
+			inst.setInterestAmount(emi.getInterestAmount());
+			inst.setPaidAmount(emi.getPaidAmount());
+			inst.setTotalAmount(emi.getTotalAmount());
+			inst.setDueDate(emi.getDueDate().format(DATE_FORMAT));
+
+			inst.setInstallmentAmount(emi.getRemainingAmount());
 
 			LocalDate today = LocalDate.now();
 
-			if (today.isAfter(p.getDueDate().toLocalDate())) {
+			if (today.isAfter(emi.getDueDate().toLocalDate())) {
 				inst.setLateFee(BigDecimal.ZERO);
 			} else {
 				inst.setLateFee(BigDecimal.ZERO);
 			}
-
-			inst.setPaid(BigDecimal.ZERO);
-			inst.setTotal(inst.getInstallmentAmount());
 			inst.setLateFeeDate(null);
+			inst.setStatus(emi.getStatus());
 
-			pending.add(inst);
+			allInstallmentDetails.add(inst);
 
-		});
+		}
 
-		info.setInstallmentDetailsList(pending);
-
-
+		info.setInstallmentDetailsList(allInstallmentDetails);
 		
 		
 		BigDecimal totalLoanAmount = installmentAmount.multiply(new BigDecimal(bm.getDuration()));
@@ -141,6 +142,7 @@ public class DailyLoanInstallmentPaymentService {
 				lastPaidDate = cb.getTransDate();
 			}
 		}
+		
 		info.setPaid(totalAmountPaid);
 		info.setBalance(totalLoanAmount.subtract(totalAmountPaid));
 		

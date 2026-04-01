@@ -115,7 +115,6 @@ const BusinessMonthlyFinance = () => {
         lateFeePaid: "",
         installmentDetailsList: (data.installmentDetailsList || []).map((inst) => ({
           ...inst,
-          paid: !!inst.paid,
         })),
       });
 
@@ -175,12 +174,15 @@ const BusinessMonthlyFinance = () => {
         dueAmount: 0,
         installmentDetailsList: form.installmentDetailsList.map((inst) => ({
           installmentNumber: inst.installmentNumber,
+          principleAmount: inst.principleAmount,
+          interestAmount: inst.interestAmount,
+          paidAmount: inst.paidAmount,
+          totalAmount: inst.totalAmount,
+          installmentAmount: inst.installmentAmount,
           dueDate: inst.dueDate,
           lateFeeDate: inst.lateFeeDate,
-          installmentAmount: inst.installmentAmount,
-          lateFee: inst.lateFee || 0,
-          total: (inst.installmentAmount || 0) + (inst.lateFee || 0),
-          paid: inst.paid ? 1 : 0,
+          lateFee: inst.lateFee,
+          status: inst.status
         })),
       };
 
@@ -353,7 +355,7 @@ const BusinessMonthlyFinance = () => {
           </Grid>
 
           <Grid item xs={6} sm={3} md={2}>
-            <TextField label="Paid So Far" value={form.paid || 0} size="small" fullWidth InputProps={{ readOnly: true }} />
+            <TextField label="Paid So Far" value={form.paid.toLocaleString() || 0} size="small" fullWidth InputProps={{ readOnly: true }} />
           </Grid>
 
           <Grid item xs={6} sm={3} md={2}>
@@ -362,7 +364,7 @@ const BusinessMonthlyFinance = () => {
 
           <Grid item xs={6} md={2}>
             <TextField
-              label="Principal Paid"
+              label="Amount Paid"
               value={form.amountPaid}
               onChange={(e) => setForm((p) => ({ ...p, amountPaid: e.target.value.replace(/[^0-9]/g, "") }))}
               placeholder="0"
@@ -411,30 +413,35 @@ const BusinessMonthlyFinance = () => {
           <TableHead sx={{ bgcolor: "primary.light" }}>
             <TableRow>
               <TableCell>Inst. No</TableCell>
+              <TableCell>Actual Principle Amount</TableCell>
+              <TableCell>Actual Interest Amount</TableCell>
+              <TableCell>Total EMI Amount</TableCell>
+              <TableCell>Total Paid </TableCell>
               <TableCell>Due Date</TableCell>
               <TableCell>Late From</TableCell>
-              <TableCell align="right">Installment</TableCell>
+              <TableCell align="right">Pending Amount</TableCell>
               <TableCell align="right">Late Fee</TableCell>
-              <TableCell align="right">Total</TableCell>
               <TableCell align="center">Status</TableCell>
             </TableRow>
           </TableHead>
           <TableBody>
             {form.installmentDetailsList.map((row, index) => {
-              const total = (row.installmentAmount || 0) + (row.lateFee || 0);
               return (
                 <TableRow key={index} hover>
                   <TableCell>{row.installmentNumber}</TableCell>
+                  <TableCell>{row.principleAmount.toLocaleString()}</TableCell>
+                  <TableCell>{row.interestAmount.toLocaleString()}</TableCell>
+                  <TableCell>{row.totalAmount.toLocaleString()}</TableCell>
+                  <TableCell>{row.paidAmount.toLocaleString()}</TableCell>
                   <TableCell>{row.dueDate || "-"}</TableCell>
                   <TableCell>{row.lateFeeDate || "-"}</TableCell>
-                  <TableCell align="right">₹{(row.installmentAmount || 0).toLocaleString()}</TableCell>
-                  <TableCell align="right">₹{(row.lateFee || 0).toLocaleString()}</TableCell>
                   <TableCell align="right">
-                    <strong>₹{total.toLocaleString()}</strong>
+                    <strong>₹{row.installmentAmount.toLocaleString()}</strong>
                   </TableCell>
+                  <TableCell align="right">₹{(row.lateFee || 0).toLocaleString()}</TableCell>
                   <TableCell align="center">
-                    <Typography color={row.paid ? "success.main" : "error.main"} fontWeight="medium">
-                      {row.paid ? "Paid" : "Pending"}
+                    <Typography color={row.status == 'PAID' ? "success.main" : "error.main"} fontWeight="medium">
+                      {row.status}
                     </Typography>
                   </TableCell>
                 </TableRow>

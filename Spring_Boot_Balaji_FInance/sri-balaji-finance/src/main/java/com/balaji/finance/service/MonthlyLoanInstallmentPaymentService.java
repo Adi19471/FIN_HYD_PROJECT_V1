@@ -95,20 +95,20 @@ public class MonthlyLoanInstallmentPaymentService {
 
 		
 
-		
-		
 		List<EMI> allEMIs = emiRepo.findByBusinessMember(bm);
-		List<EMI> pendingEMIs = allEMIs.stream().filter(emi -> !emi.getStatus().equalsIgnoreCase("PAID")).collect(Collectors.toList());
+		List<InstallmentDetails> allInstallmentDetails = new ArrayList<>();
 
-		
-		List<InstallmentDetails> pending = new ArrayList<>();
+		for (EMI emi : allEMIs) {
 
-		for (EMI emi : pendingEMIs) {
-			
 			InstallmentDetails inst = new InstallmentDetails();
 			inst.setEmiId(emi.getEmiId());
 			inst.setInstallmentNumber(emi.getInstallmentNumber());
+			inst.setPrincipleAmount(emi.getPrincipalAmount());
+			inst.setInterestAmount(emi.getInterestAmount());
+			inst.setPaidAmount(emi.getPaidAmount());
+			inst.setTotalAmount(emi.getTotalAmount());
 			inst.setDueDate(emi.getDueDate().format(DATE_FORMAT));
+
 			inst.setInstallmentAmount(emi.getRemainingAmount());
 
 			LocalDate today = LocalDate.now();
@@ -118,17 +118,15 @@ public class MonthlyLoanInstallmentPaymentService {
 			} else {
 				inst.setLateFee(BigDecimal.ZERO);
 			}
-
-			inst.setPaid(BigDecimal.ZERO);
-			inst.setTotal(inst.getInstallmentAmount());
 			inst.setLateFeeDate(null);
+			inst.setStatus(emi.getStatus());
 
-			pending.add(inst);
-			
+			allInstallmentDetails.add(inst);
+
 		}
 		
 		
-		info.setInstallmentDetailsList(pending);
+		info.setInstallmentDetailsList(allInstallmentDetails);
 
 	
 		

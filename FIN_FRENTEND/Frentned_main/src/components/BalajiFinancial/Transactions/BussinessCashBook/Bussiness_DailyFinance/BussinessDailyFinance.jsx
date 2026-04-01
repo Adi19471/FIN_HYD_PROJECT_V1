@@ -128,8 +128,7 @@ const BussinessDailyFinance = () => {
         lateFeePaid: "",
         installmentDetailsList: (data.installmentDetailsList || []).map(
           (inst) => ({
-            ...inst,
-            paid: !!inst.paid,
+            ...inst
           })
         ),
       });
@@ -175,12 +174,15 @@ const BussinessDailyFinance = () => {
         lateFee: lateFeeAmount,
         installmentDetailsList: form.installmentDetailsList.map((inst) => ({
           installmentNumber: inst.installmentNumber,
+          principleAmount: inst.principleAmount,
+          interestAmount: inst.interestAmount,
+          paidAmount: inst.paidAmount,
+          totalAmount: inst.totalAmount,
+          installmentAmount: inst.installmentAmount,
           dueDate: inst.dueDate,
           lateFeeDate: inst.lateFeeDate,
-          installmentAmount: inst.installmentAmount,
-          lateFee: inst.lateFee || 0,
-          total: (inst.installmentAmount || 0) + (inst.lateFee || 0),
-          paid: inst.paid ? 1 : 0,
+          lateFee: inst.lateFee,
+          status: inst.status
         })),
       };
 
@@ -239,7 +241,7 @@ const BussinessDailyFinance = () => {
                       {...params}
                       label="Search Customer"
                       size="small"
-                      sx={{width:300}}
+                      sx={{ width: 300 }}
                       InputProps={{
                         ...params.InputProps,
                         endAdornment: (
@@ -298,19 +300,19 @@ const BussinessDailyFinance = () => {
 
             <Grid container spacing={2}>
 
-<Grid item xs={12} md={4}>
-  <TextField
-    label="Loan Amount"
-    value={
-      form.loanAmount
-        ? Number(form.loanAmount).toLocaleString('en-IN')
-        : ''
-    }
-    size="small"
-    fullWidth
-    InputProps={{ readOnly: true }}
-  />
-</Grid>
+              <Grid item xs={12} md={4}>
+                <TextField
+                  label="Loan Amount"
+                  value={
+                    form.loanAmount
+                      ? Number(form.loanAmount).toLocaleString('en-IN')
+                      : ''
+                  }
+                  size="small"
+                  fullWidth
+                  InputProps={{ readOnly: true }}
+                />
+              </Grid>
 
               <Grid item xs={12} md={4}>
                 <TextField
@@ -375,62 +377,62 @@ const BussinessDailyFinance = () => {
                 />
               </Grid>
 
-            
-            <Grid item xs={12} sm={6} md={3}>
-  <TextField
-    label="Current Balance"
-    value={
-      form.balance
-        ? Number(form.balance).toLocaleString('en-IN')
-        : ''
-    }
-    fullWidth
-    size="small"
-    InputProps={{ readOnly: true }}
-  />
-</Grid>
 
-           
-           <Grid item xs={12} md={4}>
-  <TextField
-    label="Amount Paid"
-    value={
-      form.amountPaid
-        ? Number(form.amountPaid).toLocaleString('en-IN')
-        : ''
-    }
-    size="small"
-    fullWidth
-    onChange={(e) => {
-      const rawValue = e.target.value.replace(/[^0-9]/g, "");
-      setForm({
-        ...form,
-        amountPaid: rawValue,
-      });
-    }}
-  />
-</Grid>
+              <Grid item xs={12} sm={6} md={3}>
+                <TextField
+                  label="Current Balance"
+                  value={
+                    form.balance
+                      ? Number(form.balance).toLocaleString('en-IN')
+                      : ''
+                  }
+                  fullWidth
+                  size="small"
+                  InputProps={{ readOnly: true }}
+                />
+              </Grid>
 
-            
-            <Grid item xs={12} md={4}>
-  <TextField
-    label="Late Fee"
-    value={
-      form.lateFeePaid
-        ? Number(form.lateFeePaid).toLocaleString('en-IN')
-        : ''
-    }
-    size="small"
-    fullWidth
-    onChange={(e) => {
-      const rawValue = e.target.value.replace(/[^0-9]/g, "");
-      setForm({
-        ...form,
-        lateFeePaid: rawValue,
-      });
-    }}
-  />
-</Grid>
+
+              <Grid item xs={12} md={4}>
+                <TextField
+                  label="Amount Paid"
+                  value={
+                    form.amountPaid
+                      ? Number(form.amountPaid).toLocaleString('en-IN')
+                      : ''
+                  }
+                  size="small"
+                  fullWidth
+                  onChange={(e) => {
+                    const rawValue = e.target.value.replace(/[^0-9]/g, "");
+                    setForm({
+                      ...form,
+                      amountPaid: rawValue,
+                    });
+                  }}
+                />
+              </Grid>
+
+
+              <Grid item xs={12} md={4}>
+                <TextField
+                  label="Late Fee"
+                  value={
+                    form.lateFeePaid
+                      ? Number(form.lateFeePaid).toLocaleString('en-IN')
+                      : ''
+                  }
+                  size="small"
+                  fullWidth
+                  onChange={(e) => {
+                    const rawValue = e.target.value.replace(/[^0-9]/g, "");
+                    setForm({
+                      ...form,
+                      lateFeePaid: rawValue,
+                    });
+                  }}
+                />
+              </Grid>
 
             </Grid>
 
@@ -481,29 +483,36 @@ const BussinessDailyFinance = () => {
                     </TableCell>
 
                     <TableCell sx={{ backgroundColor: "#1976d2", color: "#fff", fontWeight: "bold" }}>
+                      Actual Principle Amount
+                    </TableCell>
+
+                    <TableCell sx={{ backgroundColor: "#1976d2", color: "#fff", fontWeight: "bold" }}>
+                      Actual Interest Amount
+                    </TableCell>
+
+                    <TableCell sx={{ backgroundColor: "#1976d2", color: "#fff", fontWeight: "bold" }}>
+                      Total EMI Amount
+                    </TableCell>
+
+                    <TableCell sx={{ backgroundColor: "#1976d2", color: "#fff", fontWeight: "bold" }}>
+                      Total Paid
+                    </TableCell>
+
+                    <TableCell sx={{ backgroundColor: "#1976d2", color: "#fff", fontWeight: "bold" }}>
                       Due Date
                     </TableCell>
 
                     <TableCell sx={{ backgroundColor: "#1976d2", color: "#fff", fontWeight: "bold" }}>
-                      Late Fee Date
+                      Late From
                     </TableCell>
 
                     <TableCell sx={{ backgroundColor: "#1976d2", color: "#fff", fontWeight: "bold" }}>
-                      Installment
+                      Pending Amount
                     </TableCell>
 
                     <TableCell sx={{ backgroundColor: "#1976d2", color: "#fff", fontWeight: "bold" }}>
                       Late Fee
                     </TableCell>
-
-                    <TableCell sx={{ backgroundColor: "#1976d2", color: "#fff", fontWeight: "bold" }}>
-                      Total
-                    </TableCell>
-
-                    <TableCell sx={{ backgroundColor: "#1976d2", color: "#fff", fontWeight: "bold" }}>
-                      Paid
-                    </TableCell>
-
                     <TableCell sx={{ backgroundColor: "#1976d2", color: "#fff", fontWeight: "bold" }}>
                       Status
                     </TableCell>
@@ -519,35 +528,19 @@ const BussinessDailyFinance = () => {
                       <TableRow key={idx} hover>
 
                         <TableCell>{row.installmentNumber}</TableCell>
-
+                        <TableCell>{row.principleAmount.toLocaleString()}</TableCell>
+                        <TableCell>{row.interestAmount.toLocaleString()}</TableCell>
+                        <TableCell>{row.totalAmount.toLocaleString()}</TableCell>
+                        <TableCell>{row.paidAmount.toLocaleString()}</TableCell>
                         <TableCell>{row.dueDate || "-"}</TableCell>
-
                         <TableCell>{row.lateFeeDate || "-"}</TableCell>
-
-                        <TableCell>₹{row.installmentAmount || 0}</TableCell>
-
-                        <TableCell>₹{row.lateFee || 0}</TableCell>
-
-                        <TableCell>₹{row.total || 0}</TableCell>
-
-                        <TableCell> ₹{row.paid} </TableCell>
-
-                        <TableCell>
-                          <Typography
-                            fontWeight="bold"
-                            color={
-                              row.paid === row.total
-                                ? "success.main"
-                                : row.paid > 0
-                                  ? "warning.main"
-                                  : "error.main"
-                            }
-                          >
-                            {row.paid === row.total
-                              ? "Completed"
-                              : row.paid > 0
-                                ? "Partial"
-                                : "Pending"}
+                        <TableCell align="right">
+                          <strong>₹{row.installmentAmount.toLocaleString()}</strong>
+                        </TableCell>
+                        <TableCell align="right">₹{(row.lateFee || 0).toLocaleString()}</TableCell>
+                        <TableCell align="center">
+                          <Typography color={row.status == 'PAID' ? "success.main" : "error.main"} fontWeight="medium">
+                            {row.status}
                           </Typography>
                         </TableCell>
 

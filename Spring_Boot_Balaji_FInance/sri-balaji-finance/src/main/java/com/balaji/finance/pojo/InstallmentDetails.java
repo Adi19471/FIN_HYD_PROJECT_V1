@@ -6,13 +6,15 @@ public class InstallmentDetails {
 
 	private Integer emiId;
 	private long installmentNumber;
+	private BigDecimal principleAmount;
+	private BigDecimal interestAmount;
+	private BigDecimal paidAmount;
+	private BigDecimal totalAmount;
+	private BigDecimal installmentAmount;
 	private String dueDate;
 	private String lateFeeDate;
-	private BigDecimal installmentAmount;
 	private BigDecimal lateFee;
-	private BigDecimal total;
-	private BigDecimal paid;
-
+	private String status;
 	// Getters and Setters
 
 	public long getInstallmentNumber() {
@@ -55,28 +57,52 @@ public class InstallmentDetails {
 		this.lateFee = lateFee;
 	}
 
-	public BigDecimal getTotal() {
-		return total;
-	}
-
-	public void setTotal(BigDecimal total) {
-		this.total = total;
-	}
-
-	public BigDecimal getPaid() {
-		return paid;
-	}
-
-	public void setPaid(BigDecimal paid) {
-		this.paid = paid;
-	}
-
 	public Integer getEmiId() {
 		return emiId;
 	}
 
 	public void setEmiId(Integer emiId) {
 		this.emiId = emiId;
+	}
+
+	public BigDecimal getPrincipleAmount() {
+		return principleAmount;
+	}
+
+	public void setPrincipleAmount(BigDecimal principleAmount) {
+		this.principleAmount = principleAmount;
+	}
+
+	public BigDecimal getInterestAmount() {
+		return interestAmount;
+	}
+
+	public void setInterestAmount(BigDecimal interestAmount) {
+		this.interestAmount = interestAmount;
+	}
+
+	public BigDecimal getPaidAmount() {
+		return paidAmount;
+	}
+
+	public void setPaidAmount(BigDecimal paidAmount) {
+		this.paidAmount = paidAmount;
+	}
+
+	public BigDecimal getTotalAmount() {
+		return totalAmount;
+	}
+
+	public void setTotalAmount(BigDecimal totalAmount) {
+		this.totalAmount = totalAmount;
+	}
+
+	public String getStatus() {
+		return status;
+	}
+
+	public void setStatus(String status) {
+		this.status = status;
 	}
 
 }
