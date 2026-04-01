@@ -38,7 +38,7 @@ import dayjs from "dayjs";
 const LOAN_TYPE = { DAILY_FINANCE: "DAILY_FINANCE" };
 const FIXED_DURATION_DAYS = 100;
 const BASE_PROCESSING_FEE = 200;
-
+const BASE_INTEREST_RATE = 3;
 
 
 const DailyFinance = () => {
@@ -61,7 +61,7 @@ const DailyFinance = () => {
     startDate: dayjs(),
     endDate: dayjs().add(FIXED_DURATION_DAYS, "day"),
     amount: "",
-    interestRatePerMonth: "3",
+    interestRatePerMonth: BASE_INTEREST_RATE,
     interestAmountForAllDays: 0,
     installment: "",
     processingFee: BASE_PROCESSING_FEE,
@@ -160,48 +160,45 @@ const DailyFinance = () => {
   }, [formData.startDate]);
 
   useEffect(() => {
-    // Reset fields if required inputs are missing
-    if (!formData.amount || !formData.interestRatePerMonth) {
-      setFormData((prev) => ({
-        ...prev,
-        installment: "",
-        interestAmountForAllDays: "",
-      }));
-      return;
+    const amount = Number(formData.amount);
+    const monthlyRate = Number(formData.interestRatePerMonth);
+
+    let installment = "";
+    let interestAmountForAllDays = "";
+    let processingFee = BASE_PROCESSING_FEE;
+
+    //  DAILY INTEREST CALCULATION
+    if (amount > 0 && monthlyRate > 0) {
+      const monthlyInterestRate = monthlyRate / 100;
+      const dailyInterestRate = monthlyInterestRate / 30;
+
+      const totalInterest =
+        amount * dailyInterestRate * FIXED_DURATION_DAYS;
+
+      const dailyInstallment = Math.round(
+        amount / FIXED_DURATION_DAYS
+      );
+
+      installment = dailyInstallment.toString();
+      interestAmountForAllDays = totalInterest.toFixed(2);
     }
 
-    const principal = Number(formData.amount);
-    const monthlyInterestRate = Number(formData.interestRatePerMonth) / 100;
-    const dailyInterestRate = monthlyInterestRate / 30;
+    //  PROCESSING FEE CALCULATION
+    if (amount > 20000) {
+      const extraFee =
+        Math.ceil((amount - 20000) / 10000) * 100;
 
+      processingFee = BASE_PROCESSING_FEE + extraFee;
+    }
 
-    const totalInterest = principal * dailyInterestRate * FIXED_DURATION_DAYS;
-    const dailyInstallment = Math.round(principal / FIXED_DURATION_DAYS);
-
+    //  SINGLE STATE UPDATE (CRITICAL)
     setFormData((prev) => ({
       ...prev,
-      installment: dailyInstallment.toString(),
-      interestAmountForAllDays: totalInterest.toFixed(2)
+      installment,
+      interestAmountForAllDays,
+      processingFee,
     }));
   }, [formData.amount, formData.interestRatePerMonth]);
-
-
-  useEffect(() => {
-    const amount = Number(formData.amount);
-    const rate = Number(formData.interestRate);
-    let extraFee = 0;
-    if (amount > 20000) {
-      extraFee = Math.ceil((amount - 20000) / 10000) * 100;
-    }
-    const finalProcessingFee = BASE_PROCESSING_FEE + extraFee;
-
-    setFormData(prev => ({
-      ...prev,
-      processingFee: finalProcessingFee
-    }));
-
-  }, [formData.amount]);
-
 
 
   // MEMBER AUTOCOMPLETE SEARCH
@@ -246,7 +243,7 @@ const DailyFinance = () => {
       startDate: dayjs(),
       endDate: dayjs().add(FIXED_DURATION_DAYS, "day"),
       amount: "",
-      interestRatePerMonth: "3",
+      interestRatePerMonth: BASE_INTEREST_RATE,
       interestAmountForAllDays: 0,
       installment: "",
       processingFee: BASE_PROCESSING_FEE,
@@ -370,8 +367,8 @@ const DailyFinance = () => {
     setOpen(false);
     resetForm();
   };
- 
- 
+
+
   // TABLE COLUMNS
   const columns = [
     // 🔥 Actions
@@ -394,7 +391,7 @@ const DailyFinance = () => {
     { field: "id", headerName: "Acc No", width: 110 },
     { field: "customerName", headerName: "Customer", width: 240 },
 
-   
+
     // 🔹 Financials
     {
       field: "amount",
@@ -448,7 +445,7 @@ const DailyFinance = () => {
     },
 
 
-     // 🔹 Guarantors & Partner
+    // 🔹 Guarantors & Partner
     { field: "g1Name", headerName: "Guarantor 1", width: 200 },
     { field: "g2Name", headerName: "Guarantor 2", width: 200 },
     { field: "g3Name", headerName: "Guarantor 3", width: 200 },
@@ -601,7 +598,7 @@ const DailyFinance = () => {
                 type="text"                    // Changed from number to text for better formatting
                 value={
                   formData.interestAmountForAllDays
-                    ? `₹${Number(formData.interestAmountForAllDays).toLocaleString("en-IN")}`
+                    ? `${Number(formData.interestAmountForAllDays).toLocaleString("en-IN")}`
                     : ""
                 }
                 InputProps={{
@@ -637,14 +634,27 @@ const DailyFinance = () => {
 
             <Grid item xs={12} md={6}>
               <TextField
-                fullWidth
-                label="Processing Fee"
-                type="number"
-                value={formData.processingFee}
-                onChange={(e) =>
-                  setFormData((p) => ({ ...p, processingFee: e.target.value }))
+              fullWidth
+              label="Processing Fee"
+              type="text"   
+              value={
+                formData.processingFee
+                  ? Number(formData.processingFee).toLocaleString("en-IN")
+                  : ""
+              }
+              onChange={(e) => {
+                // Remove commas before saving
+                const rawValue = e.target.value.replace(/,/g, "");
+
+                // Allow only numbers
+                if (!isNaN(rawValue)) {
+                  setFormData((p) => ({
+                    ...p,
+                    processingFee: rawValue,
+                  }));
                 }
-              />
+              }}
+            />
             </Grid>
 
             <Grid item xs={12} md={12}>

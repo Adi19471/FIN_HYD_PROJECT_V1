@@ -36,6 +36,7 @@ import dayjs from "dayjs";
 const FIXED_DURATION_MONTHS = 10;
 const TOTAL_INSTALLMENTS = FIXED_DURATION_MONTHS;
 const BASE_PROCESSING_FEE = 200;
+const BASE_INTEREST_RATE = 200;
 
 const MonthlyFinance = () => {
   const [rows, setRows] = useState([]);
@@ -54,7 +55,7 @@ const MonthlyFinance = () => {
     startDate: dayjs(),
     endDate: dayjs().add(FIXED_DURATION_MONTHS, "month"),
     amount: "",
-    interestRate: "",
+    interestRate: BASE_INTEREST_RATE,
     interestAmount: "",
     installment: "",
     processingFee: BASE_PROCESSING_FEE,
@@ -116,6 +117,7 @@ const MonthlyFinance = () => {
         amount: loan.amount || 0,
         interestRate: loan.interestRate || 0,
         installment: loan.installment || 0,
+        interestAmount: loan.interest || 0,
         startDate: loan.startDate || null,
         endDate: loan.endDate || null,
         g1Name: loan.guarantor1
@@ -154,45 +156,38 @@ const MonthlyFinance = () => {
     }
   }, [formData.startDate]);
 
-  // Auto calculate monthly EMI (Flat Interest Method)
-  useEffect(() => {
-
-    const amount = Number(formData.amount);
-    const rate = Number(formData.interestRate);
-
-    if (!amount || !rate) return;
-
-    const interestAmount = amount * TOTAL_INSTALLMENTS * (rate / 100);
-
-    const total = amount + interestAmount;
-
-    const emi = Math.round(total / TOTAL_INSTALLMENTS);
-
-    setFormData(prev => ({
-      ...prev,
-      interestAmount: interestAmount.toFixed(2),
-      installment: emi
-    }));
-
-  }, [formData.amount, formData.interestRate]);
-
-
-
   useEffect(() => {
     const amount = Number(formData.amount);
     const rate = Number(formData.interestRate);
+
+    let interestAmount = "";
+    let installment = "";
+
+    // ✅ EMI + Interest
+    if (amount > 0 && rate > 0) {
+      const interest = amount * TOTAL_INSTALLMENTS * (rate / 100);
+      const total = amount + interest;
+
+      interestAmount = interest.toFixed(2);
+      installment = Math.round(total / TOTAL_INSTALLMENTS);
+    }
+
+    // ✅ Processing Fee
     let extraFee = 0;
     if (amount > 20000) {
       extraFee = Math.ceil((amount - 20000) / 10000) * 100;
     }
-    const finalProcessingFee = BASE_PROCESSING_FEE + extraFee;
+    const processingFee = BASE_PROCESSING_FEE + extraFee;
 
+    // ✅ SINGLE STATE UPDATE (VERY IMPORTANT)
     setFormData(prev => ({
       ...prev,
-      processingFee: finalProcessingFee
+      interestAmount,
+      installment,
+      processingFee
     }));
 
-  }, [formData.amount]);
+  }, [formData.amount, formData.interestRate]);
 
 
 
@@ -235,7 +230,7 @@ const MonthlyFinance = () => {
       startDate: dayjs(),
       endDate: dayjs().add(FIXED_DURATION_MONTHS, "month"),
       amount: "",
-      interestRate: "",
+      interestRate: BASE_INTEREST_RATE,
       installment: "",
       processingFee: BASE_PROCESSING_FEE,
       security: "",
@@ -578,10 +573,13 @@ const MonthlyFinance = () => {
                 label="Interest %"
                 type="number"
                 variant="outlined"
-                value={formData.interestRate || 3}
+                value={formData.interestRate}   
                 inputProps={{ min: 0, max: 100, step: 0.1 }}
                 onChange={(e) =>
-                  setFormData((p) => ({ ...p, interestRate: e.target.value }))
+                  setFormData((p) => ({
+                    ...p,
+                    interestRate: Number(e.target.value) 
+                  }))
                 }
               />
             </Grid>
