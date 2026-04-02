@@ -1,0 +1,21 @@
+/* Sidebar Styles - Increased Width Version */
+.min-w-fit {
+  min-width: fit-content;
+}
+
+#sidebar {
+  width: 300px;
+}
+
+/* Larger icons in navigation */
+.w-4.h-4, .w-5.h-5 {
+  width: 1.5rem !important;
+  height: 1.5rem !important;
+}
+
+.min-w-\[20px\] {
+  min-width: 24px !important;
+}
+
+
+

@@ -36,7 +36,7 @@ import dayjs from "dayjs";
 const FIXED_DURATION_MONTHS = 10;
 const TOTAL_INSTALLMENTS = FIXED_DURATION_MONTHS;
 const BASE_PROCESSING_FEE = 200;
-const BASE_INTEREST_RATE = 200;
+const BASE_INTEREST_RATE = 3;
 
 const MonthlyFinance = () => {
   const [rows, setRows] = useState([]);
