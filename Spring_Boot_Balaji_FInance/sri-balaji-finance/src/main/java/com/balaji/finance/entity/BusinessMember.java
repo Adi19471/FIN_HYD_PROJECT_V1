@@ -99,6 +99,12 @@ public class BusinessMember {
 	@Column(name = "LOAN_TYPE")
 	private String loanType;
 
+	@Column(name = "YEAR")
+	private Integer year;
+
+	@Column(name = "SEQUENCE")
+	private Integer sequence;
+
 	public String getLoanStatus() {
 		return loanStatus;
 	}
@@ -297,6 +303,22 @@ public class BusinessMember {
 
 	public void setLoanType(String loanType) {
 		this.loanType = loanType;
+	}
+
+	public Integer getYear() {
+		return year;
+	}
+
+	public void setYear(Integer year) {
+		this.year = year;
+	}
+
+	public Integer getSequence() {
+		return sequence;
+	}
+
+	public void setSequence(Integer sequence) {
+		this.sequence = sequence;
 	}
 
 }

@@ -24,6 +24,6 @@ public class MfNumberService {
 		int sequence = repo.getLastInsertedId();
 
 		// Step 3: Format
-		return String.format("MF-%d-%02d", year, sequence);
+		return String.format("MF%d-%02d", year, sequence);
 	}
 }

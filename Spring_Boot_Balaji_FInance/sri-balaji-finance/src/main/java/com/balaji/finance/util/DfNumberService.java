@@ -24,6 +24,6 @@ public class DfNumberService {
 		int sequence = repo.getLastInsertedId();
 
 		// Step 3: Format
-		return String.format("DF-%d-%02d", year, sequence);
+		return String.format("DF%d-%02d", year, sequence);
 	}
 }

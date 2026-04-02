@@ -1,11 +1,13 @@
 package com.balaji.finance.service;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
 import com.balaji.finance.dto.PersonalInfoAutoCompletePojo;
@@ -28,37 +30,6 @@ public class PersonalInfoService {
 	private AccountMasterRepo accountMasterRepo;
 	
 	
-	public String generateId(String type) {
-
-		String prefix;
-		long seq = 0;
-		switch (type) {
-		case "PARTNER":
-			prefix = "P";
-			seq = personalSequenceService.getNextPartnerSeqId();
-			break;
-
-		case "CUSTOMER":
-			prefix = "C";
-			seq = personalSequenceService.getNextCustomerSeqId();
-			break;
-
-		case "EMPLOYEE":
-			prefix = "E";
-			seq = personalSequenceService.getNextEmployeeSeqId();
-			break;
-
-		case "VENDOR":
-			prefix = "V";
-			seq = personalSequenceService.getNextVendorSeqId();
-			break;
-
-		default:
-			throw new IllegalArgumentException("Unknown type: " + type);
-		}
-
-		return prefix + "" + seq;
-	}
 
 	// create
 	public PersonalInfoDto createPersonalInfoDto(String type) {
@@ -73,7 +44,43 @@ public class PersonalInfoService {
 	public String savePersonalInfoDto(PersonalInfoDto personalInfoDto,String type) {
 
 		PersonalInfo personalInfo = new PersonalInfo();
-		personalInfo.setPersonalInfoId(generateId(type));
+		
+		String prefix;
+		switch (type) {
+		case "PARTNER":
+			prefix = "P";
+
+			break;
+
+		case "CUSTOMER":
+			prefix = "C";
+			break;
+
+		case "EMPLOYEE":
+			prefix = "E";
+			break;
+
+		case "VENDOR":
+			prefix = "V";
+			break;
+
+		default:
+			throw new IllegalArgumentException("Unknown type: " + type);
+		}
+
+		long seq = 0;
+		seq = personalSequenceService.getNextSequence(type);
+
+		String currentUser = SecurityContextHolder.getContext().getAuthentication().getName();
+		
+		personalInfo.setPersonalInfoId(prefix + "" + seq);
+		personalInfo.setSequence(seq);
+		
+		personalInfo.setCreatedDate(LocalDateTime.now());
+		personalInfo.setModifiedDate(LocalDateTime.now());
+		
+		personalInfo.setCreatedUser(currentUser);
+		personalInfo.setModifiedUser(currentUser);
 		
 		
 		personalInfo.setFirstName(personalInfoDto.getFirstname());

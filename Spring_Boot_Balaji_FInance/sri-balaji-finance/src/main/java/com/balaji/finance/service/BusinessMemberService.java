@@ -53,9 +53,9 @@ public class BusinessMemberService {
 	@Autowired
 	private DfNumberService dfNumberService;
 
-	public String generateId(String type, LocalDateTime startDate) {
+	public String generateId(String type, int year) {
 
-		int year = startDate.getYear();
+		
 		String generatedId = null;
 
 		switch (type) {
@@ -76,10 +76,16 @@ public class BusinessMemberService {
 
 	// Creating Loan Account
 	public String saveBusinessMember(BusinessMemberDto businessMemberDto, String type) {
-
+	
+		int year = businessMemberDto.getStartDate().getYear();
+		
 		BusinessMember businessMember = new BusinessMember();
-		businessMember.setBusinessMemberId(generateId(type, businessMemberDto.getStartDate()));
+		businessMember.setBusinessMemberId(generateId(type, year ));
 		businessMember.setLoanType(type);
+		
+		String[] split = businessMember.getBusinessMemberId().split("-");
+		businessMember.setSequence(Integer.valueOf(split[1]));
+		businessMember.setYear(year);
 
 		if (businessMemberDto.getCustomerId() != null && !businessMemberDto.getCustomerId().isBlank()) {
 			Optional<PersonalInfo> customerOptional = personalInfoRepository

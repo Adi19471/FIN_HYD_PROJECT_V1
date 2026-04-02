@@ -1,7 +1,7 @@
 package com.balaji.finance.entity;
 
 import java.math.BigDecimal;
-import java.util.Objects;
+import java.time.LocalDateTime;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -84,6 +84,21 @@ public class PersonalInfo {
 
 	@Column(name = "INTRO_NAME")
 	private String introname;
+
+	@Column(name = "CREATED_DATE")
+	private LocalDateTime createdDate;
+
+	@Column(name = "MODIFIED_DATE")
+	private LocalDateTime modifiedDate;
+
+	@Column(name = "SEQUENCE")
+	private Long sequence;
+
+	@Column(name = "CREATED_USER")
+	private String createdUser;
+
+	@Column(name = "MODIFIED_USER")
+	private String modifiedUser;
 
 	public String getPersonalInfoId() {
 		return personalInfoId;
@@ -275,6 +290,46 @@ public class PersonalInfo {
 
 	public void setIntroname(String introname) {
 		this.introname = introname;
+	}
+
+	public LocalDateTime getCreatedDate() {
+		return createdDate;
+	}
+
+	public void setCreatedDate(LocalDateTime createdDate) {
+		this.createdDate = createdDate;
+	}
+
+	public LocalDateTime getModifiedDate() {
+		return modifiedDate;
+	}
+
+	public void setModifiedDate(LocalDateTime modifiedDate) {
+		this.modifiedDate = modifiedDate;
+	}
+
+	public String getCreatedUser() {
+		return createdUser;
+	}
+
+	public void setCreatedUser(String createdUser) {
+		this.createdUser = createdUser;
+	}
+
+	public String getModifiedUser() {
+		return modifiedUser;
+	}
+
+	public void setModifiedUser(String modifiedUser) {
+		this.modifiedUser = modifiedUser;
+	}
+
+	public Long getSequence() {
+		return sequence;
+	}
+
+	public void setSequence(Long sequence) {
+		this.sequence = sequence;
 	}
 
 }
