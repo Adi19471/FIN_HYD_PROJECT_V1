@@ -34,7 +34,6 @@ import { DateTimePicker } from "@mui/x-date-pickers/DateTimePicker";
 import dayjs from "dayjs";
 
 const FIXED_DURATION_MONTHS = 10;
-const TOTAL_INSTALLMENTS = FIXED_DURATION_MONTHS;
 const BASE_PROCESSING_FEE = 200;
 const BASE_INTEREST_RATE = 3;
 
@@ -88,6 +87,7 @@ const MonthlyFinance = () => {
       const memberIds = new Set();
       loans.forEach((l) => {
         l.customerId && memberIds.add(l.customerId);
+        l.customerId && memberIds.add(l.partnerId);
         [l.guarantor1, l.guarantor2, l.guarantor3].forEach(
           (g) => g && memberIds.add(g)
         );
@@ -102,7 +102,7 @@ const MonthlyFinance = () => {
           });
           mRes.data.forEach((m) => {
             memberMap[m.id] =
-              `${m.firstname || ""} ${m.lastname || ""}`.trim() ||
+              `${m.id || ""} ${m.firstname || ""} ${m.lastname || ""}`.trim() ||
               `ID: ${m.id}`;
           });
         } catch (e) {
@@ -112,8 +112,7 @@ const MonthlyFinance = () => {
 
       const enriched = loans.map((loan) => ({
         id: loan.id || "N/A",
-        customerName:
-          memberMap[loan.customerId] || `ID: ${loan.customerId || "N/A"}`,
+        customerName: memberMap[loan.customerId] || `ID: ${loan.customerId || "N/A"}`,
         amount: loan.amount || 0,
         interestRate: loan.interestRate || 0,
         installment: loan.installment || 0,
@@ -151,25 +150,27 @@ const MonthlyFinance = () => {
     if (formData.startDate) {
       setFormData((prev) => ({
         ...prev,
-        endDate: prev.startDate.add(FIXED_DURATION_MONTHS, "month"),
+        endDate: prev.startDate.add(formData.duration, "month"),
       }));
     }
-  }, [formData.startDate]);
+  }, [formData.startDate, formData.duration]);
 
   useEffect(() => {
     const amount = Number(formData.amount);
     const rate = Number(formData.interestRate);
+    const duration = Number(formData.duration);
+
 
     let interestAmount = "";
     let installment = "";
 
     // ✅ EMI + Interest
     if (amount > 0 && rate > 0) {
-      const interest = amount * TOTAL_INSTALLMENTS * (rate / 100);
+      const interest = amount * duration * (rate / 100);
       const total = amount + interest;
 
       interestAmount = interest.toFixed(2);
-      installment = Math.round(total / TOTAL_INSTALLMENTS);
+      installment = Math.round(total / duration);
     }
 
     // ✅ Processing Fee
@@ -205,8 +206,8 @@ const MonthlyFinance = () => {
         });
         const list = (res.data || []).map((item) => ({
           id: item.id,
-          label: `${item.firstname || ""} ${item.lastname || ""} - ${item.mobile || "No Mobile"
-            } (${item.id})`.trim(),
+          label: `${item.id || ""} ${item.firstname || ""} ${item.lastname || ""} - ${item.mobile || "No Mobile"
+            }`.trim(),
         }));
         setOptions(list);
       } catch (err) {
@@ -218,6 +219,43 @@ const MonthlyFinance = () => {
     },
     [headers]
   );
+
+  const searchPartners = useCallback(
+    async (query) => {
+      if (!query || query.trim().length < 2) {
+        setOptions([]);
+        return;
+      }
+
+      setLoadingSearch(true);
+
+      try {
+        const res = await axios.get(
+          `${API_BASE}/PersonalInfo/personInfoAutoCompleteByCategory/PARTNER`,
+          {
+            headers,
+            params: { q: query.trim() }, // maps to @RequestParam String q
+          }
+        );
+
+        const list = (res.data || []).map((item) => ({
+          id: item.id,
+          label: `${item.id || ""} ${item.firstname || ""} ${item.lastname || ""} - ${item.mobile || "No Mobile"
+            }`,
+        }));
+
+        setOptions(list);
+      } catch (err) {
+        errorToast("Search failed");
+        setOptions([]);
+      } finally {
+        setLoadingSearch(false);
+      }
+    },
+    [headers]
+  );
+
+
 
   const resetForm = () => {
     setFormData({
@@ -234,6 +272,7 @@ const MonthlyFinance = () => {
       installment: "",
       processingFee: BASE_PROCESSING_FEE,
       security: "",
+      duration: FIXED_DURATION_MONTHS,
     });
     setIsEditMode(false);
     setCurrentLoanId(null);
@@ -252,6 +291,7 @@ const MonthlyFinance = () => {
         l.guarantor1,
         l.guarantor2,
         l.guarantor3,
+        l.partnerId,
       ].filter(Boolean);
 
       let map = {};
@@ -265,7 +305,7 @@ const MonthlyFinance = () => {
         mRes.data.forEach((m) => {
           map[m.id] = {
             id: m.id,
-            label: `${m.firstname || ""} ${m.lastname || ""} - ${m.mobile || ""}`,
+            label: `${m.id || ""} ${m.firstname || ""} ${m.lastname || ""} - ${m.mobile || ""}`,
           };
         });
       }
@@ -324,10 +364,13 @@ const MonthlyFinance = () => {
       installment: Number(formData.installment), // Send calculated EMI
       processingFee: Number(formData.processingFee) || 0,
       security: formData.security,
-      duration: FIXED_DURATION_MONTHS,
+      duration: formData.duration,
     };
 
     try {
+      setLoading(true); // 🔥 START LOADING
+
+
       if (isEditMode) {
         await axios.post(
           `${API_BASE}/BusinessMember/update/${LOAN_TYPE.MONTHLY_FINANCE}`,
@@ -553,16 +596,23 @@ const MonthlyFinance = () => {
               <TextField
                 fullWidth
                 label="Loan Amount *"
-                type="number"
-                variant="outlined"
-                value={formData.amount}
-                inputProps={{ min: 0 }}
+                type="text"                    // Changed to text for better control
+                value={formData.amount
+                  ? Number(formData.amount).toLocaleString('en-IN')
+                  : ""
+                }
                 onChange={(e) => {
-                  const value = e.target.value;
-                  if (value >= 0) {
-                    setFormData((p) => ({ ...p, amount: value }));
-                  }
+                  // Remove commas and non-numeric characters
+                  const rawValue = e.target.value.replace(/[^0-9]/g, '');
+                  setFormData((p) => ({
+                    ...p,
+                    amount: rawValue
+                  }));
                 }}
+                InputProps={{
+                  startAdornment: <Typography sx={{ mr: 1, color: 'text.secondary' }}>₹</Typography>,
+                }}
+                placeholder="0"
               />
             </Grid>
 
@@ -573,12 +623,12 @@ const MonthlyFinance = () => {
                 label="Interest %"
                 type="number"
                 variant="outlined"
-                value={formData.interestRate}   
+                value={formData.interestRate}
                 inputProps={{ min: 0, max: 100, step: 0.1 }}
                 onChange={(e) =>
                   setFormData((p) => ({
                     ...p,
-                    interestRate: Number(e.target.value) 
+                    interestRate: Number(e.target.value)
                   }))
                 }
               />
@@ -587,10 +637,18 @@ const MonthlyFinance = () => {
               <TextField
                 fullWidth
                 label="Interest Amount"
-                InputLabelProps={{ shrink: true }}
-                variant="outlined"
-                value={formData.interestAmount}
-                InputProps={{ readOnly: true }}
+                type="text"
+                value={
+                  formData.interestAmount
+                    ? `${Number(formData.interestAmount).toLocaleString("en-IN")}`
+                    : ""
+                }
+                InputProps={{
+                  readOnly: true,
+                  startAdornment: (
+                    <Typography sx={{ mr: 1, color: 'text.secondary' }}>₹</Typography>
+                  )
+                }}
               />
             </Grid>
             <Grid item xs={12} sm={6}>
@@ -610,23 +668,39 @@ const MonthlyFinance = () => {
               <TextField
                 fullWidth
                 label="Duration"
-                value="10 Months Fixed"
-                InputProps={{ readOnly: true }}
+                type="number"
                 variant="outlined"
+                value={formData.duration}
+                onChange={(e) =>
+                  setFormData((p) => ({ ...p, duration: e.target.value }))
+                }
               />
             </Grid>
             <Grid item xs={12} sm={6}>
               <TextField
                 fullWidth
                 label="Processing Fee"
-                type="number"
-                variant="outlined"
-                value={formData.processingFee}
-                onChange={(e) =>
-                  setFormData((p) => ({ ...p, processingFee: e.target.value }))
+                type="text"
+                value={
+                  formData.processingFee
+                    ? Number(formData.processingFee).toLocaleString("en-IN")
+                    : ""
                 }
+                onChange={(e) => {
+                  // Remove commas before saving
+                  const rawValue = e.target.value.replace(/,/g, "");
+
+                  // Allow only numbers
+                  if (!isNaN(rawValue)) {
+                    setFormData((p) => ({
+                      ...p,
+                      processingFee: rawValue,
+                    }));
+                  }
+                }}
               />
             </Grid>
+
             <Grid item xs={12} sm={6}>
               <TextField
                 fullWidth
@@ -687,7 +761,7 @@ const MonthlyFinance = () => {
                 options={options}
                 loading={loadingSearch}
                 value={formData.partnerId}
-                onInputChange={(e, v) => searchMembers(v)}
+                onInputChange={(e, v) => searchPartners(v)}
                 onChange={(e, v) =>
                   setFormData((p) => ({ ...p, partnerId: v }))
                 }
@@ -707,9 +781,16 @@ const MonthlyFinance = () => {
           <Button
             variant="contained"
             onClick={handleSave}
-            sx={{ bgcolor: "#10b981", "&:hover": { bgcolor: "#059669" } }}
+            disabled={loading}
+            startIcon={
+              loading ? <CircularProgress size={20} color="inherit" /> : null
+            }
           >
-            {isEditMode ? "Update Loan" : "Create Loan"}
+            {loading
+              ? "Processing..."
+              : isEditMode
+                ? "Update Loan"
+                : "Create Loan"}
           </Button>
         </DialogActions>
       </Dialog>
