@@ -420,4 +420,31 @@ public class PersonalInfoService {
 		return toBeReturnedDtoList;
 	}
 
+	
+	public List<PersonalInfoAutoCompletePojo> personInfoAutoCompleteByCategory(String keyword, String category) {
+		
+		List<String> personTypesList = new ArrayList<String>();
+		personTypesList.add(category);
+
+		List<PersonalInfo> allPersonalInfoList = personalInfoRepository.personalInfoAutoComplete(false, keyword,
+				personTypesList);
+
+		List<PersonalInfoAutoCompletePojo> toBeReturnedDtoList = new ArrayList<PersonalInfoAutoCompletePojo>();
+
+		allPersonalInfoList.stream().forEach(p -> {
+
+			PersonalInfoAutoCompletePojo personalInfoAutoCompletePojo = new PersonalInfoAutoCompletePojo();
+			personalInfoAutoCompletePojo.setId(p.getPersonalInfoId());
+
+			personalInfoAutoCompletePojo.setFirstname(p.getFirstName());
+			personalInfoAutoCompletePojo.setLastname(p.getLastName());
+			personalInfoAutoCompletePojo.setGender(p.getGender());
+
+			toBeReturnedDtoList.add(personalInfoAutoCompletePojo);
+
+		});
+
+		return toBeReturnedDtoList;
+	}
+
 }
