@@ -64,7 +64,9 @@ const AccountLedger = () => {
         url = `${API_BASE}/getAccountsLedger/${fromDate}/${toDate}`;
       }
 
-      const res = await axios.get(url, headers);
+      const res = await axios.get(url,   {
+          headers,
+        });
 
       if (res?.data?.length > 0) {
         const formatted = res.data.map((item, index) => ({

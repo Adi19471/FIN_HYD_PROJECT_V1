@@ -78,7 +78,9 @@ const AccountMasterSetup = () => {
     try {
       const res = await axios.get(
         `${API_BASE}/account-master-setup/findAll`,
-        headers
+        {
+          headers,
+        }
       );
       setAccounts(res.data || []);
     } catch {

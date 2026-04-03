@@ -94,7 +94,9 @@ const AccountMasterLedger = () => {
     try {
       const res = await axios.get(
         `${API_BASE}/account-master-droddown/findAllMasterCodes`,
-        headers
+          {
+          headers,
+        }
       );
 
       setMasterCodes(res.data || []);
@@ -134,7 +136,9 @@ const AccountMasterLedger = () => {
         url = `${API_BASE}/getRecordsByAccountMasterCode/${masterName}/${fromDate}/${toDate}`;
       }
 
-      const res = await axios.get(url, headers);
+      const res = await axios.get(url,   {
+          headers,
+        });
 
       console.log("Ledger Response:", res.data);
 
