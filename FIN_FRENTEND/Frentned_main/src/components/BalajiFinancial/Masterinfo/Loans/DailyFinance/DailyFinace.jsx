@@ -104,7 +104,7 @@ const DailyFinance = () => {
 
         mRes.data.forEach((m) => {
           memberMap[m.id] =
-            `${m.firstname || ""} ${m.lastname || ""}`.trim() ||
+            `${m.id || ""} ${m.firstname || ""} ${m.lastname || ""}`.trim() ||
             `ID: ${m.id}`;
         });
       }
@@ -217,8 +217,8 @@ const DailyFinance = () => {
 
         const list = (res.data || []).map((item) => ({
           id: item.id,
-          label: `${item.firstname || ""} ${item.lastname || ""} - ${item.mobile || "No Mobile"
-            } (${item.id})`,
+          label: `${item.id || ""} ${item.firstname || ""} ${item.lastname || ""} - ${item.mobile || "No Mobile"
+            }`,
         }));
 
         setOptions(list);
@@ -280,7 +280,7 @@ const DailyFinance = () => {
         mRes.data.forEach((m) => {
           map[m.id] = {
             id: m.id,
-            label: `${m.firstname || ""} ${m.lastname || ""} - ${m.mobile || ""
+            label: `${m.id || ""} ${m.firstname || ""} ${m.lastname || ""} - ${m.mobile || ""
               }`,
           };
         });
