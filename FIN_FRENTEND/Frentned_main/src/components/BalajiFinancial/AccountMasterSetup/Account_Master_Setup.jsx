@@ -42,7 +42,7 @@ import { toast } from "react-toastify";
 import { API_BASE } from "lib/config";
 import { getSession } from "src/utils/session";
 
-const PERSON_TYPES = ["CUSTOMER", "PARTNER", "EMPLOYEE", "VENDOR"];
+const PERSON_TYPES = ["Customer", "Partner", "Employee", "Vendor"];
 const TRANS_TYPES = ["CREDIT", "DEBIT"];
 
 const AccountMasterSetup = () => {
@@ -151,7 +151,9 @@ const AccountMasterSetup = () => {
       : "/account-master-setup/saveAccountMaster";
 
     try {
-      await axios.post(`${API_BASE}${url}`, payload, headers);
+      await axios.post(`${API_BASE}${url}`, payload, {
+        headers,
+      });
       toast.success(isEdit ? "Updated successfully" : "Saved successfully");
       handleClose();
       fetchData();
@@ -337,16 +339,20 @@ const AccountMasterSetup = () => {
               <InputLabel>Person Type</InputLabel>
               <Select
                 multiple
-                value={form.personType}
+                value={form.personType || []}
                 label="Person Type"
-                onChange={(e) =>
-                  setForm({ ...form, personType: e.target.value })
-                }
+                onChange={(e) => {
+                  const value = e.target.value;
+                  setForm({
+                    ...form,
+                    personType: typeof value === "string" ? value.split(",") : value,
+                  });
+                }}
                 renderValue={(selected) => selected.join(", ")}
               >
                 {PERSON_TYPES.map((type) => (
                   <MenuItem key={type} value={type}>
-                    <Checkbox checked={form.personType.includes(type)} />
+                    <Checkbox checked={(form.personType || []).includes(type)} />
                     {type}
                   </MenuItem>
                 ))}
