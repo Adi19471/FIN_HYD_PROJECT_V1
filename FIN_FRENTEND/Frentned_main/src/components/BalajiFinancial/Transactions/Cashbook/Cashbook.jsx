@@ -159,8 +159,8 @@ const Cashbook = () => {
           { headers: getAuthHeader() }
         );
         const options = res.data.map((p) => ({
-          label: `${p.firstname || ""} ${p.lastname || ""}`.trim(),
-          value: `${p.firstname || ""} ${p.lastname || ""}`.trim(),
+          label: `${p.id || ""} ${p.firstname || ""} ${p.lastname || ""}`.trim(),
+          value: `${p.id || ""} ${p.firstname || ""} ${p.lastname || ""}`.trim(),
           data: p,
         }));
         setPersonOptions(options);
