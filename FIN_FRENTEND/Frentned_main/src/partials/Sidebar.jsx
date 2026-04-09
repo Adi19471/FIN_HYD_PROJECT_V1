@@ -114,6 +114,8 @@ function Sidebar({ sidebarOpen, setSidebarOpen }) {
       setOpenGroup("accounts");
     } else if (pathname.toLowerCase().startsWith("/accountmastersetup")) {
       setOpenGroup("accountMaster");
+    } else if (pathname.toLowerCase().startsWith("/customer/")) {
+      setOpenGroup("customer");
     } else if (
       pathname.toLowerCase().startsWith("/bussiness/")
     ) {
@@ -681,6 +683,93 @@ function Sidebar({ sidebarOpen, setSidebarOpen }) {
                 >
                   <Summarize className="w-4 h-4" />
                   <span>Business Collection Reports</span>
+                </NavLink>
+              </li>
+            </ul>
+          )}
+
+          {/* Customer */}
+          <div
+            className={`flex items-center justify-between px-3 py-3 rounded-xl cursor-pointer transition-all duration-200 font-medium ${
+              openGroup === "customer"
+                ? "bg-sky-100 dark:bg-sky-900/40"
+                : "hover:bg-sky-100 dark:hover:bg-sky-900/30"
+            }`}
+            onClick={() => handleGroupToggle("customer")}
+          >
+            <div className="flex items-center gap-3">
+              <People className="w-5 h-5 text-sky-600 dark:text-sky-400" />
+              <span className="text-sm lg:opacity-0 lg:sidebar-expanded:opacity-100 2xl:opacity-100 transition-opacity duration-200">
+                Customer
+              </span>
+            </div>
+            <ExpandMore
+              className={`w-5 h-5 transition-transform duration-300 ${
+                openGroup === "customer" ? "rotate-180" : ""
+              }`}
+            />
+          </div>
+
+          {openGroup === "customer" && (
+            <ul className="pl-11 mt-1 space-y-1">
+              <li>
+                <NavLink
+                  to="/Customer/Customer_Dues"
+                  className={({ isActive }) =>
+                    `flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-all duration-200 ${
+                      isActive
+                        ? "bg-gradient-to-r from-sky-600 to-blue-600 text-white shadow-sm"
+                        : "text-gray-600 dark:text-gray-400 hover:bg-sky-100 hover:text-sky-700 dark:hover:bg-sky-900/40 dark:hover:text-sky-300"
+                    }`
+                  }
+                >
+                  <People className="w-4 h-4" />
+                  <span>Customer Dues</span>
+                </NavLink>
+              </li>
+              <li>
+                <NavLink
+                  to="/Customer/Customer_Outstanding"
+                  className={({ isActive }) =>
+                    `flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-all duration-200 ${
+                      isActive
+                        ? "bg-gradient-to-r from-sky-600 to-blue-600 text-white shadow-sm"
+                        : "text-gray-600 dark:text-gray-400 hover:bg-sky-100 hover:text-sky-700 dark:hover:bg-sky-900/40 dark:hover:text-sky-300"
+                    }`
+                  }
+                >
+                  <Description className="w-4 h-4" />
+                  <span>Customer Outstanding</span>
+                </NavLink>
+              </li>
+              <li>
+                <NavLink
+                  to="/Customer/Customer_Report"
+                  className={({ isActive }) =>
+                    `flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-all duration-200 ${
+                      isActive
+                        ? "bg-gradient-to-r from-sky-600 to-blue-600 text-white shadow-sm"
+                        : "text-gray-600 dark:text-gray-400 hover:bg-sky-100 hover:text-sky-700 dark:hover:bg-sky-900/40 dark:hover:text-sky-300"
+                    }`
+                  }
+                >
+                  <Summarize className="w-4 h-4" />
+                  <span>Customer Report</span>
+                </NavLink>
+              </li>
+              <li>
+                <NavLink
+                  to="/Customer/Customer_Transactions"
+                  className={({ isActive }) =>
+                    `flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-all duration-200 ${
+                      isActive
+                        ? "bg-gradient-to-r from-sky-600 to-blue-600 text-white shadow-sm"
+                        : "text-gray-600 dark:text-gray-400 hover:bg-sky-100 hover:text-sky-700 dark:hover:bg-sky-900/40 dark:hover:text-sky-300"
+                    }`
+                  }
+                >
+                  <ReceiptLong className="w-4 h-4" />
+                  <span>Customer Transactions</span>
                 </NavLink>
               </li>
             </ul>
