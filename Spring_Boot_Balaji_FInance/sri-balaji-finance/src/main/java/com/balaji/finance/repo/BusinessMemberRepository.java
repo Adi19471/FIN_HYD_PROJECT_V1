@@ -8,6 +8,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
+import com.balaji.finance.dto.CustomerOutstandingProjection;
 import com.balaji.finance.dto.LoanSummaryProjection;
 import com.balaji.finance.entity.BusinessMember;
 
@@ -97,5 +98,26 @@ public interface BusinessMemberRepository extends JpaRepository<BusinessMember, 
 			GROUP BY loanType
 						  """)
 	List<LoanSummaryProjection> findAllLoansDisbursed();
+	
+	@Query("""
+			    SELECT
+			        customer.personalInfoId AS personInfoId,
+			        customer.firstName AS personName,
+			        COUNT(bm.businessMemberId) AS noOfLoans,
+			        SUM(bm.amount) AS totalLoansAmount,
+			        COALESCE((
+			            SELECT SUM(e.paidAmount)
+			            FROM EMI e
+			            WHERE e.businessMember.customerId = customer
+			        ), 0) AS totalPaidAmount
+
+			    FROM BusinessMember as bm
+			    LEFT JOIN bm.customerId customer
+			    WHERE bm.loanType IN :loanType
+			      AND bm.sysDate <= :selectedDate
+			    GROUP BY customer.personalInfoId, customer.firstName
+			""")
+	List<CustomerOutstandingProjection> customerLoansOverview(@Param("loanType") List<String> loanTypes,@Param("selectedDate") LocalDateTime selectedDate);
+	
 
 }
