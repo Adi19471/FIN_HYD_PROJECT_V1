@@ -151,6 +151,16 @@ const BussinessOverviewimport =lazy(() =>import("./components/BalajiFinancial/Bu
 const BussinessCollectionReportsimport =lazy(() =>import('./components/BalajiFinancial/Business/BussinessCollectionReports'))
 
 
+
+// Customer Reports collections
+
+const Customer_Dues =lazy(() =>import('./components/BalajiFinancial/Customer/Customer_Dues'))
+const Customer_Outstanding =lazy(() =>import('./components/BalajiFinancial/Customer/Customer_Outstanding'))
+const Customer_Report =lazy(() =>import('./components/BalajiFinancial/Customer/Customer_Report'))
+const Customer_Transactions =lazy(() =>import('./components/BalajiFinancial/Customer/Customer_Transactions'))
+
+
+
 const routes = [
 
 
@@ -209,6 +219,18 @@ const routes = [
    { path: "/Bussiness/BalanceSheetimport", element: BalanceSheetimport },
    { path: "/Bussiness/BussinessOverviewimport", element: BussinessOverviewimport },
    { path: "/Bussiness/BussinessCollectionReportsimport", element: BussinessCollectionReportsimport },
+
+
+  //  Customer Reports
+
+  {path: "/Customer/Customer_Dues", element: Customer_Dues },
+ {path: "/Customer/Customer_Outstanding", element: Customer_Outstanding },
+  {path: "/Customer/Customer_Report", element: Customer_Report },
+   {path: "/Customer/Customer_Transactions", element: Customer_Transactions },
+
+
+
+
 
 ];
 
