@@ -11,6 +11,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 import com.balaji.finance.dto.BalanceSheetProjection;
+import com.balaji.finance.dto.BusinessOverviewProjection;
 import com.balaji.finance.dto.DateWiseCashBookProjection;
 import com.balaji.finance.dto.DateWiseCollectionsProjection;
 import com.balaji.finance.dto.LoanCollectionProjection;
@@ -213,6 +214,14 @@ public interface CashBookRepo extends JpaRepository<CashBook, Long> {
 			ORDER BY cb.ACCOUNT_MASTER_TYPE, cb.ACCOUNT_MASTER_CODE
 			""", nativeQuery = true)
 	List<RevenueExpenseProjection> getRevenueExpenseStatement();
+	
+	
+	
+	
+	
+	
+	
+	
 
 	@Query(value = """
 			SELECT
@@ -249,14 +258,73 @@ public interface CashBookRepo extends JpaRepository<CashBook, Long> {
 
 			FROM cash_book
 			WHERE TRANS_DATE BETWEEN :fromDate AND :toDate
-			AND CODE IN (
+			AND ACCOUNT_MASTER_CODE IN (
 			    'DF LOAN INSTALLMENT',
 			    'DF INTEREST',
 			    'MF LOAN INSTALLMENT',
 			    'MF INTEREST'
 			);
 						""", nativeQuery = true)
-	LoanCollectionProjection getLoanCollectionData(@Param("fromDate") LocalDateTime fromDate,
+	LoanCollectionProjection getLoanCollectionDataByDateRange(@Param("fromDate") LocalDateTime fromDate,
 			@Param("toDate") LocalDateTime toDate);
+	
+	
+	@Query(value = """
+			SELECT
+			    SUM(CASE
+			        WHEN ACCOUNT_MASTER_CODE = 'DF LOAN INSTALLMENT'
+			        THEN CREDIT ELSE 0 END) AS dailyLoanInstallmentsReceived,
+
+			    SUM(CASE
+			        WHEN ACCOUNT_MASTER_CODE = 'DF INTEREST'
+			        THEN CREDIT ELSE 0 END) AS dailyLoanInterestReceived,
+
+			    SUM(CASE
+			        WHEN ACCOUNT_MASTER_CODE = 'MF LOAN INSTALLMENT'
+			        THEN CREDIT ELSE 0 END) AS monthlyLoanInstallmentsReceived,
+
+			    SUM(CASE
+			        WHEN ACCOUNT_MASTER_CODE = 'MF INTEREST'
+			        THEN CREDIT ELSE 0 END) AS monthlyLoanInterestReceived
+
+			FROM cash_book
+			AND ACCOUNT_MASTER_CODE IN (
+			    'DF LOAN INSTALLMENT',
+			    'DF INTEREST',
+			    'MF LOAN INSTALLMENT',
+			    'MF INTEREST'
+			);
+						""", nativeQuery = true)
+	LoanCollectionProjection getLoanCollectionData();
+	
+	
+	
+	@Query(value = """
+			SELECT
+			    cb.ACCOUNT_MASTER_TYPE AS type,
+			    cb.ACCOUNT_MASTER_CODE AS code,
+			    cb.ACCOUNT_MASTER_MASTER_CODE as masterCode,
+			    COALESCE(SUM(cb.CREDIT),0) - COALESCE(SUM(cb.DEBIT),0) AS amount
+			FROM cash_book cb
+			WHERE cb.TRANS_DATE BETWEEN :fromDate AND :toDate
+			  and cb.ACCOUNT_MASTER_TYPE IN (:typeList)
+			GROUP BY cb.ACCOUNT_MASTER_TYPE,cb.ACCOUNT_MASTER_MASTER_CODE, cb.ACCOUNT_MASTER_CODE
+			ORDER BY cb.ACCOUNT_MASTER_TYPE, cb.ACCOUNT_MASTER_CODE
+			""", nativeQuery = true)
+	List<BusinessOverviewProjection> getBusinessOverviewTrasncDate(@Param("fromDate") LocalDateTime fromDate,
+			@Param("toDate") LocalDateTime toDate,@Param("typeList") List<String> typeList);
+
+	@Query(value = """
+			SELECT
+			    cb.ACCOUNT_MASTER_TYPE AS type,
+			    cb.ACCOUNT_MASTER_CODE AS code,
+			    cb.ACCOUNT_MASTER_MASTER_CODE as masterCode,
+			    COALESCE(SUM(cb.CREDIT),0) - COALESCE(SUM(cb.DEBIT),0) AS amount
+			FROM cash_book cb
+			 Where cb.ACCOUNT_MASTER_TYPE IN (:typeList)
+			GROUP BY cb.ACCOUNT_MASTER_TYPE, cb.ACCOUNT_MASTER_MASTER_CODE, cb.ACCOUNT_MASTER_CODE
+			ORDER BY cb.ACCOUNT_MASTER_TYPE, cb.ACCOUNT_MASTER_CODE
+			""", nativeQuery = true)
+	List<BusinessOverviewProjection> getBusinessOverviewStatement(@Param("typeList") List<String> typeList);
 
 }

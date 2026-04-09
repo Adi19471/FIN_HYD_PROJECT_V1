@@ -34,7 +34,7 @@ public class BusinessShareService {
 		List<LoanSummaryProjection> allLoansDisbursedByDateRange = businessMemberRepository
 				.findAllLoansDisbursedByDateRange(from, to);
 
-		LoanCollectionProjection loanCollectionData = cashBookRepo.getLoanCollectionData(from, to);
+		LoanCollectionProjection loanCollectionData = cashBookRepo.getLoanCollectionDataByDateRange(from, to);
 
 		for (LoanSummaryProjection loanSummary : allLoansDisbursedByDateRange) {
 
