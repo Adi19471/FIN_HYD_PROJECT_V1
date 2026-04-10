@@ -8,6 +8,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
+import com.balaji.finance.dto.CustomerDuesProjection;
 import com.balaji.finance.dto.CustomerOutstandingProjection;
 import com.balaji.finance.dto.LoanSummaryProjection;
 import com.balaji.finance.entity.BusinessMember;
@@ -76,7 +77,7 @@ public interface BusinessMemberRepository extends JpaRepository<BusinessMember, 
 			  """)
 	List<BusinessMember> findAllByLoanTypeAndEndDateRange(@Param("starWithString") String starWithString,
 			@Param("fromDate") LocalDateTime fromDate, @Param("toDate") LocalDateTime toDate);
-
+	
 	@Query("""
 			  SELECT
 			    loanType as loanType,
@@ -119,5 +120,40 @@ public interface BusinessMemberRepository extends JpaRepository<BusinessMember, 
 			""")
 	List<CustomerOutstandingProjection> customerLoansOverview(@Param("loanType") List<String> loanTypes,@Param("selectedDate") LocalDateTime selectedDate);
 	
+	@Query("""
+			   SELECT
+			    bm.businessMemberId as businessMemberId,
+			    customer.personalInfoId AS customerId,
+			    customer.firstName as customerFirstName,
+			    customer.phone as customerPhoneNumber,
+			    guarentor.personalInfoId AS guarentorId,
+			    guarentor.firstName as guarentorFirstName,
+			    guarentor.phone as guarentorPhoneNumber,
+			    partner.personalInfoId AS partnerId,
+			    partner.firstName as partnerFirstName,
+			    partner.phone as partnerPhoneNumber,
+			    bm.startDate as startDate,
+			    bm.endDate as endDate,
+			    bm.amount as amount,
+			    bm.duration as duration,
+			    bm.installment as installmentPerMonth,
 
+			    COALESCE((
+			        SELECT SUM(e.paidAmount)
+			        FROM EMI e
+			        WHERE e.businessMember = bm
+			    ), 0) AS totalInstallmentAmountPaid,
+
+			    bm.paidInstallments as noOfEmisPaid,
+			    bm.loanType as loanType
+
+			   FROM BusinessMember as bm
+			   LEFT JOIN bm.customerId customer
+			   LEFT JOIN bm.guarantor1 guarentor
+			   LEFT JOIN bm.partnerId partner
+
+			   WHERE customer.personalInfoId=:personInfoId
+			   ORDER BY bm.sequence asc
+			""")
+			List<CustomerDuesProjection> getAllLoansOnCustomer(@Param("personInfoId") String personInfoId);
 }
