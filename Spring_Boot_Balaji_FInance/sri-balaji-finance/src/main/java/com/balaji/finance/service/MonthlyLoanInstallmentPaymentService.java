@@ -143,8 +143,8 @@ public class MonthlyLoanInstallmentPaymentService {
 		
 		for (CashBook cb : paidList) {
 
-			if (cb.getAccountMastercode().equalsIgnoreCase("MF LOAN INSTALLMENT")
-					|| cb.getAccountMastercode().equalsIgnoreCase("MF INTEREST")) {
+			if (cb.getAccountMasterCode().equalsIgnoreCase("MF LOAN INSTALLMENT")
+					|| cb.getAccountMasterCode().equalsIgnoreCase("MF INTEREST")) {
 
 				totalAmountPaid = totalAmountPaid.add(cb.getCredit() != null ? cb.getCredit() : BigDecimal.ZERO);
 
@@ -209,7 +209,7 @@ public class MonthlyLoanInstallmentPaymentService {
 			
 			cb.setAccountMastertype(accountMaster.getType());
 			cb.setAccountMasterMasterCode(accountMaster.getMasterCode());
-			cb.setAccountMastercode(accountMaster.getCode());
+			cb.setAccountMasterCode(accountMaster.getCode());
 			
 			cb.setUser(currentUser);
 			cb.setTransDate(transactionDate);
@@ -233,7 +233,7 @@ public class MonthlyLoanInstallmentPaymentService {
 		
 			cb.setAccountMastertype(accountMaster.getType());
 			cb.setAccountMasterMasterCode(accountMaster.getMasterCode());
-			cb.setAccountMastercode(accountMaster.getCode());
+			cb.setAccountMasterCode(accountMaster.getCode());
 			
 			cb.setUser(currentUser);
 			cb.setTransDate(transactionDate);
@@ -258,7 +258,7 @@ public class MonthlyLoanInstallmentPaymentService {
 			
 			cb.setAccountMastertype(accountMaster.getType());
 			cb.setAccountMasterMasterCode(accountMaster.getMasterCode());
-			cb.setAccountMastercode(accountMaster.getCode());
+			cb.setAccountMasterCode(accountMaster.getCode());
 			
 			cb.setUser(currentUser);
 			cb.setTransDate(transactionDate);

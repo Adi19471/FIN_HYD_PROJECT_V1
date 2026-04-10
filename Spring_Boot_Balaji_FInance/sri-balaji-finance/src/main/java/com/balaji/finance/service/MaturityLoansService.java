@@ -90,8 +90,8 @@ public class MaturityLoansService {
 
 					List<CashBook> payments = cashBookRepo.findByBusinessMember(bm);
 					totalPaid = payments.stream()
-							.filter(cb -> "MF LOAN INSTALLMENT".equalsIgnoreCase(cb.getAccountMastercode())
-									|| "MF INTEREST".equalsIgnoreCase(cb.getAccountMastercode()))
+							.filter(cb -> "MF LOAN INSTALLMENT".equalsIgnoreCase(cb.getAccountMasterCode())
+									|| "MF INTEREST".equalsIgnoreCase(cb.getAccountMasterCode()))
 							.map(cb -> cb.getCredit() != null ? cb.getCredit() : BigDecimal.ZERO)
 							.reduce(BigDecimal.ZERO, BigDecimal::add);
 
@@ -101,8 +101,8 @@ public class MaturityLoansService {
 
 					List<CashBook> payments = cashBookRepo.findByBusinessMember(bm);
 					totalPaid = payments.stream()
-							.filter(cb -> "DF LOAN INSTALLMENT".equalsIgnoreCase(cb.getAccountMastercode())
-									|| "DF INTEREST".equalsIgnoreCase(cb.getAccountMastercode()))
+							.filter(cb -> "DF LOAN INSTALLMENT".equalsIgnoreCase(cb.getAccountMasterCode())
+									|| "DF INTEREST".equalsIgnoreCase(cb.getAccountMasterCode()))
 							.map(cb -> cb.getCredit() != null ? cb.getCredit() : BigDecimal.ZERO)
 							.reduce(BigDecimal.ZERO, BigDecimal::add);
 

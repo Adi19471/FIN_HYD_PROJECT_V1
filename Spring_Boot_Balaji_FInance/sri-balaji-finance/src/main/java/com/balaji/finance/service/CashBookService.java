@@ -68,7 +68,7 @@ public class CashBookService {
 			cashBookViewPojo.setName(cashBook.getPersonalInfo() != null
 					? cashBook.getPersonalInfo().getPersonalInfoId() + " - " + cashBook.getPersonalInfo().getFirstName()
 					: "");
-			cashBookViewPojo.setParticulars(cashBook.getAccountMastercode());
+			cashBookViewPojo.setParticulars(cashBook.getAccountMasterCode());
 			cashBookViewPojo.setTransactionType(cashBook.getAccountMasterMasterCode());
 			cashBookViewPojo.setCredit(cashBook.getCredit());
 			cashBookViewPojo.setDebit(cashBook.getDebit());
@@ -139,7 +139,7 @@ public class CashBookService {
 
 				cashBookBk.setCashBookOldId(cashBook.getCashBookId());
 				cashBookBk.setLineNo(cashBook.getLineNo());
-				cashBookBk.setParticulars(cashBook.getAccountMastercode());
+				cashBookBk.setParticulars(cashBook.getAccountMasterCode());
 				cashBookBk.setReceiptRemarks(cashBook.getReceiptRemarks());
 				cashBookBk.setSysDate(cashBook.getSysDate());
 				cashBookBk.setTransDate(cashBook.getTransDate());
@@ -199,7 +199,7 @@ public class CashBookService {
 			cashBookViewPojo.setCredit(cashBook.getCredit());
 			cashBookViewPojo.setDebit(cashBook.getDebit());
 			cashBookViewPojo.setUser(cashBook.getUser());
-			cashBookViewPojo.setAccountMastercode(cashBook.getAccountMastercode());
+			cashBookViewPojo.setAccountMastercode(cashBook.getAccountMasterCode());
 			cashBookViewPojoList.add(cashBookViewPojo);
 			
 			if(cashBook.getCredit() != null) {
@@ -350,14 +350,14 @@ public class CashBookService {
 
 		if (fromDate == null && toDate == null) {
 
-			rows = cashBookRepo.findByAccountMastercode(transacType);
+			rows = cashBookRepo.findByAccountMasterCode(transacType);
 
 		} else {
 
 			LocalDateTime from = fromDate.atStartOfDay();
 			LocalDateTime to = toDate.atTime(23, 59, 59);
 
-			rows = cashBookRepo.findByAccountMastercodeAndTransDateBetween(transacType, from, to);
+			rows = cashBookRepo.findByAccountMasterCodeAndTransDateBetween(transacType, from, to);
 
 		}
 
@@ -371,7 +371,7 @@ public class CashBookService {
 			accountsMasterLedgerPojo.setName(r.getPersonalInfo() != null
 					? r.getPersonalInfo().getPersonalInfoId() + " - " + r.getPersonalInfo().getFirstName()
 					: "");
-			accountsMasterLedgerPojo.setParticulars(r.getAccountMastercode());
+			accountsMasterLedgerPojo.setParticulars(r.getAccountMasterCode());
 			accountsMasterLedgerPojo.setTransCode(r.getAccountMasterMasterCode());
 			accountsMasterLedgerPojo.setCredit(r.getCredit());
 			accountsMasterLedgerPojo.setDebit(r.getDebit());
@@ -483,7 +483,7 @@ public class CashBookService {
 			cashBookLedger.setCurrentInstallmentNumber(currentCashBook_beforeEMis.size());
 			cashBookLedger.setBalanceInstallmentNumber(currentCashBook_afterEMis.size());
 
-			cashBookLedger.setParticulars(r.getAccountMastercode());
+			cashBookLedger.setParticulars(r.getAccountMasterCode());
 
 			result.add(cashBookLedger);
 		}

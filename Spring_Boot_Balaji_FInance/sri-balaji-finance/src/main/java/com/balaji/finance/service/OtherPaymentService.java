@@ -62,7 +62,7 @@ public class OtherPaymentService {
 		AccountMaster accountMaster = accountMasterRepo.findAccountMasterByMasterCodeAndCode(otherPaymentSaveReq.getAccountMasterCode(), otherPaymentSaveReq.getAccountCode());
 		cashBookForPrinciplePaid.setAccountMastertype(accountMaster.getType());
 		cashBookForPrinciplePaid.setAccountMasterMasterCode(accountMaster.getMasterCode());
-		cashBookForPrinciplePaid.setAccountMastercode(accountMaster.getCode());
+		cashBookForPrinciplePaid.setAccountMasterCode(accountMaster.getCode());
 
 		cashBookForPrinciplePaid.setBmRemarks(otherPaymentSaveReq.getParticulars()); // doubt
 		cashBookForPrinciplePaid.setReceiptRemarks(""); // doubt

@@ -64,7 +64,7 @@ public class CashBook {
 	private String accountMasterMasterCode;
 
 	@Column(name = "ACCOUNT_MASTER_CODE")
-	private String accountMastercode;
+	private String accountMasterCode;
 
 	public Long getCashBookId() {
 		return cashBookId;
@@ -170,13 +170,14 @@ public class CashBook {
 		this.accountMasterMasterCode = accountMasterMasterCode;
 	}
 
-	public String getAccountMastercode() {
-		return accountMastercode;
+	public String getAccountMasterCode() {
+		return accountMasterCode;
 	}
 
-	public void setAccountMastercode(String accountMastercode) {
-		this.accountMastercode = accountMastercode;
+	public void setAccountMasterCode(String accountMasterCode) {
+		this.accountMasterCode = accountMasterCode;
 	}
+
 
 	
 }

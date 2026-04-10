@@ -171,7 +171,7 @@ public class BusinessMemberService {
 
 			dfLoanCashBook.setAccountMastertype(accountMaster.getType());
 			dfLoanCashBook.setAccountMasterMasterCode(accountMaster.getMasterCode());
-			dfLoanCashBook.setAccountMastercode(accountMaster.getCode());
+			dfLoanCashBook.setAccountMasterCode(accountMaster.getCode());
 
 			dfLoanCashBook.setBmRemarks("");
 			dfLoanCashBook.setReceiptRemarks("");
@@ -197,7 +197,7 @@ public class BusinessMemberService {
 
 				dfProcessingFeeCashBook.setAccountMastertype(accountMasterProcessingFee.getType());
 				dfProcessingFeeCashBook.setAccountMasterMasterCode(accountMasterProcessingFee.getMasterCode());
-				dfProcessingFeeCashBook.setAccountMastercode(accountMasterProcessingFee.getCode());
+				dfProcessingFeeCashBook.setAccountMasterCode(accountMasterProcessingFee.getCode());
 
 				dfProcessingFeeCashBook.setBmRemarks("");
 				dfProcessingFeeCashBook.setReceiptRemarks("");
@@ -227,7 +227,7 @@ public class BusinessMemberService {
 
 				dfIntrestCashBook.setAccountMastertype(accountMasterInterest.getType());
 				dfIntrestCashBook.setAccountMasterMasterCode(accountMasterInterest.getMasterCode());
-				dfIntrestCashBook.setAccountMastercode(accountMasterInterest.getCode());
+				dfIntrestCashBook.setAccountMasterCode(accountMasterInterest.getCode());
 
 				dfIntrestCashBook.setBmRemarks("");
 				dfIntrestCashBook.setReceiptRemarks("");
@@ -258,7 +258,7 @@ public class BusinessMemberService {
 
 			mFLoanCashBook.setAccountMastertype(accountMasterMonthlyLoan.getType());
 			mFLoanCashBook.setAccountMasterMasterCode(accountMasterMonthlyLoan.getMasterCode());
-			mFLoanCashBook.setAccountMastercode(accountMasterMonthlyLoan.getCode());
+			mFLoanCashBook.setAccountMasterCode(accountMasterMonthlyLoan.getCode());
 
 			mFLoanCashBook.setBmRemarks("");
 			mFLoanCashBook.setReceiptRemarks("");
@@ -285,7 +285,7 @@ public class BusinessMemberService {
 
 				dfProcessingFeeCashBook.setAccountMastertype(accountMasterProcessingFee.getType());
 				dfProcessingFeeCashBook.setAccountMasterMasterCode(accountMasterProcessingFee.getMasterCode());
-				dfProcessingFeeCashBook.setAccountMastercode(accountMasterProcessingFee.getCode());
+				dfProcessingFeeCashBook.setAccountMasterCode(accountMasterProcessingFee.getCode());
 
 				dfProcessingFeeCashBook.setBmRemarks("");
 				dfProcessingFeeCashBook.setReceiptRemarks("");
@@ -388,12 +388,12 @@ public class BusinessMemberService {
 				switch (businessMember.getLoanType()) {
 				case "DAILY_FINANCE":
 
-					optionalCashbook = cashBookRepo.findByBusinessMemberAndAccountMastercode(businessMember,
+					optionalCashbook = cashBookRepo.findByBusinessMemberAndAccountMasterCode(businessMember,
 							"DF DOC CHARGES");
 
 				case "MONTHLY_FINANCE":
 
-					optionalCashbook = cashBookRepo.findByBusinessMemberAndAccountMastercode(businessMember,
+					optionalCashbook = cashBookRepo.findByBusinessMemberAndAccountMasterCode(businessMember,
 							"MF DOC CHARGES");
 
 				}

@@ -131,8 +131,8 @@ public class DailyLoanInstallmentPaymentService {
 		
 		for (CashBook cb : paidList) {
 
-			if (cb.getAccountMastercode().equalsIgnoreCase("DF LOAN INSTALLMENT")
-					|| cb.getAccountMastercode().equalsIgnoreCase("DF INTEREST")) {
+			if (cb.getAccountMasterCode().equalsIgnoreCase("DF LOAN INSTALLMENT")
+					|| cb.getAccountMasterCode().equalsIgnoreCase("DF INTEREST")) {
 
 				totalAmountPaid = totalAmountPaid.add(cb.getCredit() != null ? cb.getCredit() : BigDecimal.ZERO);
 
@@ -192,7 +192,7 @@ public class DailyLoanInstallmentPaymentService {
 			
 			cb.setAccountMastertype(accountMaster.getType());
 			cb.setAccountMasterMasterCode(accountMaster.getMasterCode());
-			cb.setAccountMastercode(accountMaster.getCode());
+			cb.setAccountMasterCode(accountMaster.getCode());
 			
 			cb.setLineNo(1);
 			cb.setUser(currentUser);
@@ -213,7 +213,7 @@ public class DailyLoanInstallmentPaymentService {
 			lateCb.setDebit(BigDecimal.ZERO);
 			lateCb.setAccountMastertype(accountMaster.getType());
 			lateCb.setAccountMasterMasterCode(accountMaster.getMasterCode());
-			lateCb.setAccountMastercode(accountMaster.getCode());
+			lateCb.setAccountMasterCode(accountMaster.getCode());
 			lateCb.setLineNo(2);
 			lateCb.setUser(currentUser);
 			lateCb.setTransDate(transDate);
@@ -306,7 +306,7 @@ public class DailyLoanInstallmentPaymentService {
 			
 			cb.setAccountMastertype(accountMaster.getType());
 			cb.setAccountMasterMasterCode(accountMaster.getMasterCode());
-			cb.setAccountMastercode(accountMaster.getCode());
+			cb.setAccountMasterCode(accountMaster.getCode());
 			
 			cb.setLineNo(1);
 			cb.setUser(currentUser);
@@ -329,7 +329,7 @@ public class DailyLoanInstallmentPaymentService {
 			
 			lateCb.setAccountMastertype(accountMaster.getType());
 			lateCb.setAccountMasterMasterCode(accountMaster.getMasterCode());
-			lateCb.setAccountMastercode(accountMaster.getCode());
+			lateCb.setAccountMasterCode(accountMaster.getCode());
 			
 			lateCb.setLineNo(2);
 			lateCb.setUser(currentUser);
