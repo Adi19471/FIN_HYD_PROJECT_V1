@@ -12,6 +12,7 @@ import org.springframework.data.repository.query.Param;
 
 import com.balaji.finance.dto.BalanceSheetProjection;
 import com.balaji.finance.dto.BusinessOverviewProjection;
+import com.balaji.finance.dto.CustomerReportProjection;
 import com.balaji.finance.dto.DateWiseCashBookProjection;
 import com.balaji.finance.dto.DateWiseCollectionsProjection;
 import com.balaji.finance.dto.LoanCollectionProjection;
@@ -327,4 +328,19 @@ public interface CashBookRepo extends JpaRepository<CashBook, Long> {
 			""", nativeQuery = true)
 	List<BusinessOverviewProjection> getBusinessOverviewStatement(@Param("typeList") List<String> typeList);
 
+	
+	@Query("""
+		    SELECT
+		         customer.personalInfoId AS personalInfoId,
+		         customer.firstName AS customerName,
+		         COALESCE(SUM(cb.credit), 0) AS credits,
+		         COALESCE(SUM(cb.debit), 0) AS debits
+		    FROM CashBook cb
+		    LEFT JOIN cb.personalInfo customer
+		    WHERE cb.accountMastercode = :accountMastercode
+		    GROUP BY customer.personalInfoId, customer.firstName
+		    ORDER BY customer.firstName
+		""")
+		List<CustomerReportProjection> getCustomerReportOnAccountCode(
+		        @Param("accountMastercode") String accountMastercode);
 }
