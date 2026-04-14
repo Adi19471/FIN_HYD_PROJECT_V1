@@ -34,7 +34,7 @@ public interface BusinessMemberRepository extends JpaRepository<BusinessMember, 
 			SELECT u FROM BusinessMember u
 			          WHERE
 			              u.businessMemberId LIKE CONCAT(:starWithString, '%')
-			          ORDER BY u.year, u.sequence asc
+			          ORDER BY u.year desc , u.sequence desc
 			  """)
 	List<BusinessMember> findAllByLoanType(@Param("starWithString") String starWithString);
 

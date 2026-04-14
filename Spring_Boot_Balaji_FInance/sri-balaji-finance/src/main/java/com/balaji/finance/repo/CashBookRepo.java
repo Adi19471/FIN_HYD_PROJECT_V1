@@ -201,11 +201,12 @@ public interface CashBookRepo extends JpaRepository<CashBook, Long> {
 			    COALESCE(SUM(cb.CREDIT),0) - COALESCE(SUM(cb.DEBIT),0) AS amount
 			FROM cash_book cb
 			WHERE cb.TRANS_DATE BETWEEN :fromDate AND :toDate
+			  AND cb.ACCOUNT_MASTER_TYPE IN :accountType
 			GROUP BY cb.ACCOUNT_MASTER_TYPE, cb.ACCOUNT_MASTER_CODE
 			ORDER BY cb.ACCOUNT_MASTER_TYPE, cb.ACCOUNT_MASTER_CODE
 			""", nativeQuery = true)
 	List<RevenueExpenseProjection> getRevenueExpenseStatementByTrasncDate(@Param("fromDate") LocalDateTime fromDate,
-			@Param("toDate") LocalDateTime toDate);
+			@Param("toDate") LocalDateTime toDate,@Param("accountType")List<String> accountType);
 
 	@Query(value = """
 			SELECT
@@ -213,10 +214,11 @@ public interface CashBookRepo extends JpaRepository<CashBook, Long> {
 			    cb.ACCOUNT_MASTER_CODE AS code,
 			    COALESCE(SUM(cb.CREDIT),0) - COALESCE(SUM(cb.DEBIT),0) AS amount
 			FROM cash_book cb
+			  Where cb.ACCOUNT_MASTER_TYPE IN :accountType
 			GROUP BY cb.ACCOUNT_MASTER_TYPE, cb.ACCOUNT_MASTER_CODE
 			ORDER BY cb.ACCOUNT_MASTER_TYPE, cb.ACCOUNT_MASTER_CODE
 			""", nativeQuery = true)
-	List<RevenueExpenseProjection> getRevenueExpenseStatement();
+	List<RevenueExpenseProjection> getRevenueExpenseStatement(@Param("accountType")List<String> accountType);
 
 	@Query(value = """
 			SELECT

@@ -64,7 +64,7 @@ public class CashBookService {
 
 			CashBookViewPojo cashBookViewPojo = new CashBookViewPojo();
 			cashBookViewPojo.setTransactionId(cashBook.getCashBookId());
-			cashBookViewPojo.setAccountNumber(cashBook.getBusinessMember().getBusinessMemberId());
+			cashBookViewPojo.setAccountNumber(cashBook.getBusinessMember() != null ? cashBook.getBusinessMember().getBusinessMemberId() : null);
 			cashBookViewPojo.setName(cashBook.getPersonalInfo() != null
 					? cashBook.getPersonalInfo().getPersonalInfoId() + " - " + cashBook.getPersonalInfo().getFirstName()
 					: "");

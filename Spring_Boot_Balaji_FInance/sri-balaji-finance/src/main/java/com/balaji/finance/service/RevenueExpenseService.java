@@ -2,6 +2,7 @@ package com.balaji.finance.service;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.Arrays;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -21,10 +22,10 @@ public class RevenueExpenseService {
 		LocalDateTime from = fromDate.atStartOfDay();
 		LocalDateTime to = toDate.atTime(23, 59, 59);
 
-		return cashBookRepo.getRevenueExpenseStatementByTrasncDate(from, to);
+		return cashBookRepo.getRevenueExpenseStatementByTrasncDate(from, to,Arrays.asList("REVENUES","EXPENSES"));
 	}
 
 	public List<RevenueExpenseProjection> getRevenueExpenseStatement() {
-		return cashBookRepo.getRevenueExpenseStatement();
+		return cashBookRepo.getRevenueExpenseStatement(Arrays.asList("REVENUES","EXPENSES"));
 	}
 }
