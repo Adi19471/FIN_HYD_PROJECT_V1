@@ -6,6 +6,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -98,6 +99,7 @@ public class BusinessMemberService {
 		return businessMemberDto;
 	}
 
+	@Transactional
 	public String updateInformation(BusinessMemberDto businessMemberDto, String type) {
 
 		Optional<BusinessMember> businessMemberInDb = businessMemberRepository.findById(businessMemberDto.getId());
@@ -105,6 +107,8 @@ public class BusinessMemberService {
 		if (businessMemberInDb.isPresent()) {
 
 			BusinessMember businessMember = businessMemberInDb.get();
+
+			
 
 			if (businessMember.getAmount() == null) {
 				return saveBusinessMember(businessMemberDto, businessMember, type);
@@ -354,6 +358,18 @@ public class BusinessMemberService {
 	public String updateBusinessMember(BusinessMemberDto businessMemberDto, BusinessMember businessMember,
 			String type) {
 
+		
+		boolean hasPayments = emiRepo.existsByBusinessMember_BusinessMemberIdAndPaidAmountGreaterThan(
+				businessMember.getBusinessMemberId(), BigDecimal.ZERO);
+
+		Long hasCashEntries = cashBookRepo
+				.findCollectionsCountOnAccount(businessMember.getBusinessMemberId());
+
+		if (hasPayments || hasCashEntries > 0) {
+			throw new ApiException("Loan cannot be edited after payment/transaction started",HttpStatus.BAD_REQUEST);
+		}
+		
+		
 		String currentUser = SecurityContextHolder.getContext().getAuthentication().getName();
 		LocalDateTime currentDate = LocalDateTime.now();
 
@@ -379,7 +395,7 @@ public class BusinessMemberService {
 					}
 
 					loanCashBook.setCredit(BigDecimal.ZERO);
-					loanCashBook.setDebit(businessMemberDto.getProcessingFee());
+					loanCashBook.setDebit(businessMemberDto.getAmount());
 					loanCashBook.setUser(currentUser);
 					loanCashBook.setSysDate(currentDate);
 					loanCashBook.setTransDate(businessMemberDto.getStartDate());
@@ -444,6 +460,7 @@ public class BusinessMemberService {
 				cashBookRepo.save(dfIntrestCashBook);
 
 			}
+			
 
 			break;
 		case "MONTHLY_FINANCE":
@@ -465,7 +482,7 @@ public class BusinessMemberService {
 					}
 
 					mFLoanCashBook.setCredit(BigDecimal.ZERO);
-					mFLoanCashBook.setDebit(businessMemberDto.getProcessingFee());
+					mFLoanCashBook.setDebit(businessMemberDto.getAmount());
 					mFLoanCashBook.setUser(currentUser);
 					mFLoanCashBook.setSysDate(currentDate);
 					mFLoanCashBook.setTransDate(businessMemberDto.getStartDate());
@@ -505,12 +522,21 @@ public class BusinessMemberService {
 
 			}
 
+			
+
 			break;
 
 		default:
 			break;
 		}
-
+		
+		// Updating Emis Record
+		boolean updateEMIs =
+		        !Objects.equals(businessMember.getDuration(), businessMemberDto.getDuration())
+		     || !Objects.equals(businessMember.getAmount(), businessMemberDto.getAmount())
+		     || !Objects.equals(businessMember.getInterest(), businessMemberDto.getInterest());
+		
+		
 		if (customerOptional.isPresent()) {
 			businessMember.setCustomerId(customerOptional.get());
 		}
@@ -540,6 +566,11 @@ public class BusinessMemberService {
 
 		businessMember
 				.setAmount(businessMemberDto.getAmount() != null ? businessMemberDto.getAmount() : BigDecimal.ZERO);
+		
+		
+		
+		
+		
 		businessMember.setDuration(businessMemberDto.getDuration() != null ? businessMemberDto.getDuration() : 0);
 
 		businessMember.setInterest(
@@ -560,6 +591,18 @@ public class BusinessMemberService {
 		businessMember.setInterestRate(businessMemberDto.getInterestRate());
 
 		businessMemberRepository.save(businessMember);
+		
+		if (updateEMIs) {
+			emiRepo.deleteByBusinessMember_BusinessMemberId(businessMember.getBusinessMemberId());
+
+			// regenerate EMI
+			if ("MONTHLY_FINANCE".equals(type)) {
+				generateEMIScheduleForMonth(businessMember);
+			} else {
+				generateEMIScheduleForDays(businessMember);
+			}
+
+		}
 
 		return "Loan updated successfully!";
 
@@ -738,8 +781,8 @@ public class BusinessMemberService {
 
 			BusinessMemberAutoCompletePojo pojo = new BusinessMemberAutoCompletePojo();
 			pojo.setLoanId(bm.getBusinessMemberId());
-			pojo.setCustomerId(bm.getCustomerId().getPersonalInfoId());
-			pojo.setCustomerName(bm.getCustomerId().getFirstName());
+			pojo.setCustomerId(bm.getCustomerId() != null ? bm.getCustomerId().getPersonalInfoId() : null);
+			pojo.setCustomerName(bm.getCustomerId() != null ? bm.getCustomerId().getFirstName() : null);
 
 			pojoList.add(pojo);
 		}
@@ -811,6 +854,7 @@ public class BusinessMemberService {
 
 	    emiRepo.saveAll(emiList);
 	}
+	
 	public void generateEMIScheduleForDays(BusinessMember member) {
 
 		int days = member.getDuration(); // Loan duration in months
@@ -827,7 +871,7 @@ public class BusinessMemberService {
 
 			emi.setTotalAmount(principalPerEMI);
 			emi.setPaidAmount(BigDecimal.ZERO);
-			emi.setDueDate(member.getStartDate().plusMonths(i));
+			emi.setDueDate(member.getStartDate().plusDays(i));
 			emi.setStatus("PENDING");
 
 			emiRepo.save(emi);

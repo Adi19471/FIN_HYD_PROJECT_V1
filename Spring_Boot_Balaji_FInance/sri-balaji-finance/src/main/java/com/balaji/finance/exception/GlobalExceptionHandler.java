@@ -1,8 +1,6 @@
 package com.balaji.finance.exception;
-import java.util.Date;
-import java.util.HashMap;
+
 import java.util.List;
-import java.util.Map;
 import java.util.stream.Collectors;
 
 import org.springframework.http.HttpStatus;
@@ -16,42 +14,32 @@ import com.balaji.finance.pojo.ErrorResponse;
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
-    @ExceptionHandler(MethodArgumentNotValidException.class)
-    public ResponseEntity<Map<String, Object>> handleValidationExceptions(
-            MethodArgumentNotValidException ex) {
-        
-        Map<String, Object> response = new HashMap<>();
-        response.put("timestamp", new Date());
-        response.put("status", HttpStatus.BAD_REQUEST.value());
-        response.put("error", "Validation Failed");
-        
-        List<String> errors = ex.getBindingResult()
-                .getFieldErrors()
-                .stream()
-                .map(err -> err.getField() + ": " + err.getDefaultMessage())
-                .collect(Collectors.toList());
-        
-        response.put("errors", errors);
-        
-        return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
-    }
-    
-    
-    @ExceptionHandler(ApiException.class)
-    public ResponseEntity<?> handleApiException(ApiException ex) {
-    	ex.printStackTrace();
-        return ResponseEntity
-                .status(ex.getStatus())
-                .body(new ErrorResponse(ex.getMessage()));
-    }
+	@ExceptionHandler(MethodArgumentNotValidException.class)
+	public ResponseEntity<ErrorResponse> handleValidationExceptions(MethodArgumentNotValidException ex) {
+		ex.printStackTrace();
+		List<String> errors = ex.getBindingResult().getFieldErrors().stream()
+				.map(err -> err.getField() + ": " + err.getDefaultMessage()).collect(Collectors.toList());
 
-    @ExceptionHandler(Exception.class)
-    public ResponseEntity<?> handleGenericException(Exception ex) {
-    	ex.printStackTrace();
-        return ResponseEntity
-                .status(500)
-                .body(new ErrorResponse("Something went wrong"));
-    }
+		ErrorResponse errorResponse = new ErrorResponse("Validation Failed", "VALIDATION_ERROR", errors);
 
-    // You can also handle ConstraintViolationException if needed
+		return new ResponseEntity<>(errorResponse, HttpStatus.BAD_REQUEST);
+	}
+
+	@ExceptionHandler(Exception.class)
+	public ResponseEntity<ErrorResponse> handleGenericException(Exception ex) {
+		ex.printStackTrace();
+		ErrorResponse errorResponse = new ErrorResponse("Something went wrong", "INTERNAL_ERROR", null);
+
+		return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(errorResponse);
+	}
+
+	@ExceptionHandler(ApiException.class)
+	public ResponseEntity<ErrorResponse> handleApiException(ApiException ex) {
+		ex.printStackTrace();
+		ErrorResponse errorResponse = new ErrorResponse(ex.getMessage(), "BUSINESS_ERROR", null);
+
+		return ResponseEntity.status(ex.getStatus()).body(errorResponse);
+	}
+
+	// You can also handle ConstraintViolationException if needed
 }

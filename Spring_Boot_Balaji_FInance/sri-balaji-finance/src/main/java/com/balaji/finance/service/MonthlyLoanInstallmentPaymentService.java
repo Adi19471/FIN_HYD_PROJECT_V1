@@ -8,6 +8,7 @@ import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -19,6 +20,7 @@ import com.balaji.finance.entity.BusinessMember;
 import com.balaji.finance.entity.CashBook;
 import com.balaji.finance.entity.EMI;
 import com.balaji.finance.entity.LoanStatus;
+import com.balaji.finance.entity.PaymentAllocation;
 import com.balaji.finance.pojo.InstallmentDetails;
 import com.balaji.finance.pojo.LoanInformation;
 import com.balaji.finance.pojo.QuickCashBookRow;
@@ -26,6 +28,7 @@ import com.balaji.finance.repo.AccountMasterRepo;
 import com.balaji.finance.repo.BusinessMemberRepository;
 import com.balaji.finance.repo.CashBookRepo;
 import com.balaji.finance.repo.EmiRepo;
+import com.balaji.finance.repo.PaymentAllocationRepo;
 
 import jakarta.transaction.Transactional;
 
@@ -43,6 +46,10 @@ public class MonthlyLoanInstallmentPaymentService {
 
 	@Autowired
 	private AccountMasterRepo accountMasterRepo;
+	
+	
+	@Autowired
+	private PaymentAllocationRepo paymentAllocationRepo;
 
 	private static final DateTimeFormatter DATE_FORMAT = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
 	
@@ -172,11 +179,12 @@ public class MonthlyLoanInstallmentPaymentService {
 		BigDecimal principal = bm.getAmount();
 
 		BigDecimal principalPerMonth = principal.divide(BigDecimal.valueOf(bm.getDuration()), 2, RoundingMode.HALF_UP);
-
 		BigDecimal interestPerMonth = installmentPerMonth.subtract(principalPerMonth);
 
 		BigDecimal principalPaid = BigDecimal.ZERO;
 		BigDecimal interestPaid = BigDecimal.ZERO;
+		
+		String paymentRefId = System.currentTimeMillis() + "-" + UUID.randomUUID();
 
 		// 🔹 Split Principal & Interest
 		if (paidAmount.compareTo(principalPerMonth) <= 0) {
@@ -216,7 +224,7 @@ public class MonthlyLoanInstallmentPaymentService {
 			cb.setSysDate(LocalDateTime.now());
 			cb.setPersonalInfo(bm.getCustomerId());
 			cb.setLineNo(1);
-
+			cb.setPaymentRefId(paymentRefId);
 			cashBookRepo.save(cb);
 		}
 
@@ -240,7 +248,8 @@ public class MonthlyLoanInstallmentPaymentService {
 			cb.setSysDate(LocalDateTime.now());
 			cb.setPersonalInfo(bm.getCustomerId());
 			cb.setLineNo(2);
-
+			cb.setPaymentRefId(paymentRefId);
+			
 			cashBookRepo.save(cb);
 		}
 
@@ -265,7 +274,8 @@ public class MonthlyLoanInstallmentPaymentService {
 			cb.setSysDate(LocalDateTime.now());
 			cb.setPersonalInfo(bm.getCustomerId());
 			cb.setLineNo(3);
-
+			cb.setPaymentRefId(paymentRefId);
+			
 			cashBookRepo.save(cb);
 		}
 
@@ -276,35 +286,41 @@ public class MonthlyLoanInstallmentPaymentService {
 
 		for (EMI emi : pendingEMIs) {
 
+			if (remainingPayment.compareTo(BigDecimal.ZERO) <= 0) {
+				break;
+			}
+
 			BigDecimal emiRemaining = emi.getRemainingAmount();
 
-			if (remainingPayment.compareTo(emiRemaining) < 0) {
-				// Partial payment → update paid & remaining
-				emi.setPaidAmount(emi.getPaidAmount().add(remainingPayment));
-				emi.setPaymentDate(transactionDate);
+			// 🔹 Calculate allocation
+			BigDecimal allocation = remainingPayment.min(emiRemaining);
 
-				remainingPayment = BigDecimal.ZERO;
+			PaymentAllocation pa = new PaymentAllocation();
+			pa.setPaymentRefId(paymentRefId); // from your UUID
+			pa.setEmi(emi);
+			pa.setAllocatedAmount(allocation);
 
-				break; // no more payment left
+			paymentAllocationRepo.save(pa);
 
-			} else {
+			emi.setPaidAmount(emi.getPaidAmount().add(allocation));
+			emi.setPaymentDate(transactionDate);
 
-				// Full or excess payment → mark as paid
-				emi.setPaidAmount(emi.getPaidAmount().add(emiRemaining));
-				emi.setPaymentDate(transactionDate);
+			if (emi.getPaidAmount().compareTo(emi.getTotalAmount()) >= 0) {
 				emi.setStatus("PAID");
-
-				remainingPayment = remainingPayment.subtract(emiRemaining);
-
-				// continue to next EMI if excess remains
+			} else if (emi.getPaidAmount().compareTo(BigDecimal.ZERO) > 0) {
+				emi.setStatus("PARTIAL");
+			} else {
+				emi.setStatus("PENDING");
 			}
 
 			emiRepo.save(emi);
+
+			remainingPayment = remainingPayment.subtract(allocation);
 		}
 
 		// Check if all EMIs are paid → mark BusinessMember as PAID
-		boolean allPaid = pendingEMIs.stream()
-				.allMatch(emi -> emi.getRemainingAmount().compareTo(BigDecimal.ZERO) == 0);
+		boolean allPaid = allEMIs.stream()
+			    .allMatch(emi -> emi.getRemainingAmount().compareTo(BigDecimal.ZERO) == 0);
 
 		if (allPaid) {
 			bm.setLoanStatus(LoanStatus.COMPLETED.toString());

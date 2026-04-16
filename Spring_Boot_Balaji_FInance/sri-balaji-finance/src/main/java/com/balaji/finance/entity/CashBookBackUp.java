@@ -103,6 +103,10 @@ public class CashBookBackUp {
 
 	@LastModifiedBy
 	private String modifiedBy;
+	
+	@Column(name = "PAYMENT_REF_ID")
+	private String paymentRefId;
+
 
 	/* ===================== GETTERS & SETTERS ===================== */
 
@@ -289,5 +293,14 @@ public class CashBookBackUp {
 	public void setModifiedBy(String modifiedBy) {
 		this.modifiedBy = modifiedBy;
 	}
+
+	public String getPaymentRefId() {
+		return paymentRefId;
+	}
+
+	public void setPaymentRefId(String paymentRefId) {
+		this.paymentRefId = paymentRefId;
+	}
+
 	
 }

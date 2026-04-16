@@ -375,5 +375,21 @@ public interface CashBookRepo extends JpaRepository<CashBook, Long> {
 	List<CustomerTransactionsProjection> getCustomerTransactionsOnAccountMasterCodeAndDateRange(
 			@Param("accountMasterCode") String accountMasterCode, @Param("customerId") String customerId,
 			@Param("fromDate") LocalDateTime fromDate, @Param("toDate") LocalDateTime toDate);
+	
+	
+	List<CashBook> findByPaymentRefId(String paymentRefId);
+	
+	void deleteByPaymentRefId(String paymentRefId);
+	
+	
+	 
+	 
+	@Query("""
+			SELECT count(c.cashBookId)
+			FROM CashBook c
+			WHERE c.businessMember.businessMemberId =:businessMemberId
+			AND c.accountMasterCode NOT IN ('MF LOAN','MF DOC CHARGES','DF LOAN','DF INTEREST','DF DOC CHARGES')
+			""")
+	Long findCollectionsCountOnAccount(String businessMemberId);
 
 }

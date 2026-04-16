@@ -7,6 +7,7 @@ import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -18,6 +19,7 @@ import com.balaji.finance.entity.BusinessMember;
 import com.balaji.finance.entity.CashBook;
 import com.balaji.finance.entity.EMI;
 import com.balaji.finance.entity.LoanStatus;
+import com.balaji.finance.entity.PaymentAllocation;
 import com.balaji.finance.pojo.InstallmentDetails;
 import com.balaji.finance.pojo.LoanInformation;
 import com.balaji.finance.pojo.QuickCashBookRow;
@@ -25,6 +27,7 @@ import com.balaji.finance.repo.AccountMasterRepo;
 import com.balaji.finance.repo.BusinessMemberRepository;
 import com.balaji.finance.repo.CashBookRepo;
 import com.balaji.finance.repo.EmiRepo;
+import com.balaji.finance.repo.PaymentAllocationRepo;
 
 import jakarta.transaction.Transactional;
 
@@ -46,6 +49,9 @@ public class DailyLoanInstallmentPaymentService {
 	@Autowired
 	private AccountMasterRepo accountMasterRepo;
 
+	
+	@Autowired
+	private PaymentAllocationRepo paymentAllocationRepo;
 
 
 	public LoanInformation loadDFLoanPaidInfo(String id) {
@@ -176,36 +182,37 @@ public class DailyLoanInstallmentPaymentService {
 			throw new IllegalArgumentException(
 					"trying to paying excess amount , Remaining Balance : " + totalRemaining);
 		}
-		
-		
-		if (paidAmount.compareTo(BigDecimal.ZERO) > 0) {
-			
-			
-			
-			AccountMaster accountMaster = accountMasterRepo.findAccountMasterByMasterCodeAndCode("DF LOAN INSTALLMENT", "DF LOAN INSTALLMENT");
 
+		String paymentRefId = System.currentTimeMillis() + "-" + UUID.randomUUID();
+
+		if (paidAmount.compareTo(BigDecimal.ZERO) > 0) {
+
+			AccountMaster accountMaster = accountMasterRepo.findAccountMasterByMasterCodeAndCode("DF LOAN INSTALLMENT",
+					"DF LOAN INSTALLMENT");
 
 			CashBook cb = new CashBook();
 			cb.setBusinessMember(bm);
 			cb.setCredit(paidAmount);
 			cb.setDebit(BigDecimal.ZERO);
-			
+
 			cb.setAccountMastertype(accountMaster.getType());
 			cb.setAccountMasterMasterCode(accountMaster.getMasterCode());
 			cb.setAccountMasterCode(accountMaster.getCode());
-			
+
 			cb.setLineNo(1);
 			cb.setUser(currentUser);
 			cb.setTransDate(transDate);
 			cb.setPersonalInfo(bm.getCustomerId());
+			cb.setPaymentRefId(paymentRefId);
 
 			cashBookRepo.save(cb);
 		}
 
 		BigDecimal lateFee = info.getLateFee() != null ? info.getLateFee() : BigDecimal.ZERO;
 		if (lateFee.compareTo(BigDecimal.ZERO) > 0) {
-			
-			AccountMaster accountMaster = accountMasterRepo.findAccountMasterByMasterCodeAndCode("LATE FEE", "DF LATE FEE");
+
+			AccountMaster accountMaster = accountMasterRepo.findAccountMasterByMasterCodeAndCode("LATE FEE",
+					"DF LATE FEE");
 
 			CashBook lateCb = new CashBook();
 			lateCb.setBusinessMember(bm);
@@ -218,46 +225,51 @@ public class DailyLoanInstallmentPaymentService {
 			lateCb.setUser(currentUser);
 			lateCb.setTransDate(transDate);
 			lateCb.setPersonalInfo(bm.getCustomerId());
+			lateCb.setPaymentRefId(paymentRefId);
 
 			cashBookRepo.save(lateCb);
 		}
-		
-		
 
-		List<EMI> pendingEMIs = allEMIs.stream().filter(emi -> !emi.getStatus().equalsIgnoreCase("PAID")).collect(Collectors.toList());
+		List<EMI> pendingEMIs = allEMIs.stream().filter(emi -> !emi.getStatus().equalsIgnoreCase("PAID"))
+				.collect(Collectors.toList());
 
 		BigDecimal remainingPayment = paidAmount;
 		for (EMI emi : pendingEMIs) {
 
+			if (remainingPayment.compareTo(BigDecimal.ZERO) <= 0) {
+				break;
+			}
+
 			BigDecimal emiRemaining = emi.getRemainingAmount();
 
-			if (remainingPayment.compareTo(emiRemaining) < 0) {
-				// Partial payment → update paid & remaining
-				emi.setPaidAmount(emi.getPaidAmount().add(remainingPayment));
-				emi.setPaymentDate(transDate);
+			// 🔹 Calculate allocation
+			BigDecimal allocation = remainingPayment.min(emiRemaining);
 
-				remainingPayment = BigDecimal.ZERO;
+			PaymentAllocation pa = new PaymentAllocation();
+			pa.setPaymentRefId(paymentRefId); // from your UUID
+			pa.setEmi(emi);
+			pa.setAllocatedAmount(allocation);
 
-				break; // no more payment left
+			paymentAllocationRepo.save(pa);
 
-			} else {
+			emi.setPaidAmount(emi.getPaidAmount().add(allocation));
+			emi.setPaymentDate(transDate);
 
-				// Full or excess payment → mark as paid
-				emi.setPaidAmount(emi.getPaidAmount().add(emiRemaining));
-				emi.setPaymentDate(transDate);
+			if (emi.getPaidAmount().compareTo(emi.getTotalAmount()) >= 0) {
 				emi.setStatus("PAID");
-
-				remainingPayment = remainingPayment.subtract(emiRemaining);
-
-				// continue to next EMI if excess remains
+			} else if (emi.getPaidAmount().compareTo(BigDecimal.ZERO) > 0) {
+		        emi.setStatus("PARTIAL");
+		    } else {
+				emi.setStatus("PENDING");
 			}
 
 			emiRepo.save(emi);
+
+			remainingPayment = remainingPayment.subtract(allocation);
 		}
-		
+
 		// Check if all EMIs are paid → mark BusinessMember as PAID
-		boolean allPaid = pendingEMIs.stream()
-				.allMatch(emi -> emi.getRemainingAmount().compareTo(BigDecimal.ZERO) == 0);
+		boolean allPaid = allEMIs.stream().allMatch(emi -> emi.getRemainingAmount().compareTo(BigDecimal.ZERO) == 0);
 
 		if (allPaid) {
 			bm.setLoanStatus(LoanStatus.COMPLETED.toString());

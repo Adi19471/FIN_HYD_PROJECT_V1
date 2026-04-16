@@ -86,6 +86,10 @@ public class CashBook {
 
 	@LastModifiedBy
 	private String modifiedBy;
+	
+	
+	@Column(name = "PAYMENT_REF_ID")
+	private String paymentRefId;
 
 	public Long getCashBookId() {
 		return cashBookId;
@@ -229,6 +233,14 @@ public class CashBook {
 
 	public void setModifiedBy(String modifiedBy) {
 		this.modifiedBy = modifiedBy;
+	}
+
+	public String getPaymentRefId() {
+		return paymentRefId;
+	}
+
+	public void setPaymentRefId(String paymentRefId) {
+		this.paymentRefId = paymentRefId;
 	}
 
 	

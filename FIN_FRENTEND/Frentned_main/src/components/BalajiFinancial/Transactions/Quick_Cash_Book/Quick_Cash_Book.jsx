@@ -107,6 +107,11 @@ const QuickCashBook = () => {
     } catch { }
   }, [token, usedAccounts]);
 
+  
+  
+  
+  
+  
   /* Fetch Record */
   const fetchAccountRecord = async (loanId, rowId) => {
     console.log("🔥 FETCH API CALLED for:", loanId);
@@ -139,7 +144,7 @@ const QuickCashBook = () => {
           )
         );
 
-       
+
 
         // Add only ONE row
         // setTimeout(() => addNewRowWithPrefix(basePrefix), 250);
@@ -173,6 +178,7 @@ const QuickCashBook = () => {
     setRows((prev) => prev.filter((row) => row.id !== id));
   };
 
+
   const handleSaveAll = async () => {
     const rowsToSave = rows.filter((r) => r.accountNo?.trim());
     if (!rowsToSave.length) return errorToast("No valid records to save");
@@ -181,19 +187,21 @@ const QuickCashBook = () => {
     try {
       const payload = {
         transactionDate: transactionDate.format("YYYY-MM-DD HH:mm:ss"),
-        quickCashBookRows: rowsToSave.filter(
-          (r) =>
-            Number(r.paidAmount || 0) > 0 ||
-            Number(r.paidLateFee || 0) > 0
-        ).map((r) => ({
-          accountNo: r.accountNo,
-          name: r.name,
-          installment: Number(r.installment || 0),
-          dueAmount: Number(r.dueAmount || 0),
-          lateFee: Number(r.lateFee || 0),
-          paidAmount: Number(r.paidAmount || 0),
-          paidLateFee: Number(r.paidLateFee || 0),
-        })),
+        quickCashBookRows: rowsToSave
+          .filter(
+            (r) =>
+              Number(r.paidAmount || 0) > 0 ||
+              Number(r.paidLateFee || 0) > 0
+          )
+          .map((r) => ({
+            accountNo: r.accountNo,
+            name: r.name,
+            installment: Number(r.installment || 0),
+            dueAmount: Number(r.dueAmount || 0),
+            lateFee: Number(r.lateFee || 0),
+            paidAmount: Number(r.paidAmount || 0),
+            paidLateFee: Number(r.paidLateFee || 0),
+          })),
       };
 
       await axios.post(`${API_BASE}/saveQuickCashBookRecords`, payload, {
@@ -202,8 +210,17 @@ const QuickCashBook = () => {
 
       successToast("Saved successfully");
       setRows([]);
-    } catch {
-      errorToast("Save failed");
+
+    } catch (error) {
+
+      // 🔥 extract backend message
+      const message =
+        error.response?.data?.message ||
+        error.response?.data?.error ||
+        "Save failed";
+
+      errorToast(message);
+
     } finally {
       setLoading(false);
     }
@@ -222,7 +239,7 @@ const QuickCashBook = () => {
     <Box>
       <Paper elevation={2} sx={{ p: 2, mb: 2, borderRadius: 0, display: "flex", justifyContent: "space-between", alignItems: "center", gap: 2 }}>
         <Typography variant="h5" fontWeight={700} color="primary.main">
-          Quick Business 
+          Quick Business
         </Typography>
 
         <Stack direction="row" spacing={2}>
@@ -358,7 +375,7 @@ const QuickCashBook = () => {
                         if ((e.key === "Enter" || e.key === "Tab") && !e.shiftKey) {
                           if (Number(row.paidAmount || 0) > 0) {
                             e.preventDefault(); // prevents weird double triggers
-                             const basePrefix = row.accountNo.trim().replace(/\d+$/, "");
+                            const basePrefix = row.accountNo.trim().replace(/\d+$/, "");
                             addNewRowWithPrefix(basePrefix)
                           }
                         }
