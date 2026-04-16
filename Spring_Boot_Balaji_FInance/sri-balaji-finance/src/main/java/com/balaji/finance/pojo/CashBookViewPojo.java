@@ -4,6 +4,7 @@ import java.math.BigDecimal;
 
 public class CashBookViewPojo {
 
+	private String paymentRefId;
 	private Long transactionId;
 	private String accountNumber;
 	private String name;
@@ -11,6 +12,14 @@ public class CashBookViewPojo {
 	private String particulars;
 	private BigDecimal credit;
 	private BigDecimal debit;
+
+	public String getPaymentRefId() {
+		return paymentRefId;
+	}
+
+	public void setPaymentRefId(String paymentRefId) {
+		this.paymentRefId = paymentRefId;
+	}
 
 	public Long getTransactionId() {
 		return transactionId;

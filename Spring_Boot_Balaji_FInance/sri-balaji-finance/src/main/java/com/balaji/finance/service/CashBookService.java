@@ -65,15 +65,16 @@ public class CashBookService {
 		LocalDateTime start = transactionDate.atStartOfDay();
 		LocalDateTime end = transactionDate.plusDays(1).atStartOfDay();
 
-		List<CashBook> byTransDate = cashBookRepo.findByTransactionDate(start,end);
+		List<CashBook> byTransDate = cashBookRepo.findByTransactionDateExcludedSomeAccountCodes(start,end);
 
 		List<CashBookViewPojo> cashBookViewPojoList = new ArrayList<CashBookViewPojo>();
-
+		
 		for (CashBook cashBook : byTransDate) {
 
 			CashBookViewPojo cashBookViewPojo = new CashBookViewPojo();
 			cashBookViewPojo.setTransactionId(cashBook.getCashBookId());
-			cashBookViewPojo.setAccountNumber(cashBook.getBusinessMember() != null ? cashBook.getBusinessMember().getBusinessMemberId() : null);
+			cashBookViewPojo.setAccountNumber(
+					cashBook.getBusinessMember() != null ? cashBook.getBusinessMember().getBusinessMemberId() : null);
 			cashBookViewPojo.setName(cashBook.getPersonalInfo() != null
 					? cashBook.getPersonalInfo().getPersonalInfoId() + " - " + cashBook.getPersonalInfo().getFirstName()
 					: "");
@@ -81,7 +82,7 @@ public class CashBookService {
 			cashBookViewPojo.setTransactionType(cashBook.getAccountMasterMasterCode());
 			cashBookViewPojo.setCredit(cashBook.getCredit());
 			cashBookViewPojo.setDebit(cashBook.getDebit());
-
+			cashBookViewPojo.setPaymentRefId(cashBook.getPaymentRefId());
 			cashBookViewPojoList.add(cashBookViewPojo);
 
 		}
@@ -109,8 +110,8 @@ public class CashBookService {
 			cashBookDeletedViewPojo.setName(cashBook.getPersonalInfo() != null
 					? cashBook.getPersonalInfo().getPersonalInfoId() + " - " + cashBook.getPersonalInfo().getFirstName()
 					: "");
-			cashBookDeletedViewPojo.setParticulars(cashBook.getParticulars());
-			cashBookDeletedViewPojo.setTransactionType(cashBook.getTransType());
+			cashBookDeletedViewPojo.setParticulars(cashBook.getAccountMasterCode());
+			cashBookDeletedViewPojo.setTransactionType(cashBook.getAccountMasterMasterCode());
 			cashBookDeletedViewPojo.setCredit(cashBook.getCredit());
 			cashBookDeletedViewPojo.setDebit(cashBook.getDebit());
 			cashBookDeletedViewPojo.setDeletedByUser(cashBook.getDeletedBy());
@@ -153,68 +154,77 @@ public class CashBookService {
 	     
 	        processedRefIds.add(refId);
 	        
-	        
-	        List<CashBook> cashBooks = cashBookRepo.findByPaymentRefId(refId);
-	        for (CashBook cb : cashBooks) {
+			List<CashBook> cashBooks = cashBookRepo.findByPaymentRefId(refId);
+			for (CashBook cb : cashBooks) {
 
-	            CashBookBackUp bk = new CashBookBackUp();
+				CashBookBackUp backup = new CashBookBackUp();
 
-	            bk.setBusinessMember(cb.getBusinessMember());
-	            bk.setBmRemarks(cb.getBmRemarks());
-	            bk.setComments(comments);
-	            bk.setCredit(cb.getCredit());
-	            bk.setPersonalInfo(cb.getPersonalInfo());
-	            bk.setDebit(cb.getDebit());
+				// ===== Copy basic fields =====
+				backup.setCashBookOldId(cb.getCashBookId());
+				backup.setLineNo(cb.getLineNo());
+				backup.setTransDate(cb.getTransDate());
+				backup.setSysDate(cb.getSysDate());
 
-	            bk.setCashBookOldId(cb.getCashBookId());
-	            bk.setLineNo(cb.getLineNo());
-	            bk.setParticulars(cb.getAccountMasterCode());
-	            bk.setReceiptRemarks(cb.getReceiptRemarks());
-	            bk.setSysDate(cb.getSysDate());
-	            bk.setTransDate(cb.getTransDate());
-	            bk.setEntryUser(cb.getUser());
-	            bk.setTransType(cb.getAccountMasterMasterCode());
-	            bk.setPaymentRefId(cb.getPaymentRefId());
+				backup.setCredit(cb.getCredit());
+				backup.setDebit(cb.getDebit());
 
-	            bk.setDeletedBy(currentUser);
-	            bk.setDeletedDate(LocalDateTime.now());
+				backup.setEntryUser(cb.getUser());
+				backup.setReceiptRemarks(cb.getReceiptRemarks());
+				backup.setBmRemarks(cb.getBmRemarks());
 
-	            cashBookBkRepo.save(bk);
-	        }
-	        
+				backup.setAccountMastertype(cb.getAccountMastertype());
+				backup.setAccountMasterMasterCode(cb.getAccountMasterMasterCode());
+				backup.setAccountMasterCode(cb.getAccountMasterCode());
+
+				backup.setPaymentRefId(cb.getPaymentRefId());
+
+				// ===== Copy relationships =====
+				backup.setPersonalInfo(cashBook.getPersonalInfo());
+				backup.setBusinessMember(cashBook.getBusinessMember());
+
+				backup.setDeletedBy(currentUser);
+				backup.setDeletedDate(LocalDateTime.now());
+				backup.setComments(comments); // set if needed
+
+				cashBookBkRepo.save(backup);
+			}
 	       
 	      
 	        
+	      if(refId != null) {
+	    	
+	    	  
+	    	  List<PaymentAllocation> allocations =
+		                paymentAllocationRepo.findByPaymentRefId(refId);
+
+		        for (PaymentAllocation pa : allocations) {
+
+		            EMI emi = pa.getEmi();
+
+		            // subtract allocated amount
+		            emi.setPaidAmount(
+		                emi.getPaidAmount().subtract(pa.getAllocatedAmount())
+		            );
+
+		            // 🔹 Update status
+		            if (emi.getPaidAmount().compareTo(BigDecimal.ZERO) <= 0) {
+		                emi.setPaidAmount(BigDecimal.ZERO);
+		                emi.setStatus("PENDING");
+		            } else if (emi.getPaidAmount().compareTo(emi.getTotalAmount()) < 0) {
+		                emi.setStatus("PARTIAL");
+		            } else {
+		                emi.setStatus("PAID");
+		            }
+
+		            emiRepo.save(emi);
+		        }
+
+		        paymentAllocationRepo.deleteByPaymentRefId(refId);
+		        cashBookRepo.deleteByPaymentRefId(refId);
+		        
+	      }
+
 	      
-
-	        List<PaymentAllocation> allocations =
-	                paymentAllocationRepo.findByPaymentRefId(refId);
-
-	        for (PaymentAllocation pa : allocations) {
-
-	            EMI emi = pa.getEmi();
-
-	            // subtract allocated amount
-	            emi.setPaidAmount(
-	                emi.getPaidAmount().subtract(pa.getAllocatedAmount())
-	            );
-
-	            // 🔹 Update status
-	            if (emi.getPaidAmount().compareTo(BigDecimal.ZERO) <= 0) {
-	                emi.setPaidAmount(BigDecimal.ZERO);
-	                emi.setStatus("PENDING");
-	            } else if (emi.getPaidAmount().compareTo(emi.getTotalAmount()) < 0) {
-	                emi.setStatus("PARTIAL");
-	            } else {
-	                emi.setStatus("PAID");
-	            }
-
-	            emiRepo.save(emi);
-	        }
-
-	        paymentAllocationRepo.deleteByPaymentRefId(refId);
-	        cashBookRepo.deleteByPaymentRefId(refId);
-	        
 	       
 	    }
 

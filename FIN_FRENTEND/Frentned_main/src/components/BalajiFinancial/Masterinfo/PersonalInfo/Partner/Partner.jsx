@@ -290,19 +290,6 @@ const Partner = ({ personType = "CUSTOMER" }) => {
           >
             Edit
           </Button>
-
-          <Button
-            size="small"
-            variant="outlined"
-            color="error"
-            startIcon={<FiTrash2 />}
-            onClick={() => {
-              setToDeleteId(params.row.id);
-              setDeleteDialogOpen(true);
-            }}
-          >
-            Delete
-          </Button>
         </Box>
       ),
     },

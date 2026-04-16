@@ -58,10 +58,22 @@ public interface CashBookRepo extends JpaRepository<CashBook, Long> {
 			FROM CashBook c
 			WHERE c.transDate >= :startDate
 			AND c.transDate < :endDate
-			AND c.accountMasterCode NOT IN ('MF LOAN','MF INTEREST','MF DOC CHARGES','DF LOAN','DF INTEREST','DF DOC CHARGES')
 			""")
 	List<CashBook> findByTransactionDate(@Param("startDate") LocalDateTime startDate,
 			@Param("endDate") LocalDateTime endDate);
+	
+	
+	@Query("""
+			SELECT c
+			FROM CashBook c
+			WHERE c.transDate >= :startDate
+			AND c.transDate < :endDate
+			AND c.accountMasterCode NOT IN ('MF LOAN','MF DOC CHARGES','DF LOAN','DF INTEREST','DF DOC CHARGES')
+			""")
+	List<CashBook> findByTransactionDateExcludedSomeAccountCodes(@Param("startDate") LocalDateTime startDate,
+			@Param("endDate") LocalDateTime endDate);
+	
+	
 
 	@Query(value = """
 			SELECT

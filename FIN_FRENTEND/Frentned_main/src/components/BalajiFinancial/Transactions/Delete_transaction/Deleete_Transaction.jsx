@@ -1,24 +1,8 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import {
-  Box,
-  Paper,
-  Typography,
-  TextField,
-  Button,
-  Checkbox,
-  FormControlLabel,
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TableRow,
-  TablePagination,
-  InputAdornment,
-  Alert,
-  CircularProgress,
-  Chip,
-  Grid,
+  Box, Paper, TextField, Button, Checkbox, FormControlLabel,
+  Table, TableBody, TableCell, TableContainer, TableHead, TableRow,
+  TablePagination, InputAdornment, Alert, CircularProgress, Chip, Grid,
 } from '@mui/material';
 import {
   DeleteForever as DeleteIcon,
@@ -33,48 +17,37 @@ const DeleteTransactions = () => {
   const [date, setDate] = useState('2026-01-07');
   const [showDeleted, setShowDeleted] = useState(false);
   const [search, setSearch] = useState('');
-  const [selected, setSelected] = useState([]); // array of transactionIds (numbers)
+  const [selectedGroups, setSelectedGroups] = useState(new Set());
   const [comments, setComments] = useState('');
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const [transactions, setTransactions] = useState([]);
   const [loading, setLoading] = useState(false);
   const [page, setPage] = useState(0);
-  const [rowsPerPage, setRowsPerPage] = useState(10);
+  const [rowsPerPage, setRowsPerPage] = useState(15);
 
   const token = getSession("token");
-  const headers = useMemo(
-    () => ({
-      Authorization: `Bearer ${token || ""}`,
-      'Content-Type': 'application/json',
-    }),
-    [token]
-  );
+  const headers = useMemo(() => ({
+    Authorization: `Bearer ${token || ""}`,
+    'Content-Type': 'application/json',
+  }), [token]);
 
-  // Fetch transactions based on showDeleted flag
   const fetchTransactions = async () => {
     if (!date) return;
     setLoading(true);
     setError('');
     setSuccess('');
-    setSelected([]); // Clear selection when switching views/date
+    setSelectedGroups(new Set());
 
     try {
-      let endpoint;
-      if (showDeleted) {
-        endpoint = `${API_BASE}/loadAllDayWiseDeletedTransactions/${date}`;
-      } else {
-        endpoint = `${API_BASE}/loadAllDayWiseTransactions/${date}`;
-      }
+      const endpoint = showDeleted
+        ? `${API_BASE}/loadAllDayWiseDeletedTransactions/${date}`
+        : `${API_BASE}/loadAllDayWiseTransactions/${date}`;
 
       const res = await axios.get(endpoint, { headers });
-      const data = res.data;
-
-      // Ensure we always set an array
-      const txList = Array.isArray(data) ? data : [];
-      setTransactions(txList);
+      setTransactions(Array.isArray(res.data) ? res.data : []);
     } catch (err) {
-      setError('Failed to load transactions. Please try again.');
+      setError('Failed to load transactions.');
       console.error(err);
       setTransactions([]);
     } finally {
@@ -82,310 +55,230 @@ const DeleteTransactions = () => {
     }
   };
 
-  // Fetch on date change OR when showDeleted toggles
   useEffect(() => {
     fetchTransactions();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [date, showDeleted]);
 
-  // Client-side search filter
-  const filteredTransactions = transactions.filter((tx) => {
-    const searchLower = search.toLowerCase();
-    return (
-      (tx.name?.toLowerCase().includes(searchLower) ?? false) ||
-      (tx.transactionId?.toString().includes(search) ?? false) ||
-      (tx.accountNumber?.toLowerCase().includes(searchLower) ?? false) ||
-      (tx.transactionType?.toLowerCase().includes(searchLower) ?? false) ||
-      (tx.particulars?.toLowerCase().includes(searchLower) ?? false)
-    );
-  });
+  // Group transactions by paymentRefId
+  const groupedData = useMemo(() => {
+    const groups = {};
+    transactions.forEach(tx => {
+      const key = tx.paymentRefId || `single-${tx.transactionId}`;
+      if (!groups[key]) groups[key] = [];
+      groups[key].push(tx);
+    });
+    return groups;
+  }, [transactions]);
 
-  // Selection handlers
+  // Prepare flat rows with group info
+  const tableRows = useMemo(() => {
+    const rows = [];
+    Object.keys(groupedData).forEach(key => {
+      const group = groupedData[key];
+      group.forEach((tx, index) => {
+        rows.push({
+          ...tx,
+          groupKey: key,
+          isFirstInGroup: index === 0,
+          groupSize: group.length,
+        });
+      });
+    });
+    return rows.sort((a, b) => a.groupKey.localeCompare(b.groupKey));
+  }, [groupedData]);
+
+  const filteredRows = tableRows.filter(row =>
+    (row.name?.toLowerCase().includes(search.toLowerCase())) ||
+    row.transactionId?.toString().includes(search) ||
+    (row.accountNumber?.toLowerCase().includes(search.toLowerCase())) ||
+    (row.transactionType?.toLowerCase().includes(search.toLowerCase())) ||
+    (row.particulars?.toLowerCase().includes(search.toLowerCase()))
+  );
+
+  // Check if a group is selected
+  const isGroupSelected = (groupKey) => selectedGroups.has(groupKey);
+
+  const handleGroupSelect = (groupKey) => {
+    setSelectedGroups(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(groupKey)) {
+        newSet.delete(groupKey);
+      } else {
+        newSet.add(groupKey);
+      }
+      return newSet;
+    });
+  };
+
   const handleSelectAll = (event) => {
     if (event.target.checked) {
-      const newSelected = filteredTransactions
-        .filter((tx) => !tx.deleted) // Only allow selecting non-deleted
-        .map((tx) => tx.transactionId);
-      setSelected(newSelected);
+      const uniqueGroups = [...new Set(filteredRows.map(r => r.groupKey))];
+      setSelectedGroups(new Set(uniqueGroups));
     } else {
-      setSelected([]);
+      setSelectedGroups(new Set());
     }
   };
 
-  const handleSelect = (transactionId) => {
-    setSelected((prev) =>
-      prev.includes(transactionId)
-        ? prev.filter((id) => id !== transactionId)
-        : [...prev, transactionId]
-    );
+  const getAllSelectedTransactionIds = () => {
+    return tableRows
+      .filter(row => selectedGroups.has(row.groupKey))
+      .map(row => row.transactionId);
   };
 
-  const isSelected = (transactionId) => selected.includes(transactionId);
-
-  // Delete handler
   const handleDelete = async () => {
-    if (selected.length === 0) {
-      setError('Please select at least one transaction');
-      return;
-    }
-    if (!comments.trim()) {
-      setError('Comments are required for deletion');
-      return;
-    }
-    if (!window.confirm(`Permanently delete ${selected.length} transaction(s)?`)) {
-      return;
-    }
+    const selectedIds = getAllSelectedTransactionIds();
+    if (selectedIds.length === 0) return setError('Please select at least one group');
+    if (!comments.trim()) return setError('Comments are required for deletion');
+
+    if (!window.confirm(`Delete ${selectedIds.length} transaction(s) from ${selectedGroups.size} group(s)?`)) return;
 
     setLoading(true);
-    setError('');
-    setSuccess('');
-
     try {
-      await axios.post(
-        `${API_BASE}/deleteCashBookRecords`,
-        {
-          transactionId: selected,
-          comments: comments.trim(),
-        },
-        { headers }
-      );
+      await axios.post(`${API_BASE}/deleteCashBookRecords`, {
+        transactionId: selectedIds,
+        comments: comments.trim(),
+      }, { headers });
 
-      setSuccess(`Successfully deleted ${selected.length} transaction(s).`);
-      setSelected([]);
+      setSuccess(`Successfully deleted ${selectedIds.length} transaction(s).`);
+      setSelectedGroups(new Set());
       setComments('');
-      fetchTransactions(); // Refresh list
+      fetchTransactions();
     } catch (err) {
-      setError('Failed to delete transactions. Please try again.');
-      console.error(err);
+      setError('Failed to delete transactions.');
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <Box sx={{ p: { xs: 2, md: 3 }, bgcolor: 'background.default', minHeight: '100vh' }}>
-   
-    
-        <Box 
-          sx={{ 
-            display: 'flex', 
-            flexDirection: { xs: 'column', sm: 'row' },
-            gap: 2, 
-            alignItems: 'flex-start',
-            flexWrap: 'wrap'
-          }}
-        >
-          <TextField
-            label="Transaction Date"
-            type="date"
-            value={date}
-            onChange={(e) => setDate(e.target.value)}
-            InputLabelProps={{ shrink: true }}
-            sx={{ minWidth: 200 }}
-          />
+    <Box sx={{ p: { xs: 2, md: 3 } }}>
+      <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 2, mb: 3, alignItems: 'center' }}>
+        <TextField label="Transaction Date" type="date" value={date} onChange={(e) => setDate(e.target.value)} InputLabelProps={{ shrink: true }} />
 
-          <FormControlLabel
-            control={
-              <Checkbox
-                checked={showDeleted}
-                onChange={(e) => setShowDeleted(e.target.checked)}
-              />
-            }
-            label="Show Deleted Transactions"
-          />
+        <FormControlLabel control={<Checkbox checked={showDeleted} onChange={(e) => setShowDeleted(e.target.checked)} />} label="Show Deleted Transactions" />
 
-          <Button
-            variant="contained"
-            color="primary"
-            startIcon={<ViewIcon />}
-            onClick={fetchTransactions}
-            disabled={loading}
-          >
-            Refresh
+        <Button variant="contained" startIcon={<ViewIcon />} onClick={fetchTransactions} disabled={loading}>Refresh</Button>
+
+        {!showDeleted && (
+          <Button variant="contained" color="error" startIcon={<DeleteIcon />} onClick={handleDelete} disabled={selectedGroups.size === 0 || loading}>
+            Delete ({getAllSelectedTransactionIds().length})
           </Button>
+        )}
+      </Box>
 
-          {!showDeleted && (
-            <Button
-              variant="contained"
-              color="error"
-              startIcon={<DeleteIcon />}
-              onClick={handleDelete}
-              disabled={selected.length === 0 || loading}
-            >
-              Delete ({selected.length})
-            </Button>
-          )}
-        </Box>
+      <Grid container spacing={2} sx={{ mb: 3 }}>
+        <Grid item xs={12} md={6}>
+          <TextField fullWidth label="Search" value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Search..." InputProps={{ startAdornment: <SearchIcon /> }} />
+        </Grid>
+        {!showDeleted && (
+          <Grid item xs={12} md={6}>
+            <TextField fullWidth label="Comments (Required)" value={comments} onChange={(e) => setComments(e.target.value)} placeholder="Reason for deletion" />
+          </Grid>
+        )}
+      </Grid>
 
+      {success && <Alert severity="success" sx={{ mb: 2 }}>{success}</Alert>}
+      {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
 
-        <Grid container spacing={2} sx={{ mt: 2 }}>
-  
-  {/* Search Field */}
-  <Grid item xs={12} md={6}>
-    <TextField
-      fullWidth
-      label="Search"
-      value={search}
-      onChange={(e) => setSearch(e.target.value)}
-      placeholder="Search by name, ID, account, type..."
-      size="small"
-      InputProps={{
-        startAdornment: (
-          <InputAdornment position="start">
-            <SearchIcon />
-          </InputAdornment>
-        ),
-      }}
-    />
-  </Grid>
+      <Paper elevation={3}>
+        <TableContainer sx={{ maxHeight: 700 }}>
+          <Table stickyHeader size="small">
+            <TableHead>
+              <TableRow>
+                {!showDeleted && (
+                  <TableCell padding="checkbox">
+                    <Checkbox
+                      indeterminate={selectedGroups.size > 0 && selectedGroups.size < new Set(filteredRows.map(r => r.groupKey)).size}
+                      checked={selectedGroups.size === new Set(filteredRows.map(r => r.groupKey)).size && selectedGroups.size > 0}
+                      onChange={handleSelectAll}
+                    />
+                  </TableCell>
+                )}
+                <TableCell><strong>Trans ID</strong></TableCell>
+                <TableCell><strong>Payment Ref ID</strong></TableCell>
+                <TableCell><strong>Account No</strong></TableCell>
+                <TableCell><strong>Name</strong></TableCell>
+                <TableCell><strong>Trans Type</strong></TableCell>
+                <TableCell><strong>Particulars</strong></TableCell>
+                <TableCell align="right"><strong>Credit</strong></TableCell>
+                <TableCell align="right"><strong>Debit</strong></TableCell>
+                <TableCell><strong>Status</strong></TableCell>
+                {showDeleted && (
+                  <>
+                    <TableCell>Deleted On</TableCell>
+                    <TableCell>Deleted By</TableCell>
+                  </>
+                )}
+              </TableRow>
+            </TableHead>
+            <TableBody>
+              {filteredRows.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage).map((row) => {
+                const groupSelected = isGroupSelected(row.groupKey);   // ← Fixed here
+                const isDeleted = !!row.deleted;
+                const showCheckbox = row.isFirstInGroup;
 
-  {/* Comments Field */}
-  {!showDeleted && (
-    <Grid item xs={12} md={6}>
-      <TextField
-        fullWidth
-        label="Comments (Required for Deletion)"
-       sx={{width:300}}
-      
-        value={comments}
-        onChange={(e) => setComments(e.target.value)}
-        placeholder="Enter reason for deletion..."
-        size="small"
-        error={!!error && error.includes('Comments')}
-        helperText={error.includes('Comments') ? error : ''}
-      />
-    </Grid>
-  )}
-
-</Grid>
-   
-
-      {success && <Alert severity="success" sx={{ mb: 3 }}>{success}</Alert>}
-      {error && <Alert severity="error" sx={{ mb: 3 }}>{error}</Alert>}
-
-      <Paper elevation={2}>
-        {loading ? (
-          <Box sx={{ p: 8, display: 'flex', justifyContent: 'center', }}>
-            <CircularProgress />
-          </Box>
-        ) : (
-          <>
-            <TableContainer sx={{ maxHeight: 600,marginTop:"20px" }}>
-              <Table stickyHeader size="small">
-                <TableHead>
-                  <TableRow>
+                return (
+                  <TableRow
+                    key={row.transactionId}
+                    hover={!isDeleted}
+                    sx={{
+                      bgcolor: groupSelected ? 'action.selected' : (isDeleted ? 'action.disabledBackground' : 'inherit'),
+                      borderLeft: row.isFirstInGroup ? '4px solid #1976d2' : 'none',
+                    }}
+                  >
                     {!showDeleted && (
                       <TableCell padding="checkbox">
-                        <Checkbox
-                          indeterminate={
-                            selected.length > 0 &&
-                            selected.length < filteredTransactions.filter((t) => !t.deleted).length
-                          }
-                          checked={
-                            filteredTransactions.length > 0 &&
-                            selected.length === filteredTransactions.filter((t) => !t.deleted).length
-                          }
-                          onChange={handleSelectAll}
-                        />
+                        {showCheckbox && (
+                          <Checkbox
+                            checked={groupSelected}
+                            onChange={() => handleGroupSelect(row.groupKey)}
+                            disabled={isDeleted}
+                          />
+                        )}
                       </TableCell>
                     )}
-                    <TableCell><strong>Trans ID</strong></TableCell>
-                    <TableCell><strong>Account No</strong></TableCell>
-                    <TableCell><strong>Name</strong></TableCell>
-                    <TableCell><strong>Trans Type</strong></TableCell>
-                    <TableCell><strong>Particulars</strong></TableCell>
-                    <TableCell align="right"><strong>Credit</strong></TableCell>
-                    <TableCell align="right"><strong>Debit</strong></TableCell>
-                    <TableCell><strong>Status</strong></TableCell>
+
+                    <TableCell>{row.transactionId}</TableCell>
+                    <TableCell>
+                      {row.paymentRefId || '-'}
+                      {row.groupSize > 1 && <Chip size="small" label={row.groupSize} sx={{ ml: 1 }} />}
+                    </TableCell>
+                    <TableCell>{row.accountNumber}</TableCell>
+                    <TableCell>{row.name}</TableCell>
+                    <TableCell>{row.transactionType}</TableCell>
+                    <TableCell>{row.particulars}</TableCell>
+                    <TableCell align="right" sx={{ color: 'success.main' }}>
+                      {row.credit > 0 ? `₹${Number(row.credit).toLocaleString('en-IN')}` : '-'}
+                    </TableCell>
+                    <TableCell align="right" sx={{ color: 'error.main' }}>
+                      {row.debit > 0 ? `₹${Number(row.debit).toLocaleString('en-IN')}` : '-'}
+                    </TableCell>
+                    <TableCell>
+                      <Chip label={isDeleted ? 'Deleted' : 'Active'} color={isDeleted ? 'error' : 'success'} size="small" />
+                    </TableCell>
                     {showDeleted && (
                       <>
-                        <TableCell><strong>Deleted On</strong></TableCell>
-                        <TableCell><strong>Deleted By</strong></TableCell>
+                        <TableCell>{row.deletedDate || '-'}</TableCell>
+                        <TableCell>{row.deletedByUser || '-'}</TableCell>
                       </>
                     )}
                   </TableRow>
-                </TableHead>
-                <TableBody>
-                  {filteredTransactions
-                    .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
-                    .map((row) => {
-                      const isItemSelected = isSelected(row.transactionId);
-                      const isDeleted = !!row.deleted;
+                );
+              })}
+            </TableBody>
+          </Table>
+        </TableContainer>
 
-                      return (
-                        <TableRow
-                          key={row.transactionId}
-                          hover={!isDeleted}
-                          selected={isItemSelected}
-                          sx={{
-                            opacity: isDeleted ? 0.6 : 1,
-                            textDecoration: isDeleted ? 'line-through' : 'none',
-                            bgcolor: isDeleted ? 'action.disabledBackground' : 'inherit',
-                          }}
-                        >
-                          {!showDeleted && (
-                            <TableCell padding="checkbox">
-                              <Checkbox
-                                checked={isItemSelected}
-                                onChange={() => handleSelect(row.transactionId)}
-                                disabled={isDeleted || loading}
-                              />
-                            </TableCell>
-                          )}
-                          <TableCell>{row.transactionId}</TableCell>
-                          <TableCell>{row.accountNumber}</TableCell>
-                          <TableCell>{row.name}</TableCell>
-                          <TableCell>{row.transactionType}</TableCell>
-                          <TableCell>{row.particulars}</TableCell>
-                          <TableCell align="right">
-                            {row.credit > 0 ? row.credit.toLocaleString('en-IN') : '-'}
-                          </TableCell>
-                          <TableCell align="right" sx={{ fontWeight: 'medium', color: 'error.main' }}>
-                            {row.debit > 0 ? row.debit.toLocaleString('en-IN') : '-'}
-                          </TableCell>
-                          <TableCell>
-                            <Chip
-                              label={isDeleted ? 'Deleted' : 'Active'}
-                              color={isDeleted ? 'error' : 'success'}
-                              size="small"
-                            />
-                          </TableCell>
-                          {showDeleted && (
-                            <>
-                              <TableCell>{row.deletedDate || '-'}</TableCell>
-                              <TableCell>{row.deletedByUser || '-'}</TableCell>
-                            </>
-                          )}
-                        </TableRow>
-                      );
-                    })}
-                </TableBody>
-              </Table>
-            </TableContainer>
-
-            <TablePagination
-              rowsPerPageOptions={[10, 25, 50]}
-              component="div"
-              count={filteredTransactions.length}
-              rowsPerPage={rowsPerPage}
-              page={page}
-              onPageChange={(_, newPage) => setPage(newPage)}
-              onRowsPerPageChange={(e) => {
-                setRowsPerPage(parseInt(e.target.value, 10));
-                setPage(0);
-              }}
-            />
-          </>
-        )}
+        <TablePagination
+          rowsPerPageOptions={[10, 15, 25, 50]}
+          component="div"
+          count={filteredRows.length}
+          rowsPerPage={rowsPerPage}
+          page={page}
+          onPageChange={(_, newPage) => setPage(newPage)}
+          onRowsPerPageChange={(e) => { setRowsPerPage(parseInt(e.target.value, 10)); setPage(0); }}
+        />
       </Paper>
-
-      {!loading && filteredTransactions.length === 0 && (
-        <Alert severity="info" sx={{ mt: 3 }}>
-          {showDeleted
-            ? 'No deleted transactions found for the selected date.'
-            : 'No transactions found for the selected date.'}
-        </Alert>
-      )}
     </Box>
   );
 };

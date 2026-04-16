@@ -53,42 +53,29 @@ public class CashBookBackUp {
 	@JoinColumn(name = "BUSINESS_MEMBER_ID")
 	private BusinessMember businessMember;
 
-	@Column(name = "TRANS_TYPE", length = 100)
-	private String transType;
-
-	@Column(name = "PARTICULARS", length = 255)
-	private String particulars;
-
-	@Column(name = "CREDIT", precision = 19, scale = 2)
+	@Column(name = "CREDIT", nullable = false)
 	private BigDecimal credit = BigDecimal.ZERO;
 
-	@Column(name = "DEBIT", precision = 19, scale = 2)
+	@Column(name = "DEBIT", nullable = false)
 	private BigDecimal debit = BigDecimal.ZERO;
 
 	@Column(name = "ENTRY_USER", length = 100)
 	private String entryUser;
 
-	@Column(name = "RECEIPT_REMARKS", length = 500)
+	@Column(name = "RECEIPT_REMARKS")
 	private String receiptRemarks;
 
-	@Column(name = "BM_REMARKS", length = 500)
+	@Column(name = "BM_REMARKS")
 	private String bmRemarks;
 
-	@Column(name = "CURRENT_INSTALLMENT_NUMBER")
-	private Integer currentInstallmentNumber;
+	@Column(name = "ACCOUNT_MASTER_TYPE")
+	private String accountMastertype;
 
-	@Column(name = "PENDING_BALANCE", precision = 19, scale = 2)
-	private BigDecimal pendingBalance;
+	@Column(name = "ACCOUNT_MASTER_MASTER_CODE")
+	private String accountMasterMasterCode;
 
-	@CreationTimestamp
-	@Column(name = "DELETEDDATE", updatable = false)
-	private LocalDateTime deletedDate;
-
-	@Column(name = "DELETEDBY", length = 255)
-	private String deletedBy;
-
-	@Column(name = "COMMENTS", length = 255)
-	private String comments;
+	@Column(name = "ACCOUNT_MASTER_CODE")
+	private String accountMasterCode;
 
 	@CreatedDate
 	@Column(updatable = false)
@@ -103,10 +90,19 @@ public class CashBookBackUp {
 
 	@LastModifiedBy
 	private String modifiedBy;
-	
+
 	@Column(name = "PAYMENT_REF_ID")
 	private String paymentRefId;
 
+	@CreationTimestamp
+	@Column(name = "DELETEDDATE", updatable = false)
+	private LocalDateTime deletedDate;
+
+	@Column(name = "DELETEDBY", length = 255)
+	private String deletedBy;
+
+	@Column(name = "COMMENTS", length = 255)
+	private String comments;
 
 	/* ===================== GETTERS & SETTERS ===================== */
 
@@ -166,22 +162,6 @@ public class CashBookBackUp {
 		this.businessMember = businessMember;
 	}
 
-	public String getTransType() {
-		return transType;
-	}
-
-	public void setTransType(String transType) {
-		this.transType = transType;
-	}
-
-	public String getParticulars() {
-		return particulars;
-	}
-
-	public void setParticulars(String particulars) {
-		this.particulars = particulars;
-	}
-
 	public BigDecimal getCredit() {
 		return credit;
 	}
@@ -220,22 +200,6 @@ public class CashBookBackUp {
 
 	public void setBmRemarks(String bmRemarks) {
 		this.bmRemarks = bmRemarks;
-	}
-
-	public Integer getCurrentInstallmentNumber() {
-		return currentInstallmentNumber;
-	}
-
-	public void setCurrentInstallmentNumber(Integer currentInstallmentNumber) {
-		this.currentInstallmentNumber = currentInstallmentNumber;
-	}
-
-	public BigDecimal getPendingBalance() {
-		return pendingBalance;
-	}
-
-	public void setPendingBalance(BigDecimal pendingBalance) {
-		this.pendingBalance = pendingBalance;
 	}
 
 	public LocalDateTime getDeletedDate() {
@@ -302,5 +266,28 @@ public class CashBookBackUp {
 		this.paymentRefId = paymentRefId;
 	}
 
-	
+	public String getAccountMastertype() {
+		return accountMastertype;
+	}
+
+	public void setAccountMastertype(String accountMastertype) {
+		this.accountMastertype = accountMastertype;
+	}
+
+	public String getAccountMasterMasterCode() {
+		return accountMasterMasterCode;
+	}
+
+	public void setAccountMasterMasterCode(String accountMasterMasterCode) {
+		this.accountMasterMasterCode = accountMasterMasterCode;
+	}
+
+	public String getAccountMasterCode() {
+		return accountMasterCode;
+	}
+
+	public void setAccountMasterCode(String accountMasterCode) {
+		this.accountMasterCode = accountMasterCode;
+	}
+
 }
