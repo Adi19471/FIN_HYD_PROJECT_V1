@@ -11,6 +11,8 @@ import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
+import com.balaji.finance.pojo.ErrorResponse;
+
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
@@ -32,6 +34,23 @@ public class GlobalExceptionHandler {
         response.put("errors", errors);
         
         return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
+    }
+    
+    
+    @ExceptionHandler(ApiException.class)
+    public ResponseEntity<?> handleApiException(ApiException ex) {
+    	ex.printStackTrace();
+        return ResponseEntity
+                .status(ex.getStatus())
+                .body(new ErrorResponse(ex.getMessage()));
+    }
+
+    @ExceptionHandler(Exception.class)
+    public ResponseEntity<?> handleGenericException(Exception ex) {
+    	ex.printStackTrace();
+        return ResponseEntity
+                .status(500)
+                .body(new ErrorResponse("Something went wrong"));
     }
 
     // You can also handle ConstraintViolationException if needed

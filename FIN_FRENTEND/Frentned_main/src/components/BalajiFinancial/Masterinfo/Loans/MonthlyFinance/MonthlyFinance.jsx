@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useCallback } from "react";
-import { DataGrid } from "@mui/x-data-grid";
+import { DataGrid, GridToolbar } from '@mui/x-data-grid';
 import axios from "axios";
 import { successToast, errorToast } from "toastify";
 import { API_BASE } from "lib/config";
@@ -33,6 +33,7 @@ import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
 import { DateTimePicker } from "@mui/x-date-pickers/DateTimePicker";
 import dayjs from "dayjs";
 
+
 const FIXED_DURATION_MONTHS = 10;
 const BASE_PROCESSING_FEE = 200;
 const BASE_INTEREST_RATE = 3;
@@ -43,6 +44,93 @@ const MonthlyFinance = () => {
   const [open, setOpen] = useState(false);
   const [isEditMode, setIsEditMode] = useState(false);
   const [currentLoanId, setCurrentLoanId] = useState(null);
+
+
+  const [filters, setFilters] = useState({
+    id: "",
+    customerName: "",
+    amount: "",
+    interestRate: "",
+    installment: "",
+    interestAmount: "",
+    startDate: "",
+    endDate: "",
+    g1Name: "",
+    g2Name: "",
+    g3Name: "",
+    partnerId: ""
+  });
+
+
+  const filteredRows = rows.filter((row) =>
+    Object.keys(filters).every((key) => {
+      const value = row[key] ?? "";   // 🔥 handle null
+      return value
+        .toString()
+        .toLowerCase()
+        .includes(filters[key].toLowerCase());
+    })
+  );
+
+  const getHeader = (label, field) => (
+    <div style={{ width: "100%", paddingTop: 2 }}>
+
+      {/* Header Label (bigger & clear) */}
+      <div
+        style={{
+          fontWeight: 600,
+          fontSize: "14px",
+          marginBottom: 4,
+          lineHeight: 1.2
+        }}
+      >
+        {label}
+      </div>
+
+      {/* Compact Filter Box */}
+      <TextField
+        variant="outlined"
+        size="small"
+        value={filters[field]}
+        onChange={(e) =>
+          setFilters((prev) => ({
+            ...prev,
+            [field]: e.target.value,
+          }))
+        }
+        placeholder="Filter"
+        fullWidth
+        sx={{
+          "& .MuiOutlinedInput-root": {
+            height: 26,              // 🔥 reduce height
+            fontSize: "12px",
+          },
+          "& .MuiOutlinedInput-input": {
+            padding: "4px 8px",     // 🔥 tighter padding
+          }
+        }}
+      />
+    </div>
+  );
+
+  const clearFilters = () => {
+    setFilters({
+      id: "",
+      customerName: "",
+      amount: "",
+      interestRate: "",
+      installment: "",
+      interestAmount: "",
+      startDate: "",
+      endDate: "",
+      g1Name: "",
+      g2Name: "",
+      g3Name: "",
+      partnerId: ""
+    });
+  };
+
+
 
   const [formData, setFormData] = useState({
     id: null,
@@ -277,6 +365,46 @@ const MonthlyFinance = () => {
     setIsEditMode(false);
     setCurrentLoanId(null);
   };
+
+
+
+  const handleNewButton = async () => {
+    try {
+      const res = await axios.get(`${API_BASE}/BusinessMember/createLoan/${LOAN_TYPE.MONTHLY_FINANCE}`, {
+        headers,
+      });
+
+      const l = res.data;
+
+      setFormData({
+        id: l.id,
+        customerId: null,
+        guarantor1: null,
+        guarantor2: null,
+        guarantor3: null,
+        partnerId: null,
+        startDate: dayjs(),
+        endDate: dayjs().add(FIXED_DURATION_MONTHS, "month"),
+        amount: "",
+        interestRate: BASE_INTEREST_RATE,
+        installment: "",
+        processingFee: BASE_PROCESSING_FEE,
+        security: "",
+        duration: FIXED_DURATION_MONTHS,
+      });
+
+      setIsEditMode(false);
+      setCurrentLoanId(l.id);
+      setOpen(true);
+
+    } catch (err) {
+      console.log("err", err);
+      errorToast("Failed to load loan");
+    }
+  };
+
+
+
   const handleEdit = async (id) => {
     try {
       const res = await axios.get(`${API_BASE}/BusinessMember/findById/${id}`, {
@@ -319,18 +447,18 @@ const MonthlyFinance = () => {
 
         partnerId: map[l.partnerId] || null,
 
-        startDate: l.startDate ? dayjs(l.startDate) : null,
-        endDate: l.endDate ? dayjs(l.endDate) : null,
+        startDate: l.startDate ? dayjs(l.startDate) : dayjs(),
+        endDate: l.endDate ? dayjs(l.endDate) : dayjs().add(FIXED_DURATION_MONTHS, "month"),
 
         amount: l.amount?.toString() || "",
-        duration: l.duration?.toString() || "",
-        interestRate: l.interestRate?.toString() || "",
+        duration: l.duration?.toString() || FIXED_DURATION_MONTHS,
+        interestRate: l.interestRate?.toString() || BASE_INTEREST_RATE,
 
         interestAmount: l.interest?.toString() || "",
 
         installment: l.installment?.toString() || "",
 
-        processingFee: l.processingFee?.toString() || "",
+        processingFee: l.processingFee?.toString() || BASE_PROCESSING_FEE,
 
         security: l.security || "",
       });
@@ -371,21 +499,25 @@ const MonthlyFinance = () => {
       setLoading(true); // 🔥 START LOADING
 
 
-      if (isEditMode) {
-        await axios.post(
+      try {
+        const response = await axios.post(
           `${API_BASE}/BusinessMember/update/${LOAN_TYPE.MONTHLY_FINANCE}`,
           payload,
           { headers }
         );
-        successToast("Loan updated successfully!");
-      } else {
-        await axios.post(
-          `${API_BASE}/BusinessMember/update/${LOAN_TYPE.MONTHLY_FINANCE}`, // Change this endpoint if you have a separate one for monthly
-          payload,
-          { headers }
-        );
-        successToast("New loan created successfully!");
+
+        successToast(response.data || "Loan updated successfully!");
+
+      } catch (error) {
+
+        const message =
+          error.response?.data?.message ||
+          error.response?.data ||
+          "Something went wrong";
+
+        errorToast(message);
       }
+
       handleClose();
       fetchData();
       console.log("fetchData", fetchData);
@@ -405,6 +537,7 @@ const MonthlyFinance = () => {
       headerName: "Actions",
       width: 110,
       sortable: false,
+      filterable: false,
       renderCell: (params) => (
         <Box sx={{ display: "flex", gap: 1 }}>
           <IconButton
@@ -414,54 +547,76 @@ const MonthlyFinance = () => {
           >
             <EditIcon fontSize="small" />
           </IconButton>
-
         </Box>
       ),
     },
-    { field: "id", headerName: "Acc No", width: 100 },
-    { field: "customerName", headerName: "Customer Name", width: 260 },
+
+    {
+      field: "id",
+      width: 100,
+      renderHeader: () => getHeader("Acc No", "id"),
+    },
+    {
+      field: "customerName",
+      width: 260,
+      renderHeader: () => getHeader("Customer Name", "customerName"),
+    },
     {
       field: "amount",
-      headerName: "Loan Amount",
       width: 140,
+      renderHeader: () => getHeader("Loan Amount", "amount"),
     },
     {
       field: "interestRate",
-      headerName: "Interest %",
       width: 100,
+      renderHeader: () => getHeader("Interest %", "interestRate"),
     },
     {
       field: "installment",
-      headerName: "Monthly EMI",
       width: 150,
+      renderHeader: () => getHeader("Monthly EMI", "installment"),
     },
-
     {
       field: "interestAmount",
-      headerName: "Interest Amount",
       width: 150,
+      renderHeader: () => getHeader("Interest Amount", "interestAmount"),
     },
-
     {
       field: "startDate",
-      headerName: "Loan Date",
       width: 140,
+      renderHeader: () => getHeader("Loan Date", "startDate"),
     },
     {
       field: "endDate",
-      headerName: "Maturity Date",
       width: 140,
+      renderHeader: () => getHeader("Maturity Date", "endDate"),
     },
-
-    { field: "g1Name", headerName: "Guarantor 1", width: 200 },
-    { field: "g2Name", headerName: "Guarantor 2", width: 200 },
-    { field: "g3Name", headerName: "Guarantor 3", width: 200 },
-    { field: "partnerId", headerName: "Partner/Agent", width: 150 },
+    {
+      field: "g1Name",
+      width: 200,
+      renderHeader: () => getHeader("Guarantor 1", "g1Name"),
+    },
+    {
+      field: "g2Name",
+      width: 200,
+      renderHeader: () => getHeader("Guarantor 2", "g2Name"),
+    },
+    {
+      field: "g3Name",
+      width: 200,
+      renderHeader: () => getHeader("Guarantor 3", "g3Name"),
+    },
+    {
+      field: "partnerId",
+      width: 150,
+      renderHeader: () => getHeader("Partner/Agent", "partnerId"),
+    },
   ];
 
   return (
     <LocalizationProvider dateAdapter={AdapterDayjs}>
       <Box sx={{ p: 3 }}>
+
         <Box
           sx={{
             display: "flex",
@@ -471,15 +626,33 @@ const MonthlyFinance = () => {
           }}
         >
           <Typography variant="h5" fontWeight={600} color="#1e293b">
-            Monthly Finance (10 Months)
+            Monthly Finance
           </Typography>
+
+
+        </Box>
+        <Box
+          sx={{
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+            mb: 3,
+          }}
+        >
+
+          <Button
+            variant="contained"
+            onClick={clearFilters}
+            sx={{ textTransform: "none", fontWeight: 600 }}
+          >
+            Clear Filters
+          </Button>
 
           <Button
             variant="contained"
             startIcon={<SaveIcon />}
             onClick={() => {
-              resetForm();
-              setOpen(true);
+              handleNewButton();
             }}
             sx={{ textTransform: "none", fontWeight: 600 }}
           >
@@ -488,13 +661,22 @@ const MonthlyFinance = () => {
         </Box>
 
         <DataGrid
-          rows={rows}
+          rows={filteredRows}
           columns={columns}
           loading={loading}
           getRowId={(r) => r.id}
-          pageSizeOptions={[10, 25, 50, 100]}
           autoHeight
+          pageSizeOptions={[10, 25, 50, 100]}
+          initialState={{
+            pagination: {
+              paginationModel: { pageSize: 10, page: 0 },
+            },
+          }}
+          pagination
+          headerHeight={70}
         />
+
+
 
         {/* Loading Spinner Overlay */}
         {loading && rows.length === 0 && (
@@ -529,9 +711,7 @@ const MonthlyFinance = () => {
 
         <DialogContent dividers sx={{ bgcolor: "#f8fafc" }}>
           <Typography variant="subtitle2" color="text.secondary" gutterBottom>
-            {isEditMode
-              ? `Account No: ${currentLoanId}`
-              : "Fixed 10 Months • Monthly Collection"}
+            {`Account No: ${currentLoanId}`}
           </Typography>
 
           {/* Customer & Dates */}

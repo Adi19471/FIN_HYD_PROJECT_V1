@@ -95,7 +95,8 @@ public class CashBookService {
 
 			CashBookDeletedViewPojo cashBookDeletedViewPojo = new CashBookDeletedViewPojo();
 			cashBookDeletedViewPojo.setTransactionId(cashBook.getCashBookBackUpId());
-			cashBookDeletedViewPojo.setAccountNumber(cashBook.getBusinessMember().getBusinessMemberId());
+			cashBookDeletedViewPojo.setAccountNumber(
+					cashBook.getBusinessMember() != null ? cashBook.getBusinessMember().getBusinessMemberId() : null);
 			cashBookDeletedViewPojo.setName(cashBook.getPersonalInfo() != null
 					? cashBook.getPersonalInfo().getPersonalInfoId() + " - " + cashBook.getPersonalInfo().getFirstName()
 					: "");

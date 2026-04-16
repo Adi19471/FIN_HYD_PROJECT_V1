@@ -24,6 +24,15 @@ public class BusinessMemberController {
 	@Autowired
 	private BusinessMemberService businessMemberService;
 
+	@GetMapping("/createLoan/{loanType}")
+	public ResponseEntity<BusinessMemberDto> update(@PathVariable String loanType) {
+
+		BusinessMemberDto response = null;
+
+		response = businessMemberService.createLoanObject(loanType);
+
+		return ResponseEntity.ok().body(response);
+	}
 
 	@PostMapping("/update/{loanType}")
 	public ResponseEntity<String> update(@RequestBody BusinessMemberDto businessMemberDto,
@@ -31,11 +40,7 @@ public class BusinessMemberController {
 
 		String response = null;
 
-		if (businessMemberDto.getId() == null || businessMemberDto.getId().isBlank()) {
-			response = businessMemberService.saveBusinessMember(businessMemberDto, loanType);
-		} else {
-			response = businessMemberService.updateBusinessMember(businessMemberDto);
-		}
+		response = businessMemberService.updateInformation(businessMemberDto, loanType);
 
 		return ResponseEntity.ok().body(response);
 	}

@@ -2,12 +2,14 @@ package com.balaji.finance.service;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
@@ -18,6 +20,7 @@ import com.balaji.finance.entity.CashBook;
 import com.balaji.finance.entity.EMI;
 import com.balaji.finance.entity.LoanStatus;
 import com.balaji.finance.entity.PersonalInfo;
+import com.balaji.finance.exception.ApiException;
 import com.balaji.finance.pojo.BusinessMemberAutoCompletePojo;
 import com.balaji.finance.repo.AccountMasterRepo;
 import com.balaji.finance.repo.BusinessMemberRepository;
@@ -75,18 +78,51 @@ public class BusinessMemberService {
 	}
 
 	// Creating Loan Account
-	public String saveBusinessMember(BusinessMemberDto businessMemberDto, String type) {
-	
-		int year = businessMemberDto.getStartDate().getYear();
-		
+	public BusinessMemberDto createLoanObject(String type) {
+
+		int year = LocalDate.now().getYear();
+
 		BusinessMember businessMember = new BusinessMember();
-		businessMember.setBusinessMemberId(generateId(type, year ));
+		businessMember.setBusinessMemberId(generateId(type, year));
 		businessMember.setLoanType(type);
-		
 		String[] split = businessMember.getBusinessMemberId().split("-");
 		businessMember.setSequence(Integer.valueOf(split[1]));
 		businessMember.setYear(year);
+		
+		
+		businessMemberRepository.save(businessMember);
 
+		BusinessMemberDto businessMemberDto = new BusinessMemberDto();
+		businessMemberDto.setId(businessMember.getBusinessMemberId());
+
+		return businessMemberDto;
+	}
+
+	public String updateInformation(BusinessMemberDto businessMemberDto, String type) {
+
+		Optional<BusinessMember> businessMemberInDb = businessMemberRepository.findById(businessMemberDto.getId());
+
+		if (businessMemberInDb.isPresent()) {
+
+			BusinessMember businessMember = businessMemberInDb.get();
+
+			if (businessMember.getAmount() == null) {
+				return saveBusinessMember(businessMemberDto, businessMember, type);
+			} else {
+				return updateBusinessMember(businessMemberDto, businessMember, type);
+			}
+
+		} else {
+
+			throw new ApiException("Loan not found", HttpStatus.NOT_FOUND);
+
+		}
+
+	}
+	
+	// Saving Loan for First Time
+	public String saveBusinessMember(BusinessMemberDto businessMemberDto, BusinessMember businessMember, String type) {
+		
 		if (businessMemberDto.getCustomerId() != null && !businessMemberDto.getCustomerId().isBlank()) {
 			Optional<PersonalInfo> customerOptional = personalInfoRepository
 					.findById(businessMemberDto.getCustomerId());
@@ -126,20 +162,15 @@ public class BusinessMemberService {
 		businessMember.setStartDate(businessMemberDto.getStartDate());
 		businessMember.setEndDate(businessMemberDto.getEndDate());
 
-		businessMember
-				.setAmount(businessMemberDto.getAmount() != null ? businessMemberDto.getAmount() : BigDecimal.ZERO);
+		businessMember.setAmount(businessMemberDto.getAmount() != null ? businessMemberDto.getAmount() : BigDecimal.ZERO);
 		businessMember.setDuration(businessMemberDto.getDuration() != null ? businessMemberDto.getDuration() : 0);
-		businessMember.setInterest(
-				businessMemberDto.getInterest() != null ? businessMemberDto.getInterest() : BigDecimal.ZERO);
+		businessMember.setInterest(businessMemberDto.getInterest() != null ? businessMemberDto.getInterest() : BigDecimal.ZERO);
 
-		businessMember.setInstallment(
-				businessMemberDto.getInstallment() != null ? businessMemberDto.getInstallment() : BigDecimal.ZERO);
+		businessMember.setInstallment(businessMemberDto.getInstallment() != null ? businessMemberDto.getInstallment() : BigDecimal.ZERO);
 		businessMember.setStatus(businessMemberDto.isStatus());
 
-		businessMember.setPartPrincipal(
-				businessMemberDto.getPartPrincipal() != null ? businessMemberDto.getPartPrincipal() : 0);
-		businessMember
-				.setPartInterest(businessMemberDto.getPartInterest() != null ? businessMemberDto.getPartInterest() : 0);
+		businessMember.setPartPrincipal(businessMemberDto.getPartPrincipal() != null ? businessMemberDto.getPartPrincipal() : 0);
+		businessMember.setPartInterest(businessMemberDto.getPartInterest() != null ? businessMemberDto.getPartInterest() : 0);
 
 		businessMember.setChequeReminder(businessMemberDto.isChequeReminder());
 		businessMember.setBusinessId(businessMemberDto.getBusinessId());
@@ -155,9 +186,17 @@ public class BusinessMemberService {
 
 		businessMemberRepository.save(businessMember);
 
+	
+		
+		
+		
+		
 		String currentUser = SecurityContextHolder.getContext().getAuthentication().getName();
 		LocalDateTime currentDate = LocalDateTime.now();
 
+		
+		
+		
 		switch (type) {
 		case "DAILY_FINANCE":
 
@@ -308,104 +347,72 @@ public class BusinessMemberService {
 			break;
 		}
 
-		return "Sucessfully Saved ";
+		return "New loan created successfully!";
 	}
 
 	// update
-	public String updateBusinessMember(BusinessMemberDto businessMemberDto) {
+	public String updateBusinessMember(BusinessMemberDto businessMemberDto, BusinessMember businessMember,
+			String type) {
 
-		Optional<BusinessMember> businessMemberInDb = businessMemberRepository.findById(businessMemberDto.getId());
+		String currentUser = SecurityContextHolder.getContext().getAuthentication().getName();
+		LocalDateTime currentDate = LocalDateTime.now();
 
-		if (businessMemberInDb.isPresent()) {
+		Optional<PersonalInfo> customerOptional = personalInfoRepository.findById(businessMemberDto.getCustomerId());
 
-			BusinessMember businessMember = businessMemberInDb.get();
+		switch (businessMember.getLoanType()) {
+		case "DAILY_FINANCE":
 
-			Optional<PersonalInfo> customerOptional = personalInfoRepository
-					.findById(businessMemberDto.getCustomerId());
-			if (customerOptional.isPresent()) {
-				businessMember.setCustomerId(customerOptional.get());
+			// Updating Loan Record
+			if (businessMember.getAmount() != null && businessMemberDto.getAmount() != null
+					&& businessMember.getAmount().compareTo(businessMemberDto.getAmount()) != 0) {
+
+				CashBook loanCashBook = null;
+				Optional<CashBook> optionalCashbook = null;
+				optionalCashbook = cashBookRepo.findByBusinessMemberAndAccountMasterCode(businessMember, "DF LOAN");
+
+				if (optionalCashbook.isPresent()) {
+
+					loanCashBook = optionalCashbook.get();
+
+					if (customerOptional.isPresent()) {
+						loanCashBook.setPersonalInfo(customerOptional.get());
+					}
+
+					loanCashBook.setCredit(BigDecimal.ZERO);
+					loanCashBook.setDebit(businessMemberDto.getProcessingFee());
+					loanCashBook.setUser(currentUser);
+					loanCashBook.setSysDate(currentDate);
+					loanCashBook.setTransDate(businessMemberDto.getStartDate());
+
+					cashBookRepo.save(loanCashBook);
+
+				}
+
 			}
 
-			Optional<PersonalInfo> gureantor1Optional = personalInfoRepository
-					.findById(businessMemberDto.getGuarantor1());
-			if (gureantor1Optional.isPresent()) {
-				businessMember.setGuarantor1(gureantor1Optional.get());
-			}
-
-			Optional<PersonalInfo> gureantor2Optional = personalInfoRepository
-					.findById(businessMemberDto.getGuarantor2());
-			if (gureantor2Optional.isPresent()) {
-				businessMember.setGuarantor2(gureantor2Optional.get());
-			}
-
-			Optional<PersonalInfo> gureantor3Optional = personalInfoRepository
-					.findById(businessMemberDto.getGuarantor3());
-			if (gureantor3Optional.isPresent()) {
-				businessMember.setGuarantor3(gureantor3Optional.get());
-			}
-
-			Optional<PersonalInfo> partnerOptional = personalInfoRepository.findById(businessMemberDto.getPartnerId());
-			if (partnerOptional.isPresent()) {
-				businessMember.setPartnerId(partnerOptional.get());
-			}
-
-			businessMember.setStartDate(businessMemberDto.getStartDate());
-			businessMember.setEndDate(businessMemberDto.getEndDate());
-
-			businessMember
-					.setAmount(businessMemberDto.getAmount() != null ? businessMemberDto.getAmount() : BigDecimal.ZERO);
-			businessMember.setDuration(businessMemberDto.getDuration() != null ? businessMemberDto.getDuration() : 0);
-
-			businessMember.setInterest(
-					businessMemberDto.getInterest() != null ? businessMemberDto.getInterest() : BigDecimal.ZERO);
-			businessMember.setInstallment(
-					businessMemberDto.getInstallment() != null ? businessMemberDto.getInstallment() : BigDecimal.ZERO);
-
-			businessMember.setStatus(businessMemberDto.isStatus());
-			businessMember.setPartPrincipal(
-					businessMemberDto.getPartPrincipal() != null ? businessMemberDto.getPartPrincipal() : 0);
-			businessMember.setUnpaidLateFee(
-					businessMemberDto.getUnpaidLateFee() != null ? businessMemberDto.getUnpaidLateFee()
-							: BigDecimal.ZERO);
-			businessMember.setChequeReminder(businessMemberDto.isChequeReminder());
-			businessMember.setBusinessId(businessMemberDto.getBusinessId());
-			businessMember.setSecurity(businessMemberDto.getSecurity());
-
-			businessMember.setProcessingFee(businessMemberDto.getProcessingFee());
-			businessMember.setInterestRate(businessMemberDto.getInterestRate());
-
-			businessMemberRepository.save(businessMember);
-
+			// Updating DocCharges Record
 			if (businessMember.getProcessingFee() != null && businessMemberDto.getProcessingFee() != null
 					&& businessMember.getProcessingFee().compareTo(businessMemberDto.getProcessingFee()) != 0) {
-
-				String currentUser = SecurityContextHolder.getContext().getAuthentication().getName();
-				LocalDateTime currentDate = LocalDateTime.now();
 
 				CashBook dfProcessingFeeCashBook = null;
 				Optional<CashBook> optionalCashbook = null;
 
-				switch (businessMember.getLoanType()) {
-				case "DAILY_FINANCE":
-
-					optionalCashbook = cashBookRepo.findByBusinessMemberAndAccountMasterCode(businessMember,
-							"DF DOC CHARGES");
-
-				case "MONTHLY_FINANCE":
-
-					optionalCashbook = cashBookRepo.findByBusinessMemberAndAccountMasterCode(businessMember,
-							"MF DOC CHARGES");
-
-				}
+				optionalCashbook = cashBookRepo.findByBusinessMemberAndAccountMasterCode(businessMember,
+						"DF DOC CHARGES");
 
 				if (optionalCashbook.isPresent()) {
 
 					dfProcessingFeeCashBook = optionalCashbook.get();
 
+					if (customerOptional.isPresent()) {
+						dfProcessingFeeCashBook.setPersonalInfo(customerOptional.get());
+					}
+
 					dfProcessingFeeCashBook.setCredit(businessMemberDto.getProcessingFee());
 					dfProcessingFeeCashBook.setDebit(BigDecimal.ZERO);
 					dfProcessingFeeCashBook.setUser(currentUser);
 					dfProcessingFeeCashBook.setSysDate(currentDate);
+					dfProcessingFeeCashBook.setTransDate(businessMemberDto.getStartDate());
 
 					cashBookRepo.save(dfProcessingFeeCashBook);
 
@@ -413,13 +420,148 @@ public class BusinessMemberService {
 
 			}
 
-			return "Sucessfully Updated ";
+			// Updating Interest Record
+			if (businessMember.getInterest() != null && businessMemberDto.getInterest() != null
+					&& businessMember.getInterest().compareTo(businessMemberDto.getInterest()) != 0) {
 
-		} else {
+				CashBook dfIntrestCashBook = null;
+				Optional<CashBook> optionalCashbook = null;
 
-			return "Record Not Found ";
+				optionalCashbook = cashBookRepo.findByBusinessMemberAndAccountMasterCode(businessMember, "DF INTEREST");
 
+				dfIntrestCashBook = optionalCashbook.get();
+
+				if (customerOptional.isPresent()) {
+					dfIntrestCashBook.setPersonalInfo(customerOptional.get());
+				}
+
+				dfIntrestCashBook.setCredit(businessMemberDto.getInterest());
+				dfIntrestCashBook.setDebit(BigDecimal.ZERO);
+				dfIntrestCashBook.setUser(currentUser);
+				dfIntrestCashBook.setSysDate(currentDate);
+				dfIntrestCashBook.setTransDate(businessMemberDto.getStartDate());
+
+				cashBookRepo.save(dfIntrestCashBook);
+
+			}
+
+			break;
+		case "MONTHLY_FINANCE":
+
+			// Updating Loan Record
+			if (businessMember.getAmount() != null && businessMemberDto.getAmount() != null
+					&& businessMember.getAmount().compareTo(businessMemberDto.getAmount()) != 0) {
+
+				CashBook mFLoanCashBook = null;
+				Optional<CashBook> optionalCashbook = null;
+				optionalCashbook = cashBookRepo.findByBusinessMemberAndAccountMasterCode(businessMember, "MF LOAN");
+
+				if (optionalCashbook.isPresent()) {
+
+					mFLoanCashBook = optionalCashbook.get();
+
+					if (customerOptional.isPresent()) {
+						mFLoanCashBook.setPersonalInfo(customerOptional.get());
+					}
+
+					mFLoanCashBook.setCredit(BigDecimal.ZERO);
+					mFLoanCashBook.setDebit(businessMemberDto.getProcessingFee());
+					mFLoanCashBook.setUser(currentUser);
+					mFLoanCashBook.setSysDate(currentDate);
+					mFLoanCashBook.setTransDate(businessMemberDto.getStartDate());
+
+					cashBookRepo.save(mFLoanCashBook);
+
+				}
+
+			}
+
+			// Updating DocCharges Record
+			if (businessMember.getProcessingFee() != null && businessMemberDto.getProcessingFee() != null
+					&& businessMember.getProcessingFee().compareTo(businessMemberDto.getProcessingFee()) != 0) {
+
+				CashBook mfProcessingFeeCashBook = null;
+				Optional<CashBook> optionalCashbook = null;
+
+				optionalCashbook = cashBookRepo.findByBusinessMemberAndAccountMasterCode(businessMember,
+						"MF DOC CHARGES");
+
+				if (optionalCashbook.isPresent()) {
+
+					mfProcessingFeeCashBook = optionalCashbook.get();
+					if (customerOptional.isPresent()) {
+						mfProcessingFeeCashBook.setPersonalInfo(customerOptional.get());
+					}
+
+					mfProcessingFeeCashBook.setCredit(businessMemberDto.getProcessingFee());
+					mfProcessingFeeCashBook.setDebit(BigDecimal.ZERO);
+					mfProcessingFeeCashBook.setUser(currentUser);
+					mfProcessingFeeCashBook.setSysDate(currentDate);
+					mfProcessingFeeCashBook.setTransDate(businessMemberDto.getStartDate());
+
+					cashBookRepo.save(mfProcessingFeeCashBook);
+
+				}
+
+			}
+
+			break;
+
+		default:
+			break;
 		}
+
+		if (customerOptional.isPresent()) {
+			businessMember.setCustomerId(customerOptional.get());
+		}
+
+		Optional<PersonalInfo> gureantor1Optional = personalInfoRepository.findById(businessMemberDto.getGuarantor1());
+		if (gureantor1Optional.isPresent()) {
+			businessMember.setGuarantor1(gureantor1Optional.get());
+		}
+
+		Optional<PersonalInfo> gureantor2Optional = personalInfoRepository.findById(businessMemberDto.getGuarantor2());
+		if (gureantor2Optional.isPresent()) {
+			businessMember.setGuarantor2(gureantor2Optional.get());
+		}
+
+		Optional<PersonalInfo> gureantor3Optional = personalInfoRepository.findById(businessMemberDto.getGuarantor3());
+		if (gureantor3Optional.isPresent()) {
+			businessMember.setGuarantor3(gureantor3Optional.get());
+		}
+
+		Optional<PersonalInfo> partnerOptional = personalInfoRepository.findById(businessMemberDto.getPartnerId());
+		if (partnerOptional.isPresent()) {
+			businessMember.setPartnerId(partnerOptional.get());
+		}
+
+		businessMember.setStartDate(businessMemberDto.getStartDate());
+		businessMember.setEndDate(businessMemberDto.getEndDate());
+
+		businessMember
+				.setAmount(businessMemberDto.getAmount() != null ? businessMemberDto.getAmount() : BigDecimal.ZERO);
+		businessMember.setDuration(businessMemberDto.getDuration() != null ? businessMemberDto.getDuration() : 0);
+
+		businessMember.setInterest(
+				businessMemberDto.getInterest() != null ? businessMemberDto.getInterest() : BigDecimal.ZERO);
+		businessMember.setInstallment(
+				businessMemberDto.getInstallment() != null ? businessMemberDto.getInstallment() : BigDecimal.ZERO);
+
+		businessMember.setStatus(businessMemberDto.isStatus());
+		businessMember.setPartPrincipal(
+				businessMemberDto.getPartPrincipal() != null ? businessMemberDto.getPartPrincipal() : 0);
+		businessMember.setUnpaidLateFee(
+				businessMemberDto.getUnpaidLateFee() != null ? businessMemberDto.getUnpaidLateFee() : BigDecimal.ZERO);
+		businessMember.setChequeReminder(businessMemberDto.isChequeReminder());
+		businessMember.setBusinessId(businessMemberDto.getBusinessId());
+		businessMember.setSecurity(businessMemberDto.getSecurity());
+
+		businessMember.setProcessingFee(businessMemberDto.getProcessingFee());
+		businessMember.setInterestRate(businessMemberDto.getInterestRate());
+
+		businessMemberRepository.save(businessMember);
+
+		return "Loan updated successfully!";
 
 	}
 

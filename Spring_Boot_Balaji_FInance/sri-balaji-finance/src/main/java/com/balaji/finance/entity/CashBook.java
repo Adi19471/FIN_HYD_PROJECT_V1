@@ -4,9 +4,15 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 import org.hibernate.annotations.CreationTimestamp;
+import org.springframework.data.annotation.CreatedBy;
+import org.springframework.data.annotation.CreatedDate;
+import org.springframework.data.annotation.LastModifiedBy;
+import org.springframework.data.annotation.LastModifiedDate;
+import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EntityListeners;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -17,6 +23,7 @@ import jakarta.persistence.Table;
 
 @Entity
 @Table(name = "CASH_BOOK")
+@EntityListeners(AuditingEntityListener.class)
 public class CashBook {
 
 	@Id
@@ -65,6 +72,20 @@ public class CashBook {
 
 	@Column(name = "ACCOUNT_MASTER_CODE")
 	private String accountMasterCode;
+
+	@CreatedDate
+	@Column(updatable = false)
+	private LocalDateTime createdDate;
+
+	@LastModifiedDate
+	private LocalDateTime modifiedDate;
+
+	@CreatedBy
+	@Column(updatable = false)
+	private String createdBy;
+
+	@LastModifiedBy
+	private String modifiedBy;
 
 	public Long getCashBookId() {
 		return cashBookId;
@@ -178,6 +199,37 @@ public class CashBook {
 		this.accountMasterCode = accountMasterCode;
 	}
 
+	public LocalDateTime getCreatedDate() {
+		return createdDate;
+	}
+
+	public void setCreatedDate(LocalDateTime createdDate) {
+		this.createdDate = createdDate;
+	}
+
+	public LocalDateTime getModifiedDate() {
+		return modifiedDate;
+	}
+
+	public void setModifiedDate(LocalDateTime modifiedDate) {
+		this.modifiedDate = modifiedDate;
+	}
+
+	public String getCreatedBy() {
+		return createdBy;
+	}
+
+	public void setCreatedBy(String createdBy) {
+		this.createdBy = createdBy;
+	}
+
+	public String getModifiedBy() {
+		return modifiedBy;
+	}
+
+	public void setModifiedBy(String modifiedBy) {
+		this.modifiedBy = modifiedBy;
+	}
 
 	
 }

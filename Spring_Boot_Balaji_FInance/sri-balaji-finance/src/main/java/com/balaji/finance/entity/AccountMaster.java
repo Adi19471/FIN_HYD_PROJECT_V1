@@ -1,9 +1,18 @@
 package com.balaji.finance.entity;
 
+import java.time.LocalDateTime;
+
+import org.springframework.data.annotation.CreatedBy;
+import org.springframework.data.annotation.CreatedDate;
+import org.springframework.data.annotation.LastModifiedBy;
+import org.springframework.data.annotation.LastModifiedDate;
+import org.springframework.data.jpa.domain.support.AuditingEntityListener;
+
 import jakarta.persistence.*;
 
 @Entity
 @Table(name = "accountmaster")
+@EntityListeners(AuditingEntityListener.class)
 public class AccountMaster {
 
 	@Id
@@ -31,6 +40,20 @@ public class AccountMaster {
 
 	@Column(name = "TRANS_TYPE")
 	private String transType;
+
+	@CreatedDate
+	@Column(updatable = false)
+	private LocalDateTime createdDate;
+
+	@LastModifiedDate
+	private LocalDateTime modifiedDate;
+
+	@CreatedBy
+	@Column(updatable = false)
+	private String createdBy;
+
+	@LastModifiedBy
+	private String modifiedBy;
 
 	public AccountMaster() {
 	}
@@ -99,4 +122,37 @@ public class AccountMaster {
 		this.transType = transType;
 	}
 
+	public LocalDateTime getCreatedDate() {
+		return createdDate;
+	}
+
+	public void setCreatedDate(LocalDateTime createdDate) {
+		this.createdDate = createdDate;
+	}
+
+	public LocalDateTime getModifiedDate() {
+		return modifiedDate;
+	}
+
+	public void setModifiedDate(LocalDateTime modifiedDate) {
+		this.modifiedDate = modifiedDate;
+	}
+
+	public String getCreatedBy() {
+		return createdBy;
+	}
+
+	public void setCreatedBy(String createdBy) {
+		this.createdBy = createdBy;
+	}
+
+	public String getModifiedBy() {
+		return modifiedBy;
+	}
+
+	public void setModifiedBy(String modifiedBy) {
+		this.modifiedBy = modifiedBy;
+	}
+
+	
 }

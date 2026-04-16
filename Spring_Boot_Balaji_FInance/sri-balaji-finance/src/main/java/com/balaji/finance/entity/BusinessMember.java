@@ -4,9 +4,15 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 import org.hibernate.annotations.CreationTimestamp;
+import org.springframework.data.annotation.CreatedBy;
+import org.springframework.data.annotation.CreatedDate;
+import org.springframework.data.annotation.LastModifiedBy;
+import org.springframework.data.annotation.LastModifiedDate;
+import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EntityListeners;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
@@ -15,6 +21,7 @@ import jakarta.persistence.Table;
 
 @Entity
 @Table(name = "BUSINESS_MEMBER")
+@EntityListeners(AuditingEntityListener.class)
 public class BusinessMember {
 
 	@Id
@@ -104,6 +111,20 @@ public class BusinessMember {
 
 	@Column(name = "SEQUENCE")
 	private Integer sequence;
+
+	@CreatedDate
+	@Column(updatable = false)
+	private LocalDateTime createdDate;
+
+	@LastModifiedDate
+	private LocalDateTime modifiedDate;
+
+	@CreatedBy
+	@Column(updatable = false)
+	private String createdBy;
+
+	@LastModifiedBy
+	private String modifiedBy;
 
 	public String getLoanStatus() {
 		return loanStatus;
@@ -319,6 +340,38 @@ public class BusinessMember {
 
 	public void setSequence(Integer sequence) {
 		this.sequence = sequence;
+	}
+
+	public LocalDateTime getCreatedDate() {
+		return createdDate;
+	}
+
+	public void setCreatedDate(LocalDateTime createdDate) {
+		this.createdDate = createdDate;
+	}
+
+	public LocalDateTime getModifiedDate() {
+		return modifiedDate;
+	}
+
+	public void setModifiedDate(LocalDateTime modifiedDate) {
+		this.modifiedDate = modifiedDate;
+	}
+
+	public String getCreatedBy() {
+		return createdBy;
+	}
+
+	public void setCreatedBy(String createdBy) {
+		this.createdBy = createdBy;
+	}
+
+	public String getModifiedBy() {
+		return modifiedBy;
+	}
+
+	public void setModifiedBy(String modifiedBy) {
+		this.modifiedBy = modifiedBy;
 	}
 
 }

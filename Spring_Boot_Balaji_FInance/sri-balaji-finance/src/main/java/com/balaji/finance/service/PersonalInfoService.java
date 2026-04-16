@@ -76,13 +76,6 @@ public class PersonalInfoService {
 		personalInfo.setPersonalInfoId(prefix + "" + seq);
 		personalInfo.setSequence(seq);
 		
-		personalInfo.setCreatedDate(LocalDateTime.now());
-		personalInfo.setModifiedDate(LocalDateTime.now());
-		
-		personalInfo.setCreatedUser(currentUser);
-		personalInfo.setModifiedUser(currentUser);
-		
-		
 		personalInfo.setFirstName(personalInfoDto.getFirstname());
 		personalInfo.setLastName(personalInfoDto.getLastname());
 		personalInfo.setGender(personalInfoDto.getGender());

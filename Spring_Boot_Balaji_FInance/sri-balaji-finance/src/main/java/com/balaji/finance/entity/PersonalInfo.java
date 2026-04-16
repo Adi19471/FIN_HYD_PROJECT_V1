@@ -3,13 +3,21 @@ package com.balaji.finance.entity;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
+import org.springframework.data.annotation.CreatedBy;
+import org.springframework.data.annotation.CreatedDate;
+import org.springframework.data.annotation.LastModifiedBy;
+import org.springframework.data.annotation.LastModifiedDate;
+import org.springframework.data.jpa.domain.support.AuditingEntityListener;
+
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EntityListeners;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 
 @Entity
 @Table(name = "PERSONAL_INFO")
+@EntityListeners(AuditingEntityListener.class)
 public class PersonalInfo {
 
 	@Id
@@ -85,20 +93,22 @@ public class PersonalInfo {
 	@Column(name = "INTRO_NAME")
 	private String introname;
 
-	@Column(name = "CREATED_DATE")
-	private LocalDateTime createdDate;
-
-	@Column(name = "MODIFIED_DATE")
-	private LocalDateTime modifiedDate;
-
 	@Column(name = "SEQUENCE")
 	private Long sequence;
 
-	@Column(name = "CREATED_USER")
-	private String createdUser;
+	@CreatedDate
+	@Column(updatable = false)
+	private LocalDateTime createdDate;
 
-	@Column(name = "MODIFIED_USER")
-	private String modifiedUser;
+	@LastModifiedDate
+	private LocalDateTime modifiedDate;
+
+	@CreatedBy
+	@Column(updatable = false)
+	private String createdBy;
+
+	@LastModifiedBy
+	private String modifiedBy;
 
 	public String getPersonalInfoId() {
 		return personalInfoId;
@@ -308,20 +318,20 @@ public class PersonalInfo {
 		this.modifiedDate = modifiedDate;
 	}
 
-	public String getCreatedUser() {
-		return createdUser;
+	public String getCreatedBy() {
+		return createdBy;
 	}
 
-	public void setCreatedUser(String createdUser) {
-		this.createdUser = createdUser;
+	public void setCreatedBy(String createdBy) {
+		this.createdBy = createdBy;
 	}
 
-	public String getModifiedUser() {
-		return modifiedUser;
+	public String getModifiedBy() {
+		return modifiedBy;
 	}
 
-	public void setModifiedUser(String modifiedUser) {
-		this.modifiedUser = modifiedUser;
+	public void setModifiedBy(String modifiedBy) {
+		this.modifiedBy = modifiedBy;
 	}
 
 	public Long getSequence() {
