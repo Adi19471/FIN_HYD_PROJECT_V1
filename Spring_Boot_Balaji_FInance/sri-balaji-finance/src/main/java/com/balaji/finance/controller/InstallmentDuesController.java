@@ -20,7 +20,7 @@ public class InstallmentDuesController {
 	private InstallmentDuesService installmentDuesService;
 
 	@PostMapping("/installmentDuesList")
-	public ResponseEntity<List<InstallmentDuesPojo>> getAlldisbursedList(
+	public ResponseEntity<List<InstallmentDuesPojo>> getInstallmentDues(
 			@RequestBody InstallmentsDuesRequestPojo installmentsDuesRequestPojo) {
 
 		List<InstallmentDuesPojo> resturnList = installmentDuesService.getInstallmentDues(

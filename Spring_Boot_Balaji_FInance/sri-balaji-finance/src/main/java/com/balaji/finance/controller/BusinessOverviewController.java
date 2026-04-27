@@ -19,7 +19,7 @@ public class BusinessOverviewController {
 	private BusinessOverviewService businessOverviewService;
 
 	@GetMapping("/businessOverview/{fromDate}/{toDate}/{excludeDividends}/{accruedRevenue}")
-	public ResponseEntity<BusinessOverviewResponsePojo> getAlldisbursedList(@PathVariable String fromDate,
+	public ResponseEntity<BusinessOverviewResponsePojo> getBusinessOverView(@PathVariable String fromDate,
 			@PathVariable String toDate, @PathVariable String excludeDividends, @PathVariable String accruedRevenue) {
 
 		DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
@@ -34,7 +34,7 @@ public class BusinessOverviewController {
 	}
 
 	@GetMapping("/businessOverview/{excludeDividends}/{accruedRevenue}")
-	public ResponseEntity<BusinessOverviewResponsePojo> getAlldisbursedList(@PathVariable String excludeDividends,
+	public ResponseEntity<BusinessOverviewResponsePojo> getBusinessOverView(@PathVariable String excludeDividends,
 			@PathVariable String accruedRevenue) {
 
 		BusinessOverviewResponsePojo resturnList = businessOverviewService

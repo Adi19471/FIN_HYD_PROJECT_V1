@@ -19,7 +19,7 @@ public class MaturityLoansController {
 	private MaturityLoansService maturityLoansService;
 
 	@PostMapping("/maturityLoansList")
-	public ResponseEntity<List<MaturedLoansPojo>> getAlldisbursedList(
+	public ResponseEntity<List<MaturedLoansPojo>> getMaturityLoans(
 			@RequestBody InstallmentsDuesRequestPojo installmentsDuesRequestPojo) {
 
 		List<MaturedLoansPojo> resturnList = maturityLoansService.getMaturityLoans(

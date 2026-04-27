@@ -12,6 +12,7 @@ import org.springframework.data.repository.query.Param;
 
 import com.balaji.finance.dto.BalanceSheetProjection;
 import com.balaji.finance.dto.BusinessOverviewProjection;
+import com.balaji.finance.dto.CashBookProjection;
 import com.balaji.finance.dto.CustomerReportProjection;
 import com.balaji.finance.dto.CustomerTransactionsProjection;
 import com.balaji.finance.dto.DateWiseCashBookProjection;
@@ -61,8 +62,7 @@ public interface CashBookRepo extends JpaRepository<CashBook, Long> {
 			""")
 	List<CashBook> findByTransactionDate(@Param("startDate") LocalDateTime startDate,
 			@Param("endDate") LocalDateTime endDate);
-	
-	
+
 	@Query("""
 			SELECT c
 			FROM CashBook c
@@ -72,8 +72,6 @@ public interface CashBookRepo extends JpaRepository<CashBook, Long> {
 			""")
 	List<CashBook> findByTransactionDateExcludedSomeAccountCodes(@Param("startDate") LocalDateTime startDate,
 			@Param("endDate") LocalDateTime endDate);
-	
-	
 
 	@Query(value = """
 			SELECT
@@ -219,7 +217,7 @@ public interface CashBookRepo extends JpaRepository<CashBook, Long> {
 			ORDER BY cb.ACCOUNT_MASTER_TYPE, cb.ACCOUNT_MASTER_CODE
 			""", nativeQuery = true)
 	List<RevenueExpenseProjection> getRevenueExpenseStatementByTrasncDate(@Param("fromDate") LocalDateTime fromDate,
-			@Param("toDate") LocalDateTime toDate,@Param("accountType")List<String> accountType);
+			@Param("toDate") LocalDateTime toDate, @Param("accountType") List<String> accountType);
 
 	@Query(value = """
 			SELECT
@@ -231,7 +229,7 @@ public interface CashBookRepo extends JpaRepository<CashBook, Long> {
 			GROUP BY cb.ACCOUNT_MASTER_TYPE, cb.ACCOUNT_MASTER_CODE
 			ORDER BY cb.ACCOUNT_MASTER_TYPE, cb.ACCOUNT_MASTER_CODE
 			""", nativeQuery = true)
-	List<RevenueExpenseProjection> getRevenueExpenseStatement(@Param("accountType")List<String> accountType);
+	List<RevenueExpenseProjection> getRevenueExpenseStatement(@Param("accountType") List<String> accountType);
 
 	@Query(value = """
 			SELECT
@@ -381,21 +379,17 @@ public interface CashBookRepo extends JpaRepository<CashBook, Long> {
 			    LEFT JOIN cb.businessMember businessMember
 			    WHERE cb.accountMasterCode = :accountMasterCode
 			      and customer.personalInfoId= :customerId
-			      and transDate BETWEEN :fromDate AND :toDate
+			      and cb.transDate BETWEEN :fromDate AND :toDate
 			    ORDER BY cb.cashBookId
 			""")
 	List<CustomerTransactionsProjection> getCustomerTransactionsOnAccountMasterCodeAndDateRange(
 			@Param("accountMasterCode") String accountMasterCode, @Param("customerId") String customerId,
 			@Param("fromDate") LocalDateTime fromDate, @Param("toDate") LocalDateTime toDate);
-	
-	
+
 	List<CashBook> findByPaymentRefId(String paymentRefId);
-	
+
 	void deleteByPaymentRefId(String paymentRefId);
-	
-	
-	 
-	 
+
 	@Query("""
 			SELECT count(c.cashBookId)
 			FROM CashBook c
@@ -403,5 +397,20 @@ public interface CashBookRepo extends JpaRepository<CashBook, Long> {
 			AND c.accountMasterCode NOT IN ('MF LOAN','MF DOC CHARGES','DF LOAN','DF INTEREST','DF DOC CHARGES')
 			""")
 	Long findCollectionsCountOnAccount(String businessMemberId);
+
+	@Query("""
+			    SELECT
+			        cb.accountMasterCode AS accountMasterCode,
+			        COALESCE(SUM(cb.credit), 0) AS credit
+			    FROM CashBook cb
+			        LEFT JOIN cb.businessMember businessMember
+			    WHERE cb.accountMasterCode IN :accountMasterCode
+			      AND cb.transDate BETWEEN :fromDate AND :toDate
+			      And businessMember.loanStatus=:loanStatus
+			    GROUP BY cb.accountMasterCode
+			""")
+	List<CashBookProjection> getCreditSummary(@Param("accountMasterCode") List<String> accountMasterCode,
+			@Param("fromDate") LocalDateTime from, @Param("toDate") LocalDateTime to,
+			@Param("loanStatus") String loanStatus);
 
 }

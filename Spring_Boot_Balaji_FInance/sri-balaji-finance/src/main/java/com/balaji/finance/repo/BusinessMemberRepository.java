@@ -11,6 +11,7 @@ import org.springframework.data.repository.query.Param;
 import com.balaji.finance.dto.CustomerDuesProjection;
 import com.balaji.finance.dto.CustomerOutstandingProjection;
 import com.balaji.finance.dto.LoanSummaryProjection;
+import com.balaji.finance.dto.LoansGranted;
 import com.balaji.finance.entity.BusinessMember;
 
 public interface BusinessMemberRepository extends JpaRepository<BusinessMember, String> {
@@ -77,7 +78,7 @@ public interface BusinessMemberRepository extends JpaRepository<BusinessMember, 
 			  """)
 	List<BusinessMember> findAllByLoanTypeAndEndDateRange(@Param("starWithString") String starWithString,
 			@Param("fromDate") LocalDateTime fromDate, @Param("toDate") LocalDateTime toDate);
-	
+
 	@Query("""
 			  SELECT
 			    loanType as loanType,
@@ -99,7 +100,7 @@ public interface BusinessMemberRepository extends JpaRepository<BusinessMember, 
 			GROUP BY loanType
 						  """)
 	List<LoanSummaryProjection> findAllLoansDisbursed();
-	
+
 	@Query("""
 			    SELECT
 			        customer.personalInfoId AS personInfoId,
@@ -118,8 +119,9 @@ public interface BusinessMemberRepository extends JpaRepository<BusinessMember, 
 			      AND bm.sysDate <= :selectedDate
 			    GROUP BY customer.personalInfoId, customer.firstName
 			""")
-	List<CustomerOutstandingProjection> customerLoansOverview(@Param("loanType") List<String> loanTypes,@Param("selectedDate") LocalDateTime selectedDate);
-	
+	List<CustomerOutstandingProjection> customerLoansOverview(@Param("loanType") List<String> loanTypes,
+			@Param("selectedDate") LocalDateTime selectedDate);
+
 	@Query("""
 			   SELECT
 			    bm.businessMemberId as businessMemberId,
@@ -155,5 +157,18 @@ public interface BusinessMemberRepository extends JpaRepository<BusinessMember, 
 			   WHERE customer.personalInfoId=:personInfoId
 			   ORDER BY bm.sequence asc
 			""")
-			List<CustomerDuesProjection> getAllLoansOnCustomer(@Param("personInfoId") String personInfoId);
+	List<CustomerDuesProjection> getAllLoansOnCustomer(@Param("personInfoId") String personInfoId);
+
+	@Query("""
+			  SELECT
+			    loanType as loanType,
+			    SUM(amount) AS loansDisbursed
+			FROM BusinessMember
+			WHERE sysDate BETWEEN :fromDate AND :toDate
+			AND loanStatus=:loanStatus
+			GROUP BY loanType
+						  """)
+	List<LoansGranted> findAllTargetCollections(@Param("fromDate") LocalDateTime fromDate,
+			@Param("toDate") LocalDateTime toDate, @Param("loanStatus") String loanStatus);
+
 }

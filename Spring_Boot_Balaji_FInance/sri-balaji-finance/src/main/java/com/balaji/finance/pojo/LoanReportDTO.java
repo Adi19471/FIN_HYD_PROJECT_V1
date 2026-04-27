@@ -5,18 +5,20 @@ import java.math.BigDecimal;
 public class LoanReportDTO {
 
 	private int sno;
-    private String loanId;
-    private String customerName;
-    private String guarentorName;
-    private String partnerName;
-    private String startDate;
-    private String endDate;
-    private BigDecimal amount;
-    private BigDecimal amountPaid;
-    private int noofInstallmentsPaid;
-    private BigDecimal installmentDue;
-    private String status;
-    private String remarks;
+	private String loanId;
+	private String customerName;
+	private String guarentorName;
+	private String partnerName;
+	private String startDate;
+	private String endDate;
+	private BigDecimal amount;
+	private BigDecimal principleAmountPaid;
+	private int noofInstallmentsPaid;
+	private BigDecimal installmentDue;
+	private String status;
+	private String remarks;
+	private BigDecimal interestAmount;
+	private BigDecimal interestAmountPaid;
 
 	public int getSno() {
 		return sno;
@@ -82,12 +84,13 @@ public class LoanReportDTO {
 		this.amount = amount;
 	}
 
-	public BigDecimal getAmountPaid() {
-		return amountPaid;
+	
+	public BigDecimal getPrincipleAmountPaid() {
+		return principleAmountPaid;
 	}
 
-	public void setAmountPaid(BigDecimal amountPaid) {
-		this.amountPaid = amountPaid;
+	public void setPrincipleAmountPaid(BigDecimal principleAmountPaid) {
+		this.principleAmountPaid = principleAmountPaid;
 	}
 
 	public int getNoofInstallmentsPaid() {
@@ -120,6 +123,22 @@ public class LoanReportDTO {
 
 	public void setRemarks(String remarks) {
 		this.remarks = remarks;
+	}
+
+	public BigDecimal getInterestAmount() {
+		return interestAmount;
+	}
+
+	public void setInterestAmount(BigDecimal interestAmount) {
+		this.interestAmount = interestAmount;
+	}
+
+	public BigDecimal getInterestAmountPaid() {
+		return interestAmountPaid;
+	}
+
+	public void setInterestAmountPaid(BigDecimal interestAmountPaid) {
+		this.interestAmountPaid = interestAmountPaid;
 	}
 
 }
