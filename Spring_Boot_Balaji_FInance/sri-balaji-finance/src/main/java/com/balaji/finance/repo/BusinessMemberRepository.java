@@ -10,6 +10,7 @@ import org.springframework.data.repository.query.Param;
 
 import com.balaji.finance.dto.CustomerDuesProjection;
 import com.balaji.finance.dto.CustomerOutstandingProjection;
+import com.balaji.finance.dto.GuarantorDuesProjection;
 import com.balaji.finance.dto.LoanSummaryProjection;
 import com.balaji.finance.dto.LoansGranted;
 import com.balaji.finance.entity.BusinessMember;
@@ -170,5 +171,81 @@ public interface BusinessMemberRepository extends JpaRepository<BusinessMember, 
 						  """)
 	List<LoansGranted> findAllTargetCollections(@Param("fromDate") LocalDateTime fromDate,
 			@Param("toDate") LocalDateTime toDate, @Param("loanStatus") String loanStatus);
+
+	
+	
+	@Query("""
+			   SELECT
+			    bm.businessMemberId as businessMemberId,
+			    customer.personalInfoId AS customerId,
+			    customer.firstName as customerFirstName,
+			    customer.phone as customerPhoneNumber,
+			    guarentor.personalInfoId AS guarentorId,
+			    guarentor.firstName as guarentorFirstName,
+			    guarentor.phone as guarentorPhoneNumber,
+			    partner.personalInfoId AS partnerId,
+			    partner.firstName as partnerFirstName,
+			    partner.phone as partnerPhoneNumber,
+			    bm.startDate as startDate,
+			    bm.endDate as endDate,
+			    bm.amount as amount,
+			    bm.duration as duration,
+			    bm.installment as installmentPerMonth,
+
+			    COALESCE((
+			        SELECT SUM(e.paidAmount)
+			        FROM EMI e
+			        WHERE e.businessMember = bm
+			    ), 0) AS totalInstallmentAmountPaid,
+
+			    bm.paidInstallments as noOfEmisPaid,
+			    bm.loanType as loanType
+
+			   FROM BusinessMember as bm
+			   LEFT JOIN bm.customerId customer
+			   LEFT JOIN bm.guarantor1 guarentor
+			   LEFT JOIN bm.partnerId partner
+
+			   WHERE guarentor.personalInfoId=:personInfoId
+			   AND loanStatus=:loanStatus
+			   ORDER BY bm.sequence asc
+			""")
+	List<GuarantorDuesProjection> getAllLoansOnGuarantor(@Param("personInfoId") String personInfoId,@Param("loanStatus") String loanStatus);
+
+	@Query("""
+			   SELECT
+			    bm.businessMemberId as businessMemberId,
+			    customer.personalInfoId AS customerId,
+			    customer.firstName as customerFirstName,
+			    customer.phone as customerPhoneNumber,
+			    guarentor.personalInfoId AS guarentorId,
+			    guarentor.firstName as guarentorFirstName,
+			    guarentor.phone as guarentorPhoneNumber,
+			    partner.personalInfoId AS partnerId,
+			    partner.firstName as partnerFirstName,
+			    partner.phone as partnerPhoneNumber,
+			    bm.startDate as startDate,
+			    bm.endDate as endDate,
+			    bm.amount as amount,
+			    bm.duration as duration,
+			    bm.installment as installmentPerMonth,
+
+			    COALESCE((
+			        SELECT SUM(e.paidAmount)
+			        FROM EMI e
+			        WHERE e.businessMember = bm
+			    ), 0) AS totalInstallmentAmountPaid,
+
+			    bm.paidInstallments as noOfEmisPaid,
+			    bm.loanType as loanType
+
+			   FROM BusinessMember as bm
+			   LEFT JOIN bm.customerId customer
+			   LEFT JOIN bm.guarantor1 guarentor
+			   LEFT JOIN bm.partnerId partner
+			   WHERE loanStatus=:loanStatus
+			   ORDER BY bm.sequence asc
+			""")
+	List<GuarantorDuesProjection> getAllLoansOnGuarantor(@Param("loanStatus") String loanStatus);
 
 }
