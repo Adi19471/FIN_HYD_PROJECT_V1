@@ -120,6 +120,8 @@ function Sidebar({ sidebarOpen, setSidebarOpen }) {
       pathname.toLowerCase().startsWith("/bussiness/")
     ) {
       setOpenGroup("business");
+    } else if (pathname.toLowerCase().startsWith("/partners/")) {
+      setOpenGroup("partners");
     } else if (
       ["/login", "/signup", "/reset-password"].some((p) =>
         pathname.startsWith(p)
@@ -770,6 +772,153 @@ function Sidebar({ sidebarOpen, setSidebarOpen }) {
                 >
                   <ReceiptLong className="w-4 h-4" />
                   <span>Customer Transactions</span>
+                </NavLink>
+              </li>
+            </ul>
+          )}
+
+          {/* partners */}
+          <div
+            className={`flex items-center justify-between px-3 py-3 rounded-xl cursor-pointer transition-all duration-200 font-medium ${
+              openGroup === "partners"
+                ? "bg-sky-100 dark:bg-sky-900/40"
+                : "hover:bg-sky-100 dark:hover:bg-sky-900/30"
+            }`}
+            onClick={() => handleGroupToggle("partners")}
+          >
+            <div className="flex items-center gap-3">
+              <People className="w-5 h-5 text-sky-600 dark:text-sky-400" />
+              <span className="text-sm lg:opacity-0 lg:sidebar-expanded:opacity-100 2xl:opacity-100 transition-opacity duration-200">
+                Partners
+              </span>
+            </div>
+            <ExpandMore
+              className={`w-5 h-5 transition-transform duration-300 ${
+                openGroup === "partners" ? "rotate-180" : ""
+              }`}
+            />
+          </div>
+
+          {openGroup === "partners" && (
+            <ul className="pl-11 mt-1 space-y-1">
+              <li>
+                <NavLink
+                  to="/Partners/Bussiness_Reports"
+                  className={({ isActive }) =>
+                    `flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-all duration-200 ${
+                      isActive
+                        ? "bg-gradient-to-r from-sky-600 to-blue-600 text-white shadow-sm"
+                        : "text-gray-600 dark:text-gray-400 hover:bg-sky-100 hover:text-sky-700 dark:hover:bg-sky-900/40 dark:hover:text-sky-300"
+                    }`
+                  }
+                >
+                  <Description className="w-4 h-4" />
+                  <span>Business Reports</span>
+                </NavLink>
+              </li>
+              <li>
+                <NavLink
+                  to="/Partners/Group_Bussiness_Details"
+                  className={({ isActive }) =>
+                    `flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-all duration-200 ${
+                      isActive
+                        ? "bg-gradient-to-r from-sky-600 to-blue-600 text-white shadow-sm"
+                        : "text-gray-600 dark:text-gray-400 hover:bg-sky-100 hover:text-sky-700 dark:hover:bg-sky-900/40 dark:hover:text-sky-300"
+                    }`
+                  }
+                >
+                  <Description className="w-4 h-4" />
+                  <span>Group Business Details</span>
+                </NavLink>
+              </li>
+              <li>
+                <NavLink
+                  to="/Partners/Group_Bussiness"
+                  className={({ isActive }) =>
+                    `flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-all duration-200 ${
+                      isActive
+                        ? "bg-gradient-to-r from-sky-600 to-blue-600 text-white shadow-sm"
+                        : "text-gray-600 dark:text-gray-400 hover:bg-sky-100 hover:text-sky-700 dark:hover:bg-sky-900/40 dark:hover:text-sky-300"
+                    }`
+                  }
+                >
+                  <Business className="w-4 h-4" />
+                  <span>Group Business</span>
+                </NavLink>
+              </li>
+              <li>
+                <NavLink
+                  to="/Partners/Installment_Dues"
+                  className={({ isActive }) =>
+                    `flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-all duration-200 ${
+                      isActive
+                        ? "bg-gradient-to-r from-sky-600 to-blue-600 text-white shadow-sm"
+                        : "text-gray-600 dark:text-gray-400 hover:bg-sky-100 hover:text-sky-700 dark:hover:bg-sky-900/40 dark:hover:text-sky-300"
+                    }`
+                  }
+                >
+                  <Payment className="w-4 h-4" />
+                  <span>Installment Dues</span>
+                </NavLink>
+              </li>
+              <li>
+                <NavLink
+                  to="/Partners/Partner_Loan_Limit"
+                  className={({ isActive }) =>
+                    `flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-all duration-200 ${
+                      isActive
+                        ? "bg-gradient-to-r from-sky-600 to-blue-600 text-white shadow-sm"
+                        : "text-gray-600 dark:text-gray-400 hover:bg-sky-100 hover:text-sky-700 dark:hover:bg-sky-900/40 dark:hover:text-sky-300"
+                    }`
+                  }
+                >
+                  <AccountBalance className="w-4 h-4" />
+                  <span>Partner Loan Limit</span>
+                </NavLink>
+              </li>
+              <li>
+                <NavLink
+                  to="/Partners/Partner_Settelment"
+                  className={({ isActive }) =>
+                    `flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-all duration-200 ${
+                      isActive
+                        ? "bg-gradient-to-r from-sky-600 to-blue-600 text-white shadow-sm"
+                        : "text-gray-600 dark:text-gray-400 hover:bg-sky-100 hover:text-sky-700 dark:hover:bg-sky-900/40 dark:hover:text-sky-300"
+                    }`
+                  }
+                >
+                  <CheckCircle className="w-4 h-4" />
+                  <span>Partner Settlement</span>
+                </NavLink>
+              </li>
+              <li>
+                <NavLink
+                  to="/Partners/Partner_Infoamtion"
+                  className={({ isActive }) =>
+                    `flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-all duration-200 ${
+                      isActive
+                        ? "bg-gradient-to-r from-sky-600 to-blue-600 text-white shadow-sm"
+                        : "text-gray-600 dark:text-gray-400 hover:bg-sky-100 hover:text-sky-700 dark:hover:bg-sky-900/40 dark:hover:text-sky-300"
+                    }`
+                  }
+                >
+                  <People className="w-4 h-4" />
+                  <span>Partner Information</span>
+                </NavLink>
+              </li>
+              <li>
+                <NavLink
+                  to="/Partners/Performance"
+                  className={({ isActive }) =>
+                    `flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-all duration-200 ${
+                      isActive
+                        ? "bg-gradient-to-r from-sky-600 to-blue-600 text-white shadow-sm"
+                        : "text-gray-600 dark:text-gray-400 hover:bg-sky-100 hover:text-sky-700 dark:hover:bg-sky-900/40 dark:hover:text-sky-300"
+                    }`
+                  }
+                >
+                  <TrendingUp className="w-4 h-4" />
+                  <span>Performance</span>
                 </NavLink>
               </li>
             </ul>

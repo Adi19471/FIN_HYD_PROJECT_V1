@@ -160,10 +160,17 @@ const Customer_Report =lazy(() =>import('./components/BalajiFinancial/Customer/C
 const Customer_Transactions =lazy(() =>import('./components/BalajiFinancial/Customer/Customer_Transactions'))
 
 
+// Partner Reports 
+const Bussiness_Reports = lazy(()=> import("./components/BalajiFinancial/PartnerReports/Bussiness_Reports"))
+const Group_Bussiness_Details = lazy(()=> import("./components/BalajiFinancial/PartnerReports/Group_Bussiness_Details"))
+const Group_Bussiness = lazy(()=> import("./components/BalajiFinancial/PartnerReports/Group_Bussiness"))
+const Installment_Dues = lazy(()=> import("./components/BalajiFinancial/PartnerReports/Installment_Dues"))
+const Partner_Infoamtion = lazy(()=> import("./components/BalajiFinancial/PartnerReports/Partner_Infoamtion"))
+const Partner_Loan_Limit = lazy(()=> import("./components/BalajiFinancial/PartnerReports/Partner_Loan_Limit"))
+const Partner_Settelment = lazy(()=> import("./components/BalajiFinancial/PartnerReports/Partner_Settelment"))
+const Performance = lazy(()=> import("./components/BalajiFinancial/PartnerReports/Performance"))
 
 const routes = [
-
-
 
   { path: "/customer", element: Custmer, exact: true },
   { path: "/", element: Dashboard,  exact: true },
@@ -228,6 +235,16 @@ const routes = [
   {path: "/Customer/Customer_Report", element: Customer_Report },
    {path: "/Customer/Customer_Transactions", element: Customer_Transactions },
 
+// parttners
+
+{path: "/Partners/Bussiness_Reports", element: Bussiness_Reports },
+{path: "/Partners/Group_Bussiness_Details", element: Group_Bussiness_Details },
+{path: "/Partners/Group_Bussiness", element: Group_Bussiness },
+{path: "/Partners/Installment_Dues", element: Installment_Dues },
+{path: "/Partners/Partner_Loan_Limit", element: Partner_Loan_Limit },
+{path: "/Partners/Partner_Settelment", element: Partner_Settelment },
+{path: "/Partners/Partner_Infoamtion", element: Partner_Infoamtion },
+{path: "/Partners/Performance", element: Performance },
 
 
 
