@@ -379,8 +379,10 @@ public class BusinessMemberService {
 		case "DAILY_FINANCE":
 
 			// Updating Loan Record
-			if (businessMember.getAmount() != null && businessMemberDto.getAmount() != null
-					&& businessMember.getAmount().compareTo(businessMemberDto.getAmount()) != 0) {
+			if ((businessMember.getAmount() != null && businessMemberDto.getAmount() != null
+					&& businessMember.getAmount().compareTo(businessMemberDto.getAmount()) != 0)
+					|| (businessMember.getStartDate() != null && businessMemberDto.getStartDate() != null
+							&& businessMember.getStartDate().compareTo(businessMemberDto.getStartDate()) != 0)) {
 
 				CashBook loanCashBook = null;
 				Optional<CashBook> optionalCashbook = null;
@@ -407,8 +409,10 @@ public class BusinessMemberService {
 			}
 
 			// Updating DocCharges Record
-			if (businessMember.getProcessingFee() != null && businessMemberDto.getProcessingFee() != null
-					&& businessMember.getProcessingFee().compareTo(businessMemberDto.getProcessingFee()) != 0) {
+			if ((businessMember.getProcessingFee() != null && businessMemberDto.getProcessingFee() != null
+					&& businessMember.getProcessingFee().compareTo(businessMemberDto.getProcessingFee()) != 0) 
+					|| (businessMember.getStartDate() != null && businessMemberDto.getStartDate() != null
+					  && businessMember.getStartDate().compareTo(businessMemberDto.getStartDate()) != 0)) {
 
 				CashBook dfProcessingFeeCashBook = null;
 				Optional<CashBook> optionalCashbook = null;
@@ -437,8 +441,10 @@ public class BusinessMemberService {
 			}
 
 			// Updating Interest Record
-			if (businessMember.getInterest() != null && businessMemberDto.getInterest() != null
-					&& businessMember.getInterest().compareTo(businessMemberDto.getInterest()) != 0) {
+			if ((businessMember.getInterest() != null && businessMemberDto.getInterest() != null
+					&& businessMember.getInterest().compareTo(businessMemberDto.getInterest()) != 0)
+					|| (businessMember.getStartDate() != null && businessMemberDto.getStartDate() != null
+							&& businessMember.getStartDate().compareTo(businessMemberDto.getStartDate()) != 0)) {
 
 				CashBook dfIntrestCashBook = null;
 				Optional<CashBook> optionalCashbook = null;
@@ -466,8 +472,10 @@ public class BusinessMemberService {
 		case "MONTHLY_FINANCE":
 
 			// Updating Loan Record
-			if (businessMember.getAmount() != null && businessMemberDto.getAmount() != null
-					&& businessMember.getAmount().compareTo(businessMemberDto.getAmount()) != 0) {
+			if ((businessMember.getAmount() != null && businessMemberDto.getAmount() != null
+					&& businessMember.getAmount().compareTo(businessMemberDto.getAmount()) != 0)
+					|| (businessMember.getStartDate() != null && businessMemberDto.getStartDate() != null
+							&& businessMember.getStartDate().compareTo(businessMemberDto.getStartDate()) != 0)) {
 
 				CashBook mFLoanCashBook = null;
 				Optional<CashBook> optionalCashbook = null;
@@ -494,8 +502,10 @@ public class BusinessMemberService {
 			}
 
 			// Updating DocCharges Record
-			if (businessMember.getProcessingFee() != null && businessMemberDto.getProcessingFee() != null
-					&& businessMember.getProcessingFee().compareTo(businessMemberDto.getProcessingFee()) != 0) {
+			if ((businessMember.getProcessingFee() != null && businessMemberDto.getProcessingFee() != null
+					&& businessMember.getProcessingFee().compareTo(businessMemberDto.getProcessingFee()) != 0)
+					|| (businessMember.getStartDate() != null && businessMemberDto.getStartDate() != null
+							&& businessMember.getStartDate().compareTo(businessMemberDto.getStartDate()) != 0)) {
 
 				CashBook mfProcessingFeeCashBook = null;
 				Optional<CashBook> optionalCashbook = null;
