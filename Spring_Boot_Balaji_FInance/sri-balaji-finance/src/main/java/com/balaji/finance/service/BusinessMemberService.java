@@ -359,6 +359,7 @@ public class BusinessMemberService {
 			String type) {
 
 		
+		
 		boolean hasPayments = emiRepo.existsByBusinessMember_BusinessMemberIdAndPaidAmountGreaterThan(
 				businessMember.getBusinessMemberId(), BigDecimal.ZERO);
 
