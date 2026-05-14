@@ -39,6 +39,10 @@ public class BusinessCollectionsReportService {
 				to, "COMPLETED");
 		List<CashBookProjection> allMaturedreceivedCollections = cashBookRepo
 				.getCreditSummary(Arrays.asList("MF LOAN INSTALLMENT", "DF LOAN INSTALLMENT"), from, to, "COMPLETED");
+		
+		System.err.println(allTargetCollections);
+		System.err.println(allreceivedCollections);
+		
 
 		List<BusinessCollectionsReportResponse> responseList = new ArrayList<>();
 
@@ -55,7 +59,7 @@ public class BusinessCollectionsReportService {
 				if (("MF".equals(loanType) && "MF LOAN INSTALLMENT".equals(cb.getAccountMasterCode()))
 						|| ("DF".equals(loanType) && "DF LOAN INSTALLMENT".equals(cb.getAccountMasterCode()))) {
 
-					received = cb.getCredit();
+					received.add(cb.getCredit());
 				}
 			}
 
@@ -83,7 +87,8 @@ public class BusinessCollectionsReportService {
 				if (("MF".equals(loanType) && "MF LOAN INSTALLMENT".equals(cb.getAccountMasterCode()))
 						|| ("DF".equals(loanType) && "DF LOAN INSTALLMENT".equals(cb.getAccountMasterCode()))) {
 
-					received = cb.getCredit();
+
+					received.add(cb.getCredit());
 				}
 			}
 

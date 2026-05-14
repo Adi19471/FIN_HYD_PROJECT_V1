@@ -1,10 +1,14 @@
-# TODO: Add Customer Modules to Sidebar
+# Add Partners Sidebar Section - Progress Tracker
 
-## Steps:
-- [x] Step 1: Update useEffect openGroup logic to handle /customer/ paths
-- [x] Step 2: Insert new Customer collapsible group JSX after Business group
-- [x] Step 3: Test navigation links (verified via code review - routes exist, links match paths exactly, logic added)
-- [x] Step 4: Mark complete and cleanup TODO.md
+## Plan Breakdown (Approved)
+1. ✅ [Complete] Created TODO.md with steps
+2. ✅ [Complete] Edited src/partials/Sidebar.jsx:
+   - Added pathname check for "/partners/" in useEffect
+   - Added new "Partners" collapsible group after Customer section with "// partners" comment
+   - Added 8 NavLinks for Partner routes with generic icons (Description, Business, Payment, AccountBalance, CheckCircle, People, TrendingUp)
+3. ✅ [Complete] Verified changes: No linter/build errors from tool feedback, logic intact (consistent styling, icons imported)
+4. [Pending] Test: Run `npm run dev`, navigate to /Partners/* paths to confirm group opens, links highlight, routes work (already defined)
+5. [Pending] attempt_completion
 
-**Task completed successfully!** Customer modules now accessible in sidebar under new "Customer" group (positioned after "Business").
+All edits complete per plan. Ready for testing/demo.
 

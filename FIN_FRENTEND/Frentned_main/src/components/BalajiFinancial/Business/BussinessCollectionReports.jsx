@@ -1,281 +1,258 @@
-import React, { useEffect, useState } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import {
   Box,
   Typography,
   Paper,
+  Grid,
+  Button,
+  Divider,
+  CircularProgress,
   Table,
   TableBody,
   TableCell,
-  TableContainer,
-  TableHead,
   TableRow,
-  Grid,
-  CircularProgress,
-  Alert,
-  Button,
   TextField,
-  FormControlLabel,
-  Checkbox,
-  Radio,
-  RadioGroup,
-  FormControl,
-  IconButton,
 } from "@mui/material";
-
-import {
-  Print as PrintIcon,
-  Description as ExcelIcon,
-  PictureAsPdf as PdfIcon,
-} from "@mui/icons-material";
-
 import axios from "axios";
+import dayjs from "dayjs";
 import { API_BASE } from "lib/config";
 import { getSession } from "src/utils/session";
-import dayjs from "dayjs";
-
-const token = getSession()?.token || getSession("token") || "";
 
 const BussinessCollectionReports = () => {
-  const [loanData, setLoanData] = useState([]);
-  const [revenues, setRevenues] = useState([]);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(null);
+  const [fromDate, setFromDate] = useState(
+    dayjs().startOf("month").format("YYYY-MM-DD")
+  );
 
-  // Controls State
-  const [useDateRange, setUseDateRange] = useState(true);        // true = Date Range, false = All
-  const [fromDate, setFromDate] = useState();
-  const [toDate, setToDate] = useState();
-  const [excludeDividends, setExcludeDividends] = useState(true);
-  const [accruedRevenues, setAccruedRevenues] = useState(true);
+  const [toDate, setToDate] = useState(
+    dayjs().endOf("month").format("YYYY-MM-DD")
+  );
+
+  const [loading, setLoading] = useState(false);
+  const [reportData, setReportData] = useState([]);
+
+  // Token
+  const token = getSession()?.token || getSession("token") || "";
+
+  // Stable headers
+  const headers = useMemo(
+    () => ({
+      Authorization: `Bearer ${token}`,
+    }),
+    [token]
+  );
 
   const fetchReport = async () => {
     try {
       setLoading(true);
-      setError(null);
-
-      // If "All" is selected, we can send a wide date range or let backend handle it
-      const finalFromDate = useDateRange ? fromDate : "2020-01-01";   // Change this default if needed
-      const finalToDate = useDateRange ? toDate : dayjs().format("YYYY-MM-DD");
 
       const response = await axios.get(
-        `${API_BASE}/businessOverview/${finalFromDate}/${finalToDate}/${excludeDividends}/${accruedRevenues}`,
+        `${API_BASE}/businessCollectionsReport/${fromDate}/${toDate}`,
         {
-          headers: { Authorization: `Bearer ${token}` },
+          headers,
         }
       );
 
-      setLoanData(response.data.loanDisbursedInformation || []);
-      setRevenues(response.data.businessOverviewProjections || []);
-    } catch (err) {
-      setError("Failed to load Business Overview Report. Please try again.");
+      setReportData(response.data || []);
+    } catch (error) {
+      console.error("Business Collection Report Error:", error);
     } finally {
       setLoading(false);
     }
   };
 
-  // Auto fetch when component loads
   useEffect(() => {
     fetchReport();
   }, []);
 
-  // Recalculate totals
-  const totalLoansDisbursed = loanData.reduce((sum, item) => sum + (item.loansDisbursed || 0), 0);
-  const totalInterestReceivable = loanData.reduce((sum, item) => sum + (item.interestReceivable || 0), 0);
-  const totalLoansPaid = loanData.reduce((sum, item) => sum + (item.loansPaid || 0), 0);
-  const totalInterestPaid = loanData.reduce((sum, item) => sum + (item.interestPaid || 0), 0);
+  const groupedData = useMemo(() => {
+    const result = {
+      DAILY_FINANCE: {
+        ACTIVE: null,
+        MATURED: null,
+      },
+      MONTHLY_FINANCE: {
+        ACTIVE: null,
+        MATURED: null,
+      },
+    };
 
-  const totalRevenues = revenues
-    .filter((r) => r.type === "REVENUES")
-    .reduce((sum, r) => sum + (r.amount || 0), 0);
+    reportData.forEach((item) => {
+      if (!result[item.loanType]) {
+        result[item.loanType] = {};
+      }
+
+      result[item.loanType][item.loanStatus] = item;
+    });
+
+    return result;
+  }, [reportData]);
+
+  const renderSection = (title, data) => (
+    <Box mb={4}>
+      <Box
+        sx={{
+          backgroundColor: "#d9d9d9",
+          border: "1px solid #777",
+          px: 1,
+          py: 0.5,
+          mb: 2,
+        }}
+      >
+        <Typography fontWeight="bold">{title}</Typography>
+      </Box>
+
+      <Grid container spacing={4}>
+        {/* Active Loans */}
+        <Grid item xs={12} md={6}>
+          <Typography fontWeight="bold" mb={1}>
+            Active Loans :
+          </Typography>
+
+          <Table size="small">
+            <TableBody>
+              <TableRow>
+                <TableCell>Target Collections :</TableCell>
+                <TableCell align="right">
+                  {data?.ACTIVE?.targetCollections?.toLocaleString() || 0}
+                </TableCell>
+              </TableRow>
+
+              <TableRow>
+                <TableCell>Received Collections :</TableCell>
+                <TableCell align="right">
+                  {data?.ACTIVE?.receivedCollections?.toLocaleString() || 0}
+                </TableCell>
+              </TableRow>
+
+              <TableRow>
+                <TableCell>Collections Balance :</TableCell>
+                <TableCell align="right">
+                  {data?.ACTIVE?.balanceCollections?.toLocaleString() || 0}
+                </TableCell>
+              </TableRow>
+            </TableBody>
+          </Table>
+        </Grid>
+
+        {/* Matured Loans */}
+        <Grid item xs={12} md={6}>
+          <Typography fontWeight="bold" mb={1}>
+            Matured Loans :
+          </Typography>
+
+          <Table size="small">
+            <TableBody>
+              <TableRow>
+                <TableCell>Target Collections :</TableCell>
+                <TableCell align="right">
+                  {data?.MATURED?.targetCollections?.toLocaleString() || 0}
+                </TableCell>
+              </TableRow>
+
+              <TableRow>
+                <TableCell>Received Collections :</TableCell>
+                <TableCell align="right">
+                  {data?.MATURED?.receivedCollections?.toLocaleString() || 0}
+                </TableCell>
+              </TableRow>
+
+              <TableRow>
+                <TableCell>Collections Balance :</TableCell>
+                <TableCell align="right">
+                  {data?.MATURED?.balanceCollections?.toLocaleString() || 0}
+                </TableCell>
+              </TableRow>
+            </TableBody>
+          </Table>
+        </Grid>
+      </Grid>
+    </Box>
+  );
 
   return (
-    <Box sx={{ p: 2, backgroundColor: "#f9f9f9", minHeight: "100vh" }}>
-      {/* Top Controls */}
-      <Paper sx={{ p: 2, mb: 3 }}>
+    <Box p={2}>
+      {/* Filters */}
+      <Paper sx={{ p: 2, mb: 2 }}>
         <Grid container spacing={2} alignItems="center">
-          <Grid item>
-            <FormControl component="fieldset">
-              <RadioGroup
-                row
-                value={useDateRange ? "date" : "all"}
-                onChange={(e) => setUseDateRange(e.target.value === "date")}
-              >
-                <FormControlLabel value="all" control={<Radio />} label="All" />
-                <FormControlLabel value="date" control={<Radio />} label="Date Range" />
-              </RadioGroup>
-            </FormControl>
-          </Grid>
-
-          <Grid item>
+          <Grid item xs={12} sm={3}>
             <TextField
-              label="From"
               type="date"
-              size="small"
+              label="From Date"
+              fullWidth
+              InputLabelProps={{ shrink: true }}
               value={fromDate}
               onChange={(e) => setFromDate(e.target.value)}
-              disabled={!useDateRange}
-              InputLabelProps={{ shrink: true }}
             />
           </Grid>
 
-          <Grid item>
+          <Grid item xs={12} sm={3}>
             <TextField
-              label="To"
               type="date"
-              size="small"
+              label="To Date"
+              fullWidth
+              InputLabelProps={{ shrink: true }}
               value={toDate}
               onChange={(e) => setToDate(e.target.value)}
-              disabled={!useDateRange}
-              InputLabelProps={{ shrink: true }}
             />
           </Grid>
 
-          <Grid item xs>
-            <FormControlLabel
-              control={
-                <Checkbox
-                  checked={excludeDividends}
-                  onChange={(e) => setExcludeDividends(e.target.checked)}
-                />
-              }
-              label="Exclude Dividends"
-            />
-            <FormControlLabel
-              control={
-                <Checkbox
-                  checked={accruedRevenues}
-                  onChange={(e) => setAccruedRevenues(e.target.checked)}
-                />
-              }
-              label="Accrued Revenues"
-            />
-          </Grid>
-
-          <Grid item>
-            <Button 
-              variant="contained" 
-              color="primary" 
-              onClick={fetchReport} 
-              sx={{ mr: 1 }}
+          <Grid item xs={12} sm={2}>
+            <Button
+              variant="contained"
+              fullWidth
+              onClick={fetchReport}
+              disabled={loading}
             >
-              Generate
+              {loading ? <CircularProgress size={24} /> : "Generate"}
             </Button>
-            <IconButton><PrintIcon /></IconButton>
-            <IconButton><ExcelIcon /></IconButton>
-            <IconButton><PdfIcon /></IconButton>
           </Grid>
         </Grid>
       </Paper>
 
-      {/* Report Content */}
-      {loading ? (
-        <Box display="flex" justifyContent="center" py={8}>
-          <CircularProgress />
-        </Box>
-      ) : error ? (
-        <Alert severity="error" sx={{ mb: 3 }}>{error}</Alert>
-      ) : (
-        <Paper sx={{ p: 4, backgroundColor: "white", boxShadow: 2 }}>
-          {/* Header */}
-          <Typography variant="h5" align="center" fontWeight="bold">
+      {/* Report */}
+      <Paper
+        elevation={3}
+        sx={{
+          p: 4,
+          minHeight: "70vh",
+          backgroundColor: "#fff",
+        }}
+      >
+        {/* Header */}
+        <Box textAlign="center" mb={4}>
+          <Typography variant="h4" fontWeight="bold">
             SRI BALAJI ENTERPRISES
           </Typography>
-          <Typography align="center" gutterBottom>
-            Madhura Nagar, Hyderabad.
-          </Typography>
-          <Typography align="right" sx={{ mb: 3 }}>
-            Date: {dayjs().format("DD-MMM-YYYY")}
+
+          <Typography variant="h6">
+            YellaReddy Guda, Hyderabad.
           </Typography>
 
-          <Typography variant="h6" align="center" sx={{ mb: 4 }}>
-            Business Overview From{" "}
-            {useDateRange 
-              ? dayjs(fromDate).format("DD-MMM-YYYY") 
-              : "All"} To{" "}
-            {useDateRange 
-              ? dayjs(toDate).format("DD-MMM-YYYY") 
-              : "All"}
+          <Typography mt={3} fontWeight="bold">
+            Business Collections Report From{" "}
+            {dayjs(fromDate).format("DD-MMM-YYYY")} To{" "}
+            {dayjs(toDate).format("DD-MMM-YYYY")}
           </Typography>
 
-          {/* Loans Disbursed Information */}
-          <Typography variant="subtitle1" sx={{ fontWeight: "bold", mb: 1 }}>
-            Loans Disbursed Information :
+          <Typography mt={1}>
+            Date : {dayjs().format("DD-MMM-YYYY")}
           </Typography>
+        </Box>
 
-          <TableContainer component={Paper} variant="outlined" sx={{ mb: 5 }}>
-            <Table>
-              <TableHead>
-                <TableRow sx={{ backgroundColor: "#e3f2fd" }}>
-                  <TableCell><strong>Loan Type</strong></TableCell>
-                  <TableCell align="right"><strong>Loans Disbursed (A)</strong></TableCell>
-                  <TableCell align="right"><strong>Interest Receivable (B)</strong></TableCell>
-                  <TableCell align="right"><strong>Total (A+B)</strong></TableCell>
-                  <TableCell align="right"><strong>Loans Paid (X)</strong></TableCell>
-                  <TableCell align="right"><strong>Interest Paid (Y)</strong></TableCell>
-                  <TableCell align="right"><strong>Total (X+Y)</strong></TableCell>
-                </TableRow>
-              </TableHead>
-              <TableBody>
-                {loanData.map((loan, index) => (
-                  <TableRow key={index}>
-                    <TableCell>{loan.loanType === "DAILY_FINANCE" ? "DF" : "MF"}</TableCell>
-                    <TableCell align="right">{Number(loan.loansDisbursed || 0).toLocaleString()}</TableCell>
-                    <TableCell align="right">{Number(loan.interestReceivable || 0).toLocaleString()}</TableCell>
-                    <TableCell align="right">
-                      {Number(loan.sumOfLoansDisbursedAndInterestReceivable || 0).toLocaleString()}
-                    </TableCell>
-                    <TableCell align="right">{Number(loan.loansPaid || 0).toLocaleString()}</TableCell>
-                    <TableCell align="right">{Number(loan.interestPaid || 0).toLocaleString()}</TableCell>
-                    <TableCell align="right">
-                      {loan.sumOfloansPaidAndInterestPaid 
-                        ? Number(loan.sumOfloansPaidAndInterestPaid).toLocaleString() 
-                        : "0"}
-                    </TableCell>
-                  </TableRow>
-                ))}
+        <Divider sx={{ mb: 3 }} />
 
-                <TableRow sx={{ backgroundColor: "#e3f2fd", fontWeight: "bold" }}>
-                  <TableCell><strong>Total</strong></TableCell>
-                  <TableCell align="right"><strong>{totalLoansDisbursed.toLocaleString()}</strong></TableCell>
-                  <TableCell align="right"><strong>{totalInterestReceivable.toLocaleString()}</strong></TableCell>
-                  <TableCell align="right"><strong>{(totalLoansDisbursed + totalInterestReceivable).toLocaleString()}</strong></TableCell>
-                  <TableCell align="right"><strong>{totalLoansPaid.toLocaleString()}</strong></TableCell>
-                  <TableCell align="right"><strong>{totalInterestPaid.toLocaleString()}</strong></TableCell>
-                  <TableCell align="right"><strong>{(totalLoansPaid + totalInterestPaid).toLocaleString()}</strong></TableCell>
-                </TableRow>
-              </TableBody>
-            </Table>
-          </TableContainer>
-
-          {/* Revenues */}
-          <Box>
-            <Grid container justifyContent="space-between" sx={{ mb: 1 }}>
-              <Typography variant="subtitle1" fontWeight="bold">REVENUES</Typography>
-              <Typography variant="subtitle1" fontWeight="bold">
-                Total: ₹{totalRevenues.toLocaleString()}
-              </Typography>
-            </Grid>
-
-            <TableContainer component={Paper} variant="outlined">
-              <Table size="small">
-                <TableBody>
-                  {revenues.filter(r => r.type === "REVENUES").map((rev, index) => (
-                    <TableRow key={index}>
-                      <TableCell>1</TableCell>
-                      <TableCell>{rev.code}</TableCell>
-                      <TableCell align="right">₹{Number(rev.amount || 0).toLocaleString()}</TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </TableContainer>
+        {/* Loading */}
+        {loading ? (
+          <Box textAlign="center" mt={10}>
+            <CircularProgress />
           </Box>
-
-          <Typography align="center" sx={{ mt: 5, color: "#666" }}>
-            Page 1 of 1
-          </Typography>
-        </Paper>
-      )}
+        ) : (
+          <>
+            {renderSection("DF", groupedData.DAILY_FINANCE)}
+            {renderSection("MF", groupedData.MONTHLY_FINANCE)}
+          </>
+        )}
+      </Paper>
     </Box>
   );
 };
