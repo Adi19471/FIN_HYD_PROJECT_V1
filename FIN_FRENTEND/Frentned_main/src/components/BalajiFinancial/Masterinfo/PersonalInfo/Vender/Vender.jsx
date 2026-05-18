@@ -33,6 +33,7 @@ import {
 import { successToast, errorToast } from "toastify";
 import { API_BASE } from "lib/config";
 import LoadingSpinner from "src/LoadingSpinner";
+import ReportToolbar from "../../../ReportsAll/ReportToolbar";
 
 const TYPE_LABELS = {
   CUSTOMER: "Customer",
@@ -275,6 +276,18 @@ const Vender = ({ personType = "CUSTOMER" }) => {
   return (
     <Box sx={{ mt: 2 }}>
       {/* Header */}
+      <ReportToolbar
+              data={filteredRows}
+              columns={[
+                "id",
+                "firstname",
+                "lastname",
+                "mobile",
+                "address",
+              ]}
+              fileName={`${personType}_Report`}
+              tableId="customerReportTable"
+            />
       <Box sx={{ display: "flex", justifyContent: "space-between", mb: 3, alignItems: "center" }}>
         <Typography variant="h5">{TYPE_LABELS[personType]}s</Typography>
 
