@@ -12,6 +12,7 @@ import { Person, Work, Groups, Storefront } from "@mui/icons-material";
 
 import LoadingSpinner from "../../../../LoadingSpinner";
 
+
 // Lazy load each tab's component for faster initial page load
 const Customer = lazy(() => import("./Custmer/Custmer"));
 const PartnerComponent = lazy(() => import("./Partner/Partner"));
@@ -57,6 +58,8 @@ const MainPersonalFile = () => {
         minHeight: "100vh",
       }}
     >
+
+  
       {/* Paper Card */}
       <Paper
         elevation={6}
@@ -117,6 +120,7 @@ const MainPersonalFile = () => {
           ) : (
             <SelectedComponent personType={tabs[value].type} />
           )}
+        
         </Box>
       </Paper>
     </Box>

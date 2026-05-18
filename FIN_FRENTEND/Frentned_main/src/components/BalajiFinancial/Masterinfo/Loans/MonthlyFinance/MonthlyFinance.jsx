@@ -32,6 +32,7 @@ import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
 import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
 import { DateTimePicker } from "@mui/x-date-pickers/DateTimePicker";
 import dayjs from "dayjs";
+import ReportToolbar from "../../../ReportsAll/ReportToolbar";
 
 
 const FIXED_DURATION_MONTHS = 10;
@@ -615,6 +616,26 @@ const MonthlyFinance = () => {
 
   return (
     <LocalizationProvider dateAdapter={AdapterDayjs}>
+
+   <ReportToolbar
+  data={filteredRows}
+  columns={[
+    "id",
+    "customerName",
+    "amount",
+    "interestRate",
+    "interestAmount",
+    "installment",
+    "startDate",
+    "endDate",
+    "g1Name",
+    "g2Name",
+    "g3Name",
+    "partnerId",
+  ]}
+  fileName="Monthly_Finance_Report"
+  tableId="monthlyFinanceTable"
+/>
       <Box sx={{ p: 3 }}>
 
         <Box
