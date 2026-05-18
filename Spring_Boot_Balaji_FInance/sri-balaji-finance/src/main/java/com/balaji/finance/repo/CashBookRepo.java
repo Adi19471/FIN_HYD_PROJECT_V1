@@ -18,6 +18,7 @@ import com.balaji.finance.dto.CustomerTransactionsProjection;
 import com.balaji.finance.dto.DateWiseCashBookProjection;
 import com.balaji.finance.dto.DateWiseCollectionsProjection;
 import com.balaji.finance.dto.LoanCollectionProjection;
+import com.balaji.finance.dto.PartnerCreditSummaryProjection;
 import com.balaji.finance.dto.RevenueExpenseProjection;
 import com.balaji.finance.dto.SumOfCreditsAndDebitsProjection;
 import com.balaji.finance.dto.SummaryByParticularsProjection;
@@ -412,5 +413,73 @@ public interface CashBookRepo extends JpaRepository<CashBook, Long> {
 	List<CashBookProjection> getCreditSummary(@Param("accountMasterCode") List<String> accountMasterCode,
 			@Param("fromDate") LocalDateTime from, @Param("toDate") LocalDateTime to,
 			@Param("loanStatus") String loanStatus);
+	
+	
+
+	@Query("""
+		    SELECT
+		        COALESCE(SUM(cb.credit), 0)
+		    FROM CashBook cb
+		         JOIN cb.personalInfo personalInfo
+		    WHERE cb.accountMasterCode IN :accountMasterCode
+		      AND cb.transDate BETWEEN :fromDate AND :toDate
+		      AND personalInfo.personalInfoId IN :personalInfoId
+		""")
+		BigDecimal getCreditOfAccountCodeDateRange(
+		        @Param("accountMasterCode") List<String> accountMasterCode,
+		        @Param("personalInfoId") List<String> personalInfoId,
+		        @Param("fromDate") LocalDateTime from,
+		        @Param("toDate") LocalDateTime to);
+
+	@Query("""
+		    SELECT
+		        COALESCE(SUM(cb.credit), 0)
+		    FROM CashBook cb
+		         JOIN cb.personalInfo personalInfo
+		    WHERE cb.accountMasterCode IN :accountMasterCode
+		      AND personalInfo.personalInfoId IN :personalInfoId
+		""")
+		BigDecimal getCreditOfAccountCode(
+		        @Param("accountMasterCode") List<String> accountMasterCode,
+		        @Param("personalInfoId") List<String> personalInfoId);
+	
+	
+	@Query("""
+	        SELECT
+	            personalInfo.personalInfoId AS personalInfoId,
+
+	            COALESCE(SUM(cb.credit), 0) AS totalCredit
+
+	        FROM CashBook cb
+	             JOIN cb.personalInfo personalInfo
+
+	        WHERE cb.accountMasterCode IN :accountMasterCodes
+	          AND cb.transDate BETWEEN :fromDate AND :toDate
+	          AND personalInfo.personalInfoId IN :personalInfoIds
+
+	        GROUP BY personalInfo.personalInfoId
+			""")
+	List<PartnerCreditSummaryProjection> getCreditOfAccountCodeForEveryPartnerDaterange(
+			@Param("accountMasterCodes") List<String> accountMasterCodes,
+			@Param("personalInfoIds") List<String> personalInfoIds, @Param("fromDate") LocalDateTime from,
+			@Param("toDate") LocalDateTime to);
+	
+	@Query("""
+	        SELECT
+	            personalInfo.personalInfoId AS personalInfoId,
+
+	            COALESCE(SUM(cb.credit), 0) AS totalCredit
+
+	        FROM CashBook cb
+	             JOIN cb.personalInfo personalInfo
+
+	        WHERE cb.accountMasterCode IN :accountMasterCodes
+	          AND personalInfo.personalInfoId IN :personalInfoIds
+
+	        GROUP BY personalInfo.personalInfoId
+	        """)
+	List<PartnerCreditSummaryProjection> getCreditOfAccountCodeForEveryPartner(
+	        @Param("accountMasterCodes") List<String> accountMasterCodes,
+	        @Param("personalInfoIds") List<String> personalInfoIds);
 
 }

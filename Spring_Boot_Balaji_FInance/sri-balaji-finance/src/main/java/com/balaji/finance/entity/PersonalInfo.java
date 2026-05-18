@@ -12,7 +12,10 @@ import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EntityListeners;
+import jakarta.persistence.FetchType;
 import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 
 @Entity
@@ -95,6 +98,10 @@ public class PersonalInfo {
 
 	@Column(name = "SEQUENCE")
 	private Long sequence;
+	
+	@ManyToOne(fetch = FetchType.LAZY)
+	@JoinColumn(name = "PERSONAL_INFO_MANAGER_ID")
+	private PersonalInfo personalInfoManager;
 
 	@CreatedDate
 	@Column(updatable = false)
@@ -272,6 +279,15 @@ public class PersonalInfo {
 
 	public String getOccupation() {
 		return occupation;
+	}
+
+
+	public PersonalInfo getPersonalInfoManager() {
+		return personalInfoManager;
+	}
+
+	public void setPersonalInfoManager(PersonalInfo personalInfoManager) {
+		this.personalInfoManager = personalInfoManager;
 	}
 
 	public void setOccupation(String occupation) {

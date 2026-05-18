@@ -33,6 +33,7 @@ public class PersonalInfoDto {
 
 	private boolean bussinessexemption;
 	private String introname;
+	private String personalInfoManagerId;
 
 	// ---------- GETTERS & SETTERS ----------
 
@@ -226,6 +227,14 @@ public class PersonalInfoDto {
 
 	public void setIdprooftype(String idprooftype) {
 		this.idprooftype = idprooftype;
+	}
+
+	public String getPersonalInfoManagerId() {
+		return personalInfoManagerId;
+	}
+
+	public void setPersonalInfoManagerId(String personalInfoManagerId) {
+		this.personalInfoManagerId = personalInfoManagerId;
 	}
 
 }

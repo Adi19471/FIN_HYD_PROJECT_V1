@@ -7,6 +7,8 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
+import com.balaji.finance.dto.ManagerDetailsProjection;
+import com.balaji.finance.dto.PersonsUnderManagerProjection;
 import com.balaji.finance.entity.PersonalInfo;
 
 public interface PersonalInfoRepository extends JpaRepository<PersonalInfo, String> {
@@ -36,4 +38,52 @@ public interface PersonalInfoRepository extends JpaRepository<PersonalInfo, Stri
 			""")
 	public List<PersonalInfo> personalInfoAutoComplete(@Param("status") boolean status,
 			@Param("keyword") String keyWord, @Param("categoryList") List<String> categoryList);
+	
+	
+	
+	@Query(value = """
+			    SELECT
+			        m.PERSONAL_INFO_ID AS managerId,
+			        m.FIRST_NAME AS managerName,
+			        m.LAST_NAME AS managerLastName,
+			        COALESCE(SUM(p.SHARES), 0) AS noOfSharesUnderManager,
+			        GROUP_CONCAT(p.PERSONAL_INFO_ID ORDER BY p.PERSONAL_INFO_ID SEPARATOR ',') AS partnerIds
+			    FROM personal_info p
+			    JOIN personal_info m
+			        ON p.PERSONAL_INFO_MANAGER_ID = m.PERSONAL_INFO_ID
+			    GROUP BY
+			        m.PERSONAL_INFO_ID,
+			        m.FIRST_NAME,
+			        m.LAST_NAME
+			""", nativeQuery = true)
+	List<ManagerDetailsProjection> findManagerDetails();
+	
+	
+	
+	
+	@Query(value = """
+	        SELECT
+	            m.personal_info_id AS id,
+	            m.first_name AS firstName,
+	            m.last_name AS lastName,
+	            NULL AS shares
+	        FROM personal_info m
+	        WHERE m.personal_info_id = :personalInfoId
+
+	        UNION ALL
+
+	        SELECT
+	            p.personal_info_id AS id,
+	            p.first_name AS firstName,
+	            p.last_name AS lastName,
+	            p.shares AS shares
+	        FROM personal_info p
+	        WHERE p.personal_info_manager_id = :personalInfoId
+
+	        ORDER BY id
+	        """, nativeQuery = true)
+	List<PersonsUnderManagerProjection> findPersonsUnderManager(
+	        @Param("personalInfoId") String personalInfoId);
+	
+	
 }

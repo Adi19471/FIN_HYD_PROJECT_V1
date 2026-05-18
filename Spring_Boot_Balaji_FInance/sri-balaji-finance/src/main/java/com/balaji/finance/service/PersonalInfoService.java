@@ -1,6 +1,5 @@
 package com.balaji.finance.service;
 
-import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -110,6 +109,12 @@ public class PersonalInfoService {
 		personalInfo.setCategory(type);
 		personalInfo.setDisable(personalInfoDto.isDisable());
 		
+		
+		Optional<PersonalInfo> manager = personalInfoRepository.findById(personalInfoDto.getPersonalInfoManagerId());
+		if (manager.isPresent()) {
+			personalInfo.setPersonalInfoManager(manager.get());
+		}
+
 		personalInfoRepository.save(personalInfo);
 
 		return "Sucessfully Saved ";
@@ -157,7 +162,13 @@ public class PersonalInfoService {
 			personalInfo.setOldId(personalInfoDto.getOldid());
 			personalInfo.setDisable(personalInfoDto.isDisable());
 			
-			
+
+			Optional<PersonalInfo> manager = personalInfoRepository.findById(personalInfoDto.getPersonalInfoManagerId());
+			if (manager.isPresent()) {
+				personalInfo.setPersonalInfoManager(manager.get());
+			}else {
+				personalInfo.setPersonalInfoManager(null);
+			}
 			
 			personalInfoRepository.save(personalInfo);
 
@@ -240,6 +251,10 @@ public class PersonalInfoService {
 			personalInfoDto.setCategory(p.getCategory());
 			personalInfoDto.setDisable(p.isDisable());
 			
+			personalInfoDto.setPersonalInfoManagerId(p.getPersonalInfoManager() != null
+					? p.getPersonalInfoManager().getPersonalInfoId()
+					: null);
+			
 			
 			toBeReturnedDtoList.add(personalInfoDto);
 
@@ -291,6 +306,9 @@ public class PersonalInfoService {
 			personalInfoDto.setOldid(personalInfoDbObject.getOldId());
 			personalInfoDto.setCategory(personalInfoDbObject.getCategory());
 			personalInfoDto.setDisable(personalInfoDbObject.isDisable());
+			personalInfoDto.setPersonalInfoManagerId(personalInfoDbObject.getPersonalInfoManager() != null
+					? personalInfoDbObject.getPersonalInfoManager().getPersonalInfoId()
+					: null);
 
 			returnList.add(personalInfoDto);
 
@@ -347,6 +365,10 @@ public class PersonalInfoService {
 			personalInfoDto.setOldid(personalInfoDbObject.getOldId());
 			personalInfoDto.setCategory(personalInfoDbObject.getCategory());
 			personalInfoDto.setDisable(personalInfoDbObject.isDisable());
+			
+			personalInfoDto.setPersonalInfoManagerId(personalInfoDbObject.getPersonalInfoManager() != null
+					? personalInfoDbObject.getPersonalInfoManager().getPersonalInfoId()
+					: null);
 
 			return personalInfoDto;
 		

@@ -11,6 +11,8 @@ import org.springframework.data.repository.query.Param;
 import com.balaji.finance.dto.CustomerDuesProjection;
 import com.balaji.finance.dto.CustomerOutstandingProjection;
 import com.balaji.finance.dto.GuarantorDuesProjection;
+import com.balaji.finance.dto.LoanSummaryOfManagerProjection;
+import com.balaji.finance.dto.LoanSummaryOfPartnerProjection;
 import com.balaji.finance.dto.LoanSummaryProjection;
 import com.balaji.finance.dto.LoansGranted;
 import com.balaji.finance.entity.BusinessMember;
@@ -247,5 +249,83 @@ public interface BusinessMemberRepository extends JpaRepository<BusinessMember, 
 			   ORDER BY bm.sequence asc
 			""")
 	List<GuarantorDuesProjection> getAllLoansOnGuarantor(@Param("loanStatus") String loanStatus);
+	
+	@Query("""
+		    SELECT
+		        COUNT(bm.businessMemberId) AS noOfLoans,
+
+		        COALESCE(SUM(bm.amount), 0) AS disbursedAmount,
+
+		        COALESCE(SUM(bm.amount + bm.interest), 0)
+		            AS disbursedAmountWithInterest
+
+		    FROM BusinessMember bm
+		    WHERE bm.partnerId.personalInfoId IN :personalInfoId
+		      AND bm.startDate BETWEEN :fromDate AND :toDate
+		""")
+		LoanSummaryOfManagerProjection getLoanSummaryOfManagerDaterange(
+		        @Param("personalInfoId") List<String> personalInfoId,
+		        @Param("fromDate") LocalDateTime from,
+		        @Param("toDate") LocalDateTime to);
+
+	@Query("""
+		    SELECT
+		        COUNT(bm.businessMemberId) AS noOfLoans,
+
+		        COALESCE(SUM(bm.amount), 0) AS disbursedAmount,
+
+		        COALESCE(SUM(bm.amount + bm.interest), 0)
+		            AS disbursedAmountWithInterest
+
+		    FROM BusinessMember bm
+		    WHERE bm.partnerId.personalInfoId IN :personalInfoId
+		""")
+		LoanSummaryOfManagerProjection getLoanSummaryOfManager(
+		        @Param("personalInfoId") List<String> personalInfoId);
+	
+	
+
+	@Query("""
+	        SELECT
+	            bm.partnerId.personalInfoId AS personalInfoId,
+
+	            COUNT(bm.businessMemberId) AS noOfLoans,
+
+	            COALESCE(SUM(bm.amount), 0) AS disbursedAmount,
+
+	            COALESCE(SUM(bm.amount + bm.interest), 0)
+	                AS disbursedAmountWithInterest
+
+	        FROM BusinessMember bm
+
+	        WHERE bm.partnerId.personalInfoId IN :personalInfoIds
+              AND bm.startDate BETWEEN :fromDate AND :toDate
+	        GROUP BY
+	            bm.partnerId.personalInfoId
+			""")
+	List<LoanSummaryOfPartnerProjection> getLoanSummaryOfPartnerDateRange(
+			@Param("personalInfoIds") List<String> personalInfoIds, @Param("fromDate") LocalDateTime from,
+			@Param("toDate") LocalDateTime to);
+
+	@Query("""
+	        SELECT
+	            bm.partnerId.personalInfoId AS personalInfoId,
+
+	            COUNT(bm.businessMemberId) AS noOfLoans,
+
+	            COALESCE(SUM(bm.amount), 0) AS disbursedAmount,
+
+	            COALESCE(SUM(bm.amount + bm.interest), 0)
+	                AS disbursedAmountWithInterest
+
+	        FROM BusinessMember bm
+
+	        WHERE bm.partnerId.personalInfoId IN :personalInfoIds
+
+	        GROUP BY
+	            bm.partnerId.personalInfoId
+	        """)
+	List<LoanSummaryOfPartnerProjection> getLoanSummaryOfPartner(
+	        @Param("personalInfoIds") List<String> personalInfoIds);
 
 }
