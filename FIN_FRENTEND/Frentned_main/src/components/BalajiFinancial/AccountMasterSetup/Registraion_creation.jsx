@@ -1,6 +1,5 @@
 
 import React, { useEffect, useState } from "react";
-import { DataGrid, GridToolbar } from "@mui/x-data-grid";
 import {
   Button,
   Dialog,
@@ -14,16 +13,13 @@ import {
   Typography,
   CircularProgress,
   Grid,
-  Paper,
   Tooltip,
   InputAdornment,
 } from "@mui/material";
-import AddIcon from "@mui/icons-material/Add";
 import EditIcon from "@mui/icons-material/Edit";
 import DeleteIcon from "@mui/icons-material/Delete";
 import SaveIcon from "@mui/icons-material/Save";
 import CloseIcon from "@mui/icons-material/Close";
-import PersonAddIcon from "@mui/icons-material/PersonAdd";
 import LockIcon from "@mui/icons-material/Lock";
 import PersonIcon from "@mui/icons-material/Person";
 import BadgeIcon from "@mui/icons-material/Badge";
@@ -32,6 +28,8 @@ import axios from "axios";
 import { toast } from "react-toastify";
 import { API_BASE } from "lib/config";
 import { getSession } from "src/utils/session";
+import { DataTable, PageHeader } from "src/components/ui";
+import ReportToolbar from "../ReportsAll/ReportToolbar";
 
 const getHeaders = () => {
   const token =
@@ -55,6 +53,7 @@ const Registration_creation = () => {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [modalOpen, setModalOpen] = useState(false);
+  const [search, setSearch] = useState("");
   const [form, setForm] = useState({
     id: "",
     name: "",
@@ -90,6 +89,14 @@ const Registration_creation = () => {
   useEffect(() => {
     loadUsers();
   }, []);
+
+  const filteredRows = rows.filter((row) => {
+    const term = search.trim().toLowerCase();
+    if (!term) return true;
+    return [row.id, row.name, row.role]
+      .filter(Boolean)
+      .some((value) => value.toString().toLowerCase().includes(term));
+  });
 
   const handleOpen = (row = null) => {
     if (row) {
@@ -254,116 +261,57 @@ const Registration_creation = () => {
   ];
 
   return (
-    <Box p={3}>
-      {/* Header Card */}
-      <Paper 
-        elevation={0} 
-        sx={{ 
-          p: 2, 
-          mb: 2, 
-          borderRadius: 2,
-          border: "1px solid",
-          borderColor: "divider",
-          background: "linear-gradient(135deg, #f8f9fa 0%, #fff 100%)"
-        }}
-      >
-        <Box
-          sx={{
-            display: "flex",
-            justifyContent: "space-between",
-            alignItems: "center",
-          }}
-        >
-          <Box sx={{ display: "flex", alignItems: "center", gap: 1.5 }}>
-            <PersonAddIcon sx={{ color: "primary.main", fontSize: 28 }} />
-            <Typography variant="h5" sx={{ fontWeight: 600, color: "text.primary" }}>
-              User Management
-            </Typography>
-          </Box>
+    <Box>
+      <PageHeader
+        title="User Management"
+        subtitle="Create users, update roles, search records, and export the current register."
+        searchPlaceholder="Search user, role, or ID..."
+        searchValue={search}
+        onSearchChange={setSearch}
+        onAddClick={() => handleOpen()}
+        addButtonLabel="Add New User"
+        totalCount={filteredRows.length}
+        loading={loading || saving}
+        onRefresh={loadUsers}
+      />
 
-          <Button
-            variant="contained"
-            startIcon={<AddIcon />}
-            onClick={() => handleOpen()}
-            disabled={loading || saving}
-            sx={{ 
-              borderRadius: 2,
-              textTransform: "none",
-              px: 2,
-              boxShadow: "0 4px 14px rgba(25, 118, 210, 0.3)"
-            }}
-          >
-            Add New User
-          </Button>
-        </Box>
-      </Paper>
+      <ReportToolbar
+        data={filteredRows}
+        columns={["id", "name", "role"]}
+        fileName="User_Management_Report"
+        tableId="userManagementTable"
+      />
 
-      {/* Data Grid Card */}
-      <Paper 
-        elevation={0}
-        sx={{ 
-          height: 640, 
-          borderRadius: 2,
-          border: "1px solid",
-          borderColor: "divider",
-          overflow: "hidden"
-        }}
-      >
-        {loading ? (
-          <Box height="100%" display="flex" justifyContent="center" alignItems="center">
-            <CircularProgress />
-          </Box>
-        ) : (
-          <DataGrid
-            rows={rows}
-            columns={columns}
-            getRowId={(row) => row.id}
-            loading={loading}
-            disableRowSelectionOnClick
-            pageSizeOptions={[5, 10, 15, 25, 50]}
-            initialState={{
-              pagination: { paginationModel: { pageSize: 10 } },
-            }}
-            slots={{ toolbar: GridToolbar }}
-            slotProps={{
-              toolbar: {
-                showQuickFilter: true,
-                quickFilterProps: { debounceMs: 500 },
-              },
-            }}
-            showCellVerticalBorder
-            showColumnVerticalBorder
-            sx={{
-              border: "none",
-              "& .MuiDataGrid-columnHeaders": {
-                backgroundColor: "primary.main",
-                color: "black",
-                borderBottom: "2px solid primary.dark",
-              },
-              "& .MuiDataGrid-columnHeaderTitle": {
-                fontWeight: 600,
-              },
-              "& .MuiDataGrid-cell": {
-                borderBottom: "1px solid #f0f0f0",
-              },
-              "& .MuiDataGrid-row": {
-                "&:hover": {
-                  backgroundColor: "action.hover",
-                },
-                "&.Mui-selected": {
-                  backgroundColor: "action.selected",
-                },
-              },
-              "& .MuiDataGrid-footerContainer": {
-                borderTop: "2px solid primary.light",
-              },
-              "& .header-cell": {
-                fontWeight: 600,
-              },
-            }}
-          />
-        )}
-      </Paper>
+      <DataTable
+        rows={filteredRows}
+        columns={columns}
+        getRowId={(row) => row.id}
+        loading={loading}
+        height="calc(100vh - 310px)"
+        title="User register"
+        subtitle="Fast search, page numbers, row count, export, print, and density controls."
+      />
+
+      <Box sx={{ display: "none" }}>
+        <table id="userManagementTable">
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Name</th>
+              <th>Role</th>
+            </tr>
+          </thead>
+          <tbody>
+            {filteredRows.map((row) => (
+              <tr key={row.id}>
+                <td>{row.id}</td>
+                <td>{row.name}</td>
+                <td>{row.role}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </Box>
 
       {/* Modal */}
       <Dialog

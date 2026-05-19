@@ -1,317 +1,305 @@
-import React, { useState, useEffect } from "react";
-import { useAuth } from "../utils/AuthContext";
+import React from "react";
 import { useNavigate } from "react-router-dom";
-import { apiFetch } from "../lib/apiClient";
-
 import {
   Box,
-  Typography,
   Button,
-  Card,
-  CardContent,
-  Grid,
-  Stack,
   Chip,
-  Skeleton,
+  Grid,
+  LinearProgress,
+  Paper,
+  Stack,
+  Typography,
 } from "@mui/material";
-
 import {
-  PeopleAltRounded,
-  AutorenewRounded,
+  AccountBalanceRounded,
+  AddCardRounded,
+  ApprovalRounded,
+  ArrowForwardRounded,
   CurrencyRupeeRounded,
-  WarningAmberRounded,
-  TrendingUpRounded,
+  GroupsRounded,
+  LaunchRounded,
   PaymentsRounded,
-  MenuBookRounded,
-  AccountTreeRounded,
-  ReceiptRounded,
-  PersonAddRounded,
   ReceiptLongRounded,
-  TrendingUp as TrendingUpIcon,
-  AccountBalance as LoansIcon,
+  SavingsRounded,
+  TrendingUpRounded,
+  WarningAmberRounded,
 } from "@mui/icons-material";
+import {
+  Area,
+  AreaChart,
+  Bar,
+  BarChart,
+  CartesianGrid,
+  ResponsiveContainer,
+  Tooltip,
+  XAxis,
+  YAxis,
+} from "recharts";
+import { DataTable } from "src/components/ui";
+import { COMPANY_ADDRESS, COMPANY_NAME } from "src/lib/company";
 
-import { motion } from "framer-motion";
-
-// Rupee formatter
-const formatINR = (num) =>
+const formatINR = (value) =>
   new Intl.NumberFormat("en-IN", {
     style: "currency",
     currency: "INR",
     maximumFractionDigits: 0,
-  }).format(num);
+  }).format(value);
 
-// ======================
-// STAT CARD COMPONENT
-// ======================
-function StatCard({
-  title,
-  value,
-  subtitle,
-  icon: Icon,
-  color,
-  bgLight,
-  trend,
-  trendUp = true,
-  alert = false,
-  loading = false,
-  index = 0,
-}) {
-  if (loading) {
-    return (
-      <Card sx={{ borderRadius: 2, height: "100%" }}>
-        <CardContent>
-          <Skeleton height={20} />
-          <Skeleton height={40} />
-        </CardContent>
-      </Card>
-    );
-  }
+const kpis = [
+  { title: "Portfolio Value", label: formatINR(18700000), delta: "+12.4%", icon: AccountBalanceRounded, tone: "#0f62fe" },
+  { title: "Today Collection", label: formatINR(318000), delta: "+8.2%", icon: PaymentsRounded, tone: "#059669" },
+  { title: "Pending Dues", label: formatINR(684000), delta: "42 cases", icon: WarningAmberRounded, tone: "#d97706" },
+  { title: "Active Members", label: "928", delta: "+31 new", icon: GroupsRounded, tone: "#4338ca" },
+];
 
+const modules = [
+  { title: "Customer Master", path: "/customer", note: "Profiles, KYC, search, export", icon: GroupsRounded },
+  { title: "Daily Finance", path: "/Daily-Finace", note: "Daily loan register and filters", icon: CurrencyRupeeRounded },
+  { title: "Monthly Finance", path: "/Monthly-Finance", note: "Monthly loan creation and reports", icon: AccountBalanceRounded },
+  { title: "Quick Cash Book", path: "/Transactions/Quick_Cash_Book", note: "Fast transaction entry", icon: AddCardRounded },
+  { title: "Daily Book", path: "/AccountsModules/DailyBook", note: "Cash movement and day close", icon: ReceiptLongRounded },
+  { title: "Installment Dues", path: "/Loans/InstalmentDues", note: "Dues review and follow-up", icon: ApprovalRounded },
+];
+
+const cashflow = [
+  { month: "Jan", income: 42, expense: 24 },
+  { month: "Feb", income: 48, expense: 26 },
+  { month: "Mar", income: 55, expense: 30 },
+  { month: "Apr", income: 51, expense: 27 },
+  { month: "May", income: 63, expense: 32 },
+  { month: "Jun", income: 71, expense: 35 },
+];
+
+const collections = [
+  { day: "Mon", value: 52 },
+  { day: "Tue", value: 61 },
+  { day: "Wed", value: 48 },
+  { day: "Thu", value: 76 },
+  { day: "Fri", value: 69 },
+  { day: "Sat", value: 82 },
+];
+
+const transactions = [
+  { id: "TXN-1048", customer: "Rajesh Kumar", type: "Receipt", amount: 18000, status: "Posted" },
+  { id: "TXN-1047", customer: "Lakshmi Traders", type: "Loan", amount: 125000, status: "Approval" },
+  { id: "TXN-1046", customer: "Mohan Rao", type: "Installment", amount: 9200, status: "Overdue" },
+  { id: "TXN-1045", customer: "Sri Sai Stores", type: "Cashbook", amount: 44000, status: "Posted" },
+  { id: "TXN-1044", customer: "Venkata Agency", type: "Receipt", amount: 26500, status: "Posted" },
+];
+
+const activity = [
+  "Daily book closed by cashier",
+  "Partner settlement request created",
+  "Receipt ledger exported to Excel",
+  "Customer KYC updated",
+];
+
+function KpiCard({ item }) {
+  const Icon = item.icon;
   return (
-    <motion.div
-      style={{ width: "100%" }}
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ delay: index * 0.08 }}
-    >
-      <Card
-        sx={{
-          borderRadius: 2,
-          height: "100%",
-          display: "flex",
-          flexDirection: "column",
-          justifyContent: "space-between",
-          border: `1px solid ${bgLight}`,
-          transition: "0.2s",
-          "&:hover": {
-            transform: "translateY(-5px)",
-            boxShadow: `0 10px 25px ${bgLight}`,
-          },
-        }}
-      >
-        <Box sx={{ height: 4, bgcolor: color }} />
-
-        <CardContent sx={{ flexGrow: 1 }}>
-          <Stack direction="row" justifyContent="space-between">
-            <Box>
-              <Typography variant="caption" sx={{ fontWeight: 600 }}>
-                {title}
-              </Typography>
-
-              <Typography
-                variant="h6"
-                sx={{
-                  fontWeight: 700,
-                  color: alert ? "error.main" : "#1e293b",
-                }}
-              >
-                {value}
-              </Typography>
-
-              <Typography variant="caption">
-                {subtitle}
-              </Typography>
-            </Box>
-
-            <Box
-              sx={{
-                bgcolor: bgLight,
-                color,
-                borderRadius: 2,
-                width: 40,
-                height: 40,
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-              }}
-            >
-              <Icon />
-            </Box>
-          </Stack>
-
-          {trend !== undefined && (
-            <Chip
-              size="small"
-              icon={
-                <TrendingUpRounded
-                  sx={{ transform: trendUp ? "none" : "rotate(180deg)" }}
-                />
-              }
-              label={`${trendUp ? "+" : ""}${trend}%`}
-              color={trendUp ? "success" : "error"}
-              sx={{ mt: 2 }}
-            />
-          )}
-        </CardContent>
-      </Card>
-    </motion.div>
-  );
-}
-
-// ======================
-// QUICK BUTTON
-// ======================
-function QuickActionButton({ icon: Icon, label, onClick, color }) {
-  return (
-    <Button
-      variant="contained"
-      startIcon={<Icon />}
-      onClick={onClick}
-      sx={{
-        bgcolor: color,
-        fontSize: "0.75rem",
-        textTransform: "none",
-        borderRadius: 2,
-      }}
-    >
-      {label}
-    </Button>
-  );
-}
-
-// ======================
-// MAIN DASHBOARD
-// ======================
-export default function Dashboard() {
-  const { user } = useAuth();
-  const navigate = useNavigate();
-
-  const [loading, setLoading] = useState(false);
-
-  const stats = {
-    totalMembers: 1341,
-    activeMembers: 928,
-    runningChits: 862,
-    chitValue: 18700000,
-    todayCollection: 318000,
-    pendingDues: 684000,
-    totalLoans: 245,
-  };
-
-  return (
-    <Box sx={{ p: 3 }}>
-      {/* QUICK ACTIONS */}
-      <Typography variant="h6" sx={{ mb: 2 }}>
-        Quick Actions
-      </Typography>
-
-      <Stack direction="row" spacing={2} sx={{ mb: 4 }}>
-        <QuickActionButton
-          icon={PersonAddRounded}
-          label="Add Member"
-          onClick={() => navigate("/Main_personal_file")}
-          color="#0ea5e9"
-        />
-        <QuickActionButton
-          icon={AccountTreeRounded}
-          label="New Chit"
-          onClick={() => navigate("/Loan")}
-          color="#8b5cf6"
-        />
-        <QuickActionButton
-          icon={MenuBookRounded}
-          label="Cashbook"
-          onClick={() => navigate("/Transactions/Cashbook")}
-          color="#10b981"
-        />
-
-          <QuickActionButton
-            icon={PersonAddRounded}
-            label="Add Member"
-            onClick={() => navigate("/Main_personal_file")}
-            color="#0ea5e9"
-          />
-          <QuickActionButton
-            icon={AccountTreeRounded}
-            label="New Chit"
-            onClick={() => navigate("/Loan")}
-            color="#8b5cf6"
-          />
-          <QuickActionButton
-            icon={MenuBookRounded}
-            label="Cashbook"
-            onClick={() => navigate("/Transactions/Cashbook")}
-            color="#10b981"
-          />
-          <QuickActionButton
-            icon={ReceiptLongRounded}
-            label="Registration"
-            onClick={() => navigate("/AccountMasterSetup/Registraion_creation")}
-            color="#f59e0b"
-          />
-          <QuickActionButton
-            icon={ReceiptRounded}
-            label="Daily Book"
-            onClick={() => navigate("/AccountsModules/DailBook")}
-            color="#ec4899"
-          />
+    <Paper className="enterprise-card dashboard-kpi" elevation={0}>
+      <Stack direction="row" justifyContent="space-between" alignItems="flex-start">
+        <Box>
+          <Typography variant="body2" color="text.secondary">{item.title}</Typography>
+          <Typography variant="h5" sx={{ mt: 0.75 }}>{item.label}</Typography>
+        </Box>
+        <Box className="dashboard-kpi-icon" sx={{ color: item.tone, bgcolor: `${item.tone}18` }}>
+          <Icon />
+        </Box>
       </Stack>
+      <Stack direction="row" spacing={1} alignItems="center" sx={{ mt: 2 }}>
+        <Chip size="small" label={item.delta} color={item.tone === "#d97706" ? "warning" : "success"} />
+        <Typography variant="caption" color="text.secondary">vs last cycle</Typography>
+      </Stack>
+    </Paper>
+  );
+}
 
-      {/* KPI */}
-      <Typography variant="h6" sx={{ mb: 2 }}>
-        KPI Cards
-      </Typography>
+function Panel({ title, subtitle, action, children }) {
+  return (
+    <Paper className="enterprise-card dashboard-panel" elevation={0}>
+      <Stack direction="row" justifyContent="space-between" alignItems="flex-start" spacing={2} sx={{ mb: 2 }}>
+        <Box>
+          <Typography variant="h6">{title}</Typography>
+          <Typography variant="body2" color="text.secondary">{subtitle}</Typography>
+        </Box>
+        {action}
+      </Stack>
+      {children}
+    </Paper>
+  );
+}
 
-      <Grid container spacing={2} alignItems="stretch">
-        {[
-          {
-            title: "Total Members",
-            value: stats.totalMembers,
-            icon: PeopleAltRounded,
-            color: "#0ea5e9",
-            bg: "#e0f2fe",
-          },
-          {
-            title: "Running Chits",
-            value: stats.runningChits,
-            icon: AutorenewRounded,
-            color: "#8b5cf6",
-            bg: "#ede9fe",
-          },
-          {
-            title: "Chit Value",
-            value: formatINR(stats.chitValue),
-            icon: CurrencyRupeeRounded,
-            color: "#10b981",
-            bg: "#d1fae5",
-          },
-          {
-            title: "Today's Collection",
-            value: formatINR(stats.todayCollection),
-            icon: PaymentsRounded,
-            color: "#f59e0b",
-            bg: "#fef3c7",
-          },
-          {
-            title: "Pending Dues",
-            value: formatINR(stats.pendingDues),
-            icon: WarningAmberRounded,
-            color: "#ef4444",
-            bg: "#fee2e2",
-          },
-          {
-            title: "Total Loans",
-            value: stats.totalLoans,
-            icon: LoansIcon,
-            color: "#059669",
-            bg: "#d1fae5",
-          },
-        ].map((card, i) => (
-          <Grid item xs={12} sm={6} md={4} lg={2} key={i} sx={{ display: "flex" }}>
-            <StatCard
-              title={card.title}
-              value={card.value}
-              subtitle="Overview"
-              icon={card.icon}
-              color={card.color}
-              bgLight={card.bg}
-              index={i}
-              loading={loading}
-            />
+export default function Dashboard() {
+  const navigate = useNavigate();
+  const openInNewTab = (path) => window.open(path, "_blank", "noopener,noreferrer");
+
+  const transactionColumns = [
+    { field: "id", headerName: "Txn ID", width: 120 },
+    { field: "customer", headerName: "Customer", minWidth: 190, flex: 1 },
+    { field: "type", headerName: "Type", width: 130 },
+    {
+      field: "amount",
+      headerName: "Amount",
+      width: 140,
+      valueFormatter: (value) => formatINR(Number(value || 0)),
+    },
+    {
+      field: "status",
+      headerName: "Status",
+      width: 125,
+      renderCell: (params) => (
+        <span className={`finance-status ${params.value === "Posted" ? "success" : params.value === "Approval" ? "warning" : "error"}`}>
+          {params.value}
+        </span>
+      ),
+    },
+  ];
+
+  return (
+    <Stack spacing={2.5}>
+      <Paper className="enterprise-card dashboard-hero" elevation={0}>
+        <Stack direction={{ xs: "column", lg: "row" }} spacing={2.5} justifyContent="space-between" alignItems={{ lg: "center" }}>
+          <Box>
+            <Chip size="small" label={COMPANY_ADDRESS} color="primary" sx={{ mb: 1.5 }} />
+            <Typography variant="h3">{COMPANY_NAME}</Typography>
+            <Typography variant="body1" color="text.secondary" sx={{ mt: 1, maxWidth: 780 }}>
+              One admin workspace for collections, dues, ledgers, loans, reports, and daily cash operations.
+            </Typography>
+          </Box>
+          <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
+            <Button startIcon={<AddCardRounded />} variant="contained" onClick={() => navigate("/Transactions/Quick_Cash_Book")}>
+              Quick Entry
+            </Button>
+            <Button startIcon={<ReceiptLongRounded />} variant="outlined" onClick={() => navigate("/AccountsModules/DailyBook")}>
+              Daily Book
+            </Button>
+            <Button startIcon={<ApprovalRounded />} variant="outlined" onClick={() => navigate("/Loans/InstalmentDues")}>
+              Dues Review
+            </Button>
+          </Stack>
+        </Stack>
+      </Paper>
+
+      <Grid container spacing={2}>
+        {kpis.map((item) => (
+          <Grid item xs={12} sm={6} lg={3} key={item.title}>
+            <KpiCard item={item} />
           </Grid>
         ))}
       </Grid>
-    </Box>
+
+      <Grid container spacing={2}>
+        {modules.map((module) => {
+          const Icon = module.icon;
+          return (
+            <Grid item xs={12} sm={6} lg={4} key={module.path}>
+              <Paper className="enterprise-card dashboard-module" elevation={0}>
+                <Stack direction="row" spacing={1.5} alignItems="flex-start">
+                  <Box className="dashboard-module-icon"><Icon /></Box>
+                  <Box sx={{ minWidth: 0, flex: 1 }}>
+                    <Typography variant="subtitle1">{module.title}</Typography>
+                    <Typography variant="body2" color="text.secondary">{module.note}</Typography>
+                    <Stack direction="row" spacing={1} sx={{ mt: 1.4 }}>
+                      <Button size="small" variant="contained" onClick={() => navigate(module.path)}>Open</Button>
+                      <Button size="small" variant="outlined" startIcon={<LaunchRounded />} onClick={() => openInNewTab(module.path)}>
+                        New Tab
+                      </Button>
+                    </Stack>
+                  </Box>
+                </Stack>
+              </Paper>
+            </Grid>
+          );
+        })}
+      </Grid>
+
+      <Grid container spacing={2}>
+        <Grid item xs={12} lg={8}>
+          <Panel title="Revenue And Expense Trend" subtitle="Monthly movement in lakh INR">
+            <Box sx={{ height: 300 }}>
+              <ResponsiveContainer width="100%" height="100%">
+                <AreaChart data={cashflow}>
+                  <defs>
+                    <linearGradient id="income" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor="#0f62fe" stopOpacity={0.32} />
+                      <stop offset="95%" stopColor="#0f62fe" stopOpacity={0.02} />
+                    </linearGradient>
+                    <linearGradient id="expense" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor="#d97706" stopOpacity={0.28} />
+                      <stop offset="95%" stopColor="#d97706" stopOpacity={0.02} />
+                    </linearGradient>
+                  </defs>
+                  <CartesianGrid strokeDasharray="3 3" vertical={false} opacity={0.35} />
+                  <XAxis dataKey="month" />
+                  <YAxis />
+                  <Tooltip />
+                  <Area type="monotone" dataKey="income" stroke="#0f62fe" fill="url(#income)" strokeWidth={3} />
+                  <Area type="monotone" dataKey="expense" stroke="#d97706" fill="url(#expense)" strokeWidth={3} />
+                </AreaChart>
+              </ResponsiveContainer>
+            </Box>
+          </Panel>
+        </Grid>
+
+        <Grid item xs={12} lg={4}>
+          <Panel title="Weekly Collections" subtitle="Collection performance index">
+            <Box sx={{ height: 300 }}>
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={collections}>
+                  <XAxis dataKey="day" />
+                  <YAxis hide />
+                  <Tooltip />
+                  <Bar dataKey="value" fill="var(--brand-success)" radius={[8, 8, 0, 0]} />
+                </BarChart>
+              </ResponsiveContainer>
+            </Box>
+          </Panel>
+        </Grid>
+      </Grid>
+
+      <Grid container spacing={2}>
+        <Grid item xs={12} lg={8}>
+          <DataTable
+            rows={transactions}
+            columns={transactionColumns}
+            height={430}
+            title="Recent Transactions"
+            subtitle="Shared table format with search, filters, export, print, pagination, and total count."
+            pageSize={10}
+            actions={<Button size="small" endIcon={<ArrowForwardRounded />} onClick={() => navigate("/Customer/Customer_Transactions")}>View All</Button>}
+          />
+        </Grid>
+
+        <Grid item xs={12} lg={4}>
+          <Panel title="Approval Health" subtitle="Workflow and audit status">
+            <Stack spacing={2}>
+              <Box>
+                <Stack direction="row" justifyContent="space-between">
+                  <Typography variant="body2">Loan approvals</Typography>
+                  <Typography variant="body2" fontWeight={900}>74%</Typography>
+                </Stack>
+                <LinearProgress variant="determinate" value={74} sx={{ mt: 1, height: 8, borderRadius: 99 }} />
+              </Box>
+              <Box>
+                <Stack direction="row" justifyContent="space-between">
+                  <Typography variant="body2">Collection closure</Typography>
+                  <Typography variant="body2" fontWeight={900}>89%</Typography>
+                </Stack>
+                <LinearProgress variant="determinate" value={89} color="success" sx={{ mt: 1, height: 8, borderRadius: 99 }} />
+              </Box>
+              <Stack spacing={1.2} sx={{ pt: 1 }}>
+                {activity.map((item) => (
+                  <Stack key={item} direction="row" spacing={1.2} alignItems="center">
+                    <SavingsRounded color="primary" fontSize="small" />
+                    <Typography variant="body2">{item}</Typography>
+                  </Stack>
+                ))}
+              </Stack>
+            </Stack>
+          </Panel>
+        </Grid>
+      </Grid>
+    </Stack>
   );
 }

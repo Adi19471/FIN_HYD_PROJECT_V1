@@ -10,6 +10,7 @@ import PrivateRoute from "./components/PrivateRoute";
 import Layout from "./components/Layout";
 import LoadingSpinner from "./LoadingSpinner";
 import { useAuth } from "./utils/AuthContext";
+import { COMPANY_APP_NAME } from "src/lib/company";
 
 function App() {
   const location = useLocation();
@@ -25,27 +26,10 @@ function App() {
   }, [location.pathname]);
 
   /* =========================
-     Dynamic Title Rotation
+     Static Browser Title
   ========================== */
   useEffect(() => {
-    const titles = [
-      "💰 Sri Balaji Finance",
-      "✅ Safe • ⚡ Fast • 🔒 Reliable",
-      "📅 Daily Chit Funds Available",
-      "🗓️ Monthly Chit Schemes",
-      "🤝 Trusted Chit Fund Services",
-      "📈 Smart Savings • Better Returns",
-      "🏦 Secure Finance Solutions",
-    ];
-
-    let index = 0;
-
-    const interval = setInterval(() => {
-      document.title = titles[index];
-      index = (index + 1) % titles.length;
-    }, 2000);
-
-    return () => clearInterval(interval);
+    document.title = COMPANY_APP_NAME;
   }, []);
 
   /* =========================

@@ -1,5 +1,5 @@
 import React from "react";
-import { Grid, Box } from "@mui/material";
+import { Grid, Box, Typography, Paper } from "@mui/material";
 
 /**
  * FormGrid - Consistent responsive grid for forms
@@ -114,26 +114,23 @@ export const FormRow = ({ children, spacing = 2 }) => {
  */
 export const FormSection = ({ title, children, spacing = 2 }) => {
   return (
-    <Box sx={{ mb: 3 }}>
+    <Paper className="enterprise-card" elevation={0} sx={{ mb: 3, p: { xs: 2, md: 2.5 } }}>
       {title && (
         <Box
           sx={{
             mb: 2,
             pb: 1,
-            borderBottom: "1px solid #e0e0e0",
+            borderBottom: 1,
+            borderColor: "divider",
           }}
         >
-          <Grid container spacing={spacing}>
-            {children}
-          </Grid>
+          <Typography variant="subtitle1">{title}</Typography>
         </Box>
       )}
-      {!title && (
-        <Grid container spacing={spacing}>
-          {children}
-        </Grid>
-      )}
-    </Box>
+      <Grid container spacing={spacing}>
+        {children}
+      </Grid>
+    </Paper>
   );
 };
 

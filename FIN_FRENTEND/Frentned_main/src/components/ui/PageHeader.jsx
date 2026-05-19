@@ -6,8 +6,16 @@ import {
   TextField,
   InputAdornment,
   Paper,
+  Stack,
+  Chip,
 } from "@mui/material";
-import { Search as SearchIcon, Add as AddIcon } from "@mui/icons-material";
+import {
+  Search as SearchIcon,
+  Add as AddIcon,
+  RefreshRounded,
+  TuneRounded,
+} from "@mui/icons-material";
+import { COMPANY_ADDRESS, COMPANY_NAME } from "src/lib/company";
 
 /**
  * PageHeader - Consistent header for all pages
@@ -29,15 +37,18 @@ const PageHeader = ({
   addButtonLabel = "Add New",
   totalCount,
   loading = false,
+  subtitle = "Manage records, filters, exports, and approvals from one workspace.",
+  onRefresh,
+  onFilterClick,
+  actions,
 }) => {
   return (
     <Paper
-      elevation={2}
+      className="enterprise-card"
+      elevation={0}
       sx={{
-        p: { xs: 2, md: 3 },
+        p: { xs: 2, md: 2.5 },
         mb: 3,
-        borderRadius: 2,
-        background: "linear-gradient(135deg, #1a237e 0%, #283593 100%)",
       }}
     >
       <Box
@@ -49,83 +60,79 @@ const PageHeader = ({
           gap: 2,
         }}
       >
-        {/* Title Section */}
-        <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
-          <Typography
-            variant="h5"
-            sx={{
-              color: "white",
-              fontWeight: 600,
-              fontSize: { xs: "1.25rem", md: "1.5rem" },
-            }}
-          >
-            {title}
+        <Box>
+          <Stack direction="row" alignItems="center" spacing={1.5} flexWrap="wrap">
+            <Typography variant="h5">{title}</Typography>
+            {totalCount !== undefined && <Chip size="small" label={`${totalCount} records`} color="primary" />}
+          </Stack>
+          <Typography variant="caption" color="primary" sx={{ display: "block", mt: 0.35, fontWeight: 800 }}>
+            {COMPANY_NAME} / {COMPANY_ADDRESS}
+          </Typography>
+          <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
+            {subtitle}
           </Typography>
           {totalCount !== undefined && (
-            <Typography
-              variant="body2"
-              sx={{
-                color: "rgba(255,255,255,0.7)",
-                backgroundColor: "rgba(255,255,255,0.1)",
-                px: 2,
-                py: 0.5,
-                borderRadius: 1,
-              }}
-            >
+            <Typography variant="caption" color="text.secondary" sx={{ display: { xs: "block", sm: "none" } }}>
               Total: {totalCount}
             </Typography>
           )}
         </Box>
 
-        {/* Actions Section */}
         <Box
           sx={{
             display: "flex",
             gap: 2,
-            flexDirection: { xs: "column", sm: "row" },
+            flexDirection: { xs: "column", md: "row" },
+            alignItems: { xs: "stretch", md: "center" },
           }}
         >
-          {/* Search Field */}
-          <TextField
-            size="small"
-            placeholder={searchPlaceholder}
-            value={searchValue}
-            onChange={(e) => onSearchChange?.(e.target.value)}
-            disabled={loading}
-            sx={{
-              minWidth: { xs: "100%", sm: 250 },
-              backgroundColor: "rgba(255,255,255,0.95)",
-              borderRadius: 1,
-              "& .MuiOutlinedInput-root": {
-                borderRadius: 1,
-              },
-            }}
-            InputProps={{
-              startAdornment: (
-                <InputAdornment position="start">
-                  <SearchIcon color="action" />
-                </InputAdornment>
-              ),
-            }}
-          />
+          {onSearchChange && (
+            <TextField
+              size="small"
+              placeholder={searchPlaceholder}
+              value={searchValue}
+              onChange={(e) => onSearchChange?.(e.target.value)}
+              disabled={loading}
+              sx={{
+                minWidth: { xs: "100%", sm: 300 },
+              }}
+              InputProps={{
+                startAdornment: (
+                  <InputAdornment position="start">
+                    <SearchIcon color="action" />
+                  </InputAdornment>
+                ),
+              }}
+            />
+          )}
 
-          {/* Add Button */}
-          <Button
-            variant="contained"
-            startIcon={<AddIcon />}
-            onClick={onAddClick}
-            disabled={loading}
-            sx={{
-              backgroundColor: "#4caf50",
-              "&:hover": {
-                backgroundColor: "#43a047",
-              },
-              whiteSpace: "nowrap",
-              px: 3,
-            }}
-          >
-            {addButtonLabel}
-          </Button>
+          <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
+            {onFilterClick && (
+              <Button variant="outlined" startIcon={<TuneRounded />} onClick={onFilterClick} disabled={loading}>
+                Filters
+              </Button>
+            )}
+            {onRefresh && (
+              <Button variant="outlined" startIcon={<RefreshRounded />} onClick={onRefresh} disabled={loading}>
+                Refresh
+              </Button>
+            )}
+            {actions}
+            {onAddClick && (
+              <Button
+                variant="contained"
+                startIcon={<AddIcon />}
+                onClick={onAddClick}
+                disabled={loading}
+                sx={{
+                  whiteSpace: "nowrap",
+                  px: 3,
+                }}
+              >
+                {addButtonLabel}
+              </Button>
+            )}
+          </Stack>
         </Box>
       </Box>
     </Paper>

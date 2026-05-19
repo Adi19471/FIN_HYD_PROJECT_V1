@@ -1,32 +1,30 @@
 import React, { useState } from "react";
 import Sidebar from "../partials/Sidebar";
 import Header from "../partials/Header";
-import Banner from "../partials/Banner";
+import { motion } from "framer-motion";
 
 function Layout({ children }) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
   return (
-    <div className="flex h-screen overflow-hidden bg-gradient-to-br from-gray-50 via-gray-100 to-gray-200 dark:from-gray-900 dark:via-gray-800 dark:to-gray-950">
-      {/* Sidebar */}
+    <div className="enterprise-shell flex h-screen overflow-hidden">
       <Sidebar sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} />
 
-      {/* Content area */}
       <div className="relative flex flex-col flex-1 overflow-y-auto overflow-x-hidden">
-        {/* Site header */}
         <Header sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} />
 
-        {/* Main content with modern styling */}
-        <main className="grow">
-          <div className="px-4 sm:px-6 lg:px-8 py-8 w-full max-w-9xl mx-auto">
-            {/* Page container with subtle animation */}
-            <div className="animate-fade-in">
+        <main className="grow enterprise-main">
+          <div className="w-full max-w-[1840px] mx-auto px-4 sm:px-6 lg:px-8 py-5 lg:py-7">
+            <motion.div
+              key={window.location.pathname}
+              initial={{ opacity: 0, y: 12 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.25, ease: "easeOut" }}
+            >
               {children}
-            </div>
+            </motion.div>
           </div>
         </main>
-
-        <Banner />
       </div>
     </div>
   );

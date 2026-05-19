@@ -24,6 +24,29 @@ export const errorToast = (message) => {
   });
 };
 
+export const infoToast = (message) => {
+  toast.info(message, {
+    position: "top-right",
+    autoClose: 2600,
+    hideProgressBar: false,
+    closeOnClick: true,
+    pauseOnHover: true,
+    draggable: true,
+    progress: undefined,
+  });
+};
+
+export const warningToast = (message) => {
+  toast.warning(message, {
+    position: "top-right",
+    autoClose: 3000,
+    hideProgressBar: false,
+    closeOnClick: true,
+    pauseOnHover: true,
+    draggable: true,
+    progress: undefined,
+  });
+};
 
 export const confirmToast = (message) =>{
   toast.error(message, {

@@ -1,6 +1,170 @@
 import React from "react";
-import { Box, Paper, CircularProgress, Typography } from "@mui/material";
+import {
+  Box,
+  Button,
+  Chip,
+  CircularProgress,
+  LinearProgress,
+  ListItemIcon,
+  ListItemText,
+  Menu,
+  MenuItem,
+  Paper,
+  Stack,
+  Typography,
+} from "@mui/material";
 import { DataGrid, GridToolbar } from "@mui/x-data-grid";
+import {
+  ArticleRounded,
+  DescriptionRounded,
+  FileDownloadRounded,
+  PrintRounded,
+  TableViewRounded,
+} from "@mui/icons-material";
+import * as XLSX from "xlsx";
+import jsPDF from "jspdf";
+import autoTable from "jspdf-autotable";
+import { COMPANY_ADDRESS, COMPANY_NAME } from "src/lib/company";
+import { useThemeProvider } from "src/utils/ThemeContext";
+
+const labelFor = (column) => column.headerName || column.field?.replace(/([A-Z])/g, " $1").replace(/_/g, " ");
+
+const cellValue = (row, column) => {
+  const raw = row[column.field];
+  if (column.valueGetter) {
+    try {
+      return column.valueGetter(raw, row, column) ?? "";
+    } catch {
+      return raw ?? "";
+    }
+  }
+  if (column.valueFormatter) {
+    try {
+      return column.valueFormatter(raw, row, column) ?? "";
+    } catch {
+      return raw ?? "";
+    }
+  }
+  return raw ?? "";
+};
+
+function TableExportMenu({ rows, columns, fileName }) {
+  const [anchorEl, setAnchorEl] = React.useState(null);
+  const printableColumns = columns.filter((column) => column.field && !column.disableExport);
+  const hasData = rows.length > 0;
+
+  const closeMenu = () => setAnchorEl(null);
+  const reportRows = () => rows.map((row) => printableColumns.map((column) => String(cellValue(row, column))));
+
+  const handleExcel = () => {
+    closeMenu();
+    if (!hasData) return;
+    const exportRows = rows.map((row) =>
+      printableColumns.reduce((acc, column) => {
+        acc[labelFor(column)] = cellValue(row, column);
+        return acc;
+      }, {})
+    );
+    const worksheet = XLSX.utils.json_to_sheet(exportRows);
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, "Report");
+    XLSX.writeFile(workbook, `${fileName}.xlsx`);
+  };
+
+  const handlePdf = () => {
+    closeMenu();
+    if (!hasData) return;
+    const doc = new jsPDF({ orientation: "landscape", unit: "mm", format: "a4" });
+    doc.setFontSize(18);
+    doc.text(COMPANY_NAME, 14, 14);
+    doc.setFontSize(10);
+    doc.text(COMPANY_ADDRESS, 14, 20);
+    doc.text(fileName, 14, 27);
+    autoTable(doc, {
+      startY: 32,
+      head: [printableColumns.map(labelFor)],
+      body: reportRows(),
+      styles: { fontSize: 8, cellPadding: 3, overflow: "linebreak" },
+      headStyles: { fillColor: [15, 98, 254], textColor: 255, fontStyle: "bold" },
+      alternateRowStyles: { fillColor: [245, 247, 251] },
+    });
+    doc.save(`${fileName}.pdf`);
+  };
+
+  const handleWord = () => {
+    closeMenu();
+    if (!hasData) return;
+    const htmlRows = rows
+      .map((row) => `<tr>${printableColumns.map((column) => `<td>${cellValue(row, column)}</td>`).join("")}</tr>`)
+      .join("");
+    const html = `
+      <html><head><meta charset="utf-8"><style>
+      body{font-family:Arial;padding:20px;color:#111827} h1{font-size:22px;margin:0} p{margin:4px 0 14px;color:#475569}
+      table{width:100%;border-collapse:collapse} th,td{border:1px solid #cbd5e1;padding:8px;font-size:12px;text-align:left}
+      th{background:#0f62fe;color:#fff} tr:nth-child(even){background:#f8fafc}
+      </style></head><body><h1>${COMPANY_NAME}</h1><p>${COMPANY_ADDRESS}</p><h2>${fileName}</h2>
+      <table><thead><tr>${printableColumns.map((column) => `<th>${labelFor(column)}</th>`).join("")}</tr></thead><tbody>${htmlRows}</tbody></table>
+      </body></html>`;
+    const blob = new Blob(["\ufeff", html], { type: "application/msword" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = `${fileName}.doc`;
+    link.click();
+    URL.revokeObjectURL(url);
+  };
+
+  const handlePrint = () => {
+    closeMenu();
+    if (!hasData) return;
+    const tableHtml = `<table><thead><tr>${printableColumns
+      .map((column) => `<th>${labelFor(column)}</th>`)
+      .join("")}</tr></thead><tbody>${rows
+      .map((row) => `<tr>${printableColumns.map((column) => `<td>${cellValue(row, column)}</td>`).join("")}</tr>`)
+      .join("")}</tbody></table>`;
+    const printWindow = window.open("", "", "width=1200,height=760");
+    printWindow.document.write(`<html><head><title>${fileName}</title><style>
+      body{font-family:Arial;padding:20px;color:#111827} h1{text-align:center;margin:0} p{text-align:center;color:#475569}
+      table{width:100%;border-collapse:collapse} th,td{border:1px solid #cbd5e1;padding:8px;font-size:12px;text-align:left}
+      th{background:#0f62fe;color:white} tr:nth-child(even){background:#f8fafc}
+    </style></head><body><h1>${COMPANY_NAME}</h1><p>${COMPANY_ADDRESS}</p><h2>${fileName}</h2>${tableHtml}</body></html>`);
+    printWindow.document.close();
+    printWindow.focus();
+    printWindow.print();
+  };
+
+  return (
+    <>
+      <Button
+        size="small"
+        variant="outlined"
+        startIcon={<FileDownloadRounded />}
+        onClick={(event) => setAnchorEl(event.currentTarget)}
+        disabled={!hasData}
+      >
+        Export
+      </Button>
+      <Menu anchorEl={anchorEl} open={Boolean(anchorEl)} onClose={closeMenu}>
+        <MenuItem onClick={handleExcel}>
+          <ListItemIcon><TableViewRounded fontSize="small" color="success" /></ListItemIcon>
+          <ListItemText primary="Excel" secondary=".xlsx" />
+        </MenuItem>
+        <MenuItem onClick={handlePdf}>
+          <ListItemIcon><DescriptionRounded fontSize="small" color="error" /></ListItemIcon>
+          <ListItemText primary="PDF" secondary=".pdf" />
+        </MenuItem>
+        <MenuItem onClick={handleWord}>
+          <ListItemIcon><ArticleRounded fontSize="small" color="primary" /></ListItemIcon>
+          <ListItemText primary="Word" secondary=".doc" />
+        </MenuItem>
+        <MenuItem onClick={handlePrint}>
+          <ListItemIcon><PrintRounded fontSize="small" /></ListItemIcon>
+          <ListItemText primary="Print" />
+        </MenuItem>
+      </Menu>
+    </>
+  );
+}
 
 /**
  * DataTable - Consistent DataGrid wrapper
@@ -17,22 +181,71 @@ const DataTable = ({
   loading = false,
   getRowId = (row) => row.id,
   height = 600,
+  title,
+  subtitle,
+  pageSize = 25,
+  initialState,
+  showCompany = true,
+  actions,
   ...otherProps
 }) => {
+  const { settings } = useThemeProvider();
+  const tableTitle = title || "finance-export";
+  const rowHeight = settings.tableDensity === "compact" ? 40 : settings.tableDensity === "spacious" ? 54 : 46;
+  const headerHeight = settings.tableDensity === "compact" ? 44 : settings.tableDensity === "spacious" ? 58 : 52;
+
   return (
     <Paper
-      elevation={2}
+      className="enterprise-card"
+      elevation={0}
       sx={{
-        height: height,
+        height,
+        minHeight: 420,
         width: "100%",
-        borderRadius: 2,
         overflow: "hidden",
+        display: "flex",
+        flexDirection: "column",
       }}
     >
+      {(title || subtitle || showCompany || actions) && (
+        <Stack
+          direction={{ xs: "column", sm: "row" }}
+          justifyContent="space-between"
+          alignItems={{ xs: "flex-start", sm: "center" }}
+          spacing={1.5}
+          sx={{
+            px: 2.5,
+            py: 2,
+            borderBottom: 1,
+            borderColor: "divider",
+            background: "linear-gradient(180deg, rgba(255,255,255,0.96), rgba(248,250,252,0.88))",
+          }}
+        >
+          <Box>
+            {showCompany && (
+              <Typography variant="caption" color="primary" sx={{ fontWeight: 900 }}>
+                {COMPANY_NAME} / {COMPANY_ADDRESS}
+              </Typography>
+            )}
+            {title && <Typography variant="subtitle1" sx={{ mt: showCompany ? 0.25 : 0 }}>{title}</Typography>}
+            {subtitle && (
+              <Typography variant="body2" color="text.secondary">
+                {subtitle}
+              </Typography>
+            )}
+          </Box>
+          <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
+            <Chip size="small" label={`${rows.length} records`} color="primary" variant="outlined" />
+            <Chip size="small" label="Search + Filters" variant="outlined" />
+            <TableExportMenu rows={rows} columns={columns} fileName={tableTitle} />
+            {actions}
+          </Stack>
+        </Stack>
+      )}
       {loading ? (
         <Box
           sx={{
-            height: "100%",
+            flex: 1,
             display: "flex",
             justifyContent: "center",
             alignItems: "center",
@@ -40,7 +253,11 @@ const DataTable = ({
             gap: 2,
           }}
         >
-          <CircularProgress />
+          {settings.loadingStyle === "bar" ? (
+            <Box sx={{ width: "min(420px, 80%)" }}><LinearProgress /></Box>
+          ) : (
+            <CircularProgress />
+          )}
           <Typography color="text.secondary">Loading data...</Typography>
         </Box>
       ) : (
@@ -52,35 +269,92 @@ const DataTable = ({
           slotProps={{
             toolbar: {
               showQuickFilter: true,
-              printOptions: { disableToolbarButton: true },
+              quickFilterProps: { debounceMs: 350 },
+              csvOptions: { fileName: tableTitle },
+              printOptions: { disableToolbarButton: false },
             },
           }}
+          rowHeight={rowHeight}
+          columnHeaderHeight={headerHeight}
           sx={{
             border: "none",
-            "& .MuiDataGrid-columnHeaders": {
-              backgroundColor: "#f5f5f5",
-              borderBottom: "2px solid #e0e0e0",
+            flex: 1,
+            backgroundColor: "transparent",
+            "& .MuiDataGrid-toolbarContainer": {
+              px: 2,
+              py: 1.25,
+              gap: 1,
+              borderBottom: "1px solid",
+              borderColor: "divider",
+              background:
+                "linear-gradient(180deg, rgba(248,250,252,0.9), rgba(255,255,255,0.78))",
+            },
+            "& .MuiDataGrid-columnHeaders, & .MuiDataGrid-columnHeader": {
+              backgroundColor: "#f8fafc",
+            },
+            "& .MuiDataGrid-columnHeader": {
+              borderRight: "1px solid",
+              borderColor: "divider",
             },
             "& .MuiDataGrid-columnHeaderTitle": {
-              fontWeight: 600,
+              fontWeight: 800,
+              color: "text.primary",
+              textTransform: "uppercase",
+              fontSize: 12,
+              letterSpacing: 0,
             },
             "& .MuiDataGrid-cell": {
-              borderBottom: "1px solid #f0f0f0",
+              borderBottom: "1px solid",
+              borderColor: "divider",
+              display: "flex",
+              alignItems: "center",
+              fontSize: 13,
             },
+            ...(settings.tableStyle === "striped" && {
+              "& .MuiDataGrid-row:nth-of-type(even)": {
+                backgroundColor: "rgba(248,250,252,0.58)",
+              },
+            }),
+            ...(settings.tableStyle === "bordered" && {
+              "& .MuiDataGrid-cell": {
+                borderBottom: "1px solid",
+                borderRight: "1px solid",
+                borderColor: "divider",
+                display: "flex",
+                alignItems: "center",
+                fontSize: 13,
+              },
+            }),
             "& .MuiDataGrid-row:hover": {
-              backgroundColor: "#f8f9fa",
+              backgroundColor: "rgba(15,98,254,0.06)",
             },
             "& .MuiDataGrid-footerContainer": {
-              borderTop: "2px solid #e0e0e0",
+              borderTop: "1px solid",
+              borderColor: "divider",
+              backgroundColor: "#fff",
+            },
+            "& .MuiDataGrid-overlayWrapper": {
+              minHeight: 260,
+            },
+            "& .MuiButtonBase-root": {
+              borderRadius: 1.5,
             },
           }}
           initialState={{
+            density: settings.tableDensity === "spacious" ? "comfortable" : settings.tableDensity === "standard" ? "standard" : "compact",
             pagination: {
-              paginationModel: { pageSize: 10 },
+              paginationModel: { pageSize },
             },
+            ...initialState,
           }}
-          pageSizeOptions={[10, 25, 50, 100]}
+          pageSizeOptions={[10, 25, 50, 100, 200]}
           disableRowSelectionOnClick
+          keepNonExistentRowsSelected={false}
+          localeText={{
+            toolbarQuickFilterPlaceholder: "Search table...",
+            noRowsLabel: "No records found",
+            footerTotalRows: "Total rows:",
+          }}
           {...otherProps}
         />
       )}

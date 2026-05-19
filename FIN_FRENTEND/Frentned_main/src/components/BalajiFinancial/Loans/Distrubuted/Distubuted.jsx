@@ -1,24 +1,12 @@
 import React, { useMemo, useState } from "react";
-import {
-  Box,
-  Button,
-  Typography,
-  Paper,
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TableRow,
-  TextField,
-  Chip,
-  Grid,
-} from "@mui/material";
-import dayjs from "dayjs";
+import { Button, Chip, Grid, Paper, Stack } from "@mui/material";
 import axios from "axios";
 import { API_BASE } from "lib/config";
 import { getSession } from "src/utils/session";
-import LoadingSpinner from "src/LoadingSpinner";
+import { errorToast, successToast } from "toastify";
+import { AppDatePicker, DataTable, PageHeader } from "src/components/ui";
+
+const formatINR = (value) => `₹ ${Number(value || 0).toLocaleString("en-IN")}`;
 
 const Distubuted = () => {
   const [data, setData] = useState([]);
@@ -26,18 +14,16 @@ const Distubuted = () => {
   const [toDate, setToDate] = useState("");
   const [loading, setLoading] = useState(false);
 
-  const token = getSession("token");
-
   const headers = useMemo(
     () => ({
-      Authorization: `Bearer ${token || ""}`,
+      Authorization: `Bearer ${getSession("token") || ""}`,
     }),
-    [token]
+    []
   );
 
-const getDisbursedList = async () => {
+  const getDisbursedList = async () => {
     if (!fromDate || !toDate) {
-      alert("Please select both From and To dates");
+      errorToast("Please select both From and To dates");
       return;
     }
 
@@ -47,158 +33,74 @@ const getDisbursedList = async () => {
         headers,
         params: { fromDate, toDate },
       });
-      setData(res.data || []);
+      setData((res.data || []).map((row, index) => ({ id: row.loanId || row.sno || index + 1, sno: row.sno || index + 1, ...row })));
+      successToast("Disbursed loans loaded successfully");
     } catch (error) {
       console.error(error);
+      errorToast("Failed to load disbursed loans");
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
   };
 
-  // 🔥 Calculate Totals
-  const totalAmount = data.reduce(
-    (sum, row) => sum + (row.amount || 0),
-    0
-  );
+  const rows = useMemo(() => {
+    if (!data.length) return data;
+    const total = data.reduce(
+      (acc, row) => ({
+        amount: acc.amount + Number(row.amount || 0),
+        amountPaid: acc.amountPaid + Number(row.amountPaid || 0),
+        installmentDue: acc.installmentDue + Number(row.installmentDue || 0),
+      }),
+      { amount: 0, amountPaid: 0, installmentDue: 0 }
+    );
+    return [...data, { id: "total", customerName: "TOTAL", ...total }];
+  }, [data]);
 
-  const totalPaid = data.reduce(
-    (sum, row) => sum + (row.amountPaid || 0),
-    0
-  );
-
-  const totalDue = data.reduce(
-    (sum, row) => sum + (row.installmentDue || 0),
-    0
-  );
+  const columns = [
+    { field: "sno", headerName: "S.No", width: 80 },
+    { field: "loanId", headerName: "Loan ID", width: 120 },
+    { field: "customerName", headerName: "Customer", minWidth: 200, flex: 1 },
+    { field: "startDate", headerName: "Start", width: 130 },
+    { field: "endDate", headerName: "End", width: 130 },
+    { field: "amount", headerName: "Amount", width: 140, align: "right", headerAlign: "right", valueFormatter: (value) => formatINR(value) },
+    { field: "amountPaid", headerName: "Paid", width: 140, align: "right", headerAlign: "right", valueFormatter: (value) => formatINR(value) },
+    { field: "installmentDue", headerName: "Due", width: 140, align: "right", headerAlign: "right", valueFormatter: (value) => formatINR(value) },
+    {
+      field: "status",
+      headerName: "Status",
+      width: 130,
+      renderCell: (params) => params.value ? <Chip label={params.value} color={params.value === "ACTIVE" ? "success" : "error"} size="small" /> : null,
+    },
+  ];
 
   return (
-    <Box p={3}>
-      <Typography variant="h5" mb={3} fontWeight="bold">
-        Disbursed Loans Report
-      </Typography>
+    <Stack spacing={2.5}>
+      <PageHeader
+        title="Distributed Loans"
+        subtitle="Disbursed loan list with date-only MUI calendar filters and export-ready totals."
+        totalCount={data.length}
+        onRefresh={getDisbursedList}
+        loading={loading}
+      />
 
-      {/* Date Filter */}
-      <Paper sx={{ p: 3, mb: 3 }}>
+      <Paper className="enterprise-card" elevation={0} sx={{ p: 2 }}>
         <Grid container spacing={2} alignItems="center">
           <Grid item xs={12} md={4}>
-            <TextField
-              label="From Date"
-              type="date"
-              fullWidth
-              value={fromDate}
-              onChange={(e) => setFromDate(e.target.value)}
-              InputLabelProps={{ shrink: true }}
-            />
+            <AppDatePicker label="From Date" value={fromDate} onChange={setFromDate} />
           </Grid>
-
           <Grid item xs={12} md={4}>
-            <TextField
-              label="To Date"
-              type="date"
-              fullWidth
-              value={toDate}
-              onChange={(e) => setToDate(e.target.value)}
-              InputLabelProps={{ shrink: true }}
-            />
+            <AppDatePicker label="To Date" value={toDate} onChange={setToDate} />
           </Grid>
-
           <Grid item xs={12} md={4}>
-            <Button
-              variant="contained"
-              fullWidth
-              onClick={getDisbursedList}
-              sx={{ height: "56px" }}
-            >
+            <Button fullWidth variant="contained" onClick={getDisbursedList} disabled={loading}>
               Generate
             </Button>
           </Grid>
         </Grid>
       </Paper>
 
-{/* Table */}
-      <Paper>
-        {loading && data.length === 0 ? (
-          <Box sx={{ display: "flex", justifyContent: "center", alignItems: "center", height: "300px" }}>
-            <LoadingSpinner />
-          </Box>
-        ) : (
-          <TableContainer>
-            <Table>
-              <TableHead sx={{ backgroundColor: "#1976d2" }}>
-                <TableRow>
-                  <TableCell sx={{ color: "white" }}>S.No</TableCell>
-                  <TableCell sx={{ color: "white" }}>Loan ID</TableCell>
-                  <TableCell sx={{ color: "white" }}>Customer</TableCell>
-                  <TableCell sx={{ color: "white" }}>Start</TableCell>
-                  <TableCell sx={{ color: "white" }}>End</TableCell>
-                  <TableCell sx={{ color: "white" }}>Amount</TableCell>
-                  <TableCell sx={{ color: "white" }}>Paid</TableCell>
-                  <TableCell sx={{ color: "white" }}>Due</TableCell>
-                  <TableCell sx={{ color: "white" }}>Status</TableCell>
-                </TableRow>
-              </TableHead>
-
-              <TableBody>
-                {data.length > 0 ? (
-                  <>
-                    {data.map((row) => (
-                      <TableRow key={row.sno}>
-                        <TableCell>{row.sno}</TableCell>
-                        <TableCell>{row.loanId}</TableCell>
-                        <TableCell>{row.customerName}</TableCell>
-                        <TableCell>
-                          {dayjs(row.startDate, "DD-MM-YYYY").format("DD MMM YYYY")}
-                        </TableCell>
-                        <TableCell>
-                          {dayjs(row.endDate, "DD-MM-YYYY").format("DD MMM YYYY")}
-                        </TableCell>
-                        <TableCell>
-                          ₹ {row.amount?.toLocaleString()}
-                        </TableCell>
-                        <TableCell>
-                          ₹ {row.amountPaid?.toLocaleString()}
-                        </TableCell>
-                        <TableCell>
-                          ₹ {row.installmentDue?.toLocaleString()}
-                        </TableCell>
-                        <TableCell>
-                          <Chip
-                            label={row.status}
-                            color={row.status === "ACTIVE" ? "success" : "error"}
-                          />
-                        </TableCell>
-                      </TableRow>
-                    ))}
-
-                    {/* TOTAL ROW */}
-                    <TableRow sx={{ backgroundColor: "#f5f5f5" }}>
-                      <TableCell colSpan={5} align="right" sx={{ fontWeight: "bold" }}>
-                        TOTAL
-                      </TableCell>
-                      <TableCell sx={{ fontWeight: "bold" }}>
-                        ₹ {totalAmount.toLocaleString()}
-                      </TableCell>
-                      <TableCell sx={{ fontWeight: "bold" }}>
-                        ₹ {totalPaid.toLocaleString()}
-                      </TableCell>
-                      <TableCell sx={{ fontWeight: "bold" }}>
-                        ₹ {totalDue.toLocaleString()}
-                      </TableCell>
-                      <TableCell />
-                    </TableRow>
-                  </>
-                ) : (
-                  <TableRow>
-                    <TableCell colSpan={9} align="center">
-                      No Data Found
-                    </TableCell>
-                  </TableRow>
-                )}
-              </TableBody>
-            </Table>
-          </TableContainer>
-        )}
-      </Paper>
-    </Box>
+      <DataTable rows={rows} columns={columns} loading={loading} title="Distributed Loan Details" height={580} />
+    </Stack>
   );
 };
 

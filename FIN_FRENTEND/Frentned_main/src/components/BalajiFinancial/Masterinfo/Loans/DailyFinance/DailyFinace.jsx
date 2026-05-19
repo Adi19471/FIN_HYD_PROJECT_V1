@@ -30,12 +30,9 @@ import {
   Delete as DeleteIcon,
 } from "@mui/icons-material";
 
-import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
-import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
-import { DateTimePicker } from "@mui/x-date-pickers/DateTimePicker";
-
 import dayjs from "dayjs";
 import ReportToolbar from "../../../ReportsAll/ReportToolbar";
+import { AppDatePicker } from "src/components/ui";
 
 const LOAN_TYPE = { DAILY_FINANCE: "DAILY_FINANCE" };
 const FIXED_DURATION_DAYS = 100;
@@ -457,8 +454,8 @@ const DailyFinance = () => {
       guarantor2: formData.guarantor2?.id || "",
       guarantor3: formData.guarantor3?.id || "",
       partnerId: formData.partnerId?.id || "",
-      startDate: formData.startDate.format("YYYY-MM-DD HH:mm:ss"),
-      endDate: formData.endDate.format("YYYY-MM-DD HH:mm:ss"),
+      startDate: formData.startDate.format("YYYY-MM-DD"),
+      endDate: formData.endDate.format("YYYY-MM-DD"),
       amount: Number(formData.amount),
       interest: Number(formData.interestAmountForAllDays),
       interestRate: Number(formData.interestRate),
@@ -607,8 +604,7 @@ const DailyFinance = () => {
   ];
 
   return (
-    <LocalizationProvider dateAdapter={AdapterDayjs}>
-
+    <>
 <ReportToolbar
   data={filteredRows}
   columns={[
@@ -748,20 +744,21 @@ const DailyFinance = () => {
         </Grid>
 
         <Grid item xs={12} md={6}>
-          <DateTimePicker
+          <AppDatePicker
             label="Loan Date"
             value={formData.startDate}
-            onChange={(v) => setFormData((p) => ({ ...p, startDate: v }))}
-            slotProps={{ textField: { fullWidth: true } }}
+            onChange={(value) => setFormData((p) => ({ ...p, startDate: dayjs(value) }))}
+            size="medium"
           />
         </Grid>
 
         <Grid item xs={12} md={6}>
-          <DateTimePicker
+          <AppDatePicker
             label="Maturity Date"
             value={formData.endDate}
-            readOnly
-            slotProps={{ textField: { fullWidth: true } }}
+            onChange={() => {}}
+            disabled
+            size="medium"
           />
         </Grid>
       </Grid>
@@ -968,7 +965,7 @@ const DailyFinance = () => {
       </Button>
     </DialogActions>
   </Dialog>
-    </LocalizationProvider >
+    </>
   );
 };
 

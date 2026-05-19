@@ -4,6 +4,7 @@ import axios from "axios";
 import { successToast, errorToast } from "toastify";
 import { API_BASE } from "lib/config";
 import { getSession } from "src/utils/session";
+import { AppDatePicker } from "src/components/ui";
 
 import {
   Box,
@@ -186,7 +187,7 @@ const QuickCashBook = () => {
     setLoading(true);
     try {
       const payload = {
-        transactionDate: transactionDate.format("YYYY-MM-DD HH:mm:ss"),
+        transactionDate: transactionDate.format("YYYY-MM-DD"),
         quickCashBookRows: rowsToSave
           .filter(
             (r) =>
@@ -243,11 +244,9 @@ const QuickCashBook = () => {
         </Typography>
 
         <Stack direction="row" spacing={2}>
-          <TextField label="Date" type="date" value={transactionDate.format("YYYY-MM-DD")} onChange={(e) => setTransactionDate(dayjs(e.target.value))} size="small" sx={{ width: 150 }} InputLabelProps={{ shrink: true }} />
-          <TextField label="Time" type="time" value={transactionDate.format("HH:mm")} onChange={(e) => {
-            const [h, m] = e.target.value.split(":");
-            setTransactionDate((prev) => prev.hour(parseInt(h) || 0).minute(parseInt(m) || 0));
-          }} size="small" sx={{ width: 120 }} InputLabelProps={{ shrink: true }} />
+          <Box sx={{ width: 180 }}>
+            <AppDatePicker label="Date" value={transactionDate} onChange={(value) => setTransactionDate(dayjs(value))} />
+          </Box>
         </Stack>
 
         <Button variant="contained" color="info" startIcon={<Save />} onClick={handleSaveAll} disabled={loading}>

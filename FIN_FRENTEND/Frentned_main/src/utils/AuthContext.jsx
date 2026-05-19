@@ -12,8 +12,10 @@ const INACTIVITY_TIMEOUT = 5 * 60 * 1000; // 5 minutes
 
 export function AuthProvider({ children }) {
   const storedUser = typeof window !== "undefined" ? getSession("user") : null;
+  const storedToken = typeof window !== "undefined" ? getSession("token") : null;
+  const storedName = typeof window !== "undefined" ? getSession("username") : null;
 
-  const [user, setUser] = useState(storedUser || null);
+  const [user, setUser] = useState(storedUser || (storedToken ? { name: storedName || "User", token: storedToken } : null));
 
   const logout = useCallback(() => {
     setUser(null);

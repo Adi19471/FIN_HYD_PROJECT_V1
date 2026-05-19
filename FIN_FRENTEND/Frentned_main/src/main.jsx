@@ -2,6 +2,7 @@ import React from "react";
 import ReactDOM from "react-dom/client";
 import { BrowserRouter as Router } from "react-router-dom";
 import { ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 
 import ThemeProvider from "./utils/ThemeContext";
 import { AuthProvider } from "./utils/AuthContext";
@@ -20,7 +21,16 @@ ReactDOM.createRoot(document.getElementById("root")).render(
       <AuthProvider>
         <ThemeProvider>
           <App />
-          <ToastContainer />
+          <ToastContainer
+            position="top-right"
+            autoClose={2800}
+            newestOnTop
+            closeOnClick
+            pauseOnHover
+            draggable
+            theme="colored"
+            limit={4}
+          />
         </ThemeProvider>
       </AuthProvider>
     </Router>

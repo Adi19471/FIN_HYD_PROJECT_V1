@@ -73,8 +73,8 @@ function ModalSearch({ id, searchId, modalOpen, setModalOpen }) {
                 id={searchId}
                 ref={searchInput}
                 type="search"
-                placeholder="Search financial tools, reports, loans…"
-                className="w-full dark:text-gray-300 bg-white dark:bg-gray-800 border-0 focus:ring-transparent placeholder-gray-400 dark:placeholder-gray-500 appearance-none py-3 pl-10 pr-4"
+                placeholder="Search financial tools, reports, loans..."
+                className="w-full dark:text-gray-300 bg-white dark:bg-gray-800 border-0 focus:ring-transparent placeholder-gray-400 dark:placeholder-gray-500 appearance-none py-4 pl-10 pr-4"
               />
 
               <button
@@ -104,11 +104,11 @@ function ModalSearch({ id, searchId, modalOpen, setModalOpen }) {
               </div>
               <ul className="text-sm">
                 {[
-                  "Loan Application Status",
-                  "Customer Ledger - Rajesh Sharma",
-                  "Daily Collection Report",
-                  "Pending EMI List",
-                  "Finance Dashboard",
+                  "Loan approval queue",
+                  "Customer ledger lookup",
+                  "Daily collection report",
+                  "Pending installment dues",
+                  "Cashbook audit trail",
                 ].map((item, index) => (
                   <li key={index}>
                     <button
@@ -137,11 +137,12 @@ function ModalSearch({ id, searchId, modalOpen, setModalOpen }) {
               </div>
               <ul className="text-sm">
                 {[
-                  { name: "Loan Management", link: "/loans" },
-                  { name: "Customer Profiles", link: "/customers" },
-                  { name: "Finance Reports", link: "/reports" },
-                  { name: "EMI Calculator", link: "/emi-calculator" },
-                  { name: "Expenses & Collections", link: "/collections" },
+                  { name: "Dashboard", link: "/" },
+                  { name: "Loan Management", link: "/Loan" },
+                  { name: "Customer Profiles", link: "/customer" },
+                  { name: "Daily Book", link: "/AccountsModules/DailyBook" },
+                  { name: "Business Overview", link: "/Bussiness/BussinessOverviewimport" },
+                  { name: "Installment Dues", link: "/Loans/InstalmentDues" },
                 ].map((item, i) => (
                   <li key={i}>
                     <Link

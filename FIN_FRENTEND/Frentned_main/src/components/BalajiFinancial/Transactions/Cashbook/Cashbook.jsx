@@ -31,11 +31,12 @@ import { successToast, errorToast } from "toastify";
 import { API_BASE } from "lib/config";
 import { getSession } from "src/utils/session";
 import LoadingSpinner from "src/LoadingSpinner";
+import { AppDatePicker } from "src/components/ui";
 
 
 // Optimized with memo and useCallback
 const Cashbook = () => {
-  const getCurrentDateTime = useCallback(() => dayjs().format("YYYY-MM-DD HH:mm:ss"), []);
+  const getCurrentDateTime = useCallback(() => dayjs().format("YYYY-MM-DD"), []);
 
   const [transactionDate, setTransactionDate] = useState(getCurrentDateTime);
   const [masterCode, setMasterCode] = useState("");
@@ -251,19 +252,13 @@ const Cashbook = () => {
         <form onSubmit={handleSubmit}>
           <Grid container spacing={3} justifyContent="center">
 
-            {/* Date Time */}
+            {/* Date */}
             <Grid item xs={12} display="flex" justifyContent="center">
-              <TextField
-                label="Transaction Date & Time"
-                type="datetime-local"
-                value={dayjs(transactionDate).format("YYYY-MM-DDTHH:mm")}
-                onChange={(e) =>
-                  setTransactionDate(
-                    dayjs(e.target.value).format("YYYY-MM-DD HH:mm:ss")
-                  )
-                }
+              <AppDatePicker
+                label="Transaction Date"
+                value={transactionDate}
+                onChange={setTransactionDate}
                 sx={{ width: 300 }}
-                InputLabelProps={{ shrink: true }}
               />
             </Grid>
 

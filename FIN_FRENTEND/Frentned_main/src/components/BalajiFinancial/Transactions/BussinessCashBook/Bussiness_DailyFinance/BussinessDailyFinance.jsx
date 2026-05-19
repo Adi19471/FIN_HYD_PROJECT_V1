@@ -18,16 +18,13 @@ import {
   Checkbox,
 } from "@mui/material";
 
-import { DateTimePicker } from "@mui/x-date-pickers/DateTimePicker";
-import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
-import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
-
 import dayjs from "dayjs";
 import axios from "axios";
 
 import { successToast, errorToast } from "toastify";
 import { API_BASE } from "lib/config";
 import { getSession } from "src/utils/session";
+import { AppDatePicker } from "src/components/ui";
 
 const BussinessDailyFinance = () => {
   const token = getSession("token");
@@ -167,7 +164,7 @@ const BussinessDailyFinance = () => {
         installmentAmount: form.installmentAmount,
         periodFrom: form.periodFrom,
         periodTo: form.periodTo,
-        date: form.date.format("YYYY-MM-DD HH:mm:ss"),
+        date: form.date.format("YYYY-MM-DD"),
         balance: form.balance,
         paid: form.paid,
         amountPaid: principalAmount,
@@ -209,7 +206,7 @@ const BussinessDailyFinance = () => {
   };
 
   return (
-    <LocalizationProvider dateAdapter={AdapterDayjs}>
+    <>
       <Box sx={{ minHeight: "100vh", backgroundColor: "#f4f6f8", p: 3 }}>
         <Paper sx={{ maxWidth: 1400, margin: "0 auto", p: 3 }}>
 
@@ -357,13 +354,12 @@ const BussinessDailyFinance = () => {
             <Grid container spacing={2}>
 
               <Grid item xs={12} md={4}>
-                <DateTimePicker
+                <AppDatePicker
                   label="Payment Date"
                   value={form.date}
                   onChange={(newDate) =>
-                    setForm((prev) => ({ ...prev, date: newDate }))
+                    setForm((prev) => ({ ...prev, date: dayjs(newDate) }))
                   }
-                  slotProps={{ textField: { size: "small", fullWidth: true } }}
                 />
               </Grid>
 
@@ -556,7 +552,7 @@ const BussinessDailyFinance = () => {
 
         </Paper>
       </Box>
-    </LocalizationProvider>
+    </>
   );
 };
 

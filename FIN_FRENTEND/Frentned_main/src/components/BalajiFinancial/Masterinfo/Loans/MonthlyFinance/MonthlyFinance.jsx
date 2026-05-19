@@ -28,11 +28,9 @@ import {
   Edit as EditIcon,
   Delete as DeleteIcon,
 } from "@mui/icons-material";
-import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
-import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
-import { DateTimePicker } from "@mui/x-date-pickers/DateTimePicker";
 import dayjs from "dayjs";
 import ReportToolbar from "../../../ReportsAll/ReportToolbar";
+import { AppDatePicker } from "src/components/ui";
 
 
 const FIXED_DURATION_MONTHS = 10;
@@ -485,8 +483,8 @@ const MonthlyFinance = () => {
       guarantor2: formData.guarantor2?.id || "",
       guarantor3: formData.guarantor3?.id || "",
       partnerId: formData.partnerId?.id || "",
-      startDate: formData.startDate.format("YYYY-MM-DD HH:mm:ss"),
-      endDate: formData.endDate.format("YYYY-MM-DD HH:mm:ss"),
+      startDate: formData.startDate.format("YYYY-MM-DD"),
+      endDate: formData.endDate.format("YYYY-MM-DD"),
       amount: Number(formData.amount),
       interestRate: Number(formData.interestRate),
       interest: Number(formData.interestAmount),
@@ -615,8 +613,7 @@ const MonthlyFinance = () => {
   ];
 
   return (
-    <LocalizationProvider dateAdapter={AdapterDayjs}>
-
+    <>
    <ReportToolbar
   data={filteredRows}
   columns={[
@@ -760,24 +757,21 @@ const MonthlyFinance = () => {
             </Grid>
 
             <Grid item xs={12} md={6}>
-              <DateTimePicker
+              <AppDatePicker
                 label="Loan Date *"
                 value={formData.startDate}
-                onChange={(v) => setFormData((p) => ({ ...p, startDate: v }))}
-                slotProps={{
-                  textField: { fullWidth: true, variant: "outlined" },
-                }}
+                onChange={(value) => setFormData((p) => ({ ...p, startDate: dayjs(value) }))}
+                size="medium"
               />
             </Grid>
 
             <Grid item xs={12} md={6}>
-              <DateTimePicker
+              <AppDatePicker
                 label="Maturity Date"
                 value={formData.endDate}
-                readOnly
-                slotProps={{
-                  textField: { fullWidth: true, variant: "outlined" },
-                }}
+                onChange={() => {}}
+                disabled
+                size="medium"
               />
             </Grid>
           </Grid>
@@ -995,7 +989,7 @@ const MonthlyFinance = () => {
           </Button>
         </DialogActions>
       </Dialog>
-    </LocalizationProvider>
+    </>
   );
 };
 

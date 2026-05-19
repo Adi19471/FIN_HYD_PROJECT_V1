@@ -15,9 +15,6 @@ import {
   IconButton,
   TablePagination,
 } from "@mui/material";
-import { DatePicker } from "@mui/x-date-pickers/DatePicker";
-import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
-import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
 import dayjs from "dayjs";
 import axios from "axios";
 import { API_BASE } from "lib/config";
@@ -27,6 +24,7 @@ import PictureAsPdfIcon from "@mui/icons-material/PictureAsPdf";
 import ImageIcon from "@mui/icons-material/Image";
 import LoadingSpinner from "src/LoadingSpinner";
 import { useReactToPrint } from "react-to-print";
+import { AppDatePicker } from "src/components/ui";
 
 const token = getSession()?.token || getSession("token") || "";
 
@@ -118,15 +116,12 @@ const CustomerOutstanding = () => {
         </Typography>
 
         <Box display="flex" gap={2} alignItems="center">
-          <LocalizationProvider dateAdapter={AdapterDayjs}>
-            <DatePicker
-              label="Date"
-              value={selectedDate}
-              onChange={(newValue) => setSelectedDate(newValue)}
-              format="DD-MM-YYYY"
-              sx={{ width: 180 }}
-            />
-          </LocalizationProvider>
+          <AppDatePicker
+            label="Date"
+            value={selectedDate}
+            onChange={(value) => setSelectedDate(dayjs(value))}
+            sx={{ width: 180 }}
+          />
 
           <FormControlLabel
             control={<Checkbox checked={mfChecked} onChange={(e) => setMfChecked(e.target.checked)} />}

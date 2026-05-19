@@ -1,288 +1,158 @@
-import React, { useState, useCallback, memo } from 'react';
+import React, { useMemo, useState } from "react";
+import { Link, useLocation } from "react-router-dom";
 import {
-  AppBar,
-  Toolbar,
-  IconButton,
-  Typography,
   Box,
-  alpha,
-  useTheme,
-  createTheme,
-  ThemeProvider,
-} from '@mui/material';
-import MenuIcon from '@mui/icons-material/Menu';
-import SearchIcon from '@mui/icons-material/Search';
-import Brightness4Icon from '@mui/icons-material/Brightness4';
-import Brightness7Icon from '@mui/icons-material/Brightness7';
+  Chip,
+  IconButton,
+  InputAdornment,
+  Stack,
+  TextField,
+  Tooltip,
+  Typography,
+} from "@mui/material";
+import {
+  AccountBalanceRounded,
+  FullscreenRounded,
+  MenuRounded,
+  SearchRounded,
+  SettingsRounded,
+} from "@mui/icons-material";
+import SearchModal from "../components/ModalSearch";
+import Notifications from "../components/DropdownNotifications";
+import Help from "../components/DropdownHelp";
+import UserMenu from "../components/DropdownProfile";
+import EnterpriseThemePanel from "../components/EnterpriseThemePanel";
+import ThemeToggle from "../components/ThemeToggle";
+import { useThemeProvider } from "../utils/ThemeContext";
+import { COMPANY_ADDRESS, COMPANY_APP_NAME } from "src/lib/company";
 
-// Assume these are your custom components
-import SearchModal from '../components/ModalSearch';
-import Notifications from '../components/DropdownNotifications';
-import Help from '../components/DropdownHelp';
-import UserMenu from '../components/DropdownProfile';
-
-// ────────────────────────────────────────────────
-// Modern 2025–2026 Fintech Light Theme
-// Clean white base, trust blue primary, lime success, subtle glass
-// High readability, premium banking feel
-// ────────────────────────────────────────────────
-const fintechLightTheme = createTheme({
-  palette: {
-    mode: 'light',
-    primary: {
-      main: '#0ea5e9',     // Modern blue-teal – trust + innovation
-      light: '#38bdf8',
-      dark: '#0284c7',
-    },
-    secondary: {
-      main: '#84cc16',     // Fresh lime – money/growth/energy
-      light: '#a3e635',
-      dark: '#65a30d',
-    },
-    background: {
-      default: '#f8fafc',           // Soft off-white – clean & modern
-      paper: '#ffffff',             // Pure white cards/glass
-    },
-    text: {
-      primary: '#0f172a',
-      secondary: '#475569',
-    },
-    divider: alpha('#0ea5e9', 0.12),
-  },
-  components: {
-    MuiAppBar: {
-      styleOverrides: {
-        root: {
-          background: 'transparent',
-          boxShadow: 'none',
-          backdropFilter: 'blur(16px) saturate(180%)',
-          WebkitBackdropFilter: 'blur(16px) saturate(180%)',
-          borderBottom: '1px solid rgba(14, 165, 233, 0.12)',
-        },
-      },
-    },
-    MuiIconButton: {
-      styleOverrides: {
-        root: {
-          borderRadius: 12,
-          border: '1px solid rgba(14, 165, 233, 0.18)',
-          background: 'rgba(255, 255, 255, 0.75)',
-          transition: 'all 0.25s ease',
-          '&:hover': {
-            background: 'rgba(14, 165, 233, 0.12)',
-            borderColor: 'rgba(14, 165, 233, 0.45)',
-            transform: 'scale(1.06)',
-          },
-        },
-      },
-    },
-    MuiTypography: {
-      styleOverrides: {
-        h6: {
-          fontWeight: 800,
-          letterSpacing: '-0.02em',
-        },
-      },
-    },
-  },
-  shape: {
-    borderRadius: 12,
-  },
-});
+const routeLabels = {
+  "": "Dashboard",
+  AccountsModules: "Accounts",
+  AccountMasterSetup: "Account Master",
+  Bussiness: "Business",
+  Customer: "Customer Reports",
+  Loans: "Loans",
+  Partners: "Partners",
+  Transactions: "Transactions",
+  Main_personal_file: "Personal Info",
+};
 
 function Header({ sidebarOpen, setSidebarOpen }) {
-  const theme = useTheme();
+  const location = useLocation();
+  const { settings } = useThemeProvider();
   const [searchModalOpen, setSearchModalOpen] = useState(false);
-  const [darkMode, setDarkMode] = useState(false); // Default to light now
+  const [settingsOpen, setSettingsOpen] = useState(false);
 
-  // Memoized handlers for better performance
-  const handleMenuClick = useCallback(() => {
-    setSidebarOpen(!sidebarOpen);
-  }, [sidebarOpen, setSidebarOpen]);
+  const breadcrumbs = useMemo(() => {
+    const parts = location.pathname.split("/").filter(Boolean);
+    if (!parts.length) return ["Dashboard"];
+    return parts.map((part) => routeLabels[part] || part.replaceAll("_", " ").replaceAll("-", " "));
+  }, [location.pathname]);
 
-  const handleSearchClick = useCallback(() => {
-    setSearchModalOpen(true);
-  }, []);
-
-  const handleDarkModeToggle = useCallback(() => {
-    setDarkMode(prev => !prev);
-  }, []);
+  const toggleFullscreen = () => {
+    if (!document.fullscreenElement) {
+      document.documentElement.requestFullscreen?.();
+    } else {
+      document.exitFullscreen?.();
+    }
+  };
 
   return (
-    <ThemeProvider theme={fintechLightTheme}>
-      <AppBar position="sticky" elevation={0}>
-        {/* Subtle light gradient background */}
-        <Box
-          sx={{
-            position: 'absolute',
-            inset: 0,
-            pointerEvents: 'none',
-            background: 'linear-gradient(135deg, #f8fafc 0%, #f1f5f9 50%, #e2e8f0 100%)',
-            zIndex: -2,
-          }}
-        />
+    <>
+      <header
+        className={`enterprise-header ${
+          settings.navbarStyle === "solid" ? "enterprise-header-solid" : ""
+        }`}
+      >
+        <Stack direction="row" alignItems="center" spacing={2} sx={{ minWidth: 0 }}>
+          <IconButton
+            onClick={() => setSidebarOpen(!sidebarOpen)}
+            sx={{ display: { lg: "none" } }}
+            aria-label="Open navigation"
+          >
+            <MenuRounded />
+          </IconButton>
 
-        {/* Very light glass overlay + subtle accent */}
-        <Box
-          sx={{
-            position: 'absolute',
-            inset: 0,
-            backdropFilter: 'blur(2px)',
-            background: 'linear-gradient(to bottom right, rgba(14,165,233,0.04), rgba(132,204,22,0.03), transparent 70%)',
-            opacity: 0.95,
-            pointerEvents: 'none',
-            zIndex: -1,
-          }}
-        />
-
-        <Toolbar sx={{ px: { xs: 2, sm: 3, lg: 5 }, minHeight: 64 }}>
-          {/* Left – Mobile menu + Logo */}
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 3 }}>
-            <IconButton
-              color="inherit"
-              edge="start"
-              onClick={handleMenuClick}
-              sx={{ display: { lg: 'none' } }}
-              aria-label="open sidebar"
-            >
-              <MenuIcon sx={{ color: 'primary.main' }} />
-            </IconButton>
-
-            {/* Updated Logo + Brand – light mode friendly */}
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 2.5 }}>
-              <Box sx={{ position: 'relative' }}>
-                <Box
-                  sx={{
-                    width: 48,
-                    height: 48,
-                    borderRadius: '50%',
-                    background: 'linear-gradient(135deg, #0ea5e9, #0284c7, #0369a1)',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    boxShadow: '0 0 24px rgba(14,165,233,0.28)',
-                    border: '2.5px solid rgba(14,165,233,0.18)',
-                  }}
-                >
-                  <Typography
-                    variant="h6"
-                    sx={{
-                      color: '#ffffff',
-                      fontWeight: '900',
-                      fontSize: '1.45rem',
-                      letterSpacing: '-0.04em',
-                    }}
-                  >
-                    B/F
-                  </Typography>
-                </Box>
-
-                <Box
-                  sx={{
-                    position: 'absolute',
-                    inset: -6,
-                    borderRadius: '50%',
-                    background: 'radial-gradient(circle, rgba(14,165,233,0.28) 0%, transparent 70%)',
-                    filter: 'blur(10px)',
-                    animation: 'pulse 6s ease-in-out infinite',
-                    zIndex: -1,
-                  }}
-                />
-              </Box>
-
-              <Box>
-                <Typography
-                  variant="h6"
-                  component="div"
-                  sx={{
-                    background: 'linear-gradient(90deg, #38bdf8, #0ea5e9, #0284c7)',
-                    WebkitBackgroundClip: 'text',
-                    WebkitTextFillColor: 'transparent',
-                    fontWeight: 800,
-                    letterSpacing: '-0.03em',
-                    lineHeight: 1.1,
-                  }}
-                >
-                  BALAJI
-                  <Box component="span" sx={{ color: 'text.primary', ml: 1 }}>
-                    FINANCE
-                  </Box>
-                </Typography>
-
-                <Typography
-                  variant="caption"
-                  sx={{
-                    color: 'primary.main',
-                    fontWeight: 600,
-                    letterSpacing: '0.06em',
-                    opacity: 0.9,
-                    fontSize: '0.78rem',
-                  }}
-                >
-                  Premium Banking Dashboard
-                </Typography>
-              </Box>
+          <Link to="/" className="enterprise-brand" aria-label="Sri Balaji Finance dashboard">
+            <Box className="enterprise-brand-mark">
+              <AccountBalanceRounded fontSize="small" />
             </Box>
+            <Box sx={{ display: { xs: "none", sm: "block" }, minWidth: 0 }}>
+              <Typography variant="subtitle1" sx={{ lineHeight: 1, fontWeight: 850 }}>
+                {COMPANY_APP_NAME}
+              </Typography>
+              <Typography variant="caption" color="text.secondary">
+                {COMPANY_ADDRESS}
+              </Typography>
+            </Box>
+          </Link>
+
+          <Box sx={{ display: { xs: "none", md: "block" }, minWidth: 0 }}>
+            <Stack direction="row" alignItems="center" spacing={0.75}>
+              {breadcrumbs.map((crumb, index) => (
+                <React.Fragment key={`${crumb}-${index}`}>
+                  {index > 0 && <Typography color="text.disabled">/</Typography>}
+                  <Typography
+                    variant="body2"
+                    color={index === breadcrumbs.length - 1 ? "text.primary" : "text.secondary"}
+                    sx={{ textTransform: "capitalize", fontWeight: index === breadcrumbs.length - 1 ? 700 : 500 }}
+                  >
+                    {crumb}
+                  </Typography>
+                </React.Fragment>
+              ))}
+            </Stack>
           </Box>
+        </Stack>
 
-          {/* Right side actions */}
-          <Box sx={{ ml: 'auto', display: 'flex', alignItems: 'center', gap: 1.5 }}>
-            <IconButton
-              color="inherit"
-              onClick={handleSearchClick}
-              sx={{
-                ...(searchModalOpen && {
-                  boxShadow: `0 0 0 4px ${alpha(theme.palette.primary.main, 0.28)}`,
-                }),
-              }}
-            >
-              <SearchIcon sx={{ color: 'primary.main' }} />
+        <TextField
+          className="enterprise-global-search"
+          size="small"
+          placeholder="Search pages, ledgers, customers..."
+          onClick={() => setSearchModalOpen(true)}
+          InputProps={{
+            readOnly: true,
+            startAdornment: (
+              <InputAdornment position="start">
+                <SearchRounded fontSize="small" />
+              </InputAdornment>
+            ),
+            endAdornment: (
+              <InputAdornment position="end">
+                <Chip size="small" label="Ctrl K" />
+              </InputAdornment>
+            ),
+          }}
+          sx={{ display: { xs: "none", lg: "block" } }}
+        />
+
+        <Stack direction="row" alignItems="center" spacing={0.75} sx={{ ml: "auto" }}>
+          <Tooltip title="Search">
+            <IconButton onClick={() => setSearchModalOpen(true)} aria-label="Open command search">
+              <SearchRounded />
             </IconButton>
-
-            <SearchModal
-              id="search-modal"
-              modalOpen={searchModalOpen}
-              setModalOpen={setSearchModalOpen}
-            />
-
-            <Notifications />
-            <Help />
-            <UserMenu />
-
-            <IconButton
-              color="inherit"
-              onClick={handleDarkModeToggle}
-              sx={{ ml: 1 }}
-            >
-              {darkMode ? <Brightness7Icon sx={{ color: 'secondary.main' }} /> : <Brightness4Icon sx={{ color: 'primary.main' }} />}
+          </Tooltip>
+          <Notifications />
+          <Help />
+          <Tooltip title="Full screen">
+            <IconButton onClick={toggleFullscreen} aria-label="Toggle full screen">
+              <FullscreenRounded />
             </IconButton>
+          </Tooltip>
+          <Tooltip title="Theme settings">
+            <IconButton onClick={() => setSettingsOpen(true)} aria-label="Open theme settings">
+              <SettingsRounded />
+            </IconButton>
+          </Tooltip>
+          <ThemeToggle />
+          <UserMenu align="right" />
+        </Stack>
+      </header>
 
-            <Box
-              sx={{
-                width: '1px',
-                height: 36,
-                backgroundColor: 'divider',
-                mx: 1.5,
-                opacity: 0.5,
-              }}
-            />
-          </Box>
-        </Toolbar>
-      </AppBar>
-
-      {/* Animations – kept subtle */}
-      <Box
-        component="style"
-        dangerouslySetInnerHTML={{
-          __html: `
-            @keyframes pulse {
-              0%, 100% { opacity: 0.28; transform: scale(1); }
-              50% { opacity: 0.55; transform: scale(1.12); }
-            }
-          `,
-        }}
-      />
-    </ThemeProvider>
+      <SearchModal id="search-modal" modalOpen={searchModalOpen} setModalOpen={setSearchModalOpen} />
+      <EnterpriseThemePanel open={settingsOpen} onClose={() => setSettingsOpen(false)} />
+    </>
   );
 }
 

@@ -1,100 +1,36 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { useAuth } from "../../utils/AuthContext";
 import { useNavigate } from "react-router-dom";
 import {
   Box,
-  TextField,
   Button,
-  InputAdornment,
-  IconButton,
+  Checkbox,
   CircularProgress,
+  Divider,
+  FormControlLabel,
+  IconButton,
+  InputAdornment,
+  Link,
   Paper,
+  Stack,
+  TextField,
   Typography,
-  Fade,
 } from "@mui/material";
 import {
+  AccountBalanceRounded,
+  LockRounded,
+  PersonRounded,
+  ShieldRounded,
+  TrendingUpRounded,
   Visibility,
   VisibilityOff,
-  AccountCircle,
-  Lock,
 } from "@mui/icons-material";
-
+import { motion } from "framer-motion";
 import { successToast, errorToast } from "toastify";
 import { API_BASE } from "lib/config";
 import { setSession } from "src/utils/session";
-
-
-const backgroundImages = [
-
- 
-
-  // ----- Daily Business Work / Planning -----
-  "https://images.unsplash.com/photo-1554224154-26032ffc0d07?auto=format&fit=crop&q=80&w=2000",
-  "https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?auto=format&fit=crop&q=80&w=2000",
-  "https://images.unsplash.com/photo-1504384308090-c894fdcc538d?auto=format&fit=crop&q=80&w=2000",
-
-  // ----- Money Saving / Growth Concept -----
-  "https://images.unsplash.com/photo-1565372919476-6c3c5fbe8b7b?auto=format&fit=crop&q=80&w=2000",
-  "https://images.unsplash.com/photo-1581092335397-9583eb92d232?auto=format&fit=crop&q=80&w=2000",
-
-  // ----- Lord Venkateswara (Balaji) -----
-  "https://upload.wikimedia.org/wikipedia/commons/9/9d/Lord_Venkateswara_Tirumala.jpg",
-  "https://upload.wikimedia.org/wikipedia/commons/3/3f/Tirupati_Balaji_Temple_Deity.jpg",
-  "https://upload.wikimedia.org/wikipedia/commons/4/4a/Sri_Venkateswara_Swamy.jpg",
-  "https://upload.wikimedia.org/wikipedia/commons/0/09/Venkateswara_Tirumala_Deity.jpg",
-  "https://upload.wikimedia.org/wikipedia/commons/2/2c/Lord_Balaji_Tirupati.jpg",
-
-  
-   // 🛕 Lord Venkateswara (Tirupati Balaji)
-  "https://upload.wikimedia.org/wikipedia/commons/9/9d/Lord_Venkateswara_Tirumala.jpg",
-  "https://upload.wikimedia.org/wikipedia/commons/3/3f/Tirupati_Balaji_Temple_Deity.jpg",
-  "https://upload.wikimedia.org/wikipedia/commons/4/4a/Sri_Venkateswara_Swamy.jpg",
-  "https://upload.wikimedia.org/wikipedia/commons/0/09/Venkateswara_Tirumala_Deity.jpg",
-  "https://upload.wikimedia.org/wikipedia/commons/2/2c/Lord_Balaji_Tirupati.jpg",
-
-  // 🌄 Temple & Darshan Views
-  "https://upload.wikimedia.org/wikipedia/commons/e/e5/Tirumala_Temple_1.jpg",
-  "https://upload.wikimedia.org/wikipedia/commons/5/5e/Tirupati_Temple_View.jpg",
-
-  // ✨ Decorative / Devotional Style
-  "https://upload.wikimedia.org/wikipedia/commons/6/6c/Balaji_Gold_Alankaram.jpg",
-  "https://upload.wikimedia.org/wikipedia/commons/f/f5/Tirumala_Srivari.jpg",
-
-  // 📊 Trading Screens / Charts (Premium)
-  "https://images.unsplash.com/photo-1639322537228-f710d846310a?auto=format&fit=crop&q=80&w=2000",
-  "https://images.unsplash.com/photo-1611078489935-0cb964de46d6?auto=format&fit=crop&q=80&w=2000",
-  "https://images.unsplash.com/photo-1642543492481-44e81e3914a7?auto=format&fit=crop&q=80&w=2000",
-  "https://images.unsplash.com/photo-1621761191319-c6fb62004040?auto=format&fit=crop&q=80&w=2000",
-
-  // 💰 Money / Investment (Clean Look)
-  "https://images.unsplash.com/photo-1624996379697-f01d168b1a52?auto=format&fit=crop&q=80&w=2000",
-  "https://images.unsplash.com/photo-1580519542036-c47de6196ba5?auto=format&fit=crop&q=80&w=2000",
-  "https://images.unsplash.com/photo-1605902711622-cfb43c4437d1?auto=format&fit=crop&q=80&w=2000",
-  "https://images.unsplash.com/photo-1618044733300-9472054094ee?auto=format&fit=crop&q=80&w=2000",
-
-  // 🏦 Fintech / Digital Banking
-  "https://images.unsplash.com/photo-1607082348824-0a96f2a4b9da?auto=format&fit=crop&q=80&w=2000",
-  "https://images.unsplash.com/photo-1611974789855-9c2a0a7236a3?auto=format&fit=crop&q=80&w=2000",
-  "https://images.unsplash.com/photo-1581090700227-1e37b190418e?auto=format&fit=crop&q=80&w=2000",
-
-  // 📈 Growth / Success / Analytics
-  "https://images.unsplash.com/photo-1559523161-0fc0d8b38a7a?auto=format&fit=crop&q=80&w=2000",
-  "https://images.unsplash.com/photo-1454165804606-c3d57bc86b40?auto=format&fit=crop&q=80&w=2000",
-  "https://images.unsplash.com/photo-1508385082359-f48e4c5d1a3d?auto=format&fit=crop&q=80&w=2000",
-
-  // 🤖 AI + Finance (Modern Feel)
-  "https://images.unsplash.com/photo-1534751516642-a1af1ef26a56?auto=format&fit=crop&q=80&w=2000",
-  "https://images.unsplash.com/photo-1550751827-4bd374c3f58b?auto=format&fit=crop&q=80&w=2000",
-
-  // 💼 Corporate / Professional
-  "https://images.unsplash.com/photo-1556745757-8d76bdb6984b?auto=format&fit=crop&q=80&w=2000",
-  "https://images.unsplash.com/photo-1520607162513-77705c0f0d4a?auto=format&fit=crop&q=80&w=2000",
-
-  // 💳 Cards / Payment / Wallet
-  "https://images.unsplash.com/photo-1563013544-824ae1b704d3?auto=format&fit=crop&q=80&w=2000",
-  "https://images.unsplash.com/photo-1601597111158-2fceff292cdc?auto=format&fit=crop&q=80&w=2000",
-
-];
+import ThemeToggle from "../ThemeToggle";
+import { COMPANY_ADDRESS, COMPANY_APP_NAME } from "src/lib/company";
 
 const Login = () => {
   const { login } = useAuth();
@@ -104,19 +40,10 @@ const Login = () => {
   const [errors, setErrors] = useState({});
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
-  const [currentImageIndex, setCurrentImageIndex] = useState(0);
+  const [rememberMe, setRememberMe] = useState(true);
 
-  // Auto-rotate background images every 5 seconds
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setCurrentImageIndex((prev) => (prev + 1) % backgroundImages.length);
-    }, 5000);
-
-    return () => clearInterval(interval);
-  }, []);
-
-  const handleChange = (field) => (e) => {
-    setFormData((prev) => ({ ...prev, [field]: e.target.value }));
+  const handleChange = (field) => (event) => {
+    setFormData((prev) => ({ ...prev, [field]: event.target.value }));
     if (errors[field]) setErrors((prev) => ({ ...prev, [field]: "" }));
   };
 
@@ -128,8 +55,8 @@ const Login = () => {
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
+  const handleSubmit = async (event) => {
+    event.preventDefault();
     if (!validateForm()) return;
 
     setLoading(true);
@@ -148,8 +75,9 @@ const Login = () => {
       if (resp.ok && data.token) {
         setSession("token", data.token);
         setSession("username", data.name || formData.username);
+        if (rememberMe) localStorage.setItem("remembered-user", formData.username.trim());
         login({ name: data.name || formData.username, token: data.token });
-        successToast("Login successful 🙏");
+        successToast("Login successful");
         navigate("/", { replace: true });
       } else {
         errorToast(data.message || "Invalid credentials");
@@ -163,194 +91,140 @@ const Login = () => {
   };
 
   return (
-    <Box
-      sx={{
-        width: "100vw",
-        height: "100vh",
-        display: "flex",
-        position: "relative",
-        overflow: "hidden",
-        bgcolor: "#0a0a0a",
-      }}
-    >
-      {/* Background Image Carousel */}
-      <Box sx={{ position: "absolute", inset: 0, zIndex: 1 }}>
-        {backgroundImages.map((src, idx) => (
-          <Fade
-            key={src}
-            in={idx === currentImageIndex}
-            timeout={{ enter: 1400, exit: 900 }}
-            unmountOnExit
-          >
-            <Box
-              component="img"
-              src={src}
-              alt="background"
-              sx={{
-                position: "absolute",
-                inset: 0,
-                width: "100%",
-                height: "100%",
-                objectFit: "cover",
-                objectPosition: "center",
-              }}
-            />
-          </Fade>
-        ))}
+    <Box className="login-enterprise">
+      <Box className="login-visual">
+        <Box className="login-visual-overlay" />
+        <Stack spacing={4} sx={{ position: "relative", zIndex: 2, maxWidth: 720 }}>
+          <Stack direction="row" spacing={1.5} alignItems="center">
+            <Box className="login-brand-mark">
+              <AccountBalanceRounded />
+            </Box>
+            <Box>
+              <Typography variant="h5" color="white">
+                {COMPANY_APP_NAME}
+              </Typography>
+              <Typography variant="body2" sx={{ color: "rgba(255,255,255,0.72)" }}>
+                {COMPANY_ADDRESS}
+              </Typography>
+            </Box>
+          </Stack>
 
-        {/* Overlay – dark with subtle red tint for brand feel */}
-        <Box
-          sx={{
-            position: "absolute",
-            inset: 0,
-            background:
-              "linear-gradient(135deg, rgba(10,10,10,0.78) 0%, rgba(139,0,0,0.28) 100%)",
-            zIndex: 2,
-          }}
-        />
-      </Box>
-
-      {/* Login Form Panel */}
-      <Box
-        sx={{
-          width: { xs: "100%", md: "38%", lg: "35%" },
-          minWidth: { md: "400px" },
-          height: "100%",
-          ml: { md: "auto" },
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          position: "relative",
-          zIndex: 10,
-          px: { xs: 2, sm: 4 },
-        }}
-      >
-        <Paper
-          elevation={10}
-          sx={{
-            p: { xs: 4, sm: 5, md: 6 },
-            width: "100%",
-            maxWidth: 480,
-            borderRadius: 0,
-            bgcolor: "rgba(255, 255, 255, 0.91)",
-            backdropFilter: "blur(14px)",
-            border: "1px solid rgba(255,255,255,0.35)",
-            boxShadow: "0 16px 60px rgba(0,0,0,0.4)",
-          }}
-        >
-          {/* Brand / Title */}
-          <Box textAlign="center" mb={5}>
-            <Typography
-              variant="h3"
-              fontWeight={900}
-              sx={{
-                color: "#8b0000",
-                letterSpacing: 3,
-                fontFamily: "'Playfair Display', serif",
-                textShadow: "1px 1px 4px rgba(0,0,0,0.2)",
-              }}
-            >
-              SRI BALAJI
+          <Box>
+            <Typography variant="h2" sx={{ color: "white", maxWidth: 680 }}>
+              Enterprise-grade finance operations, built for clarity.
             </Typography>
-            <Typography
-              variant="subtitle1"
-              color="#555"
-              fontWeight={500}
-              mt={1}
-              letterSpacing={0.8}
-            >
-              Chit Funds • Secure Login Portal
+            <Typography variant="h6" sx={{ color: "rgba(255,255,255,0.72)", mt: 2, fontWeight: 500 }}>
+              Manage cashbooks, ledgers, loans, dues, approvals, and reports with a modern banking interface.
             </Typography>
           </Box>
 
-          {/* Form */}
-          <form onSubmit={handleSubmit} noValidate>
-            <TextField
-              margin="normal"
-              fullWidth
-              label="Username"
-              value={formData.username}
-              onChange={handleChange("username")}
-              error={!!errors.username}
-              helperText={errors.username}
-              InputProps={{
-                startAdornment: (
-                  <InputAdornment position="start">
-                    <AccountCircle sx={{ color: "#8b0000" }} />
-                  </InputAdornment>
-                ),
-              }}
-              sx={{ mb: 3 }}
-            />
+          <Stack direction={{ xs: "column", md: "row" }} spacing={2}>
+            {[
+              { icon: ShieldRounded, title: "Secure Access", text: "Token based authentication" },
+              { icon: TrendingUpRounded, title: "Live Insights", text: "Collections and portfolio KPIs" },
+              { icon: AccountBalanceRounded, title: "ERP Ready", text: "Reports, ledgers, audit flows" },
+            ].map((item) => {
+              const Icon = item.icon;
+              return (
+                <Paper key={item.title} className="login-feature" elevation={0}>
+                  <Icon />
+                  <Typography variant="subtitle2" color="white">
+                    {item.title}
+                  </Typography>
+                  <Typography variant="caption">{item.text}</Typography>
+                </Paper>
+              );
+            })}
+          </Stack>
+        </Stack>
+      </Box>
 
-            <TextField
-              margin="normal"
-              fullWidth
-              label="Password"
-              type={showPassword ? "text" : "password"}
-              value={formData.password}
-              onChange={handleChange("password")}
-              error={!!errors.password}
-              helperText={errors.password}
-              InputProps={{
-                startAdornment: (
-                  <InputAdornment position="start">
-                    <Lock sx={{ color: "#8b0000" }} />
-                  </InputAdornment>
-                ),
-                endAdornment: (
-                  <InputAdornment position="end">
-                    <IconButton
-                      onClick={() => setShowPassword((prev) => !prev)}
-                      edge="end"
-                    >
-                      {showPassword ? <VisibilityOff /> : <Visibility />}
-                    </IconButton>
-                  </InputAdornment>
-                ),
-              }}
-              sx={{ mb: 4 }}
-            />
+      <Box className="login-panel-wrap">
+        <Box sx={{ position: "absolute", top: 22, right: 24 }}>
+          <ThemeToggle />
+        </Box>
 
-            <Button
-              type="submit"
-              fullWidth
-              variant="contained"
-              size="large"
-              disabled={loading}
-              sx={{
-                py: 1.8,
-                fontSize: "1.18rem",
-                fontWeight: 700,
-                borderRadius: 0,
-                background: "linear-gradient(90deg, #8b0000 0%, #c41e3a 100%)",
-                boxShadow: "0 8px 25px rgba(139,0,0,0.4)",
-                "&:hover": {
-                  background: "linear-gradient(90deg, #a00000 0%, #d32f2f 100%)",
-                  transform: "translateY(-3px)",
-                  boxShadow: "0 14px 35px rgba(139,0,0,0.5)",
-                },
-                transition: "all 0.3s ease",
-              }}
-            >
-              {loading ? (
-                <CircularProgress size={30} color="inherit" />
-              ) : (
-                "Sign In"
-              )}
-            </Button>
-          </form>
+        <motion.div
+          initial={{ opacity: 0, y: 18 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.35, ease: "easeOut" }}
+          style={{ width: "100%", maxWidth: 460 }}
+        >
+          <Paper className="enterprise-card login-panel" elevation={0}>
+            <Stack spacing={1} sx={{ mb: 3 }}>
+              <Typography variant="h4">Welcome back</Typography>
+              <Typography variant="body2" color="text.secondary">
+                Sign in to continue to the enterprise finance command center.
+              </Typography>
+            </Stack>
 
-          <Typography
-            variant="body2"
-            color="text.secondary"
-            align="center"
-            mt={5}
-            fontSize="0.9rem"
-          >
-            © {new Date().getFullYear()} Sri Balaji Chit Funds • Hyderabad
-          </Typography>
-        </Paper>
+            <form onSubmit={handleSubmit} noValidate>
+              <Stack spacing={2.2}>
+                <TextField
+                  fullWidth
+                  label="Username"
+                  value={formData.username}
+                  onChange={handleChange("username")}
+                  error={!!errors.username}
+                  helperText={errors.username}
+                  autoComplete="username"
+                  InputProps={{
+                    startAdornment: (
+                      <InputAdornment position="start">
+                        <PersonRounded color="primary" />
+                      </InputAdornment>
+                    ),
+                  }}
+                />
+
+                <TextField
+                  fullWidth
+                  label="Password"
+                  type={showPassword ? "text" : "password"}
+                  value={formData.password}
+                  onChange={handleChange("password")}
+                  error={!!errors.password}
+                  helperText={errors.password}
+                  autoComplete="current-password"
+                  InputProps={{
+                    startAdornment: (
+                      <InputAdornment position="start">
+                        <LockRounded color="primary" />
+                      </InputAdornment>
+                    ),
+                    endAdornment: (
+                      <InputAdornment position="end">
+                        <IconButton onClick={() => setShowPassword((prev) => !prev)} edge="end" aria-label="Toggle password">
+                          {showPassword ? <VisibilityOff /> : <Visibility />}
+                        </IconButton>
+                      </InputAdornment>
+                    ),
+                  }}
+                />
+
+                <Stack direction="row" justifyContent="space-between" alignItems="center">
+                  <FormControlLabel
+                    control={<Checkbox checked={rememberMe} onChange={(event) => setRememberMe(event.target.checked)} />}
+                    label="Remember me"
+                  />
+                  <Link component="button" type="button" underline="hover" variant="body2">
+                    Forgot password?
+                  </Link>
+                </Stack>
+
+                <Button type="submit" fullWidth variant="contained" size="large" disabled={loading} sx={{ py: 1.35 }}>
+                  {loading ? <CircularProgress size={24} color="inherit" /> : "Sign in securely"}
+                </Button>
+              </Stack>
+            </form>
+
+            <Divider sx={{ my: 3 }} />
+
+            <Typography variant="caption" color="text.secondary">
+              Protected workspace for authorized finance users. Activity may be logged for audit and compliance.
+            </Typography>
+          </Paper>
+        </motion.div>
       </Box>
     </Box>
   );

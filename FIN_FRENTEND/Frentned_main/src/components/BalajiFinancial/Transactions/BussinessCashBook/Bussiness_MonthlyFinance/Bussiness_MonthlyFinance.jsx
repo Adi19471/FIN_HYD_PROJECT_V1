@@ -23,6 +23,7 @@ import axios from "axios";
 import { successToast, errorToast } from "toastify"; // assuming this exists
 import { API_BASE } from "lib/config";
 import { getSession } from "src/utils/session";
+import { AppDatePicker } from "src/components/ui";
 
 const BusinessMonthlyFinance = () => {
   const token = getSession("token");
@@ -152,7 +153,7 @@ const BusinessMonthlyFinance = () => {
     }
 
     if (!form.date?.isValid()) {
-      errorToast("Please select a valid date and time");
+      errorToast("Please select a valid date");
       return;
     }
 
@@ -166,7 +167,7 @@ const BusinessMonthlyFinance = () => {
         installmentAmount: form.installmentAmount,
         periodFrom: form.periodFrom,
         periodTo: form.periodTo,
-        date: form.date.format("YYYY-MM-DD HH:mm:ss"),
+        date: form.date.format("YYYY-MM-DD"),
         balance: form.balance,
         paid: form.paid,
         amountPaid: principal,
@@ -315,39 +316,17 @@ const BusinessMonthlyFinance = () => {
         </Typography>
 
         <Grid container spacing={2.5} alignItems="flex-end">
-          {/* Payment Date - using dayjs with native date/time inputs */}
           <Grid item xs={12} md={4}>
-            <TextField
+            <AppDatePicker
               label="Payment Date"
-              type="date"
-              value={form.date ? form.date.format("YYYY-MM-DD") : ""}
-              onChange={(e) => setForm((prev) => ({ ...prev, date: dayjs(e.target.value) }))}
-              fullWidth
-              size="small"
-              InputLabelProps={{ shrink: true }}
+              value={form.date}
+              onChange={(value) => setForm((prev) => ({ ...prev, date: dayjs(value) }))}
             />
           </Grid>
           <Grid item xs={12} md={4}>
             <TextField
-              label="Payment Time"
-              type="time"
-              value={form.date ? form.date.format("HH:mm") : ""}
-              onChange={(e) => {
-                const [hours, minutes] = e.target.value.split(":");
-                setForm((prev) => ({
-                  ...prev,
-                  date: prev.date.hour(parseInt(hours) || 0).minute(parseInt(minutes) || 0),
-                }));
-              }}
-              fullWidth
-              size="small"
-              InputLabelProps={{ shrink: true }}
-            />
-          </Grid>
-          <Grid item xs={12} md={4}>
-            <TextField
-              label="Selected Date & Time"
-              value={form.date?.isValid() ? form.date.format("DD-MM-YYYY HH:mm") : "-"}
+              label="Selected Date"
+              value={form.date?.isValid() ? form.date.format("DD-MM-YYYY") : "-"}
               fullWidth
               size="small"
               InputProps={{ readOnly: true }}
