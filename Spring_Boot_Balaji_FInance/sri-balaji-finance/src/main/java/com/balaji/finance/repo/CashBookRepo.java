@@ -19,6 +19,7 @@ import com.balaji.finance.dto.DateWiseCashBookProjection;
 import com.balaji.finance.dto.DateWiseCollectionsProjection;
 import com.balaji.finance.dto.LoanCollectionProjection;
 import com.balaji.finance.dto.PartnerCreditSummaryProjection;
+import com.balaji.finance.dto.PartnerPerformanceReport;
 import com.balaji.finance.dto.RevenueExpenseProjection;
 import com.balaji.finance.dto.SumOfCreditsAndDebitsProjection;
 import com.balaji.finance.dto.SummaryByParticularsProjection;
@@ -272,7 +273,7 @@ public interface CashBookRepo extends JpaRepository<CashBook, Long> {
 			    'DF INTEREST',
 			    'MF LOAN INSTALLMENT',
 			    'MF INTEREST'
-			);
+			)
 						""", nativeQuery = true)
 	LoanCollectionProjection getLoanCollectionDataByDateRange(@Param("fromDate") LocalDateTime fromDate,
 			@Param("toDate") LocalDateTime toDate);
@@ -296,12 +297,13 @@ public interface CashBookRepo extends JpaRepository<CashBook, Long> {
 			        THEN CREDIT ELSE 0 END) AS monthlyLoanInterestReceived
 
 			FROM cash_book
-			AND ACCOUNT_MASTER_CODE IN (
+			 WHERE
+			  ACCOUNT_MASTER_CODE IN (
 			    'DF LOAN INSTALLMENT',
 			    'DF INTEREST',
 			    'MF LOAN INSTALLMENT',
 			    'MF INTEREST'
-			);
+			)
 						""", nativeQuery = true)
 	LoanCollectionProjection getLoanCollectionData();
 
@@ -481,5 +483,100 @@ public interface CashBookRepo extends JpaRepository<CashBook, Long> {
 	List<PartnerCreditSummaryProjection> getCreditOfAccountCodeForEveryPartner(
 	        @Param("accountMasterCodes") List<String> accountMasterCodes,
 	        @Param("personalInfoIds") List<String> personalInfoIds);
+	
+	@Query(value = """
+			SELECT
+			    partner.PERSONAL_INFO_ID AS id,
+			    partner.FIRST_NAME AS firstName,
+			    partner.LAST_NAME AS lastName,
+
+			    SUM(CASE
+			        WHEN cb.ACCOUNT_MASTER_CODE IN ('DF LOAN','MF LOAN')
+			        THEN cb.CREDIT ELSE 0 END) AS disbursedAmount,
+
+			    SUM(CASE
+			        WHEN cb.ACCOUNT_MASTER_CODE IN ('DF LOAN INSTALLMENT','MF LOAN INSTALLMENT')
+			        THEN cb.CREDIT ELSE 0 END) AS loanInstallmentsReceived,
+
+			    SUM(CASE
+			        WHEN cb.ACCOUNT_MASTER_CODE IN ('DF INTEREST','MF INTEREST')
+			        THEN cb.CREDIT ELSE 0 END) AS interestReceived,
+
+			    SUM(CASE
+			        WHEN cb.ACCOUNT_MASTER_CODE IN ('DF DOC CHARGES','MF DOC CHARGES')
+			        THEN cb.CREDIT ELSE 0 END) AS documentCharges
+
+			FROM cash_book cb
+			LEFT JOIN business_member bm
+			    ON cb.BUSINESS_MEMBER_ID = bm.BUSINESS_MEMBER_ID
+			LEFT JOIN personal_info partner
+			    ON bm.PARTNER_ID = partner.PERSONAL_INFO_ID
+
+			WHERE cb.TRANS_DATE BETWEEN :fromDate AND :toDate
+			AND cb.ACCOUNT_MASTER_CODE IN (
+			    'DF LOAN INSTALLMENT',
+			    'DF INTEREST',
+			    'MF LOAN INSTALLMENT',
+			    'MF INTEREST',
+			    'DF DOC CHARGES',
+			    'MF DOC CHARGES',
+			    'DF LOAN',
+			    'MF LOAN'
+			) AND bm.PARTNER_ID IS NOT NULL
+
+			GROUP BY
+			    partner.PERSONAL_INFO_ID,
+			    partner.FIRST_NAME,
+			    partner.LAST_NAME
+			""", nativeQuery = true)
+	List<PartnerPerformanceReport> getLoanSummaryOfPartnersOfDateRange(@Param("fromDate") LocalDateTime fromDate,
+			@Param("toDate") LocalDateTime toDate);
+
+	@Query(value = """
+			SELECT
+			    partner.PERSONAL_INFO_ID AS id,
+			    partner.FIRST_NAME AS firstName,
+			    partner.LAST_NAME AS lastName,
+
+			    SUM(CASE
+			        WHEN cb.ACCOUNT_MASTER_CODE IN ('DF LOAN','MF LOAN')
+			        THEN cb.CREDIT ELSE 0 END) AS disbursedAmount,
+
+			    SUM(CASE
+			        WHEN cb.ACCOUNT_MASTER_CODE IN ('DF LOAN INSTALLMENT','MF LOAN INSTALLMENT')
+			        THEN cb.CREDIT ELSE 0 END) AS loanInstallmentsReceived,
+
+			    SUM(CASE
+			        WHEN cb.ACCOUNT_MASTER_CODE IN ('DF INTEREST','MF INTEREST')
+			        THEN cb.CREDIT ELSE 0 END) AS interestReceived,
+
+			    SUM(CASE
+			        WHEN cb.ACCOUNT_MASTER_CODE IN ('DF DOC CHARGES','MF DOC CHARGES')
+			        THEN cb.CREDIT ELSE 0 END) AS documentCharges
+
+			FROM cash_book cb
+			LEFT JOIN business_member bm
+			    ON cb.BUSINESS_MEMBER_ID = bm.BUSINESS_MEMBER_ID
+			LEFT JOIN personal_info partner
+			    ON bm.PARTNER_ID = partner.PERSONAL_INFO_ID
+
+			WHERE cb.ACCOUNT_MASTER_CODE IN (
+			    'DF LOAN INSTALLMENT',
+			    'DF INTEREST',
+			    'MF LOAN INSTALLMENT',
+			    'MF INTEREST',
+			    'DF DOC CHARGES',
+			    'MF DOC CHARGES',
+			    'DF LOAN',
+			    'MF LOAN'
+			)
+			AND bm.PARTNER_ID IS NOT NULL
+
+			GROUP BY
+			    partner.PERSONAL_INFO_ID,
+			    partner.FIRST_NAME,
+			    partner.LAST_NAME
+			""", nativeQuery = true)
+	List<PartnerPerformanceReport> getLoanSummaryOfPartners();
 
 }
