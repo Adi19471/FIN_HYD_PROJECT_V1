@@ -182,7 +182,7 @@ const Customer_Dues = () => {
       {/* Company Header */}
       <Box sx={{ textAlign: "center", mb: 3 }}>
         <Typography variant="h5" fontWeight="bold">SRI BALAJI ENTERPRISES</Typography>
-        <Typography>Madhura Nagar, Hyderabad.</Typography>
+        <Typography>Amerpeta, Hyderabad.</Typography>
         <Typography variant="body2" sx={{ mt: 1 }}>
           Date: {dayjs().format("DD-MMM-YYYY")}
         </Typography>

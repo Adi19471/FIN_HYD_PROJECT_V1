@@ -1,665 +1,162 @@
-import React, {
-  useState,
-  useEffect,
-  useMemo,
-} from "react";
-
+import React, { useEffect, useMemo, useState } from "react";
 import {
-  Box,
-  Typography,
-  Paper,
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TableRow,
-  Button,
-  Grid,
-  Divider,
   Autocomplete,
-  CircularProgress,
-  TablePagination,
+  Button,
   Checkbox,
   FormControlLabel,
-  Radio,
-  RadioGroup,
+  Grid,
+  MenuItem,
+  Paper,
+  Stack,
   TextField,
 } from "@mui/material";
-
 import axios from "axios";
 import dayjs from "dayjs";
-
 import { API_BASE } from "lib/config";
 import { getSession } from "src/utils/session";
+import { errorToast } from "toastify";
+import { DataTable, PageHeader } from "src/components/ui";
+
+const formatAmount = (amount) => Number(amount || 0).toLocaleString("en-IN");
+const formatDate = (value) => (value ? dayjs(value).format("DD-MMM-YYYY") : "-");
 
 const Installment_Dues = () => {
-  const [loading, setLoading] =
-    useState(false);
-
+  const [loading, setLoading] = useState(false);
   const [rows, setRows] = useState([]);
+  const [partners, setPartners] = useState([]);
+  const [selectedPartner, setSelectedPartner] = useState(null);
+  const [reportType, setReportType] = useState("all");
+  const [activeLoans, setActiveLoans] = useState(true);
+  const [lateFee, setLateFee] = useState(false);
 
-  // PARTNER DROPDOWN
-  const [partners, setPartners] =
-    useState([]);
+  const token = getSession()?.token || getSession("token") || "";
+  const headers = useMemo(() => ({ Authorization: `Bearer ${token}` }), [token]);
 
-  const [selectedPartner, setSelectedPartner] =
-    useState(null);
-
-  const [reportType, setReportType] =
-    useState("all");
-
-  const [activeLoans, setActiveLoans] =
-    useState(true);
-
-  const [lateFee, setLateFee] =
-    useState(false);
-
-  const [page, setPage] = useState(0);
-
-  const [rowsPerPage, setRowsPerPage] =
-    useState(10);
-
-  // TOKEN
-  const token =
-    getSession()?.token ||
-    getSession("token") ||
-    "";
-
-  const headers = useMemo(
-    () => ({
-      Authorization: `Bearer ${token}`,
-    }),
-    [token]
-  );
-
-  // ==========================================
-  // LOAD PARTNERS AUTOCOMPLETE
-  // ==========================================
-  const loadPartners = async (
-    query = ""
-  ) => {
+  const loadPartners = async (query = "") => {
     try {
-      const res = await axios.get(
-        `${API_BASE}/PersonalInfo/personInfoAutoCompleteByCategory/PARTNER`,
-        {
-          headers,
-          params: {
-            q: query.trim(),
-          },
-        }
+      const res = await axios.get(`${API_BASE}/PersonalInfo/personInfoAutoCompleteByCategory/PARTNER`, {
+        headers,
+        params: { q: query.trim() },
+      });
+
+      setPartners(
+        (res.data || []).map((item) => ({
+          id: item.id,
+          label: `${item.id || ""} - ${item.firstname || ""} ${item.lastname || ""} - ${item.mobile || "No Mobile"}`,
+          firstname: item.firstname,
+          lastname: item.lastname,
+          mobile: item.mobile,
+        }))
       );
-
-      console.log(
-        "PARTNER RESPONSE : ",
-        res.data
-      );
-
-      const list = (
-        res.data || []
-      ).map((item) => ({
-        id: item.id,
-
-        label: `${item.id || ""} - ${
-          item.firstname || ""
-        } ${
-          item.lastname || ""
-        } - ${
-          item.mobile || "No Mobile"
-        }`,
-
-        firstname: item.firstname,
-        lastname: item.lastname,
-        mobile: item.mobile,
-      }));
-
-      setPartners(list);
     } catch (error) {
-      console.error(
-        "Partner Load Error : ",
-        error
-      );
+      console.error("Partner Load Error : ", error);
     }
   };
 
-  // INITIAL LOAD
   useEffect(() => {
     loadPartners("");
   }, []);
 
-  // ==========================================
-  // GENERATE REPORT
-  // ==========================================
   const generateReport = async () => {
     try {
       setLoading(true);
-
       let url = "";
 
       if (reportType === "individual") {
         if (!selectedPartner?.id) {
-          alert(
-            "Please Select Partner"
-          );
-
-          setLoading(false);
+          errorToast("Please select partner");
           return;
         }
-
-        const partnerId =
-          selectedPartner.id;
-
-        url = `${API_BASE}/gurantorInstallmentDues/by-guarantor/${partnerId}/${activeLoans}/${lateFee}`;
+        url = `${API_BASE}/gurantorInstallmentDues/by-guarantor/${selectedPartner.id}/${activeLoans}/${lateFee}`;
       } else {
         url = `${API_BASE}/gurantorInstallmentDues/all/${activeLoans}/${lateFee}`;
       }
 
-      console.log(
-        "REPORT URL : ",
-        url
-      );
-
-      const res = await axios.get(
-        url,
-        {
-          headers,
-        }
-      );
-
-      console.log(
-        "REPORT RESPONSE : ",
-        res.data
-      );
-
-      setRows(res.data || []);
+      const res = await axios.get(url, { headers });
+      setRows((res.data || []).map((row, index) => ({ id: row.loanId || index + 1, sno: index + 1, ...row })));
     } catch (error) {
-      console.error(
-        "Generate Report Error : ",
-        error
-      );
+      console.error("Generate Report Error : ", error);
+      errorToast("Failed to generate report");
     } finally {
       setLoading(false);
     }
   };
 
-  // ==========================================
-  // PAGINATION
-  // ==========================================
-  const handleChangePage = (
-    event,
-    newPage
-  ) => {
-    setPage(newPage);
-  };
-
-  const handleChangeRowsPerPage = (
-    event
-  ) => {
-    setRowsPerPage(
-      parseInt(
-        event.target.value,
-        10
-      )
-    );
-
-    setPage(0);
-  };
+  const columns = [
+    { field: "sno", headerName: "S.No", width: 80 },
+    { field: "loanId", headerName: "Loan ID", width: 120 },
+    { field: "customerName", headerName: "Customer Name", minWidth: 190, flex: 1 },
+    { field: "guarantorName", headerName: "Guarantor Name", minWidth: 190, flex: 1 },
+    { field: "startDate", headerName: "Start Date", width: 140, valueFormatter: (value) => formatDate(value) },
+    { field: "endDate", headerName: "End Date", width: 140, valueFormatter: (value) => formatDate(value) },
+    { field: "amount", headerName: "Amount", width: 140, align: "right", headerAlign: "right", valueFormatter: (value) => formatAmount(value) },
+    { field: "duration", headerName: "Duration", width: 110, align: "center", headerAlign: "center" },
+    { field: "installmentAmount", headerName: "Inst. Amount", width: 150, align: "right", headerAlign: "right", valueFormatter: (value) => formatAmount(value) },
+    { field: "noOfInstallmentsPaid", headerName: "Paid", width: 110, align: "center", headerAlign: "center" },
+    { field: "noOfInstallmentsPending", headerName: "Pending", width: 120, align: "center", headerAlign: "center" },
+    { field: "balanceAmount", headerName: "Balance", width: 140, align: "right", headerAlign: "right", valueFormatter: (value) => formatAmount(value) },
+    { field: "dueDate", headerName: "Due Date", width: 140, valueFormatter: (value) => formatDate(value) },
+    { field: "lateFee", headerName: "Late Fee", width: 130, align: "right", headerAlign: "right", valueFormatter: (value) => formatAmount(value) },
+    { field: "loanType", headerName: "Loan Type", width: 160 },
+  ];
 
   return (
-    <Box p={2}>
-      {/* ========================================== */}
-      {/* HEADER */}
-      {/* ========================================== */}
-      <Paper
-        elevation={3}
-        sx={{
-          p: 2,
-          mb: 2,
-          borderRadius: 2,
-        }}
-      >
-        <Typography
-          variant="h4"
-          align="center"
-          fontWeight="bold"
-          gutterBottom
-        >
-          SRI BALAJI ENTERPRISES
-        </Typography>
+    <Stack spacing={2.5}>
+      <PageHeader
+        title="Partner Installment Dues"
+        subtitle="Installment dues report with grid search, sorting, pagination, and Excel/PDF/Word downloads."
+        totalCount={rows.length}
+        onRefresh={generateReport}
+        loading={loading}
+      />
 
-        <Typography align="center">
-          Installment Dues Report
-        </Typography>
-
-        <Divider sx={{ my: 2 }} />
-
-        {/* ========================================== */}
-        {/* FILTERS */}
-        {/* ========================================== */}
-        <Grid
-          container
-          spacing={2}
-          alignItems="center"
-        >
-          {/* REPORT TYPE */}
-          <Grid item xs={12} md={4}>
-            <RadioGroup
-              row
-              value={reportType}
-              onChange={(e) =>
-                setReportType(
-                  e.target.value
-                )
-              }
-            >
-              <FormControlLabel
-                value="all"
-                control={<Radio />}
-                label="All Partners"
-              />
-
-              <FormControlLabel
-                value="individual"
-                control={<Radio />}
-                label="Individual Partner"
-              />
-            </RadioGroup>
-          </Grid>
-
-          {/* CHECKBOX */}
+      <Paper className="enterprise-card" elevation={0} sx={{ p: 2 }}>
+        <Grid container spacing={2} alignItems="center">
           <Grid item xs={12} md={3}>
-            <FormControlLabel
-              control={
-                <Checkbox
-                  checked={
-                    activeLoans
-                  }
-                  onChange={(e) =>
-                    setActiveLoans(
-                      e.target.checked
-                    )
-                  }
-                />
-              }
-              label="Active Loans"
-            />
+            <TextField select label="Report Type" size="small" fullWidth value={reportType} onChange={(event) => setReportType(event.target.value)}>
+              <MenuItem value="all">All Partners</MenuItem>
+              <MenuItem value="individual">Individual Partner</MenuItem>
+            </TextField>
+          </Grid>
 
-            <FormControlLabel
-              control={
-                <Checkbox
-                  checked={lateFee}
-                  onChange={(e) =>
-                    setLateFee(
-                      e.target.checked
-                    )
-                  }
-                />
-              }
-              label="Late Fee"
+          <Grid item xs={12} md={3}>
+            <Autocomplete
+              options={partners || []}
+              value={selectedPartner}
+              onChange={(_, newValue) => setSelectedPartner(newValue)}
+              onInputChange={(_, value) => loadPartners(value)}
+              fullWidth
+              size="small"
+              disabled={reportType !== "individual"}
+              getOptionLabel={(option) => option?.label || ""}
+              isOptionEqualToValue={(option, value) => option.id === value.id}
+              renderInput={(params) => <TextField {...params} label="Select Partner" placeholder="Search Partner" />}
             />
           </Grid>
 
-          {/* PARTNER AUTOCOMPLETE */}
-          {reportType ===
-            "individual" && (
-            <Grid
-              item
-              xs={12}
-              md={3}
-            >
-              <Autocomplete
-                options={
-                  partners || []
-                }
-                value={
-                  selectedPartner
-                }
-                onChange={(
-                  event,
-                  newValue
-                ) =>
-                  setSelectedPartner(
-                    newValue
-                  )
-                }
-                onInputChange={(
-                  event,
-                  value
-                ) => {
-                  loadPartners(
-                    value
-                  );
-                }}
-                fullWidth
-                size="small"
-                getOptionLabel={(
-                  option
-                ) =>
-                  option?.label ||
-                  ""
-                }
-                isOptionEqualToValue={(
-                  option,
-                  value
-                ) =>
-                  option.id ===
-                  value.id
-                }
-                renderInput={(
-                  params
-                ) => (
-                  <TextField
-                    {...params}
-                    label="Select Partner"
-                    placeholder="Search Partner"
-                  />
-                )}
-              />
-            </Grid>
-          )}
+          <Grid item xs={12} md={3}>
+            <FormControlLabel control={<Checkbox checked={activeLoans} onChange={(event) => setActiveLoans(event.target.checked)} />} label="Active Loans" />
+            <FormControlLabel control={<Checkbox checked={lateFee} onChange={(event) => setLateFee(event.target.checked)} />} label="Late Fee" />
+          </Grid>
 
-          {/* GENERATE BUTTON */}
           <Grid item xs={12} md={2}>
-            <Button
-              fullWidth
-              variant="contained"
-              onClick={
-                generateReport
-              }
-              sx={{
-                height: 40,
-              }}
-            >
+            <Button fullWidth variant="contained" onClick={generateReport} disabled={loading}>
               Generate
             </Button>
           </Grid>
         </Grid>
       </Paper>
 
-      {/* ========================================== */}
-      {/* REPORT TABLE */}
-      {/* ========================================== */}
-      <Paper
-        elevation={3}
-        sx={{
-          borderRadius: 2,
-        }}
-      >
-        <Box p={2}>
-          {/* TITLE */}
-          <Grid
-            container
-            justifyContent="space-between"
-            alignItems="center"
-            mb={2}
-          >
-            <Grid item>
-              <Typography
-                variant="h6"
-                fontWeight="bold"
-              >
-                Installment Dues
-                Ledger
-              </Typography>
-            </Grid>
-
-            <Grid item>
-              <Typography>
-                Date :
-                {" "}
-                {dayjs().format(
-                  "DD-MMM-YYYY"
-                )}
-              </Typography>
-            </Grid>
-          </Grid>
-
-          {/* TABLE */}
-          <TableContainer>
-            <Table size="small">
-              <TableHead>
-                <TableRow
-                  sx={{
-                    backgroundColor:
-                      "#dbeafe",
-                  }}
-                >
-                  <TableCell>
-                    <b>S.No</b>
-                  </TableCell>
-
-                  <TableCell>
-                    <b>Loan ID</b>
-                  </TableCell>
-
-                  <TableCell>
-                    <b>Customer Name</b>
-                  </TableCell>
-
-                  <TableCell>
-                    <b>Guarantor Name</b>
-                  </TableCell>
-
-                  <TableCell>
-                    <b>Start Date</b>
-                  </TableCell>
-
-                  <TableCell>
-                    <b>End Date</b>
-                  </TableCell>
-
-                  <TableCell align="right">
-                    <b>Amount</b>
-                  </TableCell>
-
-                  <TableCell align="center">
-                    <b>Duration</b>
-                  </TableCell>
-
-                  <TableCell align="right">
-                    <b>Inst.Amount</b>
-                  </TableCell>
-
-                  <TableCell align="center">
-                    <b>Paid</b>
-                  </TableCell>
-
-                  <TableCell align="center">
-                    <b>Pending</b>
-                  </TableCell>
-
-                  <TableCell align="right">
-                    <b>Balance</b>
-                  </TableCell>
-
-                  <TableCell align="center">
-                    <b>Due Date</b>
-                  </TableCell>
-
-                  <TableCell align="right">
-                    <b>Late Fee</b>
-                  </TableCell>
-
-                  <TableCell>
-                    <b>Loan Type</b>
-                  </TableCell>
-                </TableRow>
-              </TableHead>
-
-              <TableBody>
-                {loading ? (
-                  <TableRow>
-                    <TableCell
-                      colSpan={15}
-                      align="center"
-                    >
-                      <CircularProgress />
-                    </TableCell>
-                  </TableRow>
-                ) : rows.length >
-                  0 ? (
-                  rows
-                    .slice(
-                      page *
-                        rowsPerPage,
-                      page *
-                        rowsPerPage +
-                        rowsPerPage
-                    )
-                    .map(
-                      (
-                        row,
-                        index
-                      ) => (
-                        <TableRow
-                          key={index}
-                          hover
-                        >
-                          <TableCell>
-                            {index +
-                              1}
-                          </TableCell>
-
-                          <TableCell>
-                            {
-                              row.loanId
-                            }
-                          </TableCell>
-
-                          <TableCell>
-                            {
-                              row.customerName
-                            }
-                          </TableCell>
-
-                          <TableCell>
-                            {
-                              row.guarantorName
-                            }
-                          </TableCell>
-
-                          <TableCell>
-                            {row.startDate
-                              ? dayjs(
-                                  row.startDate
-                                ).format(
-                                  "DD/MM/YYYY"
-                                )
-                              : "-"}
-                          </TableCell>
-
-                          <TableCell>
-                            {row.endDate
-                              ? dayjs(
-                                  row.endDate
-                                ).format(
-                                  "DD/MM/YYYY"
-                                )
-                              : "-"}
-                          </TableCell>
-
-                          <TableCell align="right">
-                            {Number(
-                              row.amount ||
-                                0
-                            ).toLocaleString()}
-                          </TableCell>
-
-                          <TableCell align="center">
-                            {
-                              row.duration
-                            }
-                          </TableCell>
-
-                          <TableCell align="right">
-                            {Number(
-                              row.installmentAmount ||
-                                0
-                            ).toLocaleString()}
-                          </TableCell>
-
-                          <TableCell align="center">
-                            {
-                              row.noOfInstallmentsPaid
-                            }
-                          </TableCell>
-
-                          <TableCell align="center">
-                            {
-                              row.noOfInstallmentsPending
-                            }
-                          </TableCell>
-
-                          <TableCell align="right">
-                            {Number(
-                              row.balanceAmount ||
-                                0
-                            ).toLocaleString()}
-                          </TableCell>
-
-                          <TableCell align="center">
-                            {row.dueDate
-                              ? dayjs(
-                                  row.dueDate
-                                ).format(
-                                  "DD/MM/YYYY"
-                                )
-                              : "-"}
-                          </TableCell>
-
-                          <TableCell align="right">
-                            {Number(
-                              row.lateFee ||
-                                0
-                            ).toLocaleString()}
-                          </TableCell>
-
-                          <TableCell>
-                            {
-                              row.loanType
-                            }
-                          </TableCell>
-                        </TableRow>
-                      )
-                    )
-                ) : (
-                  <TableRow>
-                    <TableCell
-                      colSpan={15}
-                      align="center"
-                    >
-                      No Data Found
-                    </TableCell>
-                  </TableRow>
-                )}
-              </TableBody>
-            </Table>
-          </TableContainer>
-
-          {/* PAGINATION */}
-          <TablePagination
-            component="div"
-            count={rows.length}
-            page={page}
-            onPageChange={
-              handleChangePage
-            }
-            rowsPerPage={
-              rowsPerPage
-            }
-            onRowsPerPageChange={
-              handleChangeRowsPerPage
-            }
-            rowsPerPageOptions={[
-              10,
-              25,
-              50,
-              100,
-            ]}
-          />
-        </Box>
-      </Paper>
-    </Box>
+      <DataTable
+        rows={rows}
+        columns={columns}
+        loading={loading}
+        title="Installment Dues Ledger"
+        subtitle="MUI grid table with pagination, search, sorting, Excel, PDF, Word, and print downloads."
+        height={640}
+        pageSize={25}
+      />
+    </Stack>
   );
 };
 

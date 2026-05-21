@@ -2,35 +2,47 @@ import React, { useMemo, useState } from "react";
 import {
   Box,
   Button,
-  Typography,
-  Paper,
-  Grid,
-  TextField,
-  MenuItem,
-  Table,
-  TableHead,
-  TableRow,
-  TableCell,
-  TableBody,
-  TableContainer,
   Chip,
   CircularProgress,
+  Grid,
+  MenuItem,
+  Paper,
+  Stack,
+  TextField,
+  Typography,
 } from "@mui/material";
-import dayjs from "dayjs";
+import { AssessmentRounded, RefreshRounded } from "@mui/icons-material";
 import axios from "axios";
+import dayjs from "dayjs";
 import { API_BASE } from "lib/config";
 import { getSession } from "src/utils/session";
-import LoadingSpinner from "src/LoadingSpinner";
+import { AppDatePicker, DataTable } from "src/components/ui";
+
+const loanTypes = [
+  { label: "Daily Finance", value: "DAILY_FINANCE" },
+  { label: "Monthly Finance", value: "MONTHLY_FINANCE" },
+];
+
+const menuProps = {
+  PaperProps: {
+    sx: {
+      maxHeight: 280,
+      minWidth: 220,
+    },
+  },
+};
+
+const money = (value) => Number(value || 0).toLocaleString("en-IN");
 
 const Maturity = () => {
-  const [loanType, setLoanType] = useState("MONTHLY_FINANCE"); // default selected
+  const [loanType, setLoanType] = useState("MONTHLY_FINANCE");
   const [fromDate, setFromDate] = useState("");
   const [toDate, setToDate] = useState("");
   const [data, setData] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
 
   const token = getSession("token");
-
   const headers = useMemo(
     () => ({
       Authorization: `Bearer ${token || ""}`,
@@ -39,62 +51,100 @@ const Maturity = () => {
     [token]
   );
 
-  const loanTypes = [
-    { label: "Daily Finance", value: "DAILY_FINANCE" },
-    { label: "Monthly Finance", value: "MONTHLY_FINANCE" },
-  ];
-
   const fetchMaturityLoans = async () => {
     if (!loanType || !fromDate || !toDate) {
-      alert("Please select Loan Type and Date Range");
+      setError("Please select loan type, from date, and to date.");
       return;
     }
 
+    setLoading(true);
+    setError("");
     try {
-      setLoading(true);
-
-      const payload = {
-        loanType,
-        fromDate,
-        toDate,
-      };
-
       const res = await axios.post(
         `${API_BASE}/maturityLoansList`,
-        payload,
+        { loanType, fromDate, toDate },
         { headers }
       );
-
-      setData(res.data || []);
-    } catch (error) {
-      console.error("API Error:", error);
-      alert("Failed to fetch maturity loans");
+      setData(Array.isArray(res.data) ? res.data : []);
+    } catch (err) {
+      setData([]);
+      setError(err.response?.data?.message || "Failed to fetch maturity loans.");
     } finally {
       setLoading(false);
     }
   };
 
-  // Totals Calculation
-  const totalAmount = data.reduce((sum, item) => sum + Number(item.amount || 0), 0);
-  const totalPaid = data.reduce((sum, item) => sum + Number(item.amountPaid || 0), 0);
-  const totalDue = data.reduce((sum, item) => sum + Number(item.installmentDue || 0), 0);
+  const rows = useMemo(
+    () =>
+      data.map((row, index) => ({
+        id: row.loanId || index + 1,
+        sno: row.sno || index + 1,
+        loanId: row.loanId || "-",
+        customerName: row.customerName || "-",
+        startDate: row.startDate ? dayjs(row.startDate, "DD-MM-YYYY").format("DD-MMM-YYYY") : "-",
+        endDate: row.endDate ? dayjs(row.endDate, "DD-MM-YYYY").format("DD-MMM-YYYY") : "-",
+        amount: Number(row.amount || 0),
+        installmentAmount: Number(row.installmentAmount || 0),
+        amountPaid: Number(row.amountPaid || 0),
+        installmentDue: Number(row.installmentDue || 0),
+        noOfInstallmentsPending: row.noOfInstallmentsPending || 0,
+      })),
+    [data]
+  );
+
+  const totals = useMemo(
+    () =>
+      rows.reduce(
+        (acc, row) => ({
+          amount: acc.amount + Number(row.amount || 0),
+          paid: acc.paid + Number(row.amountPaid || 0),
+          due: acc.due + Number(row.installmentDue || 0),
+        }),
+        { amount: 0, paid: 0, due: 0 }
+      ),
+    [rows]
+  );
+
+  const columns = [
+    { field: "sno", headerName: "S No", width: 80 },
+    { field: "loanId", headerName: "Loan ID", width: 130 },
+    { field: "customerName", headerName: "Customer", flex: 1, minWidth: 200 },
+    { field: "startDate", headerName: "Start", width: 140 },
+    { field: "endDate", headerName: "End", width: 140 },
+    { field: "amount", headerName: "Amount", width: 140, valueFormatter: (value) => money(value) },
+    { field: "installmentAmount", headerName: "Inst. Amt", width: 140, valueFormatter: (value) => money(value) },
+    { field: "amountPaid", headerName: "Paid", width: 140, valueFormatter: (value) => money(value) },
+    { field: "installmentDue", headerName: "Due", width: 130, valueFormatter: (value) => money(value) },
+    { field: "noOfInstallmentsPending", headerName: "Pending", width: 120 },
+  ];
+
+  const selectedLoanLabel = loanTypes.find((type) => type.value === loanType)?.label || loanType;
 
   return (
-    <Box p={3}>
-      <Typography variant="h5" fontWeight="bold" mb={3}>
-        Maturity Ledger Report
-      </Typography>
+    <Stack spacing={2.5} sx={{ p: { xs: 1.5, md: 2.5 } }}>
+      <Paper className="enterprise-card" elevation={0} sx={{ p: 2.5 }}>
+        <Stack direction={{ xs: "column", lg: "row" }} justifyContent="space-between" spacing={2}>
+          <Box>
+            <Stack direction="row" spacing={1} alignItems="center" flexWrap="wrap">
+              <AssessmentRounded color="primary" />
+              <Typography variant="h5">Maturity Ledger Report</Typography>
+              <Chip size="small" label={selectedLoanLabel} color="primary" variant="outlined" />
+              <Chip size="small" label={`${rows.length} records`} variant="outlined" />
+            </Stack>
+            <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
+              Use MUI calendar filters and select loan type directly without oversized dropdowns.
+            </Typography>
+          </Box>
 
-      {/* Filter Section */}
-      <Paper sx={{ p: 3, mb: 3 }}>
-        <Grid container spacing={2}>
-          <Grid item xs={12} md={3}>
+          <Stack direction="row" spacing={1.25} flexWrap="wrap" useFlexGap alignItems="center">
             <TextField
               select
               label="Loan Type"
-              fullWidth
+              size="small"
               value={loanType}
-              onChange={(e) => setLoanType(e.target.value)}
+              onChange={(event) => setLoanType(event.target.value)}
+              SelectProps={{ MenuProps: menuProps }}
+              sx={{ width: 220 }}
             >
               {loanTypes.map((type) => (
                 <MenuItem key={type.value} value={type.value}>
@@ -102,130 +152,51 @@ const Maturity = () => {
                 </MenuItem>
               ))}
             </TextField>
-          </Grid>
-
-          <Grid item xs={12} md={3}>
-            <TextField
-              label="From Date"
-              type="date"
-              fullWidth
-              value={fromDate}
-              onChange={(e) => setFromDate(e.target.value)}
-              InputLabelProps={{ shrink: true }}
-            />
-          </Grid>
-
-          <Grid item xs={12} md={3}>
-            <TextField
-              label="To Date"
-              type="date"
-              fullWidth
-              value={toDate}
-              onChange={(e) => setToDate(e.target.value)}
-              InputLabelProps={{ shrink: true }}
-            />
-          </Grid>
-
-          <Grid item xs={12} md={3}>
+            <AppDatePicker label="From Date" value={fromDate} onChange={setFromDate} sx={{ width: 180 }} />
+            <AppDatePicker label="To Date" value={toDate} onChange={setToDate} sx={{ width: 180 }} />
             <Button
               variant="contained"
-              fullWidth
-              sx={{ height: 56 }}
+              startIcon={loading ? <CircularProgress size={18} color="inherit" /> : <RefreshRounded />}
               onClick={fetchMaturityLoans}
               disabled={loading}
             >
-              {loading ? <CircularProgress size={24} /> : "GENERATE"}
+              {loading ? "Loading" : "Generate"}
             </Button>
+          </Stack>
+        </Stack>
+      </Paper>
+
+      {error && (
+        <Paper className="enterprise-card" elevation={0} sx={{ p: 2, borderColor: "error.light" }}>
+          <Typography color="error.main" fontWeight={800}>{error}</Typography>
+        </Paper>
+      )}
+
+      <Grid container spacing={2}>
+        {[
+          { label: "Total Amount", value: totals.amount },
+          { label: "Total Paid", value: totals.paid },
+          { label: "Total Due", value: totals.due },
+        ].map((item) => (
+          <Grid item xs={12} md={4} key={item.label}>
+            <Paper className="enterprise-card" elevation={0} sx={{ p: 2 }}>
+              <Typography variant="body2" color="text.secondary">{item.label}</Typography>
+              <Typography variant="h5">Rs {money(item.value)}</Typography>
+            </Paper>
           </Grid>
-        </Grid>
-      </Paper>
+        ))}
+      </Grid>
 
-{/* Table Section */}
-      <Paper>
-        {loading && data.length === 0 ? (
-          <Box sx={{ display: "flex", justifyContent: "center", alignItems: "center", height: "300px" }}>
-            <LoadingSpinner />
-          </Box>
-        ) : (
-          <TableContainer>
-          <Table>
-            <TableHead sx={{ backgroundColor: "#1976d2" }}>
-              <TableRow>
-                <TableCell sx={{ color: "#fff" }}>S.No</TableCell>
-                <TableCell sx={{ color: "#fff" }}>Loan ID</TableCell>
-                <TableCell sx={{ color: "#fff" }}>Customer</TableCell>
-                <TableCell sx={{ color: "#fff" }}>Start</TableCell>
-                <TableCell sx={{ color: "#fff" }}>End</TableCell>
-                <TableCell sx={{ color: "#fff" }}>Amount</TableCell>
-                <TableCell sx={{ color: "#fff" }}>Inst. Amt</TableCell>
-                <TableCell sx={{ color: "#fff" }}>Paid</TableCell>
-                <TableCell sx={{ color: "#fff" }}>Due</TableCell>
-                <TableCell sx={{ color: "#fff" }}>Pending</TableCell>
-              </TableRow>
-            </TableHead>
-
-            <TableBody>
-              {data.length > 0 ? (
-                <>
-                  {data.map((row, index) => (
-                    <TableRow key={row.loanId || index}>
-                      <TableCell>{row.sno}</TableCell>
-                      <TableCell>{row.loanId}</TableCell>
-                      <TableCell>{row.customerName}</TableCell>
-                      <TableCell>
-                        {dayjs(row.startDate, "DD-MM-YYYY").format("DD MMM YYYY")}
-                      </TableCell>
-                      <TableCell>
-                        {dayjs(row.endDate, "DD-MM-YYYY").format("DD MMM YYYY")}
-                      </TableCell>
-                      <TableCell>₹ {Number(row.amount).toLocaleString()}</TableCell>
-                      <TableCell>
-                        ₹ {Number(row.installmentAmount).toLocaleString()}
-                      </TableCell>
-                      <TableCell>
-                        ₹ {Number(row.amountPaid).toLocaleString()}
-                      </TableCell>
-                      <TableCell>
-                        <Chip
-                          label={`₹ ${Number(row.installmentDue).toLocaleString()}`}
-                          color="error"
-                        />
-                      </TableCell>
-                      <TableCell>{row.noOfInstallmentsPending}</TableCell>
-                    </TableRow>
-                  ))}
-
-                  {/* Totals Row */}
-                  <TableRow sx={{ backgroundColor: "#f5f5f5" }}>
-                    <TableCell colSpan={5} align="right" sx={{ fontWeight: "bold" }}>
-                      TOTAL
-                    </TableCell>
-                    <TableCell sx={{ fontWeight: "bold" }}>
-                      ₹ {totalAmount.toLocaleString()}
-                    </TableCell>
-                    <TableCell />
-                    <TableCell sx={{ fontWeight: "bold" }}>
-                      ₹ {totalPaid.toLocaleString()}
-                    </TableCell>
-                    <TableCell sx={{ fontWeight: "bold" }}>
-                      ₹ {totalDue.toLocaleString()}
-                    </TableCell>
-                    <TableCell />
-                  </TableRow>
-                </>
-              ) : (
-                <TableRow>
-                  <TableCell colSpan={10} align="center">
-                    No Data Found
-                  </TableCell>
-                </TableRow>
-              )}
-            </TableBody>
-          </Table>
-          </TableContainer>
-        )}
-      </Paper>
-    </Box>
+      <DataTable
+        rows={rows}
+        columns={columns}
+        loading={loading}
+        height={560}
+        title={`Maturity Ledger - ${selectedLoanLabel}`}
+        subtitle="Search, row count, PDF, Excel, Word, and print are available here."
+        pageSize={10}
+      />
+    </Stack>
   );
 };
 

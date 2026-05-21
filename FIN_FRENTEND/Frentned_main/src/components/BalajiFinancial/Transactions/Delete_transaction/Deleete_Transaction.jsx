@@ -12,6 +12,7 @@ import {
 import axios from 'axios';
 import { API_BASE } from 'lib/config';
 import { getSession } from 'src/utils/session';
+import { AppDatePicker } from 'src/components/ui';
 
 const DeleteTransactions = () => {
   const [date, setDate] = useState('2026-01-07');
@@ -153,7 +154,9 @@ const DeleteTransactions = () => {
   return (
     <Box sx={{ p: { xs: 2, md: 3 } }}>
       <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 2, mb: 3, alignItems: 'center' }}>
-        <TextField label="Transaction Date" type="date" value={date} onChange={(e) => setDate(e.target.value)} InputLabelProps={{ shrink: true }} />
+        <Box sx={{ width: 210 }}>
+          <AppDatePicker label="Transaction Date" value={date} onChange={setDate} />
+        </Box>
 
         <FormControlLabel control={<Checkbox checked={showDeleted} onChange={(e) => setShowDeleted(e.target.checked)} />} label="Show Deleted Transactions" />
 

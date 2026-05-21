@@ -1,812 +1,187 @@
-import React, {
-  useEffect,
-  useMemo,
-  useState,
-} from "react";
-
+import React, { useEffect, useMemo, useState } from "react";
 import {
-  Box,
-  Typography,
-  Paper,
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TableRow,
   Button,
-  Grid,
-  Divider,
   Checkbox,
   FormControlLabel,
-  Radio,
-  RadioGroup,
+  Grid,
+  MenuItem,
+  Paper,
+  Stack,
   TextField,
-  CircularProgress,
-  Alert,
-  Autocomplete,
 } from "@mui/material";
-
 import axios from "axios";
 import dayjs from "dayjs";
-
 import { API_BASE } from "lib/config";
 import { getSession } from "src/utils/session";
+import { DataTable, PageHeader } from "src/components/ui";
 
-const Group_Bussiness_Details = () => {
-  // ==========================================
-  // SESSION
-  // ==========================================
-  const session = getSession();
+const managerOptions = [
+  { value: "P3", label: "P001 - JAYARANJAN ROKKAM" },
+  { value: "P4", label: "P002 - SURENDAR REDDY" },
+  { value: "P5", label: "P003 - MAHESH JANAKI" },
+];
 
-  console.log("SESSION => ", session);
+const formatAmount = (amount) => Number(amount || 0).toLocaleString("en-IN");
+const formatDecimal = (amount) => Number(amount || 0).toFixed(1);
 
-  // ==========================================
-  // TOKEN
-  // ==========================================
-  const token =
-    session?.token ||
-    session?.accessToken ||
-    session?.jwtToken ||
-    localStorage.getItem("token") ||
-    "";
+const GroupBusinessDetails = () => {
+  const token = getSession()?.token || getSession("token") || "";
+  const headers = useMemo(() => ({ Authorization: `Bearer ${token}` }), [token]);
 
-  // ==========================================
-  // HEADERS
-  // ==========================================
-  const headers = useMemo(
-    () => ({
-      Authorization: `Bearer ${token}`,
-      "Content-Type": "application/json",
-    }),
-    [token]
-  );
-
-  // ==========================================
-  // STATES
-  // ==========================================
-  const [loading, setLoading] =
-    useState(false);
-
+  const [loading, setLoading] = useState(false);
   const [rows, setRows] = useState([]);
+  const [dateFilter, setDateFilter] = useState(false);
+  const [balancesOnly, setBalancesOnly] = useState(false);
+  const [managerId, setManagerId] = useState("P3");
+  const [fromDate, setFromDate] = useState(dayjs().startOf("year").format("YYYY-MM-DD"));
+  const [toDate, setToDate] = useState(dayjs().format("YYYY-MM-DD"));
 
-  const [error, setError] = useState("");
+  const selectedManager = managerOptions.find((item) => item.value === managerId);
 
-  const [filterType, setFilterType] =
-    useState("all");
-
-  const [balancesOnly, setBalancesOnly] =
-    useState(false);
-
-  const [fromDate, setFromDate] =
-    useState(
-      dayjs()
-        .startOf("month")
-        .format("YYYY-MM-DD")
-    );
-
-  const [toDate, setToDate] = useState(
-    dayjs().format("YYYY-MM-DD")
-  );
-
-  // ==========================================
-  // PARTNER DROPDOWN
-  // ==========================================
-  const [partnerOptions, setPartnerOptions] =
-    useState([]);
-
-  const [selectedPartner, setSelectedPartner] =
-    useState(null);
-
-  const [partnerLoading, setPartnerLoading] =
-    useState(false);
-
-  // ==========================================
-  // FETCH PARTNERS
-  // ==========================================
-  const fetchPartners = async (
-    query = ""
-  ) => {
-    try {
-      setPartnerLoading(true);
-
-      const res = await axios.get(
-        `${API_BASE}/PersonalInfo/personInfoAutoCompleteByCategory/PARTNER`,
-        {
-          headers,
-          params: {
-            q: query.trim(),
-          },
-        }
-      );
-
-      const list = (res.data || []).map(
-        (item) => ({
-          id: item.id,
-
-          label: `${item.id || ""} - ${
-            item.firstname || ""
-          } ${item.lastname || ""}`,
-
-          fullData: item,
-        })
-      );
-
-      setPartnerOptions(list);
-    } catch (err) {
-      console.log(err);
-    } finally {
-      setPartnerLoading(false);
-    }
-  };
-
-  // ==========================================
-  // FETCH REPORT
-  // ==========================================
   const fetchReport = async () => {
     try {
       setLoading(true);
-      setError("");
+      const url = dateFilter
+        ? `${API_BASE}/group-business-details/${managerId}/${fromDate}/${toDate}`
+        : `${API_BASE}/group-business-details/${managerId}`;
 
-      const managerId =
-        selectedPartner?.id ||
-        session?.userId ||
-        session?.partnerId ||
-        "P3";
-
-      let url = "";
-
-      if (filterType === "date") {
-        url = `${API_BASE}/group-business-details/${managerId}/${fromDate}/${toDate}`;
-      } else {
-        url = `${API_BASE}/group-business-details/${managerId}`;
-      }
-
-      console.log("URL => ", url);
-      console.log("TOKEN => ", token);
-
-      const response = await axios.get(
-        url,
-        {
-          headers,
-        }
-      );
-
+      const response = await axios.get(url, { headers });
       let data = response?.data || [];
 
-      // ==========================================
-      // BALANCES ONLY FILTER
-      // ==========================================
       if (balancesOnly) {
-        data = data.filter(
-          (item) =>
-            Number(
-              item.balanceOutStandingWithInterest ||
-                0
-            ) > 0 ||
-            Number(
-              item.balanceOutStandingWithOutInterest ||
-                0
-            ) > 0
-        );
+        data = data.filter((item) => Number(item.balanceOutStandingWithInterest || 0) > 0);
       }
 
-      setRows(data);
-    } catch (err) {
-      console.log(err);
-
-      if (
-        err?.response?.status === 401
-      ) {
-        setError(
-          "Unauthorized - Token Invalid or Expired"
-        );
-      } else if (
-        err?.response?.status === 403
-      ) {
-        setError(
-          "Forbidden - Access Denied"
-        );
-      } else {
-        setError(
-          err?.response?.data?.message ||
-            "Something went wrong"
-        );
-      }
-
-      setRows([]);
+      setRows(
+        data.map((row, index) => ({
+          id: row.partnerId || index + 1,
+          sno: index + 1,
+          ...row,
+        }))
+      );
+    } catch (error) {
+      console.log(error);
     } finally {
       setLoading(false);
     }
   };
 
-  // ==========================================
-  // INITIAL LOAD
-  // ==========================================
   useEffect(() => {
-    fetchPartners();
+    fetchReport();
   }, []);
 
-  // ==========================================
-  // TOTALS
-  // ==========================================
   const totals = useMemo(() => {
     return rows.reduce(
       (acc, item) => {
-        acc.noOfShares += Number(
-          item.noOfShares || 0
-        );
-
-        acc.capital += Number(
-          item.capital || 0
-        );
-
-        acc.noOfLoans += Number(
-          item.noOfLoans || 0
-        );
-
-        acc.disbursedAmount += Number(
-          item.disbursedAmount || 0
-        );
-
-        acc.disbursedAmountWithInterest +=
-          Number(
-            item.disbursedAmountWithInterest ||
-              0
-          );
-
-        acc.paidAmount += Number(
-          item.paidAmount || 0
-        );
-
-        acc.balanceOutStandingWithInterest +=
-          Number(
-            item.balanceOutStandingWithInterest ||
-              0
-          );
-
-        acc.balanceOutStandingWithOutInterest +=
-          Number(
-            item.balanceOutStandingWithOutInterest ||
-              0
-          );
-
-        acc.installmentDuesOutStanding +=
-          Number(
-            item.installmentDuesOutStanding ||
-              0
-          );
-
+        acc.shares += Number(item.noOfShares || 0);
+        acc.capital += Number(item.capital || 0);
+        acc.balanceWithInterest += Number(item.balanceOutStandingWithInterest || 0);
+        acc.balanceWithoutInterest += Number(item.balanceOutStandingWithOutInterest || 0);
+        acc.installmentDues += Number(item.installmentDuesOutStanding || 0);
         return acc;
       },
       {
-        noOfShares: 0,
+        shares: 0,
         capital: 0,
-        noOfLoans: 0,
-        disbursedAmount: 0,
-        disbursedAmountWithInterest: 0,
-        paidAmount: 0,
-        balanceOutStandingWithInterest: 0,
-        balanceOutStandingWithOutInterest: 0,
-        installmentDuesOutStanding: 0,
+        balanceWithInterest: 0,
+        balanceWithoutInterest: 0,
+        installmentDues: 0,
       }
     );
   }, [rows]);
 
-  // ==========================================
-  // FORMAT AMOUNT
-  // ==========================================
-  const formatAmount = (amount) => {
-    return Number(amount || 0).toLocaleString(
-      "en-IN",
-      {
-        minimumFractionDigits: 0,
-        maximumFractionDigits: 0,
-      }
-    );
-  };
+  const columns = [
+    { field: "sno", headerName: "S.No", width: 80, align: "center", headerAlign: "center" },
+    { field: "partnerId", headerName: "Partner ID", width: 130 },
+    { field: "name", headerName: "Name", minWidth: 240, flex: 1 },
+    { field: "noOfShares", headerName: "Shares", width: 120, align: "right", headerAlign: "right", valueFormatter: (value) => formatDecimal(value) },
+    { field: "capital", headerName: "Capital", width: 150, align: "right", headerAlign: "right", valueFormatter: (value) => formatAmount(value) },
+    { field: "balanceOutStandingWithInterest", headerName: "Balance O/S With Int.", width: 210, align: "right", headerAlign: "right", valueFormatter: (value) => formatAmount(value) },
+    { field: "balanceOutStandingWithOutInterest", headerName: "Balance O/S Without Int.", width: 230, align: "right", headerAlign: "right", valueFormatter: (value) => formatAmount(value) },
+    { field: "installmentDuesOutStanding", headerName: "Installment Dues O/S", width: 210, align: "right", headerAlign: "right", valueFormatter: (value) => formatAmount(value) },
+  ];
+
+  const totalRows = [
+    { label: "Shares", value: formatDecimal(totals.shares) },
+    { label: "Capital", value: formatAmount(totals.capital) },
+    { label: "Balance O/S With Int.", value: formatAmount(totals.balanceWithInterest) },
+    { label: "Balance O/S Without Int.", value: formatAmount(totals.balanceWithoutInterest) },
+    { label: "Installment Dues O/S", value: formatAmount(totals.installmentDues) },
+  ];
 
   return (
-    <Box p={2}>
-      <Paper elevation={3} sx={{ p: 3 }}>
-        {/* ===================================== */}
-        {/* FILTER SECTION */}
-        {/* ===================================== */}
+    <Stack spacing={2.5}>
+      <PageHeader
+        title={`${selectedManager?.label || "Partner"} Group Business Ledger`}
+        subtitle="Partner group business detail report with clean table totals and record count."
+        totalCount={rows.length}
+        onRefresh={fetchReport}
+        loading={loading}
+      />
 
-        <Grid
-          container
-          spacing={2}
-          alignItems="center"
-        >
-          {/* PARTNER DROPDOWN */}
-
-          <Grid item xs={12} md={6}>
-            <Autocomplete
-              options={partnerOptions}
-              loading={partnerLoading}
-              value={selectedPartner}
-              onChange={(
-                event,
-                newValue
-              ) => {
-                setSelectedPartner(
-                  newValue
-                );
-              }}
-              onInputChange={(
-                event,
-                value
-              ) => {
-                fetchPartners(value);
-              }}
-              getOptionLabel={(option) =>
-                option?.label || ""
-              }
-              renderInput={(params) => (
-                <TextField
-                  {...params}
-                  label="Partner Group"
-                  size="small"
-                  fullWidth
-                  InputProps={{
-                    ...params.InputProps,
-                    endAdornment: (
-                      <>
-                        {partnerLoading ? (
-                          <CircularProgress
-                            color="inherit"
-                            size={20}
-                          />
-                        ) : null}
-
-                        {
-                          params.InputProps
-                            .endAdornment
-                        }
-                      </>
-                    ),
-                  }}
-                />
-              )}
-            />
-          </Grid>
-
-          {/* RADIO */}
-
+      <Paper className="enterprise-card" elevation={0} sx={{ p: 2 }}>
+        <Grid container spacing={2} alignItems="center">
           <Grid item xs={12} md={3}>
-            <RadioGroup
-              row
-              value={filterType}
-              onChange={(e) =>
-                setFilterType(
-                  e.target.value
-                )
-              }
-            >
-              <FormControlLabel
-                value="all"
-                control={<Radio />}
-                label="All"
-              />
-
-              <FormControlLabel
-                value="date"
-                control={<Radio />}
-                label="Date Range"
-              />
-            </RadioGroup>
+            <TextField select fullWidth size="small" label="Partner Group" value={managerId} onChange={(event) => setManagerId(event.target.value)}>
+              {managerOptions.map((option) => (
+                <MenuItem key={option.value} value={option.value}>
+                  {option.label}
+                </MenuItem>
+              ))}
+            </TextField>
           </Grid>
 
-          {/* FROM DATE */}
-
           <Grid item xs={12} md={2}>
-            <TextField
-              fullWidth
-              type="date"
-              size="small"
-              label="From Date"
-              InputLabelProps={{
-                shrink: true,
-              }}
-              value={fromDate}
-              disabled={
-                filterType !== "date"
-              }
-              onChange={(e) =>
-                setFromDate(
-                  e.target.value
-                )
-              }
-            />
+            <FormControlLabel control={<Checkbox checked={dateFilter} onChange={(event) => setDateFilter(event.target.checked)} />} label="Date Range" />
           </Grid>
 
-          {/* TO DATE */}
-
           <Grid item xs={12} md={2}>
-            <TextField
-              fullWidth
-              type="date"
-              size="small"
-              label="To Date"
-              InputLabelProps={{
-                shrink: true,
-              }}
-              value={toDate}
-              disabled={
-                filterType !== "date"
-              }
-              onChange={(e) =>
-                setToDate(
-                  e.target.value
-                )
-              }
-            />
+            <TextField fullWidth size="small" type="date" label="From" InputLabelProps={{ shrink: true }} disabled={!dateFilter} value={fromDate} onChange={(event) => setFromDate(event.target.value)} />
           </Grid>
 
-          {/* BALANCES ONLY */}
-
           <Grid item xs={12} md={2}>
-            <FormControlLabel
-              control={
-                <Checkbox
-                  checked={
-                    balancesOnly
-                  }
-                  onChange={(e) =>
-                    setBalancesOnly(
-                      e.target.checked
-                    )
-                  }
-                />
-              }
-              label="Balances only"
-            />
+            <TextField fullWidth size="small" type="date" label="To" InputLabelProps={{ shrink: true }} disabled={!dateFilter} value={toDate} onChange={(event) => setToDate(event.target.value)} />
           </Grid>
 
-          {/* BUTTON */}
-
           <Grid item xs={12} md={2}>
-            <Button
-              fullWidth
-              variant="contained"
-              onClick={fetchReport}
-            >
+            <FormControlLabel control={<Checkbox checked={balancesOnly} onChange={(event) => setBalancesOnly(event.target.checked)} />} label="Balances only" />
+          </Grid>
+
+          <Grid item xs={12} md={1}>
+            <Button fullWidth variant="contained" onClick={fetchReport} disabled={loading}>
               Generate
             </Button>
           </Grid>
         </Grid>
-
-        <Divider sx={{ my: 3 }} />
-
-        {/* ===================================== */}
-        {/* ERROR */}
-        {/* ===================================== */}
-
-        {error && (
-          <Alert
-            severity="error"
-            sx={{ mb: 2 }}
-          >
-            {error}
-          </Alert>
-        )}
-
-        {/* ===================================== */}
-        {/* REPORT HEADER */}
-        {/* ===================================== */}
-
-        <Box
-          textAlign="center"
-          mb={3}
-        >
-          <Typography
-            variant="h4"
-            fontWeight="bold"
-          >
-            SRI BALAJI ENTERPRISES
-          </Typography>
-
-          <Typography variant="h6">
-            YellaReddy Guda, Hyderabad.
-          </Typography>
-
-          <Typography
-            variant="h5"
-            sx={{
-              mt: 3,
-              fontWeight: 600,
-            }}
-          >
-            Partner Group Business
-            Ledger
-          </Typography>
-        </Box>
-
-        {/* ===================================== */}
-        {/* TABLE */}
-        {/* ===================================== */}
-
-        <TableContainer
-          component={Paper}
-        >
-          <Table size="small">
-            <TableHead>
-              <TableRow
-                sx={{
-                  backgroundColor:
-                    "#dceeff",
-                }}
-              >
-                <TableCell>
-                  <b>S.No</b>
-                </TableCell>
-
-                <TableCell>
-                  <b>Partner ID</b>
-                </TableCell>
-
-                <TableCell>
-                  <b>Name</b>
-                </TableCell>
-
-                <TableCell align="right">
-                  <b>Shares</b>
-                </TableCell>
-
-                <TableCell align="right">
-                  <b>Capital</b>
-                </TableCell>
-
-                {!balancesOnly && (
-                  <>
-                    <TableCell align="right">
-                      <b>Loans</b>
-                    </TableCell>
-
-                    <TableCell align="right">
-                      <b>
-                        Disbursed
-                        Amount
-                      </b>
-                    </TableCell>
-
-                    <TableCell align="right">
-                      <b>
-                        Disb. Amt
-                        With Int.
-                      </b>
-                    </TableCell>
-
-                    <TableCell align="right">
-                      <b>
-                        Paid
-                        Amount
-                      </b>
-                    </TableCell>
-                  </>
-                )}
-
-                <TableCell align="right">
-                  <b>
-                    Balance O/S
-                    with Int.
-                  </b>
-                </TableCell>
-
-                <TableCell align="right">
-                  <b>
-                    Balance O/S
-                    without Int.
-                  </b>
-                </TableCell>
-
-                <TableCell align="right">
-                  <b>
-                    Installment
-                    Dues O/S
-                  </b>
-                </TableCell>
-              </TableRow>
-            </TableHead>
-
-            <TableBody>
-              {loading ? (
-                <TableRow>
-                  <TableCell
-                    align="center"
-                    colSpan={20}
-                  >
-                    <CircularProgress />
-                  </TableCell>
-                </TableRow>
-              ) : rows.length === 0 ? (
-                <TableRow>
-                  <TableCell
-                    align="center"
-                    colSpan={20}
-                  >
-                    No Data Found
-                  </TableCell>
-                </TableRow>
-              ) : (
-                <>
-                  {rows.map(
-                    (row, index) => (
-                      <TableRow
-                        key={index}
-                      >
-                        <TableCell>
-                          {index + 1}
-                        </TableCell>
-
-                        <TableCell>
-                          {
-                            row.partnerId
-                          }
-                        </TableCell>
-
-                        <TableCell>
-                          {row.name}
-                        </TableCell>
-
-                        <TableCell align="right">
-                          {row.noOfShares ||
-                            0}
-                        </TableCell>
-
-                        <TableCell align="right">
-                          {formatAmount(
-                            row.capital
-                          )}
-                        </TableCell>
-
-                        {!balancesOnly && (
-                          <>
-                            <TableCell align="right">
-                              {row.noOfLoans ||
-                                0}
-                            </TableCell>
-
-                            <TableCell align="right">
-                              {formatAmount(
-                                row.disbursedAmount
-                              )}
-                            </TableCell>
-
-                            <TableCell align="right">
-                              {formatAmount(
-                                row.disbursedAmountWithInterest
-                              )}
-                            </TableCell>
-
-                            <TableCell align="right">
-                              {formatAmount(
-                                row.paidAmount
-                              )}
-                            </TableCell>
-                          </>
-                        )}
-
-                        <TableCell align="right">
-                          {formatAmount(
-                            row.balanceOutStandingWithInterest
-                          )}
-                        </TableCell>
-
-                        <TableCell align="right">
-                          {formatAmount(
-                            row.balanceOutStandingWithOutInterest
-                          )}
-                        </TableCell>
-
-                        <TableCell align="right">
-                          {formatAmount(
-                            row.installmentDuesOutStanding
-                          )}
-                        </TableCell>
-                      </TableRow>
-                    )
-                  )}
-
-                  {/* TOTAL ROW */}
-
-                  <TableRow
-                    sx={{
-                      backgroundColor:
-                        "#edf6ff",
-                    }}
-                  >
-                    <TableCell
-                      colSpan={3}
-                      align="right"
-                    >
-                      <b>Total</b>
-                    </TableCell>
-
-                    <TableCell align="right">
-                      <b>
-                        {
-                          totals.noOfShares
-                        }
-                      </b>
-                    </TableCell>
-
-                    <TableCell align="right">
-                      <b>
-                        {formatAmount(
-                          totals.capital
-                        )}
-                      </b>
-                    </TableCell>
-
-                    {!balancesOnly && (
-                      <>
-                        <TableCell align="right">
-                          <b>
-                            {
-                              totals.noOfLoans
-                            }
-                          </b>
-                        </TableCell>
-
-                        <TableCell align="right">
-                          <b>
-                            {formatAmount(
-                              totals.disbursedAmount
-                            )}
-                          </b>
-                        </TableCell>
-
-                        <TableCell align="right">
-                          <b>
-                            {formatAmount(
-                              totals.disbursedAmountWithInterest
-                            )}
-                          </b>
-                        </TableCell>
-
-                        <TableCell align="right">
-                          <b>
-                            {formatAmount(
-                              totals.paidAmount
-                            )}
-                          </b>
-                        </TableCell>
-                      </>
-                    )}
-
-                    <TableCell align="right">
-                      <b>
-                        {formatAmount(
-                          totals.balanceOutStandingWithInterest
-                        )}
-                      </b>
-                    </TableCell>
-
-                    <TableCell align="right">
-                      <b>
-                        {formatAmount(
-                          totals.balanceOutStandingWithOutInterest
-                        )}
-                      </b>
-                    </TableCell>
-
-                    <TableCell align="right">
-                      <b>
-                        {formatAmount(
-                          totals.installmentDuesOutStanding
-                        )}
-                      </b>
-                    </TableCell>
-                  </TableRow>
-                </>
-              )}
-            </TableBody>
-          </Table>
-        </TableContainer>
       </Paper>
-    </Box>
+
+      <DataTable
+        rows={rows}
+        columns={columns}
+        loading={loading}
+        title="Group Business Details"
+        subtitle={`${selectedManager?.label || "Selected partner group"} / ${dayjs().format("DD-MMM-YYYY")}`}
+        height={640}
+        pageSize={25}
+      />
+
+      <DataTable
+        rows={totalRows.map((row, index) => ({ id: index + 1, ...row }))}
+        columns={[
+          { field: "label", headerName: "Total Field", flex: 1, minWidth: 220 },
+          { field: "value", headerName: "Total Value", flex: 1, minWidth: 180, align: "right", headerAlign: "right" },
+        ]}
+        title="Total Summary"
+        subtitle={`${rows.length} records included in totals`}
+        height={380}
+        pageSize={25}
+        hideFooter
+        disableColumnFilter
+        disableColumnSelector
+        disableDensitySelector
+      />
+    </Stack>
   );
 };
 
-export default Group_Bussiness_Details;
+export default GroupBusinessDetails;

@@ -1,173 +1,149 @@
-import React, { useRef, useEffect } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import { Link } from "react-router-dom";
-import Transition from "../utils/Transition";
+import {
+  AccountBalanceRounded,
+  AddCardRounded,
+  AssessmentRounded,
+  CloseRounded,
+  GroupsRounded,
+  ReceiptLongRounded,
+  SearchRounded,
+} from "@mui/icons-material";
+import {
+  Box,
+  Chip,
+  Dialog,
+  DialogContent,
+  IconButton,
+  InputAdornment,
+  List,
+  ListItemButton,
+  ListItemIcon,
+  ListItemText,
+  Paper,
+  Stack,
+  TextField,
+  Typography,
+} from "@mui/material";
+
+const quickPages = [
+  { name: "Dashboard", link: "/", group: "Home", keywords: "overview counts realtime", icon: AssessmentRounded },
+  { name: "Quick Cash Book", link: "/Transactions/Quick_Cash_Book", group: "Transactions", keywords: "quick entry cash collection", icon: AddCardRounded },
+  { name: "Business Cash Book", link: "/BussinessCashBook_Main", group: "Transactions", keywords: "daily monthly finance payment", icon: ReceiptLongRounded },
+  { name: "Daily Book", link: "/AccountsModules/DailyBook", group: "Accounts", keywords: "day close cash movement", icon: ReceiptLongRounded },
+  { name: "Business Collections Report", link: "/Bussiness/BussinessCollectionReportsimport", group: "Reports", keywords: "collections report df mf", icon: AssessmentRounded },
+  { name: "Customer Profiles", link: "/customer", group: "Master", keywords: "customer kyc profile", icon: GroupsRounded },
+  { name: "Daily Finance", link: "/Daily-Finace", group: "Loans", keywords: "daily loan register", icon: AccountBalanceRounded },
+  { name: "Monthly Finance", link: "/Monthly-Finance", group: "Loans", keywords: "monthly loan register", icon: AccountBalanceRounded },
+];
 
 function ModalSearch({ id, searchId, modalOpen, setModalOpen }) {
-  const modalContent = useRef(null);
   const searchInput = useRef(null);
-
-  // Close when clicking outside
-  useEffect(() => {
-    const clickHandler = ({ target }) => {
-      if (!modalOpen || modalContent.current.contains(target)) return;
-      setModalOpen(false);
-    };
-    document.addEventListener("click", clickHandler);
-    return () => document.removeEventListener("click", clickHandler);
-  });
-
-  // Close when pressing ESC
-  useEffect(() => {
-    const keyHandler = ({ keyCode }) => {
-      if (!modalOpen || keyCode !== 27) return;
-      setModalOpen(false);
-    };
-    document.addEventListener("keydown", keyHandler);
-    return () => document.removeEventListener("keydown", keyHandler);
-  });
+  const [query, setQuery] = useState("");
 
   useEffect(() => {
-    if (modalOpen) searchInput.current.focus();
+    if (modalOpen) {
+      setQuery("");
+      setTimeout(() => searchInput.current?.focus(), 80);
+    }
   }, [modalOpen]);
 
+  const results = useMemo(() => {
+    const term = query.trim().toLowerCase();
+    if (!term) return quickPages;
+    return quickPages.filter((item) =>
+      `${item.name} ${item.group} ${item.keywords}`.toLowerCase().includes(term)
+    );
+  }, [query]);
+
   return (
-    <>
-      {/* Modal backdrop */}
-      <Transition
-        className="fixed inset-0 bg-gray-900/30 z-50 transition-opacity"
-        show={modalOpen}
-        enter="transition ease-out duration-200"
-        enterStart="opacity-0"
-        enterEnd="opacity-100"
-        leave="transition ease-out duration-100"
-        leaveStart="opacity-100"
-        leaveEnd="opacity-0"
-        aria-hidden="true"
-      />
+    <Dialog
+      id={id}
+      open={modalOpen}
+      onClose={() => setModalOpen(false)}
+      maxWidth="md"
+      fullWidth
+      PaperProps={{
+        className: "enterprise-card",
+        sx: { overflow: "hidden", mt: { xs: 2, sm: -12 } },
+      }}
+      aria-labelledby={`${id}-title`}
+    >
+      <Box sx={{ p: 2, borderBottom: 1, borderColor: "divider" }}>
+        <Stack direction="row" justifyContent="space-between" alignItems="center" spacing={2}>
+          <Box>
+            <Typography id={`${id}-title`} variant="h6">Open Screen</Typography>
+            <Typography variant="body2" color="text.secondary">
+              Search pages, reports, ledgers, and transaction tools.
+            </Typography>
+          </Box>
+          <IconButton onClick={() => setModalOpen(false)} aria-label="Close search">
+            <CloseRounded />
+          </IconButton>
+        </Stack>
+        <TextField
+          id={searchId}
+          inputRef={searchInput}
+          value={query}
+          onChange={(event) => setQuery(event.target.value)}
+          placeholder="Type screen name, report, ledger, loan..."
+          fullWidth
+          sx={{ mt: 2 }}
+          InputProps={{
+            startAdornment: (
+              <InputAdornment position="start">
+                <SearchRounded color="action" />
+              </InputAdornment>
+            ),
+          }}
+        />
+      </Box>
 
-      {/* Modal dialog */}
-      <Transition
-        id={id}
-        className="fixed inset-0 z-50 overflow-hidden flex items-start top-20 mb-4 justify-center px-4 sm:px-6"
-        role="dialog"
-        aria-modal="true"
-        show={modalOpen}
-        enter="transition ease-in-out duration-200"
-        enterStart="opacity-0 translate-y-4"
-        enterEnd="opacity-100 translate-y-0"
-        leave="transition ease-in-out duration-200"
-        leaveStart="opacity-100 translate-y-0"
-        leaveEnd="opacity-0 translate-y-4"
-      >
-        <div
-          ref={modalContent}
-          className="bg-white dark:bg-gray-800 border dark:border-gray-700/60 overflow-auto max-w-2xl w-full max-h-full rounded-lg shadow-lg"
-        >
-          {/* Search */}
-          <form className="border-b border-gray-200 dark:border-gray-700/60">
-            <div className="relative">
-              <label htmlFor={searchId} className="sr-only">
-                Search
-              </label>
-              <input
-                id={searchId}
-                ref={searchInput}
-                type="search"
-                placeholder="Search financial tools, reports, loans..."
-                className="w-full dark:text-gray-300 bg-white dark:bg-gray-800 border-0 focus:ring-transparent placeholder-gray-400 dark:placeholder-gray-500 appearance-none py-4 pl-10 pr-4"
-              />
+      <DialogContent sx={{ p: 2, bgcolor: "rgba(248,250,252,0.72)" }}>
+        <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap sx={{ mb: 1.5 }}>
+          {["Transactions", "Reports", "Accounts", "Loans", "Master"].map((item) => (
+            <Chip key={item} size="small" label={item} variant="outlined" />
+          ))}
+        </Stack>
 
-              <button
-                type="submit"
-                aria-label="Search"
-                className="absolute inset-0 right-auto group"
-              >
-                <svg
-                  className="fill-current text-gray-400 dark:text-gray-500 group-hover:text-gray-500 ml-4 mr-2"
-                  width="16"
-                  height="16"
-                  viewBox="0 0 16 16"
+        <Paper elevation={0} sx={{ border: 1, borderColor: "divider", overflow: "hidden" }}>
+          <List disablePadding>
+            {results.map((item) => {
+              const Icon = item.icon;
+              return (
+                <ListItemButton
+                  key={item.link}
+                  component={Link}
+                  to={item.link}
+                  onClick={() => setModalOpen(false)}
+                  sx={{ borderBottom: 1, borderColor: "divider", py: 1.25 }}
                 >
-                  <path d="M7 14c-3.86 0-7-3.14-7-7s3.14-7 7-7 7 3.14 7 7-3.14 7-7 7zM7 2C4.24 2 2 4.24 2 7s2.24 5 5 5 5-2.24 5-5-2.24-5-5-5z" />
-                  <path d="M15.7 14.29L13.31 11.9A8.01 8.01 0 0111.9 13.31l2.39 2.39a1 1 0 001.41-1.41z" />
-                </svg>
-              </button>
-            </div>
-          </form>
-
-          {/* finance specific content */}
-          <div className="py-4 px-2">
-            {/* Recent searches */}
-            <div className="mb-4">
-              <div className="text-xs font-semibold text-gray-400 dark:text-gray-500 uppercase px-2 mb-2">
-                Recent Searches
-              </div>
-              <ul className="text-sm">
-                {[
-                  "Loan approval queue",
-                  "Customer ledger lookup",
-                  "Daily collection report",
-                  "Pending installment dues",
-                  "Cashbook audit trail",
-                ].map((item, index) => (
-                  <li key={index}>
-                    <button
-                      onClick={() => setModalOpen(false)}
-                      className="flex items-center w-full text-left p-2 text-gray-800 dark:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-700/20 rounded-lg"
-                    >
-                      <svg
-                        className="fill-current text-gray-400 dark:text-gray-500 shrink-0 mr-3"
-                        width="16"
-                        height="16"
-                        viewBox="0 0 16 16"
-                      >
-                        <circle cx="7" cy="7" r="6" />
-                      </svg>
-                      <span>{item}</span>
-                    </button>
-                  </li>
-                ))}
-              </ul>
-            </div>
-
-            {/* Quick finance links */}
-            <div>
-              <div className="text-xs font-semibold text-gray-400 dark:text-gray-500 uppercase px-2 mb-2">
-                Quick Financial Pages
-              </div>
-              <ul className="text-sm">
-                {[
-                  { name: "Dashboard", link: "/" },
-                  { name: "Loan Management", link: "/Loan" },
-                  { name: "Customer Profiles", link: "/customer" },
-                  { name: "Daily Book", link: "/AccountsModules/DailyBook" },
-                  { name: "Business Overview", link: "/Bussiness/BussinessOverviewimport" },
-                  { name: "Installment Dues", link: "/Loans/InstalmentDues" },
-                ].map((item, i) => (
-                  <li key={i}>
-                    <Link
-                      to={item.link}
-                      className="flex items-center p-2 text-gray-800 dark:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-700/20 rounded-lg"
-                      onClick={() => setModalOpen(false)}
-                    >
-                      <svg
-                        className="fill-current text-gray-400 dark:text-gray-500 shrink-0 mr-3"
-                        width="16"
-                        height="16"
-                        viewBox="0 0 16 16"
-                      >
-                        <rect x="2" y="2" width="12" height="12" rx="2" />
-                      </svg>
-                      <span>{item.name}</span>
-                    </Link>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          </div>
-        </div>
-      </Transition>
-    </>
+                  <ListItemIcon>
+                    <Box className="dashboard-module-icon" sx={{ width: 38, height: 38 }}>
+                      <Icon fontSize="small" />
+                    </Box>
+                  </ListItemIcon>
+                  <ListItemText
+                    primary={item.name}
+                    secondary={`${item.group} / ${item.keywords}`}
+                    primaryTypographyProps={{ fontWeight: 900 }}
+                  />
+                  <Chip size="small" label="Open" color="primary" variant="outlined" />
+                </ListItemButton>
+              );
+            })}
+            {!results.length && (
+              <Box sx={{ p: 4, textAlign: "center" }}>
+                <Typography fontWeight={900}>No matching screen</Typography>
+                <Typography variant="body2" color="text.secondary">
+                  Try searching for cashbook, report, customer, ledger, daily, or monthly.
+                </Typography>
+              </Box>
+            )}
+          </List>
+        </Paper>
+      </DialogContent>
+    </Dialog>
   );
 }
 

@@ -183,7 +183,7 @@ const BusinessOverview = () => {
             SRI BALAJI ENTERPRISES
           </Typography>
           <Typography align="center" gutterBottom>
-            Madhura Nagar, Hyderabad.
+            Amerpeta, Hyderabad.
           </Typography>
           <Typography align="right" sx={{ mb: 3 }}>
             Date: {dayjs().format("DD-MMM-YYYY")}

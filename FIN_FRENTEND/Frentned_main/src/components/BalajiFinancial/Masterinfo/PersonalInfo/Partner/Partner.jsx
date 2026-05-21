@@ -1,4 +1,3 @@
-<<<<<<< Updated upstream
 // src/components/BalajiFinancial/PersonalInfo/Partner/Partner.jsx
 import React, { useEffect, useState, useCallback, useMemo, useRef } from "react";
 import {
@@ -980,10 +979,5 @@ const Partner = ({ personType = "CUSTOMER" }) => {
     </Box>
   );
 };
-=======
-import PersonalInfoManager from "../PersonalInfoManager";
-
-const Partner = () => <PersonalInfoManager personType="PARTNER" />;
->>>>>>> Stashed changes
 
 export default Partner;
