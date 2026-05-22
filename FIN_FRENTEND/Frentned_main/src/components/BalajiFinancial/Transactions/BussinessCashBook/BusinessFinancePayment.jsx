@@ -261,6 +261,7 @@ export default function BusinessFinancePayment({
               getOptionLabel={(option) => (typeof option === "string" ? option : option.displayString || option.loanId || "")}
               inputValue={searchInput}
               onInputChange={(_, value) => setSearchInput(value)}
+              sx={{width:"220px"}}
               onChange={(_, value) => {
                 if (value) {
                   const loanId = typeof value === "string" ? value : value.loanId;

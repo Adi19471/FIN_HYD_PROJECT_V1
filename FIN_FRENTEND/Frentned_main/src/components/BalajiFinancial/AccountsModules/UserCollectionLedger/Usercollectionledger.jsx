@@ -107,7 +107,7 @@ const Usercollectionledger = () => {
       <Paper className="enterprise-card" elevation={0} sx={{ p: 2 }}>
         <Grid container spacing={2} alignItems="center">
           <Grid item xs={12} md={3}>
-            <TextField select label="User" value={userName} onChange={(event) => setUserName(event.target.value)} fullWidth size="small">
+            <TextField select label="User" sx={{width:"220px"}} value={userName} onChange={(event) => setUserName(event.target.value)} fullWidth size="small">
               {users.map((user, index) => (
                 <MenuItem key={index} value={user}>{user}</MenuItem>
               ))}

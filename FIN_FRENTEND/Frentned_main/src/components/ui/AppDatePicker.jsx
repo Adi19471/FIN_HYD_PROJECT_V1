@@ -1,18 +1,13 @@
 import React from "react";
 import { DatePicker } from "@mui/x-date-pickers/DatePicker";
-import { AdapterDateFns } from "@mui/x-date-pickers/AdapterDateFns";
+import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
 import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
-import { format, isValid, parseISO } from "date-fns";
+import dayjs from "dayjs";
 
-const toDate = (value) => {
+const toDayjs = (value) => {
   if (!value) return null;
-  if (value instanceof Date) return isValid(value) ? value : null;
-  if (typeof value?.toDate === "function") {
-    const date = value.toDate();
-    return isValid(date) ? date : null;
-  }
-  const parsed = typeof value === "string" ? parseISO(value) : new Date(value);
-  return isValid(parsed) ? parsed : null;
+  const parsed = dayjs(value);
+  return parsed.isValid() ? parsed : null;
 };
 
 export default function AppDatePicker({
@@ -26,14 +21,14 @@ export default function AppDatePicker({
   textFieldProps = {},
 }) {
   return (
-    <LocalizationProvider dateAdapter={AdapterDateFns}>
+    <LocalizationProvider dateAdapter={AdapterDayjs}>
       <DatePicker
         label={label}
-        value={toDate(value)}
+        value={toDayjs(value)}
         disabled={disabled}
-        format="dd-MMM-yyyy"
+        format="DD-MMM-YYYY"
         onChange={(newValue) => {
-          onChange?.(newValue && isValid(newValue) ? format(newValue, "yyyy-MM-dd") : "");
+          onChange?.(newValue?.isValid?.() ? newValue.format("YYYY-MM-DD") : "");
         }}
         slotProps={{
           textField: {

@@ -9,7 +9,6 @@ import {
   TableCell,
   TableContainer,
   TableRow,
-  TextField,
   Grid,
 } from "@mui/material";
 import dayjs from "dayjs";
@@ -17,6 +16,7 @@ import axios from "axios";
 import { API_BASE } from "lib/config";
 import { getSession } from "src/utils/session";
 import LoadingSpinner from "src/LoadingSpinner";
+import { AppDatePicker } from "src/components/ui";
 
 
 const RevenueExpenseStatement = () => {
@@ -102,25 +102,11 @@ const RevenueExpenseStatement = () => {
       <Grid container spacing={2} alignItems="center">
 
         <Grid item xs={12} md={3}>
-          <TextField
-            fullWidth
-            type="date"
-            label="From Date"
-            InputLabelProps={{ shrink: true }}
-            value={fromDate ? dayjs(fromDate).format("YYYY-MM-DD") : ""}
-            onChange={(e) => setFromDate(e.target.value)}
-          />
+          <AppDatePicker label="From Date" value={fromDate} onChange={setFromDate} />
         </Grid>
 
         <Grid item xs={12} md={3}>
-          <TextField
-            fullWidth
-            type="date"
-            label="To Date"
-            InputLabelProps={{ shrink: true }}
-            value={toDate ? dayjs(toDate).format("YYYY-MM-DD") : ""}
-            onChange={(e) => setToDate(e.target.value)}
-          />
+          <AppDatePicker label="To Date" value={toDate} onChange={setToDate} />
         </Grid>
 
         <Grid item xs={12} md={3}>

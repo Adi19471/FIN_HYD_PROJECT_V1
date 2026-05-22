@@ -674,8 +674,8 @@ public class BusinessMemberService {
 
 			businessMemberDto.setPartnerId(p.getPartnerId() != null ? p.getPartnerId().getPersonalInfoId() : null);
 
-			businessMemberDto.setStartDate(p.getStartDate().toLocalDate());
-			businessMemberDto.setEndDate(p.getEndDate().toLocalDate());
+			businessMemberDto.setStartDate(p.getStartDate() != null ? p.getStartDate().toLocalDate() : null);
+			businessMemberDto.setEndDate(p.getEndDate() != null ? p.getEndDate().toLocalDate() : null);
 
 			businessMemberDto.setAmount(p.getAmount());
 			businessMemberDto.setDuration(p.getDuration());
@@ -718,8 +718,8 @@ public class BusinessMemberService {
 
 			businessMemberDto.setPartnerId(p.getPartnerId() != null ? p.getPartnerId().getPersonalInfoId() : null);
 
-			businessMemberDto.setStartDate(p.getStartDate().toLocalDate());
-			businessMemberDto.setEndDate(p.getEndDate().toLocalDate());
+			businessMemberDto.setStartDate(p.getStartDate() != null ? p.getStartDate().toLocalDate() : null);
+			businessMemberDto.setEndDate(p.getEndDate() != null ? p.getEndDate().toLocalDate() : null);
 
 			businessMemberDto.setAmount(p.getAmount());
 			businessMemberDto.setDuration(p.getDuration());

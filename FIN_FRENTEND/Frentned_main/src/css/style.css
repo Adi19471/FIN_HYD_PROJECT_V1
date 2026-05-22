@@ -225,6 +225,99 @@ body {
   width: min(44vw, 520px);
 }
 
+.enterprise-profile-trigger {
+  min-width: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  height: 44px;
+  padding: 4px 8px 4px 5px;
+  border: 1px solid transparent;
+  border-radius: 999px;
+  color: var(--text-strong);
+  background: transparent;
+  cursor: pointer;
+  transition: background 160ms ease, border-color 160ms ease, box-shadow 160ms ease;
+}
+
+.enterprise-profile-trigger:hover,
+.enterprise-profile-trigger:focus-visible {
+  background: color-mix(in srgb, var(--brand-primary) 7%, var(--surface-1));
+  border-color: color-mix(in srgb, var(--brand-primary) 18%, var(--border-soft));
+  box-shadow: 0 10px 24px rgba(15, 23, 42, 0.08);
+  outline: none;
+}
+
+.enterprise-profile-avatar {
+  width: 34px !important;
+  height: 34px !important;
+  color: #fff !important;
+  font-size: 0.82rem !important;
+  font-weight: 900 !important;
+  background: linear-gradient(135deg, var(--brand-primary), var(--brand-secondary)) !important;
+  box-shadow: 0 12px 24px color-mix(in srgb, var(--brand-primary) 24%, transparent);
+}
+
+.enterprise-profile-avatar.large {
+  width: 42px !important;
+  height: 42px !important;
+}
+
+.enterprise-profile-copy {
+  display: grid;
+  min-width: 0;
+  max-width: 128px;
+  text-align: left;
+}
+
+.enterprise-profile-copy .MuiTypography-body2 {
+  color: var(--text-strong);
+  font-weight: 850;
+  line-height: 1.1;
+}
+
+.enterprise-profile-copy .MuiTypography-caption {
+  color: var(--text-muted);
+  font-weight: 700;
+  line-height: 1.1;
+}
+
+.enterprise-profile-chevron {
+  color: var(--text-muted);
+  transition: transform 160ms ease;
+}
+
+.enterprise-profile-chevron.is-open {
+  transform: rotate(180deg);
+}
+
+.enterprise-profile-menu {
+  width: 286px;
+  margin-top: 8px;
+  overflow: hidden;
+  border: 1px solid var(--border-soft) !important;
+  background:
+    linear-gradient(180deg, color-mix(in srgb, var(--surface-1) 96%, transparent), var(--surface-1)) !important;
+  box-shadow: 0 24px 70px rgba(15, 23, 42, 0.18) !important;
+}
+
+.enterprise-profile-menu-head {
+  padding: 14px 16px;
+}
+
+.enterprise-profile-menu .MuiListItemText-primary {
+  font-weight: 850;
+}
+
+.enterprise-profile-menu .MuiListItemText-secondary {
+  font-size: 0.74rem;
+}
+
+.enterprise-profile-signout,
+.enterprise-profile-signout .MuiListItemIcon-root {
+  color: #dc2626 !important;
+}
+
 .login-enterprise {
   min-height: 100vh;
   display: grid;
@@ -456,11 +549,104 @@ body {
     linear-gradient(180deg, color-mix(in srgb, var(--surface-1) 96%, transparent), var(--surface-1));
 }
 
+.dashboard-hero-redesign {
+  position: relative;
+  border-radius: calc(var(--app-radius) + 4px) !important;
+  background:
+    linear-gradient(120deg, color-mix(in srgb, var(--brand-primary) 13%, transparent), transparent 42%),
+    linear-gradient(315deg, color-mix(in srgb, var(--brand-success) 8%, transparent), transparent 46%),
+    color-mix(in srgb, var(--surface-1) 96%, transparent) !important;
+}
+
+.dashboard-hero-redesign::after {
+  content: "";
+  position: absolute;
+  inset: auto 3% -42px auto;
+  width: 340px;
+  height: 140px;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--brand-primary) 9%, transparent);
+  filter: blur(18px);
+  pointer-events: none;
+}
+
+.dashboard-hero-copy {
+  position: relative;
+  z-index: 1;
+  flex: 1;
+  min-width: 0;
+}
+
+.dashboard-operator-card {
+  position: relative;
+  z-index: 1;
+  width: min(100%, 430px);
+  padding: 18px;
+  border-radius: var(--app-radius);
+  border: 1px solid color-mix(in srgb, var(--brand-primary) 14%, var(--border-soft));
+  background: color-mix(in srgb, var(--surface-1) 82%, transparent);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.72), 0 18px 42px rgba(15, 23, 42, 0.08);
+}
+
+.dashboard-operator-icon {
+  width: 42px;
+  height: 42px;
+  display: grid;
+  place-items: center;
+  border-radius: 12px;
+  color: var(--brand-success);
+  background: color-mix(in srgb, var(--brand-success) 12%, transparent);
+}
+
+.dashboard-strip {
+  min-height: 100px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 4px;
+  padding: 13px;
+  border-radius: 12px;
+  border: 1px solid var(--border-soft);
+  background: var(--surface-1);
+}
+
+.dashboard-strip .MuiTypography-caption {
+  color: var(--text-muted);
+  font-weight: 800;
+}
+
+.dashboard-strip .MuiTypography-h6 {
+  font-size: 1.04rem;
+  line-height: 1.15;
+}
+
+.dashboard-strip-success {
+  border-color: color-mix(in srgb, var(--brand-success) 24%, var(--border-soft));
+}
+
+.dashboard-strip-warning {
+  border-color: color-mix(in srgb, #d97706 26%, var(--border-soft));
+}
+
+.dashboard-strip-info {
+  border-color: color-mix(in srgb, var(--brand-secondary) 24%, var(--border-soft));
+}
+
 .dashboard-kpi,
 .dashboard-panel,
 .dashboard-module {
   height: 100%;
   padding: 18px;
+}
+
+.dashboard-kpi {
+  min-height: 164px;
+  transition: transform 160ms ease, border-color 160ms ease, box-shadow 160ms ease;
+}
+
+.dashboard-kpi:hover {
+  transform: translateY(-2px);
+  border-color: color-mix(in srgb, var(--brand-primary) 18%, var(--border-soft));
 }
 
 .dashboard-kpi-icon,
@@ -485,6 +671,41 @@ body {
 .dashboard-module-icon {
   color: var(--brand-primary);
   background: color-mix(in srgb, var(--brand-primary) 12%, transparent);
+}
+
+.dashboard-chart-box {
+  width: 100%;
+  height: 300px;
+}
+
+.dashboard-chart-box .recharts-wrapper,
+.dashboard-chart-box .recharts-surface {
+  overflow: visible;
+}
+
+.dashboard-approval-list {
+  min-height: 300px;
+  justify-content: center;
+}
+
+@media (max-width: 900px) {
+  .enterprise-profile-copy {
+    display: none;
+  }
+
+  .enterprise-profile-trigger {
+    padding-right: 6px;
+  }
+
+  .dashboard-operator-card {
+    width: 100%;
+  }
+
+  .dashboard-chart-box,
+  .dashboard-approval-list {
+    min-height: 260px;
+    height: 260px;
+  }
 }
 
 .finance-status {

@@ -27,6 +27,7 @@ import {
   ReceiptLongRounded,
   RefreshRounded,
   SavingsRounded,
+  TrendingUpRounded,
   WarningAmberRounded,
 } from "@mui/icons-material";
 import {
@@ -92,6 +93,16 @@ function KpiCard({ item, loading }) {
         <Typography variant="caption" color="text.secondary">{item.note}</Typography>
       </Stack>
     </Paper>
+  );
+}
+
+function MetricStrip({ title, value, note, tone = "primary" }) {
+  return (
+    <Box className={`dashboard-strip dashboard-strip-${tone}`}>
+      <Typography variant="caption">{title}</Typography>
+      <Typography variant="h6">{value}</Typography>
+      <Typography variant="caption">{note}</Typography>
+    </Box>
   );
 }
 
@@ -198,6 +209,13 @@ export default function Dashboard() {
     { title: "Active Members", label: String(metrics.activeMembers), delta: "Realtime", note: "personal info", icon: GroupsRounded, tone: "#4338ca" },
   ];
 
+  const completionRate = useMemo(() => {
+    const target = Number(metrics.portfolioValue || 0);
+    const received = Number(metrics.todayCollection || 0);
+    if (!target) return 0;
+    return Math.min(100, Math.round((received / target) * 100));
+  }, [metrics.portfolioValue, metrics.todayCollection]);
+
   const collections = useMemo(() => {
     if (!metrics.collectionRows.length) {
       return [
@@ -232,33 +250,60 @@ export default function Dashboard() {
 
   return (
     <Stack spacing={2.5}>
-      <Paper className="enterprise-card dashboard-hero" elevation={0} sx={{ p: { xs: 2, md: 3 } }}>
-        <Stack direction={{ xs: "column", xl: "row" }} spacing={2.5} justifyContent="space-between" alignItems={{ xl: "center" }}>
-          <Box>
+      <Paper className="enterprise-card dashboard-hero dashboard-hero-redesign" elevation={0}>
+        <Stack direction={{ xs: "column", lg: "row" }} spacing={3} justifyContent="space-between" alignItems={{ lg: "stretch" }}>
+          <Box className="dashboard-hero-copy">
             <Stack direction="row" spacing={1} alignItems="center" flexWrap="wrap">
               <Chip size="small" label={COMPANY_ADDRESS} color="primary" />
               <Chip size="small" label={loading ? "Refreshing..." : "Live dashboard"} variant="outlined" />
               {lastUpdated && <Chip size="small" label={`Updated ${lastUpdated.format("hh:mm A")}`} variant="outlined" />}
             </Stack>
             <Typography variant="h3" sx={{ mt: 2 }}>{COMPANY_NAME}</Typography>
-            <Typography variant="body1" color="text.secondary" sx={{ mt: 1, maxWidth: 760 }}>
-              Realtime collections, dues, ledgers, loans, reports, and daily cash operations from one admin workspace.
+            <Typography variant="body1" color="text.secondary" sx={{ mt: 1, maxWidth: 720 }}>
+              Collections, dues, ledgers, loans, reports, and cash operations in one finance control room.
             </Typography>
+
+            <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap sx={{ mt: 2.5 }}>
+              <Button startIcon={<RefreshRounded />} variant="contained" onClick={fetchDashboard} disabled={loading}>
+                Refresh Counts
+              </Button>
+              <Button startIcon={<AddCardRounded />} variant="outlined" onClick={() => navigate("/Transactions/Quick_Cash_Book")}>
+                Quick Entry
+              </Button>
+              <Button startIcon={<ReceiptLongRounded />} variant="outlined" onClick={() => navigate("/AccountsModules/DailyBook")}>
+                Daily Book
+              </Button>
+              <Button startIcon={<ApprovalRounded />} variant="outlined" onClick={() => navigate("/Loans/InstalmentDues")}>
+                Dues Review
+              </Button>
+            </Stack>
           </Box>
-          <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
-            <Button startIcon={<RefreshRounded />} variant="contained" onClick={fetchDashboard} disabled={loading}>
-              Refresh Counts
-            </Button>
-            <Button startIcon={<AddCardRounded />} variant="outlined" onClick={() => navigate("/Transactions/Quick_Cash_Book")}>
-              Quick Entry
-            </Button>
-            <Button startIcon={<ReceiptLongRounded />} variant="outlined" onClick={() => navigate("/AccountsModules/DailyBook")}>
-              Daily Book
-            </Button>
-            <Button startIcon={<ApprovalRounded />} variant="outlined" onClick={() => navigate("/Loans/InstalmentDues")}>
-              Dues Review
-            </Button>
-          </Stack>
+
+          <Box className="dashboard-operator-card">
+            <Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 2 }}>
+              <Box>
+                <Typography variant="caption" color="text.secondary">Today Operating View</Typography>
+                <Typography variant="subtitle1">Admin workspace</Typography>
+              </Box>
+              <Box className="dashboard-operator-icon">
+                <TrendingUpRounded />
+              </Box>
+            </Stack>
+            <Grid container spacing={1.25}>
+              <Grid item xs={6}>
+                <MetricStrip title="Collection" value={formatINR(metrics.todayCollection)} note="today" tone="success" />
+              </Grid>
+              <Grid item xs={6}>
+                <MetricStrip title="Pending" value={formatINR(metrics.pendingDues)} note={`${metrics.dueCases} cases`} tone="warning" />
+              </Grid>
+              <Grid item xs={6}>
+                <MetricStrip title="Members" value={metrics.activeMembers} note="active" tone="primary" />
+              </Grid>
+              <Grid item xs={6}>
+                <MetricStrip title="Completion" value={`${completionRate}%`} note="against target" tone="info" />
+              </Grid>
+            </Grid>
+          </Box>
         </Stack>
         {loading && <LinearProgress sx={{ mt: 2, borderRadius: 99 }} />}
       </Paper>
@@ -274,7 +319,7 @@ export default function Dashboard() {
       </Grid>
 
       <Grid container spacing={2}>
-        <Grid item xs={12} lg={8}>
+        <Grid item xs={12}>
           <Panel
             title="Finance Workspace"
             subtitle="Most-used operations with the same compact action style."
@@ -306,29 +351,29 @@ export default function Dashboard() {
             </Grid>
           </Panel>
         </Grid>
+      </Grid>
 
-        <Grid item xs={12} lg={4}>
+      <Grid container spacing={2} alignItems="stretch">
+        <Grid item xs={12} md={6} xl={4}>
           <Panel title="Collection Process" subtitle="Current month received by finance status">
-            <Box sx={{ height: 320 }}>
+            <Box className="dashboard-chart-box">
               <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={collections}>
-                  <XAxis dataKey="label" tick={{ fontSize: 11 }} />
+                <BarChart data={collections} margin={{ top: 18, right: 8, left: 8, bottom: 0 }}>
+                  <XAxis dataKey="label" interval={0} height={36} tick={{ fontSize: 11 }} tickLine={false} axisLine={false} />
                   <YAxis hide />
-                  <Tooltip formatter={(value) => formatINR(value)} />
-                  <Bar dataKey="value" fill="var(--brand-success)" radius={[8, 8, 0, 0]} />
+                  <Tooltip cursor={{ fill: "rgba(15, 98, 254, 0.05)" }} formatter={(value) => formatINR(value)} />
+                  <Bar dataKey="value" fill="var(--brand-success)" radius={[8, 8, 0, 0]} maxBarSize={58} />
                 </BarChart>
               </ResponsiveContainer>
             </Box>
           </Panel>
         </Grid>
-      </Grid>
 
-      <Grid container spacing={2}>
-        <Grid item xs={12} lg={7}>
+        <Grid item xs={12} md={6} xl={4}>
           <Panel title="Revenue And Expense Trend" subtitle="Reference trend in lakh INR">
-            <Box sx={{ height: 300 }}>
+            <Box className="dashboard-chart-box">
               <ResponsiveContainer width="100%" height="100%">
-                <AreaChart data={fallbackCashflow}>
+                <AreaChart data={fallbackCashflow} margin={{ top: 18, right: 12, left: -12, bottom: 0 }}>
                   <defs>
                     <linearGradient id="income" x1="0" y1="0" x2="0" y2="1">
                       <stop offset="5%" stopColor="#0f62fe" stopOpacity={0.32} />
@@ -340,8 +385,8 @@ export default function Dashboard() {
                     </linearGradient>
                   </defs>
                   <CartesianGrid strokeDasharray="3 3" vertical={false} opacity={0.35} />
-                  <XAxis dataKey="month" />
-                  <YAxis />
+                  <XAxis dataKey="month" tickLine={false} axisLine={false} />
+                  <YAxis width={38} tickLine={false} axisLine={false} />
                   <Tooltip />
                   <Area type="monotone" dataKey="income" stroke="#0f62fe" fill="url(#income)" strokeWidth={3} />
                   <Area type="monotone" dataKey="expense" stroke="#d97706" fill="url(#expense)" strokeWidth={3} />
@@ -351,9 +396,9 @@ export default function Dashboard() {
           </Panel>
         </Grid>
 
-        <Grid item xs={12} lg={5}>
+        <Grid item xs={12} xl={4}>
           <Panel title="Approval Health" subtitle="Workflow and audit status">
-            <Stack spacing={2}>
+            <Stack className="dashboard-approval-list" spacing={2}>
               <Box>
                 <Stack direction="row" justifyContent="space-between">
                   <Typography variant="body2">Loan approvals</Typography>

@@ -15,7 +15,6 @@ import {
   CircularProgress,
   Alert,
   Button,
-  TextField,
   FormControlLabel,
   Checkbox,
   Radio,
@@ -34,6 +33,7 @@ import axios from "axios";
 import { API_BASE } from "lib/config";
 import { getSession } from "src/utils/session";
 import dayjs from "dayjs";
+import { AppDatePicker } from "src/components/ui";
 
 const token = getSession()?.token || getSession("token") || "";
 
@@ -45,8 +45,8 @@ const BusinessOverview = () => {
 
   // Controls State
   const [useDateRange, setUseDateRange] = useState(true);        // true = Date Range, false = All
-  const [fromDate, setFromDate] = useState();
-  const [toDate, setToDate] = useState();
+  const [fromDate, setFromDate] = useState(dayjs().startOf("month").format("YYYY-MM-DD"));
+  const [toDate, setToDate] = useState(dayjs().format("YYYY-MM-DD"));
   const [excludeDividends, setExcludeDividends] = useState(true);
   const [accruedRevenues, setAccruedRevenues] = useState(true);
 
@@ -54,6 +54,11 @@ const BusinessOverview = () => {
     try {
       setLoading(true);
       setError(null);
+
+      if (useDateRange && (!fromDate || !toDate)) {
+        setError("Please select both From and To dates.");
+        return;
+      }
 
       // If "All" is selected, we can send a wide date range or let backend handle it
       const finalFromDate = useDateRange ? fromDate : "2020-01-01";   // Change this default if needed
@@ -109,26 +114,22 @@ const BusinessOverview = () => {
           </Grid>
 
           <Grid item>
-            <TextField
+            <AppDatePicker
               label="From"
-              type="date"
-              size="small"
               value={fromDate}
-              onChange={(e) => setFromDate(e.target.value)}
+              onChange={setFromDate}
               disabled={!useDateRange}
-              InputLabelProps={{ shrink: true }}
+              sx={{ width: 180 }}
             />
           </Grid>
 
           <Grid item>
-            <TextField
+            <AppDatePicker
               label="To"
-              type="date"
-              size="small"
               value={toDate}
-              onChange={(e) => setToDate(e.target.value)}
+              onChange={setToDate}
               disabled={!useDateRange}
-              InputLabelProps={{ shrink: true }}
+              sx={{ width: 180 }}
             />
           </Grid>
 

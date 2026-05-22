@@ -127,7 +127,7 @@ export default function Loans() {
       <Paper className="enterprise-card" elevation={0} sx={{ p: 2 }}>
         <Grid container spacing={2} alignItems="center">
           <Grid item xs={12} md={3}>
-            <TextField select label="Loan Type" value={loanType} onChange={(event) => setLoanType(event.target.value)} fullWidth size="small">
+            <TextField select label="Loan Type" sx={{width:"220px"}}value={loanType} onChange={(event) => setLoanType(event.target.value)} fullWidth size="small">
               <MenuItem value="ALL">All Loans</MenuItem>
               <MenuItem value="Daily Finance">Daily Finance</MenuItem>
               <MenuItem value="Monthly Finance">Monthly Finance</MenuItem>
