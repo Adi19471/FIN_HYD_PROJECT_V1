@@ -11,8 +11,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import com.balaji.finance.dto.BalanceSheetProjection;
-import com.balaji.finance.dto.RevenueExpenseProjection;
-import com.balaji.finance.dto.SumOfCreditsAndDebitsProjection;
 import com.balaji.finance.repo.CashBookRepo;
 
 @Service

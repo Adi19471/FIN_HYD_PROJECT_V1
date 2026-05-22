@@ -2,6 +2,7 @@ package com.balaji.finance.service;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 import java.util.Optional;
 
@@ -35,9 +36,8 @@ public class OtherPaymentService {
 
 	public void saveOtherPayment(OtherPaymentSaveReq otherPaymentSaveReq) {
 
-		String dateStr = otherPaymentSaveReq.getTransactionDate();
-		DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
-		LocalDateTime currentInstallmentDate = LocalDateTime.parse(dateStr, formatter);
+		LocalDateTime currentInstallmentDate = otherPaymentSaveReq.getTransactionDate().atTime(LocalTime.now());
+		
 		String currentUser = SecurityContextHolder.getContext().getAuthentication().getName();
 
 		CashBook cashBookForPrinciplePaid = new CashBook();

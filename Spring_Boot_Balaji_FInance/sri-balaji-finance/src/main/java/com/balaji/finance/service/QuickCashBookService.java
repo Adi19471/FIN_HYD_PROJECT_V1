@@ -1,6 +1,7 @@
 package com.balaji.finance.service;
 
 import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Optional;
@@ -62,11 +63,8 @@ public class QuickCashBookService {
 	@Transactional
 	public void saveQuickCashBookRecords(QuickCashBookSaveRequest quickCashBookSaveRequest) {
 
-		String transactionDate = quickCashBookSaveRequest.getTransactionDate();
-
-		DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
-		LocalDateTime currentInstallmentDate = LocalDateTime.parse(transactionDate, formatter);
-
+		LocalDateTime currentInstallmentDate = quickCashBookSaveRequest.getTransactionDate().atTime(LocalTime.now());
+		
 		List<QuickCashBookRow> quickCashBookRows = quickCashBookSaveRequest.getQuickCashBookRows();
 
 		for (QuickCashBookRow quickCashBookRow : quickCashBookRows) {

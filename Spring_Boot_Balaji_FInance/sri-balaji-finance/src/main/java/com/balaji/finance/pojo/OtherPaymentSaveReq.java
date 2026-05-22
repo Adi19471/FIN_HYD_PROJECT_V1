@@ -1,12 +1,13 @@
 package com.balaji.finance.pojo;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 
 public class OtherPaymentSaveReq {
 
-	private String transactionDate;
+	private LocalDate transactionDate;
 	private String accountMasterCode;
 	private String accountCode;
 	private String customerId;
@@ -15,11 +16,11 @@ public class OtherPaymentSaveReq {
 
 	private BigDecimal amount;
 
-	public String getTransactionDate() {
+	public LocalDate getTransactionDate() {
 		return transactionDate;
 	}
 
-	public void setTransactionDate(String transactionDate) {
+	public void setTransactionDate(LocalDate transactionDate) {
 		this.transactionDate = transactionDate;
 	}
 
@@ -71,5 +72,4 @@ public class OtherPaymentSaveReq {
 		this.accountMasterCode = accountMasterCode;
 	}
 
-	
 }

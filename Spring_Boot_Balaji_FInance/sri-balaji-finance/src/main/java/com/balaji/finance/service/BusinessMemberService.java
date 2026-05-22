@@ -4,6 +4,7 @@ import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -163,8 +164,8 @@ public class BusinessMemberService {
 			}
 		}
 
-		businessMember.setStartDate(businessMemberDto.getStartDate());
-		businessMember.setEndDate(businessMemberDto.getEndDate());
+		businessMember.setStartDate(businessMemberDto.getStartDate().atTime(LocalTime.now()));
+		businessMember.setEndDate(businessMemberDto.getEndDate().atTime(LocalTime.now()));
 
 		businessMember.setAmount(businessMemberDto.getAmount() != null ? businessMemberDto.getAmount() : BigDecimal.ZERO);
 		businessMember.setDuration(businessMemberDto.getDuration() != null ? businessMemberDto.getDuration() : 0);
@@ -222,7 +223,7 @@ public class BusinessMemberService {
 			dfLoanCashBook.setLineNo(1);
 			dfLoanCashBook.setUser(currentUser);
 
-			dfLoanCashBook.setTransDate(businessMemberDto.getStartDate());
+			dfLoanCashBook.setTransDate(businessMemberDto.getStartDate().atTime(LocalTime.now()));
 			dfLoanCashBook.setSysDate(currentDate);
 
 			cashBookRepo.save(dfLoanCashBook);
@@ -248,7 +249,7 @@ public class BusinessMemberService {
 				dfProcessingFeeCashBook.setLineNo(2);
 				dfProcessingFeeCashBook.setUser(currentUser);
 
-				dfProcessingFeeCashBook.setTransDate(businessMemberDto.getStartDate());
+				dfProcessingFeeCashBook.setTransDate(businessMemberDto.getStartDate().atTime(LocalTime.now()));
 				dfProcessingFeeCashBook.setSysDate(currentDate);
 
 				cashBookRepo.save(dfProcessingFeeCashBook);
@@ -278,7 +279,7 @@ public class BusinessMemberService {
 				dfIntrestCashBook.setLineNo(3);
 				dfIntrestCashBook.setUser(currentUser);
 
-				dfIntrestCashBook.setTransDate(businessMemberDto.getStartDate());
+				dfIntrestCashBook.setTransDate(businessMemberDto.getStartDate().atTime(LocalTime.now()));
 				dfIntrestCashBook.setSysDate(currentDate);
 
 				cashBookRepo.save(dfIntrestCashBook);
@@ -309,7 +310,7 @@ public class BusinessMemberService {
 			mFLoanCashBook.setLineNo(1);
 			mFLoanCashBook.setUser(currentUser);
 
-			mFLoanCashBook.setTransDate(businessMemberDto.getStartDate());
+			mFLoanCashBook.setTransDate(businessMemberDto.getStartDate().atTime(LocalTime.now()));
 			mFLoanCashBook.setSysDate(currentDate);
 
 			cashBookRepo.save(mFLoanCashBook);
@@ -336,7 +337,7 @@ public class BusinessMemberService {
 				dfProcessingFeeCashBook.setLineNo(2);
 				dfProcessingFeeCashBook.setUser(currentUser);
 
-				dfProcessingFeeCashBook.setTransDate(businessMemberDto.getStartDate());
+				dfProcessingFeeCashBook.setTransDate(businessMemberDto.getStartDate().atTime(LocalTime.now()));
 				dfProcessingFeeCashBook.setSysDate(currentDate);
 
 				cashBookRepo.save(dfProcessingFeeCashBook);
@@ -383,7 +384,7 @@ public class BusinessMemberService {
 			if ((businessMember.getAmount() != null && businessMemberDto.getAmount() != null
 					&& businessMember.getAmount().compareTo(businessMemberDto.getAmount()) != 0)
 					|| (businessMember.getStartDate() != null && businessMemberDto.getStartDate() != null
-							&& businessMember.getStartDate().compareTo(businessMemberDto.getStartDate()) != 0)) {
+							&& businessMember.getStartDate().toLocalDate().compareTo(businessMemberDto.getStartDate()) != 0)) {
 
 				CashBook loanCashBook = null;
 				Optional<CashBook> optionalCashbook = null;
@@ -401,7 +402,7 @@ public class BusinessMemberService {
 					loanCashBook.setDebit(businessMemberDto.getAmount());
 					loanCashBook.setUser(currentUser);
 					loanCashBook.setSysDate(currentDate);
-					loanCashBook.setTransDate(businessMemberDto.getStartDate());
+					loanCashBook.setTransDate(businessMemberDto.getStartDate().atTime(LocalTime.now()));
 
 					cashBookRepo.save(loanCashBook);
 
@@ -413,7 +414,7 @@ public class BusinessMemberService {
 			if ((businessMember.getProcessingFee() != null && businessMemberDto.getProcessingFee() != null
 					&& businessMember.getProcessingFee().compareTo(businessMemberDto.getProcessingFee()) != 0) 
 					|| (businessMember.getStartDate() != null && businessMemberDto.getStartDate() != null
-					  && businessMember.getStartDate().compareTo(businessMemberDto.getStartDate()) != 0)) {
+					  && businessMember.getStartDate().toLocalDate().compareTo(businessMemberDto.getStartDate()) != 0)) {
 
 				CashBook dfProcessingFeeCashBook = null;
 				Optional<CashBook> optionalCashbook = null;
@@ -433,7 +434,7 @@ public class BusinessMemberService {
 					dfProcessingFeeCashBook.setDebit(BigDecimal.ZERO);
 					dfProcessingFeeCashBook.setUser(currentUser);
 					dfProcessingFeeCashBook.setSysDate(currentDate);
-					dfProcessingFeeCashBook.setTransDate(businessMemberDto.getStartDate());
+					dfProcessingFeeCashBook.setTransDate(businessMemberDto.getStartDate().atTime(LocalTime.now()));
 
 					cashBookRepo.save(dfProcessingFeeCashBook);
 
@@ -445,7 +446,7 @@ public class BusinessMemberService {
 			if ((businessMember.getInterest() != null && businessMemberDto.getInterest() != null
 					&& businessMember.getInterest().compareTo(businessMemberDto.getInterest()) != 0)
 					|| (businessMember.getStartDate() != null && businessMemberDto.getStartDate() != null
-							&& businessMember.getStartDate().compareTo(businessMemberDto.getStartDate()) != 0)) {
+							&& businessMember.getStartDate().toLocalDate().compareTo(businessMemberDto.getStartDate()) != 0)) {
 
 				CashBook dfIntrestCashBook = null;
 				Optional<CashBook> optionalCashbook = null;
@@ -462,7 +463,7 @@ public class BusinessMemberService {
 				dfIntrestCashBook.setDebit(BigDecimal.ZERO);
 				dfIntrestCashBook.setUser(currentUser);
 				dfIntrestCashBook.setSysDate(currentDate);
-				dfIntrestCashBook.setTransDate(businessMemberDto.getStartDate());
+				dfIntrestCashBook.setTransDate(businessMemberDto.getStartDate().atTime(LocalTime.now()));
 
 				cashBookRepo.save(dfIntrestCashBook);
 
@@ -476,7 +477,7 @@ public class BusinessMemberService {
 			if ((businessMember.getAmount() != null && businessMemberDto.getAmount() != null
 					&& businessMember.getAmount().compareTo(businessMemberDto.getAmount()) != 0)
 					|| (businessMember.getStartDate() != null && businessMemberDto.getStartDate() != null
-							&& businessMember.getStartDate().compareTo(businessMemberDto.getStartDate()) != 0)) {
+							&& businessMember.getStartDate().toLocalDate().compareTo(businessMemberDto.getStartDate()) != 0)) {
 
 				CashBook mFLoanCashBook = null;
 				Optional<CashBook> optionalCashbook = null;
@@ -494,7 +495,7 @@ public class BusinessMemberService {
 					mFLoanCashBook.setDebit(businessMemberDto.getAmount());
 					mFLoanCashBook.setUser(currentUser);
 					mFLoanCashBook.setSysDate(currentDate);
-					mFLoanCashBook.setTransDate(businessMemberDto.getStartDate());
+					mFLoanCashBook.setTransDate(businessMemberDto.getStartDate().atTime(LocalTime.now()));
 
 					cashBookRepo.save(mFLoanCashBook);
 
@@ -506,7 +507,7 @@ public class BusinessMemberService {
 			if ((businessMember.getProcessingFee() != null && businessMemberDto.getProcessingFee() != null
 					&& businessMember.getProcessingFee().compareTo(businessMemberDto.getProcessingFee()) != 0)
 					|| (businessMember.getStartDate() != null && businessMemberDto.getStartDate() != null
-							&& businessMember.getStartDate().compareTo(businessMemberDto.getStartDate()) != 0)) {
+							&& businessMember.getStartDate().toLocalDate().compareTo(businessMemberDto.getStartDate()) != 0)) {
 
 				CashBook mfProcessingFeeCashBook = null;
 				Optional<CashBook> optionalCashbook = null;
@@ -525,7 +526,7 @@ public class BusinessMemberService {
 					mfProcessingFeeCashBook.setDebit(BigDecimal.ZERO);
 					mfProcessingFeeCashBook.setUser(currentUser);
 					mfProcessingFeeCashBook.setSysDate(currentDate);
-					mfProcessingFeeCashBook.setTransDate(businessMemberDto.getStartDate());
+					mfProcessingFeeCashBook.setTransDate(businessMemberDto.getStartDate().atTime(LocalTime.now()));
 
 					cashBookRepo.save(mfProcessingFeeCashBook);
 
@@ -572,8 +573,8 @@ public class BusinessMemberService {
 			businessMember.setPartnerId(partnerOptional.get());
 		}
 
-		businessMember.setStartDate(businessMemberDto.getStartDate());
-		businessMember.setEndDate(businessMemberDto.getEndDate());
+		businessMember.setStartDate(businessMemberDto.getStartDate().atTime(LocalTime.now()));
+		businessMember.setEndDate(businessMemberDto.getEndDate().atTime(LocalTime.now()));
 
 		businessMember
 				.setAmount(businessMemberDto.getAmount() != null ? businessMemberDto.getAmount() : BigDecimal.ZERO);
@@ -673,8 +674,8 @@ public class BusinessMemberService {
 
 			businessMemberDto.setPartnerId(p.getPartnerId() != null ? p.getPartnerId().getPersonalInfoId() : null);
 
-			businessMemberDto.setStartDate(p.getStartDate());
-			businessMemberDto.setEndDate(p.getEndDate());
+			businessMemberDto.setStartDate(p.getStartDate().toLocalDate());
+			businessMemberDto.setEndDate(p.getEndDate().toLocalDate());
 
 			businessMemberDto.setAmount(p.getAmount());
 			businessMemberDto.setDuration(p.getDuration());
@@ -717,8 +718,8 @@ public class BusinessMemberService {
 
 			businessMemberDto.setPartnerId(p.getPartnerId() != null ? p.getPartnerId().getPersonalInfoId() : null);
 
-			businessMemberDto.setStartDate(p.getStartDate());
-			businessMemberDto.setEndDate(p.getEndDate());
+			businessMemberDto.setStartDate(p.getStartDate().toLocalDate());
+			businessMemberDto.setEndDate(p.getEndDate().toLocalDate());
 
 			businessMemberDto.setAmount(p.getAmount());
 			businessMemberDto.setDuration(p.getDuration());

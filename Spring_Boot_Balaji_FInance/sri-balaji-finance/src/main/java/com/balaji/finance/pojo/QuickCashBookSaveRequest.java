@@ -1,5 +1,6 @@
 package com.balaji.finance.pojo;
 
+import java.time.LocalDate;
 import java.util.List;
 
 import jakarta.validation.Valid;
@@ -9,7 +10,7 @@ import jakarta.validation.constraints.NotNull;
 public class QuickCashBookSaveRequest {
 	
 	@NotBlank(message = "Transaction date is required")
-	private String transactionDate;
+	private LocalDate transactionDate;
 	
 	@Valid
 	@NotNull(message = "Rows cannot be null")
@@ -23,11 +24,11 @@ public class QuickCashBookSaveRequest {
 		this.quickCashBookRows = quickCashBookRows;
 	}
 
-	public String getTransactionDate() {
+	public LocalDate getTransactionDate() {
 		return transactionDate;
 	}
 
-	public void setTransactionDate(String transactionDate) {
+	public void setTransactionDate(LocalDate transactionDate) {
 		this.transactionDate = transactionDate;
 	}
 

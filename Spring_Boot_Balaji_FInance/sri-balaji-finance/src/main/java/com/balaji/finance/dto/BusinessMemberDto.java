@@ -1,15 +1,10 @@
 package com.balaji.finance.dto;
 
 import java.math.BigDecimal;
-import java.time.LocalDateTime;
-
-import org.springframework.stereotype.Service;
+import java.time.LocalDate;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 
-import jakarta.persistence.Column;
-
-@Service
 public class BusinessMemberDto {
 
 	private String id;
@@ -19,11 +14,11 @@ public class BusinessMemberDto {
 	private String guarantor3;
 	private String partnerId;
 
-	@JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
-	private LocalDateTime startDate;
+	@JsonFormat(pattern = "yyyy-MM-dd")
+	private LocalDate startDate;
 
-	@JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
-	private LocalDateTime endDate;
+	@JsonFormat(pattern = "yyyy-MM-dd")
+	private LocalDate endDate;
 
 	private BigDecimal amount;
 	private Integer duration;
@@ -88,19 +83,19 @@ public class BusinessMemberDto {
 		this.partnerId = partnerId;
 	}
 
-	public LocalDateTime getStartDate() {
+	public LocalDate getStartDate() {
 		return startDate;
 	}
 
-	public void setStartDate(LocalDateTime startDate) {
+	public void setStartDate(LocalDate startDate) {
 		this.startDate = startDate;
 	}
 
-	public LocalDateTime getEndDate() {
+	public LocalDate getEndDate() {
 		return endDate;
 	}
 
-	public void setEndDate(LocalDateTime endDate) {
+	public void setEndDate(LocalDate endDate) {
 		this.endDate = endDate;
 	}
 
