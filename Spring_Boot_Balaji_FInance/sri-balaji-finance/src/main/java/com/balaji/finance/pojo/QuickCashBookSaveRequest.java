@@ -9,7 +9,7 @@ import jakarta.validation.constraints.NotNull;
 
 public class QuickCashBookSaveRequest {
 	
-	@NotBlank(message = "Transaction date is required")
+//	@NotBlank(message = "Transaction date is required")
 	private LocalDate transactionDate;
 	
 	@Valid

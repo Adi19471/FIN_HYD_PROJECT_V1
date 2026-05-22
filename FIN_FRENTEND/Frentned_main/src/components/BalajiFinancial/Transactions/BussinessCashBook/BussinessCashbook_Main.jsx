@@ -1,16 +1,15 @@
 import React, { useState } from "react";
-import {
-  Box,
-  Tabs,
-  Tab,
-  Typography,
-  CircularProgress,
-  Fade,
-} from "@mui/material";
-import { MdCalendarToday, MdCalendarMonth } from "react-icons/md";
+import { Box, Chip, CircularProgress, Fade, Paper, Stack, Tab, Tabs, Typography } from "@mui/material";
+import { ReceiptLongRounded } from "@mui/icons-material";
+import { MdCalendarMonth, MdCalendarToday } from "react-icons/md";
 
 import BussinessDailyFinance from "./Bussiness_DailyFinance/BussinessDailyFinance";
 import BussinessMonthlyFinance from "./Bussiness_MonthlyFinance/Bussiness_MonthlyFinance";
+
+const tabs = [
+  { label: "Daily", icon: <MdCalendarToday /> },
+  { label: "Monthly", icon: <MdCalendarMonth /> },
+];
 
 const BussinessCashbook_Main = () => {
   const [value, setValue] = useState(0);
@@ -19,116 +18,89 @@ const BussinessCashbook_Main = () => {
   const handleChange = (event, newValue) => {
     setLoading(true);
     setValue(newValue);
-
-    setTimeout(() => setLoading(false), 400);
+    setTimeout(() => setLoading(false), 250);
   };
 
   return (
-    <Box sx={{ p: 2 }}>
-      {/* 🔵 HEADER */}
-      <Box
+    <Box sx={{ p: { xs: 1.5, md: 2.5 } }}>
+      <Paper
+        className="enterprise-card"
+        elevation={0}
         sx={{
-          width: "100%",
-          bgcolor: "rgba(13,21,40,0.9)",
-          backdropFilter: "blur(10px)",
-          borderRadius: "1px",
-          px: 2,
-          py: 1.5,
+          p: 2,
           display: "flex",
+          flexDirection: { xs: "column", sm: "row" },
           justifyContent: "space-between",
-          alignItems: "center",
-          boxShadow: "0 4px 20px rgba(0,0,0,0.4)",
-          border: "1px solid rgba(255,255,255,0.05)",
+          alignItems: { xs: "stretch", sm: "center" },
+          gap: 2,
         }}
       >
-        {/* Title */}
-        <Typography
-          sx={{
-            fontSize: "16px",
-            color: "#fff",
-            fontWeight: 700,
-            letterSpacing: "1px",
-          }}
-        >
-          💰 Transactions
-        </Typography>
+        <Stack direction="row" alignItems="center" spacing={1.25} flexWrap="wrap">
+          <ReceiptLongRounded color="primary" />
+          <Box>
+            <Typography variant="h5">Transactions</Typography>
+            <Typography variant="body2" color="text.secondary">
+              Daily and monthly finance collections use one consistent format.
+            </Typography>
+          </Box>
+          <Chip size="small" label={tabs[value].label} color="primary" variant="outlined" />
+        </Stack>
 
-        {/* Tabs */}
         <Tabs
           value={value}
           onChange={handleChange}
+          variant="scrollable"
+          scrollButtons="auto"
           sx={{
-            minHeight: "40px",
-            "& .MuiTabs-indicator": {
-              display: "none",
-            },
+            minHeight: 44,
+            "& .MuiTabs-indicator": { display: "none" },
           }}
         >
-          {[ 
-            { label: "Daily", icon: <MdCalendarToday /> },
-            { label: "Monthly", icon: <MdCalendarMonth /> },
-          ].map((tab, index) => (
+          {tabs.map((tab, index) => (
             <Tab
-              key={index}
+              key={tab.label}
               icon={tab.icon}
               iconPosition="start"
               label={tab.label}
               sx={{
-                minHeight: "36px",
-                minWidth: "110px",
-                borderRadius: "1px",
+                minHeight: 42,
+                minWidth: 126,
+                borderRadius: 1,
                 mx: 0.5,
                 textTransform: "none",
-                fontWeight: 600,
-                fontSize: "13px",
-                color: value === index ? "#fff" : "#fff",
-                bgcolor: value === index ? "#fff" : "transparent",
-                transition: "0.3s",
+                fontWeight: 800,
+                color: value === index ? "primary.contrastText" : "text.primary",
+                bgcolor: value === index ? "primary.main" : "background.paper",
+                border: "1px solid",
+                borderColor: value === index ? "primary.main" : "divider",
                 "&:hover": {
-                  bgcolor: value === index ? "#1565c0" : "rgba(255,255,255,0.05)",
+                  bgcolor: value === index ? "primary.dark" : "action.hover",
                 },
               }}
             />
           ))}
         </Tabs>
-      </Box>
+      </Paper>
 
-      {/* 🔵 CONTENT CARD */}
-      <Box
-        sx={{
-          mt: 2,
-          p: 2,
-          borderRadius: "1px",
-          bgcolor: "#0f1b32",
-          minHeight: "400px",
-          boxShadow: "0 4px 20px rgba(0,0,0,0.3)",
-          border: "1px solid rgba(255,255,255,0.05)",
-          position: "relative",
-          overflow: "hidden",
-        }}
-      >
-        {/* 🔄 Loading Overlay */}
+      <Box sx={{ mt: 2.5, minHeight: 400, position: "relative" }}>
         <Fade in={loading}>
           <Box
             sx={{
               position: "absolute",
-              top: 0,
-              left: 0,
-              width: "100%",
-              height: "100%",
-              backdropFilter: "blur(4px)",
-              backgroundColor: "rgba(0,0,0,0.4)",
+              inset: 0,
+              borderRadius: 2,
+              backdropFilter: "blur(6px)",
+              backgroundColor: "rgba(255,255,255,0.62)",
               display: "flex",
               justifyContent: "center",
               alignItems: "center",
               zIndex: 10,
             }}
           >
-            <CircularProgress size={50} thickness={4} />
+            <CircularProgress size={46} thickness={4} />
           </Box>
         </Fade>
 
-        {/* 📊 Content */}
         {value === 0 && <BussinessDailyFinance />}
         {value === 1 && <BussinessMonthlyFinance />}
       </Box>

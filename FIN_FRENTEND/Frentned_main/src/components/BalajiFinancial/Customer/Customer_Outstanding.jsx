@@ -39,7 +39,7 @@ const CustomerOutstanding = () => {
   const [rowsPerPage, setRowsPerPage] = useState(10);
 
   const [companyName] = useState("SRI BALAJI ENTERPRISES");
-  const [address] = useState("Madhura Nagar, Hyderabad.");
+  const [address] = useState("Amerpeta, Hyderabad.");
 
   // Ref for printing
   const printRef = useRef(null);

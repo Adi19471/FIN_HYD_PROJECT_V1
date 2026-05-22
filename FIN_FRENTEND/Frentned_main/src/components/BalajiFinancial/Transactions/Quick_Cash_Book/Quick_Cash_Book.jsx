@@ -1,139 +1,139 @@
-import React, { useState, useMemo, useEffect, useCallback, useRef } from "react";
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import dayjs from "dayjs";
 import axios from "axios";
+import * as XLSX from "xlsx";
+import jsPDF from "jspdf";
+import autoTable from "jspdf-autotable";
 import { successToast, errorToast } from "toastify";
 import { API_BASE } from "lib/config";
 import { getSession } from "src/utils/session";
 import { AppDatePicker } from "src/components/ui";
+import { COMPANY_ADDRESS, COMPANY_NAME } from "src/lib/company";
 
 import {
+  Alert,
   Box,
   Button,
-  TextField,
-  Typography,
-  Stack,
-  Paper,
-  Alert,
   Divider,
-  CircularProgress,
+  Grid,
   IconButton,
+  Paper,
+  Stack,
   Table,
   TableBody,
   TableCell,
   TableContainer,
   TableHead,
   TableRow,
+  TextField,
+  Typography,
 } from "@mui/material";
-
-import { Save, Delete, Add } from "@mui/icons-material";
+import { Add, ArticleRounded, Delete, DescriptionRounded, PrintRounded, Save, TableViewRounded } from "@mui/icons-material";
 import { Autocomplete as MuiAutocomplete } from "@mui/material";
+
+const blankRow = (accountNo = "") => ({
+  id: Date.now() + Math.random(),
+  accountNo,
+  name: "",
+  installment: 0,
+  dueAmount: 0,
+  lateFee: 0,
+  paidAmount: 0,
+  paidLateFee: 0,
+});
+
+const formatNumber = (value) => {
+  if (value === "" || value === null || value === undefined) return "";
+  return Number(value || 0).toLocaleString("en-IN");
+};
+
+const parseNumber = (value) => String(value || "").replace(/,/g, "");
 
 const QuickCashBook = () => {
   const [transactionDate, setTransactionDate] = useState(dayjs());
-  const [rows, setRows] = useState([]);
+  const [rows, setRows] = useState([blankRow()]);
   const [accountSuggestions, setAccountSuggestions] = useState([]);
   const [loading, setLoading] = useState(false);
   const [fetchingAccount, setFetchingAccount] = useState(null);
   const [alertMsg, setAlertMsg] = useState({ text: "", severity: "info" });
-  const [isAddingRow, setIsAddingRow] = useState(false);   // ← Protection flag
+  const [isAddingRow, setIsAddingRow] = useState(false);
 
   const token = getSession("token");
   const inputRefs = useRef({});
 
-  // Get list of already used account numbers
-  const usedAccounts = useMemo(() => {
-    return new Set(rows.map(r => r.accountNo?.trim()).filter(Boolean));
-  }, [rows]);
+  const filledRows = useMemo(() => rows.filter((row) => row.accountNo?.trim()), [rows]);
+  const usedAccounts = useMemo(() => new Set(filledRows.map((row) => row.accountNo.trim())), [filledRows]);
+  const totalCollected = useMemo(() => rows.reduce((sum, row) => sum + Number(row.paidAmount || 0), 0), [rows]);
+  const totalLateFeeCollected = useMemo(() => rows.reduce((sum, row) => sum + Number(row.paidLateFee || 0), 0), [rows]);
 
-  // Initialize with exactly ONE row
   useEffect(() => {
-    if (rows.length === 0) {
-      const initialRow = {
-        id: Date.now(),
-        accountNo: "",
-        name: "",
-        installment: 0,
-        dueAmount: 0,
-        lateFee: 0,
-        paidAmount: 0,
-        paidLateFee: 0,
-      };
-      setRows([initialRow]);
-
-      setTimeout(() => inputRefs.current[initialRow.id]?.focus(), 200);
-    }
-  }, []);
+    if (rows.length === 0) setRows([blankRow()]);
+  }, [rows.length]);
 
   const addNewRowWithPrefix = (basePrefix = "") => {
-    if (isAddingRow) return;   // Prevent multiple calls
-
+    if (isAddingRow) return;
     setIsAddingRow(true);
-
-    const newRow = {
-      id: Date.now(),
-      accountNo: basePrefix,
-      name: "",
-      installment: 0,
-      dueAmount: 0,
-      lateFee: 0,
-      paidAmount: 0,
-      paidLateFee: 0,
-    };
-
+    const newRow = blankRow(basePrefix);
     setRows((prev) => [...prev, newRow]);
-
     setTimeout(() => {
       inputRefs.current[newRow.id]?.focus();
       setIsAddingRow(false);
     }, 150);
   };
 
-  /* Fetch Suggestions */
-  const fetchSuggestions = useCallback(async (searchText) => {
-    if (!searchText || searchText.length < 2) return setAccountSuggestions([]);
+  const updateRow = (rowId, field, newValue) => {
+    setRows((prev) => prev.map((row) => (row.id === rowId ? { ...row, [field]: newValue } : row)));
+  };
+
+  const deleteRow = (rowId) => {
+    setRows((prev) => (prev.length === 1 ? [blankRow()] : prev.filter((row) => row.id !== rowId)));
+  };
+
+  const fetchSuggestions = useCallback(
+    async (searchText, currentRowId) => {
+      if (!searchText || searchText.length < 2) {
+        setAccountSuggestions([]);
+        return;
+      }
+      try {
+        const res = await axios.get(`${API_BASE}/BusinessMember/allLoanDetailsAutoComplete`, {
+          params: { q: searchText },
+          headers: { Authorization: `Bearer ${token || ""}` },
+        });
+        const currentAccount = rows.find((row) => row.id === currentRowId)?.accountNo?.trim();
+        const filtered = Array.isArray(res.data)
+          ? res.data.filter((option) => {
+              const accountNo = String(option.loanId || option.displayString || "").trim();
+              return accountNo === currentAccount || !usedAccounts.has(accountNo);
+            })
+          : [];
+        setAccountSuggestions(filtered);
+      } catch (err) {
+        setAccountSuggestions([]);
+        setAlertMsg({ text: "Account dropdown data could not be loaded.", severity: "warning" });
+      }
+    },
+    [rows, token, usedAccounts]
+  );
+
+  const fetchAccountRecord = async (loanId, rowId) => {
+    const accountNo = loanId?.trim();
+    if (!accountNo) return;
+
+    setFetchingAccount(accountNo);
     try {
-      const res = await axios.get(`${API_BASE}/BusinessMember/allLoanDetailsAutoComplete`, {
-        params: { q: searchText },
-        headers: { Authorization: `Bearer ${token}` },
+      const res = await axios.get(`${API_BASE}/retriveQuickCashBookRecord/${accountNo}`, {
+        headers: { Authorization: `Bearer ${token || ""}` },
       });
 
-      if (Array.isArray(res.data)) {
-        // Filter out already used accounts
-        const filtered = res.data.filter(option => {
-          const accNo = option.loanId || option.displayString || "";
-          return !usedAccounts.has(accNo.trim());
-        });
-        setAccountSuggestions(filtered);
-      }
-    } catch { }
-  }, [token, usedAccounts]);
+      if (!res.data) throw new Error("No record returned");
 
-  
-  
-  
-  
-  
-  /* Fetch Record */
-  const fetchAccountRecord = async (loanId, rowId) => {
-    console.log("🔥 FETCH API CALLED for:", loanId);
-
-    if (!loanId?.trim()) return;
-
-    setFetchingAccount(loanId);
-
-    try {
-      const res = await axios.get(
-        `${API_BASE}/retriveQuickCashBookRecord/${loanId.trim()}`,
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
-
-      if (res.data) {
-        setRows((prev) =>
-          prev.map((row) =>
-            row.id === rowId
-              ? {
+      setRows((prev) =>
+        prev.map((row) =>
+          row.id === rowId
+            ? {
                 ...row,
-                accountNo: loanId.trim(),
+                accountNo,
                 name: res.data.name || "Unknown",
                 installment: Number(res.data.installment || 0),
                 dueAmount: Number(res.data.dueAmount || 0),
@@ -141,18 +141,13 @@ const QuickCashBook = () => {
                 paidAmount: 0,
                 paidLateFee: 0,
               }
-              : row
-          )
-        );
-
-
-
-        // Add only ONE row
-        // setTimeout(() => addNewRowWithPrefix(basePrefix), 250);
-      }
+            : row
+        )
+      );
+      setAlertMsg({ text: `Loaded ${accountNo}.`, severity: "success" });
     } catch (err) {
-      console.error(err);
-      setAlertMsg({ text: `No record found for ${loanId}`, severity: "warning" });
+      const message = err.response?.data?.message || err.response?.data?.error || `No record found for ${accountNo}`;
+      setAlertMsg({ text: message, severity: "warning" });
     } finally {
       setFetchingAccount(null);
     }
@@ -161,228 +156,298 @@ const QuickCashBook = () => {
   const handleAccountCommit = (rowId, value) => {
     const finalValue = value?.trim();
     if (!finalValue) return;
-
-    setRows((prev) =>
-      prev.map((row) => (row.id === rowId ? { ...row, accountNo: finalValue } : row))
-    );
-
+    updateRow(rowId, "accountNo", finalValue);
     fetchAccountRecord(finalValue, rowId);
   };
 
-  const updateRow = (rowId, field, newValue) => {
-    setRows((prev) =>
-      prev.map((row) => (row.id === rowId ? { ...row, [field]: newValue } : row))
-    );
-  };
-
-  const deleteRow = (id) => {
-    setRows((prev) => prev.filter((row) => row.id !== id));
-  };
-
+  const payableRows = useMemo(
+    () => filledRows.filter((row) => Number(row.paidAmount || 0) > 0 || Number(row.paidLateFee || 0) > 0),
+    [filledRows]
+  );
 
   const handleSaveAll = async () => {
-    const rowsToSave = rows.filter((r) => r.accountNo?.trim());
-    if (!rowsToSave.length) return errorToast("No valid records to save");
+    if (!filledRows.length) return errorToast("No valid records to save");
+    if (!payableRows.length) {
+      setAlertMsg({ text: "Enter Paid Amount or Paid Late Fee for at least one account before saving.", severity: "warning" });
+      return errorToast("No payment amount entered");
+    }
 
     setLoading(true);
     try {
       const payload = {
-        transactionDate: transactionDate.format("YYYY-MM-DD"),
-        quickCashBookRows: rowsToSave
-          .filter(
-            (r) =>
-              Number(r.paidAmount || 0) > 0 ||
-              Number(r.paidLateFee || 0) > 0
-          )
-          .map((r) => ({
-            accountNo: r.accountNo,
-            name: r.name,
-            installment: Number(r.installment || 0),
-            dueAmount: Number(r.dueAmount || 0),
-            lateFee: Number(r.lateFee || 0),
-            paidAmount: Number(r.paidAmount || 0),
-            paidLateFee: Number(r.paidLateFee || 0),
-          })),
+        transactionDate: dayjs(transactionDate).format("YYYY-MM-DD"),
+        quickCashBookRows: payableRows.map((row) => ({
+          accountNo: row.accountNo,
+          name: row.name,
+          installment: Number(row.installment || 0),
+          dueAmount: Number(row.dueAmount || 0),
+          lateFee: Number(row.lateFee || 0),
+          paidAmount: Number(row.paidAmount || 0),
+          paidLateFee: Number(row.paidLateFee || 0),
+        })),
       };
 
       await axios.post(`${API_BASE}/saveQuickCashBookRecords`, payload, {
-        headers: { Authorization: `Bearer ${token}` },
+        headers: { Authorization: `Bearer ${token || ""}` },
       });
 
       successToast("Saved successfully");
-      setRows([]);
-
+      setAlertMsg({ text: `${payableRows.length} quick cash rows saved successfully.`, severity: "success" });
+      setRows([blankRow()]);
     } catch (error) {
-
-      // 🔥 extract backend message
+      const responseData = error.response?.data;
       const message =
-        error.response?.data?.message ||
-        error.response?.data?.error ||
-        "Save failed";
-
+        (typeof responseData === "string" && responseData) ||
+        responseData?.message ||
+        responseData?.error ||
+        error.message ||
+        "Save failed. Check account number, payment date, and paid amount.";
+      console.error("Quick Cash Book save failed", error);
+      setAlertMsg({ text: message, severity: "error" });
       errorToast(message);
-
     } finally {
       setLoading(false);
     }
   };
 
-  const totalCollected = useMemo(() => rows.reduce((sum, r) => sum + Number(r.paidAmount || 0), 0), [rows]);
-  const formatNumber = (val) => {
-    if (val === "" || val === null || val === undefined) return "";
-    return Number(val).toLocaleString("en-IN");
+  const exportRows = useMemo(
+    () =>
+      filledRows.map((row, index) => ({
+        "S No": index + 1,
+        Date: dayjs(transactionDate).format("DD-MMM-YYYY"),
+        "Loan / A/c": row.accountNo,
+        Customer: row.name || "-",
+        Installment: row.installment || 0,
+        Due: row.dueAmount || 0,
+        "Late Fee": row.lateFee || 0,
+        "Paid Amount": row.paidAmount || 0,
+        "Paid Late Fee": row.paidLateFee || 0,
+      })),
+    [filledRows, transactionDate]
+  );
+
+  const exportFileName = `quick-cash-book-${dayjs(transactionDate).format("YYYY-MM-DD")}`;
+
+  const handleExcel = () => {
+    if (!exportRows.length) return errorToast("No data to export");
+    const worksheet = XLSX.utils.json_to_sheet(exportRows);
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, "Quick Cash Book");
+    XLSX.writeFile(workbook, `${exportFileName}.xlsx`);
   };
 
-  const parseNumber = (val) => {
-    return val.replace(/,/g, "");
+  const handlePdf = () => {
+    if (!exportRows.length) return errorToast("No data to export");
+    const doc = new jsPDF({ orientation: "landscape", unit: "mm", format: "a4" });
+    doc.setFontSize(18);
+    doc.text(COMPANY_NAME, 14, 14);
+    doc.setFontSize(10);
+    doc.text(COMPANY_ADDRESS, 14, 20);
+    doc.text(`Quick Cash Book - ${dayjs(transactionDate).format("DD-MMM-YYYY")}`, 14, 27);
+    autoTable(doc, {
+      startY: 34,
+      head: [Object.keys(exportRows[0])],
+      body: exportRows.map((row) => Object.values(row)),
+      styles: { fontSize: 8, cellPadding: 3 },
+      headStyles: { fillColor: [15, 98, 254], textColor: 255 },
+    });
+    doc.save(`${exportFileName}.pdf`);
   };
+
+  const tableHtml = () => {
+    const headers = Object.keys(exportRows[0] || {});
+    const rowsHtml = exportRows
+      .map((row) => `<tr>${headers.map((header) => `<td>${row[header]}</td>`).join("")}</tr>`)
+      .join("");
+    return `<table><thead><tr>${headers.map((header) => `<th>${header}</th>`).join("")}</tr></thead><tbody>${rowsHtml}</tbody></table>`;
+  };
+
+  const handleWord = () => {
+    if (!exportRows.length) return errorToast("No data to export");
+    const html = `<html><head><meta charset="utf-8"><style>
+      body{font-family:Arial;padding:20px;color:#111827} h1{margin:0} p{color:#475569}
+      table{width:100%;border-collapse:collapse} th,td{border:1px solid #cbd5e1;padding:8px;font-size:12px;text-align:left}
+      th{background:#0f62fe;color:#fff}
+      </style></head><body><h1>${COMPANY_NAME}</h1><p>${COMPANY_ADDRESS}</p><h2>Quick Cash Book - ${dayjs(transactionDate).format("DD-MMM-YYYY")}</h2>${tableHtml()}</body></html>`;
+    const blob = new Blob(["\ufeff", html], { type: "application/msword" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = `${exportFileName}.doc`;
+    link.click();
+    URL.revokeObjectURL(url);
+  };
+
+  const handlePrint = () => {
+    if (!exportRows.length) return errorToast("No data to print");
+    const printWindow = window.open("", "", "width=1200,height=760");
+    if (!printWindow) return;
+    printWindow.document.write(`<html><head><title>Quick Cash Book</title><style>
+      body{font-family:Arial;padding:20px;color:#111827} h1{text-align:center;margin:0} p{text-align:center;color:#475569}
+      table{width:100%;border-collapse:collapse} th,td{border:1px solid #cbd5e1;padding:8px;font-size:12px;text-align:left}
+      th{background:#0f62fe;color:white}
+    </style></head><body><h1>${COMPANY_NAME}</h1><p>${COMPANY_ADDRESS}</p><h2>Quick Cash Book - ${dayjs(transactionDate).format("DD-MMM-YYYY")}</h2>${tableHtml()}</body></html>`);
+    printWindow.document.close();
+    printWindow.focus();
+    printWindow.print();
+  };
+
   return (
-    <Box>
-      <Paper elevation={2} sx={{ p: 2, mb: 2, borderRadius: 0, display: "flex", justifyContent: "space-between", alignItems: "center", gap: 2 }}>
-        <Typography variant="h5" fontWeight={700} color="primary.main">
-          Quick Business
-        </Typography>
+    <Box sx={{ p: { xs: 1.5, md: 2.5 } }}>
+      <Paper
+        elevation={0}
+        sx={{
+          p: { xs: 2, md: 3 },
+          mb: 2,
+          border: "1px solid",
+          borderColor: "divider",
+          borderRadius: 1,
+          bgcolor: "#fff",
+          boxShadow: "0 12px 34px rgba(15, 23, 42, 0.06)",
+        }}
+      >
+        <Stack spacing={2}>
+          <Stack direction={{ xs: "column", md: "row" }} justifyContent="space-between" spacing={2}>
+            <Box>
+              <Typography variant="h5">Quick Cash Book</Typography>
+              <Typography variant="body2" color="text.secondary" sx={{ mt: 0.35 }}>
+                Fast collection entry with date, totals, exports, and print.
+              </Typography>
+            </Box>
+          </Stack>
 
-        <Stack direction="row" spacing={2}>
-          <Box sx={{ width: 180 }}>
-            <AppDatePicker label="Date" value={transactionDate} onChange={(value) => setTransactionDate(dayjs(value))} />
-          </Box>
+          <Divider />
+
+          <Grid container spacing={2} alignItems="center">
+            <Grid item xs={12} sm={6} md={3}>
+              <AppDatePicker label="Date" value={transactionDate} onChange={(value) => setTransactionDate(dayjs(value))} />
+            </Grid>
+            <Grid item xs={12} sm={6} md={3}>
+              <TextField label="Records" size="small" value={filledRows.length} InputProps={{ readOnly: true }} fullWidth />
+            </Grid>
+            <Grid item xs={12} sm={6} md={3}>
+              <TextField
+                label="Paid Total"
+                size="small"
+                value={`Rs ${totalCollected.toLocaleString("en-IN")}`}
+                InputProps={{ readOnly: true }}
+                fullWidth
+              />
+            </Grid>
+            <Grid item xs={12} sm={6} md={3}>
+              <TextField
+                label="Late Fee Total"
+                size="small"
+                value={`Rs ${totalLateFeeCollected.toLocaleString("en-IN")}`}
+                InputProps={{ readOnly: true }}
+                fullWidth
+              />
+            </Grid>
+          </Grid>
+
+          <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap justifyContent="flex-end">
+              <Button variant="outlined" startIcon={<TableViewRounded />} onClick={handleExcel} disabled={!exportRows.length}>Excel</Button>
+              <Button variant="outlined" startIcon={<DescriptionRounded />} onClick={handlePdf} disabled={!exportRows.length}>PDF</Button>
+              <Button variant="outlined" startIcon={<ArticleRounded />} onClick={handleWord} disabled={!exportRows.length}>Word</Button>
+              <Button variant="outlined" startIcon={<PrintRounded />} onClick={handlePrint} disabled={!exportRows.length}>Print</Button>
+              <Button variant="contained" startIcon={<Save />} onClick={handleSaveAll} disabled={loading}>
+                {loading ? "Saving..." : "Save All"}
+              </Button>
+          </Stack>
         </Stack>
-
-        <Button variant="contained" color="info" startIcon={<Save />} onClick={handleSaveAll} disabled={loading}>
-          {loading ? "Saving..." : "Save All"}
-        </Button>
       </Paper>
 
-      <Divider sx={{ my: 2 }} />
-      {alertMsg.text && <Alert severity={alertMsg.severity}>{alertMsg.text}</Alert>}
+      {alertMsg.text && <Alert severity={alertMsg.severity} sx={{ mb: 2 }}>{alertMsg.text}</Alert>}
 
-      <Paper sx={{ mt: 2 }}>
+      <Paper className="enterprise-card" elevation={0} sx={{ p: 1 }}>
         <TableContainer>
-          <Table>
+          <Table size="small">
             <TableHead>
               <TableRow>
-                <TableCell align="center"><strong>Action</strong></TableCell>
-                <TableCell><strong>Loan / A/c</strong></TableCell>
-                <TableCell><strong>Customer</strong></TableCell>
-                <TableCell><strong>Installment</strong></TableCell>
-                <TableCell><strong>Due</strong></TableCell>
-                <TableCell><strong>Late Fee</strong></TableCell>
-                <TableCell><strong>Paid Amount</strong></TableCell>
-                <TableCell><strong>Paid Late Fee</strong></TableCell>
+                <TableCell align="center">Action</TableCell>
+                <TableCell>Loan / A/c</TableCell>
+                <TableCell>Customer</TableCell>
+                <TableCell>Installment</TableCell>
+                <TableCell>Due</TableCell>
+                <TableCell>Late Fee</TableCell>
+                <TableCell>Paid Amount</TableCell>
+                <TableCell>Paid Late Fee</TableCell>
               </TableRow>
             </TableHead>
             <TableBody>
               {rows.map((row) => (
                 <TableRow key={row.id}>
-
                   <TableCell align="center">
                     <IconButton color="error" onClick={() => deleteRow(row.id)}>
                       <Delete />
                     </IconButton>
                   </TableCell>
-
-
-                  <TableCell sx={{ width: 220 }}>
+                  <TableCell sx={{ minWidth: 290 }}>
                     <MuiAutocomplete
                       freeSolo
                       fullWidth
                       size="small"
                       options={accountSuggestions}
-                      value={row.accountNo || null}
+                      value={row.accountNo || ""}
                       inputValue={row.accountNo || ""}
-                      getOptionLabel={(option) => typeof option === "string" ? option : option.displayString || option.loanId || ""}
-                      onInputChange={(e, newInput) => {
-                        fetchSuggestions(newInput);
+                      getOptionLabel={(option) => (typeof option === "string" ? option : option.displayString || option.loanId || "")}
+                      onInputChange={(_, newInput) => {
+                        fetchSuggestions(newInput, row.id);
                         updateRow(row.id, "accountNo", newInput);
                       }}
-                      onChange={(e, newValue) => {
-                        let selected = typeof newValue === "string" ? newValue : newValue?.loanId || newValue || "";
+                      onChange={(_, newValue) => {
+                        const selected = typeof newValue === "string" ? newValue : newValue?.loanId || newValue?.displayString || "";
                         handleAccountCommit(row.id, selected);
                       }}
                       onBlur={() => handleAccountCommit(row.id, row.accountNo)}
-                      onKeyDown={(e) => e.key === "Enter" && handleAccountCommit(row.id, row.accountNo)}
+                      onKeyDown={(event) => event.key === "Enter" && handleAccountCommit(row.id, row.accountNo)}
                       renderInput={(params) => (
-                        <TextField {...params} placeholder="Enter Account No" inputRef={(el) => (inputRefs.current[row.id] = el)} variant="outlined" size="small" />
+                        <TextField
+                          {...params}
+                          placeholder="Enter Account No"
+                          inputRef={(element) => (inputRefs.current[row.id] = element)}
+                          size="small"
+                          helperText={fetchingAccount === row.accountNo ? "Loading..." : " "}
+                        />
                       )}
                     />
                   </TableCell>
-
-                  <TableCell>{row.name || "-"}</TableCell>
-                  <TableCell>{row.installment}</TableCell>
-                  <TableCell>{row.dueAmount}</TableCell>
-                  <TableCell>{row.lateFee}</TableCell>
-
-                  <TableCell>
+                  <TableCell sx={{ minWidth: 170 }}>{row.name || "-"}</TableCell>
+                  <TableCell>{formatNumber(row.installment)}</TableCell>
+                  <TableCell>{formatNumber(row.dueAmount)}</TableCell>
+                  <TableCell>{formatNumber(row.lateFee)}</TableCell>
+                  <TableCell sx={{ minWidth: 150 }}>
                     <TextField
                       size="small"
-                      type="text"
                       value={formatNumber(row.paidAmount)}
-                      onFocus={() => {
-                        if (row.paidAmount === 0) {
-                          updateRow(row.id, "paidAmount", "");
-                        }
+                      onFocus={() => row.paidAmount === 0 && updateRow(row.id, "paidAmount", "")}
+                      onChange={(event) => {
+                        const value = parseNumber(event.target.value);
+                        if (/^\d*$/.test(value)) updateRow(row.id, "paidAmount", value === "" ? "" : Number(value));
                       }}
-                      onChange={(e) => {
-                        let val = e.target.value;
-
-                        // remove commas
-                        val = parseNumber(val);
-
-                        // allow only numbers
-                        if (!/^\d*$/.test(val)) return;
-
-                        updateRow(row.id, "paidAmount", val === "" ? "" : Number(val));
-                      }}
-                      onBlur={(e) => {
-                        if (e.target.value === "") {
-                          updateRow(row.id, "paidAmount", 0);
-                        }
-                      }}
-
-
+                      onBlur={(event) => event.target.value === "" && updateRow(row.id, "paidAmount", 0)}
                       fullWidth
                     />
                   </TableCell>
-
-                  <TableCell>
+                  <TableCell sx={{ minWidth: 150 }}>
                     <TextField
                       size="small"
-                      type="text"
                       value={formatNumber(row.paidLateFee)}
-                      onFocus={() => {
-                        if (row.paidLateFee === 0) {
-                          updateRow(row.id, "paidLateFee", "");
-                        }
+                      onFocus={() => row.paidLateFee === 0 && updateRow(row.id, "paidLateFee", "")}
+                      onChange={(event) => {
+                        const value = parseNumber(event.target.value);
+                        if (/^\d*$/.test(value)) updateRow(row.id, "paidLateFee", value === "" ? "" : Number(value));
                       }}
-                      onChange={(e) => {
-                        let val = e.target.value;
-
-                        val = parseNumber(val);
-
-                        if (!/^\d*$/.test(val)) return;
-
-                        updateRow(row.id, "paidLateFee", val === "" ? "" : Number(val));
-                      }}
-                      onBlur={(e) => {
-                        if (e.target.value === "") {
-                          updateRow(row.id, "paidLateFee", 0);
-                        }
-                      }}
-
-                      onKeyDown={(e) => {
-                        if ((e.key === "Enter" || e.key === "Tab") && !e.shiftKey) {
-                          if (Number(row.paidAmount || 0) > 0) {
-                            e.preventDefault(); // prevents weird double triggers
-                            const basePrefix = row.accountNo.trim().replace(/\d+$/, "");
-                            addNewRowWithPrefix(basePrefix)
-                          }
+                      onBlur={(event) => event.target.value === "" && updateRow(row.id, "paidLateFee", 0)}
+                      onKeyDown={(event) => {
+                        if ((event.key === "Enter" || event.key === "Tab") && !event.shiftKey && Number(row.paidAmount || 0) > 0) {
+                          event.preventDefault();
+                          addNewRowWithPrefix(row.accountNo.trim().replace(/\d+$/, ""));
                         }
                       }}
                       fullWidth
                     />
                   </TableCell>
-
                 </TableRow>
               ))}
             </TableBody>
@@ -390,13 +455,14 @@ const QuickCashBook = () => {
         </TableContainer>
       </Paper>
 
-      <Button variant="outlined" startIcon={<Add />} onClick={() => addNewRowWithPrefix("")} sx={{ mt: 2 }}>
-        Add New Row
-      </Button>
-
-      <Typography mt={2} fontWeight="bold" fontSize="1.1rem">
-        Total Collected: ₹{totalCollected.toFixed(2)}
-      </Typography>
+      <Stack direction="row" spacing={2} alignItems="center" flexWrap="wrap" useFlexGap sx={{ mt: 2 }}>
+        <Button variant="outlined" startIcon={<Add />} onClick={() => addNewRowWithPrefix("")}>
+          Add New Row
+        </Button>
+        <Typography fontWeight={900}>
+          Total Collected: Rs {totalCollected.toLocaleString("en-IN")} | Late Fee: Rs {totalLateFeeCollected.toLocaleString("en-IN")}
+        </Typography>
+      </Stack>
     </Box>
   );
 };

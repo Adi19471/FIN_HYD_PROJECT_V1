@@ -378,6 +378,30 @@ body {
   background: var(--surface-1);
 }
 
+.MuiMenu-paper {
+  max-height: min(360px, 62vh) !important;
+  border-radius: var(--app-radius) !important;
+}
+
+.MuiMenu-list {
+  padding-block: 6px !important;
+}
+
+.MuiMenuItem-root {
+  min-height: 40px !important;
+  white-space: normal !important;
+}
+
+.MuiAutocomplete-popper .MuiAutocomplete-paper {
+  border-radius: var(--app-radius) !important;
+  border: 1px solid var(--border-soft);
+  box-shadow: var(--shadow-panel);
+}
+
+.MuiAutocomplete-listbox {
+  max-height: min(320px, 58vh) !important;
+}
+
 .MuiDialog-paper {
   border-radius: calc(var(--app-radius) + 4px) !important;
   border: 1px solid var(--border-soft) !important;

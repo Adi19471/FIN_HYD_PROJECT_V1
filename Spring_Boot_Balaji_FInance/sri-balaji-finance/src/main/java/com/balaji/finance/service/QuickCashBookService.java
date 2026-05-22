@@ -64,7 +64,6 @@ public class QuickCashBookService {
 	public void saveQuickCashBookRecords(QuickCashBookSaveRequest quickCashBookSaveRequest) {
 
 		LocalDateTime currentInstallmentDate = quickCashBookSaveRequest.getTransactionDate().atTime(LocalTime.now());
-		
 		List<QuickCashBookRow> quickCashBookRows = quickCashBookSaveRequest.getQuickCashBookRows();
 
 		for (QuickCashBookRow quickCashBookRow : quickCashBookRows) {

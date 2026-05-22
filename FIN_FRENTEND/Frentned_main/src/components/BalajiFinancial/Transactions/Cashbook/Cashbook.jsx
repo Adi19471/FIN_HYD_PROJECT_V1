@@ -6,21 +6,14 @@ import {
   TextField,
   Button,
   FormControl,
-  FormLabel,
-  RadioGroup,
-  FormControlLabel,
-  Radio,
   MenuItem,
   Select,
   InputLabel,
   Grid,
-  Divider,
-  CircularProgress,
   Autocomplete,
   InputAdornment,
 } from "@mui/material";
 import {
-  CalendarToday as CalendarIcon,
   Payments as PaymentsIcon,
 } from "@mui/icons-material";
 
@@ -33,6 +26,14 @@ import { getSession } from "src/utils/session";
 import LoadingSpinner from "src/LoadingSpinner";
 import { AppDatePicker } from "src/components/ui";
 
+const compactMenuProps = {
+  PaperProps: {
+    sx: {
+      maxHeight: 320,
+      minWidth: 260,
+    },
+  },
+};
 
 // Optimized with memo and useCallback
 const Cashbook = () => {
@@ -269,6 +270,7 @@ const Cashbook = () => {
                 <Select
                   value={masterCode}
                   label="Account Group"
+                  MenuProps={compactMenuProps}
                   onChange={(e) => setMasterCode(e.target.value)}
                 >
                   {masterCodes.map((g) => (
@@ -286,6 +288,7 @@ const Cashbook = () => {
                 <Select
                   value={code}
                   label="Account Code"
+                  MenuProps={compactMenuProps}
                   onChange={(e) => setCode(e.target.value)}
                 >
                   {codes.map((c) => (
@@ -315,6 +318,10 @@ const Cashbook = () => {
                   }
                 }}
                 options={personOptions}
+                slotProps={{
+                  paper: { sx: { maxHeight: 320 } },
+                  listbox: { sx: { maxHeight: 300 } },
+                }}
                 getOptionLabel={(o) =>
                   typeof o === "string" ? o : o.label || ""
                 }
@@ -359,6 +366,7 @@ const Cashbook = () => {
                 <Select
                   value={transactionType}
                   label="Transaction Type"
+                  MenuProps={compactMenuProps}
                   onChange={(e) => setTransactionType(e.target.value)}
                 >
                   {transactionTypes.map((type) => (

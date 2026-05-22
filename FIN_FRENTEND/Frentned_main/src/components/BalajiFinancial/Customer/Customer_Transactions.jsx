@@ -258,7 +258,7 @@ const CustomerTransactions = () => {
             <Typography variant="h4" fontWeight="bold">
               SRI BALAJI ENTERPRISES
             </Typography>
-            <Typography variant="h6">Madhura Nagar, Hyderabad.</Typography>
+            <Typography variant="h6">Amerpeta, Hyderabad.</Typography>
             <Typography variant="body1" sx={{ mt: 1 }}>
               Date: {reportDate}
             </Typography>
