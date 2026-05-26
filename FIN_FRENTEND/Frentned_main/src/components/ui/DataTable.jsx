@@ -27,10 +27,21 @@ import autoTable from "jspdf-autotable";
 import { COMPANY_ADDRESS, COMPANY_NAME } from "src/lib/company";
 import { useThemeProvider } from "src/utils/ThemeContext";
 
-const labelFor = (column) => column.headerName || column.field?.replace(/([A-Z])/g, " $1").replace(/_/g, " ");
+const reportDateLabel = () => new Date().toLocaleDateString("en-GB", {
+  day: "2-digit",
+  month: "short",
+  year: "numeric",
+}).replace(/ /g, "-");
+
+const labelFor = (column) => {
+  if (typeof column === "string") return column.replace(/([A-Z])/g, " $1").replace(/_/g, " ");
+  return column.headerName || column.field?.replace(/([A-Z])/g, " $1").replace(/_/g, " ");
+};
 
 const cellValue = (row, column) => {
-  const raw = row[column.field];
+  const field = typeof column === "string" ? column : column.field;
+  const raw = row[field];
+  if (typeof column === "string") return raw ?? "";
   if (column.valueGetter) {
     try {
       return column.valueGetter(raw, row, column) ?? "";
@@ -48,9 +59,9 @@ const cellValue = (row, column) => {
   return raw ?? "";
 };
 
-function TableExportMenu({ rows, columns, fileName }) {
+export function TableExportMenu({ rows, columns, fileName, buttonLabel = "Download" }) {
   const [anchorEl, setAnchorEl] = React.useState(null);
-  const printableColumns = columns.filter((column) => column.field && !column.disableExport);
+  const printableColumns = columns.filter((column) => (typeof column === "string" ? column : column.field && !column.disableExport));
   const hasData = rows.length > 0;
 
   const closeMenu = () => setAnchorEl(null);
@@ -75,13 +86,16 @@ function TableExportMenu({ rows, columns, fileName }) {
     closeMenu();
     if (!hasData) return;
     const doc = new jsPDF({ orientation: "landscape", unit: "mm", format: "a4" });
+    const currentDate = reportDateLabel();
     doc.setFontSize(18);
     doc.text(COMPANY_NAME, 14, 14);
     doc.setFontSize(10);
     doc.text(COMPANY_ADDRESS, 14, 20);
-    doc.text(fileName, 14, 27);
+    doc.text(`Date: ${currentDate}`, 14, 26);
+    doc.setFontSize(13);
+    doc.text(fileName, 14, 34);
     autoTable(doc, {
-      startY: 32,
+      startY: 40,
       head: [printableColumns.map(labelFor)],
       body: reportRows(),
       styles: { fontSize: 8, cellPadding: 3, overflow: "linebreak" },
@@ -94,15 +108,16 @@ function TableExportMenu({ rows, columns, fileName }) {
   const handleWord = () => {
     closeMenu();
     if (!hasData) return;
+    const currentDate = reportDateLabel();
     const htmlRows = rows
       .map((row) => `<tr>${printableColumns.map((column) => `<td>${cellValue(row, column)}</td>`).join("")}</tr>`)
       .join("");
     const html = `
       <html><head><meta charset="utf-8"><style>
-      body{font-family:Arial;padding:20px;color:#111827} h1{font-size:22px;margin:0} p{margin:4px 0 14px;color:#475569}
+      body{font-family:Arial;padding:20px;color:#111827} h1{font-size:22px;margin:0;text-align:center} p{text-align:center;margin:4px 0;color:#475569} h2{text-align:center;margin:18px 0 14px}
       table{width:100%;border-collapse:collapse} th,td{border:1px solid #cbd5e1;padding:8px;font-size:12px;text-align:left}
       th{background:#0f62fe;color:#fff} tr:nth-child(even){background:#f8fafc}
-      </style></head><body><h1>${COMPANY_NAME}</h1><p>${COMPANY_ADDRESS}</p><h2>${fileName}</h2>
+      </style></head><body><h1>${COMPANY_NAME}</h1><p>${COMPANY_ADDRESS}</p><p><strong>Date:</strong> ${currentDate}</p><h2>${fileName}</h2>
       <table><thead><tr>${printableColumns.map((column) => `<th>${labelFor(column)}</th>`).join("")}</tr></thead><tbody>${htmlRows}</tbody></table>
       </body></html>`;
     const blob = new Blob(["\ufeff", html], { type: "application/msword" });
@@ -117,6 +132,7 @@ function TableExportMenu({ rows, columns, fileName }) {
   const handlePrint = () => {
     closeMenu();
     if (!hasData) return;
+    const currentDate = reportDateLabel();
     const tableHtml = `<table><thead><tr>${printableColumns
       .map((column) => `<th>${labelFor(column)}</th>`)
       .join("")}</tr></thead><tbody>${rows
@@ -124,10 +140,10 @@ function TableExportMenu({ rows, columns, fileName }) {
       .join("")}</tbody></table>`;
     const printWindow = window.open("", "", "width=1200,height=760");
     printWindow.document.write(`<html><head><title>${fileName}</title><style>
-      body{font-family:Arial;padding:20px;color:#111827} h1{text-align:center;margin:0} p{text-align:center;color:#475569}
+      body{font-family:Arial;padding:20px;color:#111827} h1{text-align:center;margin:0} p{text-align:center;color:#475569;margin:4px 0} h2{text-align:center;margin:18px 0 14px}
       table{width:100%;border-collapse:collapse} th,td{border:1px solid #cbd5e1;padding:8px;font-size:12px;text-align:left}
       th{background:#0f62fe;color:white} tr:nth-child(even){background:#f8fafc}
-    </style></head><body><h1>${COMPANY_NAME}</h1><p>${COMPANY_ADDRESS}</p><h2>${fileName}</h2>${tableHtml}</body></html>`);
+    </style></head><body><h1>${COMPANY_NAME}</h1><p>${COMPANY_ADDRESS}</p><p><strong>Date:</strong> ${currentDate}</p><h2>${fileName}</h2>${tableHtml}</body></html>`);
     printWindow.document.close();
     printWindow.focus();
     printWindow.print();
@@ -142,20 +158,20 @@ function TableExportMenu({ rows, columns, fileName }) {
         onClick={(event) => setAnchorEl(event.currentTarget)}
         disabled={!hasData}
       >
-        Export
+        {buttonLabel}
       </Button>
       <Menu anchorEl={anchorEl} open={Boolean(anchorEl)} onClose={closeMenu}>
         <MenuItem onClick={handleExcel}>
           <ListItemIcon><TableViewRounded fontSize="small" color="success" /></ListItemIcon>
-          <ListItemText primary="Excel" secondary=".xlsx" />
+          <ListItemText primary="Excel workbook" secondary=".xlsx" />
         </MenuItem>
         <MenuItem onClick={handlePdf}>
           <ListItemIcon><DescriptionRounded fontSize="small" color="error" /></ListItemIcon>
-          <ListItemText primary="PDF" secondary=".pdf" />
+          <ListItemText primary="PDF report" secondary=".pdf" />
         </MenuItem>
         <MenuItem onClick={handleWord}>
           <ListItemIcon><ArticleRounded fontSize="small" color="primary" /></ListItemIcon>
-          <ListItemText primary="Word" secondary=".doc" />
+          <ListItemText primary="Word document" secondary=".doc" />
         </MenuItem>
         <MenuItem onClick={handlePrint}>
           <ListItemIcon><PrintRounded fontSize="small" /></ListItemIcon>
@@ -193,6 +209,17 @@ const DataTable = ({
   const tableTitle = title || "finance-export";
   const rowHeight = settings.tableDensity === "compact" ? 40 : settings.tableDensity === "spacious" ? 54 : 46;
   const headerHeight = settings.tableDensity === "compact" ? 44 : settings.tableDensity === "spacious" ? 58 : 52;
+  const fontScale = Number(settings.fontScale || 1);
+  const tableScale = settings.tableDensity === "compact" ? 0.92 : settings.tableDensity === "spacious" ? 1.08 : 1;
+  const pageSizeOptions = React.useMemo(
+    () => Array.from(new Set([10, 25, 50, 100, 200, pageSize])).sort((a, b) => a - b),
+    [pageSize]
+  );
+  const [paginationModel, setPaginationModel] = React.useState({ page: 0, pageSize });
+
+  React.useEffect(() => {
+    setPaginationModel((model) => ({ ...model, page: 0, pageSize }));
+  }, [pageSize, rows.length]);
 
   return (
     <Paper
@@ -224,7 +251,7 @@ const DataTable = ({
           <Box>
             {showCompany && (
               <Typography variant="caption" color="primary" sx={{ fontWeight: 900 }}>
-                {COMPANY_NAME} / {COMPANY_ADDRESS}
+                {COMPANY_NAME} / {COMPANY_ADDRESS} / Date: {reportDateLabel()}
               </Typography>
             )}
             {title && <Typography variant="subtitle1" sx={{ mt: showCompany ? 0.25 : 0 }}>{title}</Typography>}
@@ -300,7 +327,7 @@ const DataTable = ({
               fontWeight: 800,
               color: "text.primary",
               textTransform: "uppercase",
-              fontSize: 12,
+              fontSize: `${0.75 * fontScale * tableScale}rem`,
               letterSpacing: 0,
             },
             "& .MuiDataGrid-cell": {
@@ -308,7 +335,7 @@ const DataTable = ({
               borderColor: "divider",
               display: "flex",
               alignItems: "center",
-              fontSize: 13,
+              fontSize: `${0.8125 * fontScale * tableScale}rem`,
             },
             ...(settings.tableStyle === "striped" && {
               "& .MuiDataGrid-row:nth-of-type(even)": {
@@ -322,11 +349,22 @@ const DataTable = ({
                 borderColor: "divider",
                 display: "flex",
                 alignItems: "center",
-                fontSize: 13,
+                fontSize: `${0.8125 * fontScale * tableScale}rem`,
               },
             }),
             "& .MuiDataGrid-row:hover": {
-              backgroundColor: "rgba(15,98,254,0.06)",
+              backgroundColor: "color-mix(in srgb, var(--brand-primary) 9%, var(--surface-1))",
+              cursor: "pointer",
+            },
+            "& .MuiDataGrid-row.Mui-selected": {
+              backgroundColor: "color-mix(in srgb, var(--brand-primary) 14%, var(--surface-1))",
+            },
+            "& .MuiDataGrid-row.Mui-selected:hover": {
+              backgroundColor: "color-mix(in srgb, var(--brand-primary) 18%, var(--surface-1))",
+            },
+            "& .MuiDataGrid-cell:focus, & .MuiDataGrid-cell:focus-within": {
+              outline: "2px solid color-mix(in srgb, var(--brand-primary) 34%, transparent)",
+              outlineOffset: "-2px",
             },
             "& .MuiDataGrid-footerContainer": {
               borderTop: "1px solid",
@@ -343,11 +381,13 @@ const DataTable = ({
           initialState={{
             density: settings.tableDensity === "spacious" ? "comfortable" : settings.tableDensity === "standard" ? "standard" : "compact",
             pagination: {
-              paginationModel: { pageSize },
+              paginationModel,
             },
             ...initialState,
           }}
-          pageSizeOptions={[10, 25, 50, 100, 200]}
+          paginationModel={paginationModel}
+          onPaginationModelChange={setPaginationModel}
+          pageSizeOptions={pageSizeOptions}
           disableRowSelectionOnClick
           keepNonExistentRowsSelected={false}
           localeText={{

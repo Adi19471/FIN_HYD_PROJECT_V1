@@ -17,6 +17,12 @@ import {
 } from "@mui/icons-material";
 import { COMPANY_ADDRESS, COMPANY_NAME } from "src/lib/company";
 
+const reportDateLabel = () => new Date().toLocaleDateString("en-GB", {
+  day: "2-digit",
+  month: "short",
+  year: "numeric",
+}).replace(/ /g, "-");
+
 /**
  * PageHeader - Consistent header for all pages
  * @param {string} title - Page title
@@ -66,7 +72,7 @@ const PageHeader = ({
             {totalCount !== undefined && <Chip size="small" label={`${totalCount} records`} color="primary" />}
           </Stack>
           <Typography variant="caption" color="primary" sx={{ display: "block", mt: 0.35, fontWeight: 800 }}>
-            {COMPANY_NAME} / {COMPANY_ADDRESS}
+            {COMPANY_NAME} / {COMPANY_ADDRESS} / Date: {reportDateLabel()}
           </Typography>
           <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
             {subtitle}

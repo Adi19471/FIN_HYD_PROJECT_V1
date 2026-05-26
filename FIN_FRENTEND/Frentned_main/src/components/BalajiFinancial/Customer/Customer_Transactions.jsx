@@ -16,12 +16,13 @@ import {
   CircularProgress,
   Divider,
   FormControlLabel,
+  TablePagination,
 } from "@mui/material";
-import { Print } from "@mui/icons-material";
 import dayjs from "dayjs";
 import axios from "axios";
 import { API_BASE } from "lib/config";
 import { getSession } from "src/utils/session";
+import { AppDatePicker, ReportCompanyHeader, TableExportMenu } from "src/components/ui";
 
 const token = getSession()?.token || getSession("token") || "";
 
@@ -36,6 +37,8 @@ const CustomerTransactions = () => {
   const [loading, setLoading] = useState(false);
   const [searchLoading, setSearchLoading] = useState(false);
   const [reportDate] = useState(dayjs().format("DD-MMM-YYYY"));
+  const [page, setPage] = useState(0);
+  const [rowsPerPage, setRowsPerPage] = useState(10);
 
   const printRef = useRef(null);
 
@@ -53,12 +56,13 @@ const CustomerTransactions = () => {
   };
 
   // Fetch Customers for Autocomplete
-  const fetchCustomers = async (query) => {
-    if (!query || query.length < 2) return;
+  const fetchCustomers = async (query = "") => {
+    const searchText = query.trim();
+    if (searchText.length === 1) return;
     setSearchLoading(true);
     try {
       const res = await axios.get(
-        `${API_BASE}/PersonalInfo/autocomplete?q=${encodeURIComponent(query)}`,
+        `${API_BASE}/PersonalInfo/autocomplete?q=${encodeURIComponent(searchText)}`,
         { headers: { Authorization: `Bearer ${token}` } }
       );
       setCustomers(res.data || []);
@@ -94,6 +98,7 @@ const CustomerTransactions = () => {
         }
       );
       setTransactions(res.data || []);
+      setPage(0);
     } catch (err) {
       console.error("Error fetching transactions:", err);
       alert("Failed to load transactions. Please try again.");
@@ -112,39 +117,11 @@ const CustomerTransactions = () => {
     const debit = transactions.reduce((sum, t) => sum + (parseFloat(t.debit) || 0), 0);
     return { credit, debit };
   }, [transactions]);
-
-  // Print Handler (Better approach)
-  const handlePrint = () => {
-    if (!printRef.current) return;
-    const printWindow = window.open("", "_blank");
-    printWindow.document.write(`
-      <html>
-        <head>
-          <title>Ledger Report</title>
-          <style>
-            body { font-family: Arial, sans-serif; margin: 20px; }
-            table { width: 100%; border-collapse: collapse; margin-top: 20px; }
-            th, td { border: 1px solid #000; padding: 8px; text-align: left; }
-            th { background-color: #1976d2; color: white; }
-            .total-row { background-color: #e3f2fd; font-weight: bold; }
-            .text-right { text-align: right; }
-            .header { text-align: center; margin-bottom: 30px; }
-            .green { color: green; }
-            .red { color: red; }
-          </style>
-        </head>
-        <body>
-          ${printRef.current.innerHTML}
-        </body>
-      </html>
-    `);
-    printWindow.document.close();
-    printWindow.focus();
-    setTimeout(() => {
-      printWindow.print();
-      printWindow.close();
-    }, 500);
-  };
+  const paginatedTransactions = React.useMemo(
+    () => transactions.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage),
+    [page, rowsPerPage, transactions]
+  );
+  const exportColumns = ["sno", "transactionId", "transactionDate", "accountNumber", "transactionName", "particulars", "credit", "debit"];
 
   return (
     <Box sx={{ p: 3, backgroundColor: "#f8f9fa", minHeight: "100vh" }}>
@@ -157,6 +134,7 @@ const CustomerTransactions = () => {
         <Grid container spacing={2} alignItems="center">
           <Grid item xs={12} sm={4}>
             <Autocomplete
+              openOnFocus
               options={masterCodes}
               sx={{width:"220px"}}
               value={selectedAccountCode}
@@ -167,11 +145,14 @@ const CustomerTransactions = () => {
 
           <Grid item xs={12} sm={5}>
             <Autocomplete  sx={{width:"220px"}}
+              openOnFocus
+              filterOptions={(x) => x}
               options={customers}
               getOptionLabel={(opt) => `${opt.id ? opt.id + " - " : ""}${opt.firstname} ${opt.lastname} ${opt.mobile ? "- " + opt.mobile : ""}`}
               value={selectedCustomer}
               onChange={(e, val) => setSelectedCustomer(val)}
-              onInputChange={(e, value) => value.length >= 2 && fetchCustomers(value)}
+              onOpen={() => fetchCustomers("")}
+              onInputChange={(e, value) => fetchCustomers(value || "")}
               loading={searchLoading}
               renderInput={(params) => (
                 <TextField
@@ -200,26 +181,18 @@ const CustomerTransactions = () => {
           </Grid>
 
           <Grid item xs={12} sm={3}>
-            <TextField
+            <AppDatePicker
               label="From"
-              type="date"
-              size="small"
-              fullWidth
               value={fromDate}
-              onChange={(e) => setFromDate(e.target.value)}
-              InputLabelProps={{ shrink: true }}
+              onChange={setFromDate}
             />
           </Grid>
 
           <Grid item xs={12} sm={3}>
-            <TextField
+            <AppDatePicker
               label="To"
-              type="date"
-              size="small"
-              fullWidth
               value={toDate}
-              onChange={(e) => setToDate(e.target.value)}
-              InputLabelProps={{ shrink: true }}
+              onChange={setToDate}
             />
           </Grid>
 
@@ -238,14 +211,7 @@ const CustomerTransactions = () => {
 
           {transactions.length > 0 && (
             <Grid item xs={12} sm={3}>
-              <Button
-                variant="outlined"
-                startIcon={<Print />}
-                onClick={handlePrint}
-                fullWidth
-              >
-                Print / PDF
-              </Button>
+              <TableExportMenu rows={transactions} columns={exportColumns} fileName="Customer_Transactions" />
             </Grid>
           )}
         </Grid>
@@ -254,23 +220,13 @@ const CustomerTransactions = () => {
       {/* Printable Ledger Area */}
       {transactions.length > 0 && (
         <Paper ref={printRef} sx={{ p: 4, backgroundColor: "white" }}>
-          <Box className="header">
-            <Typography variant="h4" fontWeight="bold">
-              SRI BALAJI ENTERPRISES
-            </Typography>
-            <Typography variant="h6">Amerpeta, Hyderabad.</Typography>
-            <Typography variant="body1" sx={{ mt: 1 }}>
-              Date: {reportDate}
-            </Typography>
-          </Box>
-
-          <Divider sx={{ my: 3 }} />
-
-          <Typography variant="h6" align="center" gutterBottom sx={{ fontWeight: "bold" }}>
-            {selectedCustomer
+          <ReportCompanyHeader
+            title={selectedCustomer
               ? `${selectedCustomer.id ? selectedCustomer.id + " - " : ""}${selectedCustomer.firstname} ${selectedCustomer.lastname} ${selectedCustomer.mobile ? "- " + selectedCustomer.mobile : ""} ${selectedAccountCode || ""} Ledger`
-              : "Ledger"}
-          </Typography>
+              : "Customer Ledger"}
+            subtitle={fromDate || toDate ? `From ${fromDate ? dayjs(fromDate).format("DD-MMM-YYYY") : "All"} To ${toDate ? dayjs(toDate).format("DD-MMM-YYYY") : "All"}` : "All Transactions"}
+            date={reportDate}
+          />
 
           <TableContainer>
             <Table sx={{ borderCollapse: "collapse" }}>
@@ -287,9 +243,9 @@ const CustomerTransactions = () => {
                 </TableRow>
               </TableHead>
               <TableBody>
-                {transactions.map((row, index) => (
+                {paginatedTransactions.map((row, index) => (
                   <TableRow key={row.transactionId || index}>
-                    <TableCell sx={{ border: "1px solid #ddd" }}>{row.sno || index + 1}</TableCell>
+                    <TableCell sx={{ border: "1px solid #ddd" }}>{row.sno || page * rowsPerPage + index + 1}</TableCell>
                     <TableCell sx={{ border: "1px solid #ddd" }}>{row.transactionId}</TableCell>
                     <TableCell sx={{ border: "1px solid #ddd" }}>
                       {dayjs(row.transactionDate).format("DD-MMM-YYYY")}
@@ -322,8 +278,21 @@ const CustomerTransactions = () => {
             </Table>
           </TableContainer>
 
+          <TablePagination
+            component="div"
+            count={transactions.length}
+            page={page}
+            rowsPerPage={rowsPerPage}
+            onPageChange={(_, newPage) => setPage(newPage)}
+            onRowsPerPageChange={(event) => {
+              setRowsPerPage(parseInt(event.target.value, 10));
+              setPage(0);
+            }}
+            rowsPerPageOptions={[10, 25, 50, 100]}
+          />
+
           <Typography variant="body2" align="center" sx={{ mt: 4, color: "#555" }}>
-            Page 1 of 1
+            Page {page + 1} of {Math.max(1, Math.ceil(transactions.length / rowsPerPage))}
           </Typography>
         </Paper>
       )}

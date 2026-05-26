@@ -46,6 +46,7 @@ const DailyFinance = () => {
   const [open, setOpen] = useState(false);
   const [isEditMode, setIsEditMode] = useState(false);
   const [currentLoanId, setCurrentLoanId] = useState(null);
+  const [paginationModel, setPaginationModel] = useState({ page: 0, pageSize: 10 });
 
 
   const [filters, setFilters] = useState({
@@ -72,6 +73,10 @@ const DailyFinance = () => {
         .includes(filters[key].toLowerCase());
     })
   );
+
+  useEffect(() => {
+    setPaginationModel((model) => ({ ...model, page: 0 }));
+  }, [filteredRows.length]);
 
   const getHeader = (label, field) => (
     <div style={{ width: "100%", paddingTop: 2 }}>
@@ -288,8 +293,9 @@ const DailyFinance = () => {
 
   // MEMBER AUTOCOMPLETE SEARCH
   const searchMembers = useCallback(
-    async (query) => {
-      if (!query || query.trim().length < 2) {
+    async (query = "") => {
+      const searchText = query.trim();
+      if (searchText.length === 1) {
         setOptions([]);
         return;
       }
@@ -297,7 +303,7 @@ const DailyFinance = () => {
       try {
         const res = await axios.get(`${API_BASE}/PersonalInfo/autocomplete`, {
           headers,
-          params: { q: query.trim() },
+          params: { q: searchText },
         });
 
         const list = (res.data || []).map((item) => ({
@@ -678,11 +684,8 @@ const DailyFinance = () => {
         autoHeight
         getRowId={(r) => r.id}
         pageSizeOptions={[10, 25, 50, 100]}
-        initialState={{
-          pagination: {
-            paginationModel: { pageSize: 10, page: 0 },
-          },
-        }}
+        paginationModel={paginationModel}
+        onPaginationModelChange={setPaginationModel}
         pagination
         slots={{ toolbar: GridToolbar }}
       />
@@ -729,9 +732,12 @@ const DailyFinance = () => {
           <Autocomplete
             fullWidth
             sx={{ width: "220px" }}
+            openOnFocus
+            filterOptions={(x) => x}
             options={options}
             loading={loadingSearch}
             value={formData.customerId}
+            onOpen={() => searchMembers("")}
             onInputChange={(e, v) => searchMembers(v)}
             onChange={(e, v) =>
               setFormData((p) => ({ ...p, customerId: v }))
@@ -903,8 +909,11 @@ const DailyFinance = () => {
             <Autocomplete
               fullWidth
               sx={{ width: "230px" }}
+              openOnFocus
+              filterOptions={(x) => x}
               options={options}
               value={formData[field]}
+              onOpen={() => searchMembers("")}
               onInputChange={(e, v) => searchMembers(v)}
               onChange={(e, v) =>
                 setFormData((p) => ({ ...p, [field]: v }))
@@ -928,9 +937,12 @@ const DailyFinance = () => {
           <Autocomplete
             fullWidth
             sx={{ width: "230px" }}
+            openOnFocus
+            filterOptions={(x) => x}
             options={options}
             loading={loadingSearch}
             value={formData.partnerId}
+            onOpen={() => searchMembers("")}
             onInputChange={(e, v) => searchMembers(v)}
             onChange={(e, v) =>
               setFormData((p) => ({ ...p, partnerId: v }))

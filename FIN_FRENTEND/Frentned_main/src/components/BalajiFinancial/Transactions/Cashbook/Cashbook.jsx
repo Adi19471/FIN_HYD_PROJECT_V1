@@ -145,36 +145,45 @@ const Cashbook = () => {
     fetchTransactionTypes();
   }, [masterCode, code, getAuthHeader]);
 
-  // Person Autocomplete Search - Optimized with debounce
-  useEffect(() => {
-    if (!masterCode || !code || name.trim().length < 2) {
+  const loadPersonOptions = useCallback(async (query = "") => {
+    if (!masterCode || !code) {
       setPersonOptions([]);
       return;
     }
 
-    const timeoutId = setTimeout(async () => {
-      setLoadingPersons(true);
-      try {
-        const res = await axios.post(
-          `${API_BASE}/PersonalInfo/personInfoAutoCompleteByCodeAndMasterCode?q=${encodeURIComponent(name.trim())}`,
-          { masterCode, code },
-          { headers: getAuthHeader() }
-        );
-        const options = res.data.map((p) => ({
-          label: `${p.id || ""} ${p.firstname || ""} ${p.lastname || ""}`.trim(),
-          value: `${p.id || ""} ${p.firstname || ""} ${p.lastname || ""}`.trim(),
-          data: p,
-        }));
-        setPersonOptions(options);
-      } catch (err) {
-        console.error("Person search failed:", err);
-      } finally {
-        setLoadingPersons(false);
-      }
-    }, 300); // Debounce 300ms
+    const searchText = query.trim();
+    if (searchText.length === 1) {
+      setPersonOptions([]);
+      return;
+    }
+
+    setLoadingPersons(true);
+    try {
+      const res = await axios.post(
+        `${API_BASE}/PersonalInfo/personInfoAutoCompleteByCodeAndMasterCode?q=${encodeURIComponent(searchText)}`,
+        { masterCode, code },
+        { headers: getAuthHeader() }
+      );
+      const options = (res.data || []).map((p) => ({
+        label: `${p.id || ""} ${p.firstname || ""} ${p.lastname || ""}`.trim(),
+        value: `${p.id || ""} ${p.firstname || ""} ${p.lastname || ""}`.trim(),
+        data: p,
+      }));
+      setPersonOptions(options);
+    } catch (err) {
+      console.error("Person search failed:", err);
+      setPersonOptions([]);
+    } finally {
+      setLoadingPersons(false);
+    }
+  }, [masterCode, code, getAuthHeader]);
+
+  // Person Autocomplete Search - Optimized with debounce
+  useEffect(() => {
+    const timeoutId = setTimeout(() => loadPersonOptions(name), 300); // Debounce 300ms
 
     return () => clearTimeout(timeoutId);
-  }, [name, masterCode, code, getAuthHeader]);
+  }, [name, loadPersonOptions]);
 
   // Optimized submit handler with useCallback
   const handleSubmit = useCallback(async (e) => {
@@ -304,10 +313,13 @@ const Cashbook = () => {
             <Grid item>
               <Autocomplete
                 sx={{ width: 280 }}
+                openOnFocus
+                filterOptions={(x) => x}
                 freeSolo
                 value={name}
                 inputValue={name}
                 onInputChange={(e, val) => setName(val)}
+                onOpen={() => loadPersonOptions(name)}
                 onChange={(e, val) => {
                   if (typeof val === "string") {
                     setName(val);

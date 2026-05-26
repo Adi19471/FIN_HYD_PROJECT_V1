@@ -23,6 +23,7 @@ import axios from "axios";
 import { API_BASE } from "lib/config";
 import { getSession } from "src/utils/session";
 import LoadingSpinner from "src/LoadingSpinner";
+import { ReportCompanyHeader, TableExportMenu } from "src/components/ui";
 
 const Customer_Dues = () => {
   const [customerInput, setCustomerInput] = useState("");
@@ -122,6 +123,20 @@ const Customer_Dues = () => {
     return { totalAmount, totalPaid, totalDue };
   }, [duesData]);
 
+  const exportColumns = [
+    "loanId",
+    "customerName",
+    "guarentorName",
+    "partnerName",
+    "startDate",
+    "endDate",
+    "amount",
+    "totalInstallmentAmountPaid",
+    "installmentAmountPending",
+    "dueDate",
+    "remarks",
+  ];
+
   return (
     <Box sx={{ p: 3 }}>
       {/* Search Section */}
@@ -129,6 +144,7 @@ const Customer_Dues = () => {
         <Grid container spacing={2} alignItems="center">
           <Grid item xs={12} md={6}>
             <Autocomplete
+              openOnFocus
               freeSolo
               options={options}
               loading={loadingSearch}
@@ -136,7 +152,7 @@ const Customer_Dues = () => {
               inputValue={customerInput} sx={{width:"220px"}}
               onInputChange={(e, newValue) => setCustomerInput(newValue)}
               onChange={handleCustomerSelect}
-              onFocus={() => searchMembers("")}   // Show list immediately on focus
+              onOpen={() => searchMembers("")}   // Show list immediately on click
               getOptionLabel={(option) => (typeof option === "string" ? option : option.label || "")}
               renderInput={(params) => (
                 <TextField
@@ -172,23 +188,17 @@ const Customer_Dues = () => {
 
           <Grid item xs={12} md={4}>
             <Box sx={{ display: "flex", gap: 1, justifyContent: "flex-end" }}>
-              <Button variant="outlined" size="small">🖨️ Print</Button>
-              <Button variant="outlined" size="small" color="error">PDF</Button>
+              <TableExportMenu rows={duesData} columns={exportColumns} fileName="Customer_Dues" />
             </Box>
           </Grid>
         </Grid>
       </Paper>
 
-      {/* Company Header */}
-      <Box sx={{ textAlign: "center", mb: 3 }}>
-        <Typography variant="h5" fontWeight="bold">SRI BALAJI ENTERPRISES</Typography>
-        <Typography>Amerpeta, Hyderabad.</Typography>
-        <Typography variant="body2" sx={{ mt: 1 }}>
-          Date: {dayjs().format("DD-MMM-YYYY")}
-        </Typography>
-      </Box>
-
-      <Divider sx={{ mb: 3 }} />
+      <ReportCompanyHeader
+        title="Customer Dues"
+        subtitle={selectedCustomer?.label ? `Customer: ${selectedCustomer.label}` : "Search and select a customer to view dues"}
+        date={dayjs()}
+      />
 
       {loadingDues ? (
         <LoadingSpinner />

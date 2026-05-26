@@ -7,7 +7,7 @@ import autoTable from "jspdf-autotable";
 import { successToast, errorToast } from "toastify";
 import { API_BASE } from "lib/config";
 import { getSession } from "src/utils/session";
-import { AppDatePicker } from "src/components/ui";
+import { AppDatePicker, TableExportMenu } from "src/components/ui";
 import { COMPANY_ADDRESS, COMPANY_NAME } from "src/lib/company";
 
 import {
@@ -91,13 +91,14 @@ const QuickCashBook = () => {
 
   const fetchSuggestions = useCallback(
     async (searchText, currentRowId) => {
-      if (!searchText || searchText.length < 2) {
+      const query = (searchText || "").trim();
+      if (query.length === 1) {
         setAccountSuggestions([]);
         return;
       }
       try {
         const res = await axios.get(`${API_BASE}/BusinessMember/allLoanDetailsAutoComplete`, {
-          params: { q: searchText },
+          params: { q: query },
           headers: { Authorization: `Bearer ${token || ""}` },
         });
         const currentAccount = rows.find((row) => row.id === currentRowId)?.accountNo?.trim();
@@ -346,10 +347,7 @@ const QuickCashBook = () => {
           </Grid>
 
           <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap justifyContent="flex-end">
-              <Button variant="outlined" startIcon={<TableViewRounded />} onClick={handleExcel} disabled={!exportRows.length}>Excel</Button>
-              <Button variant="outlined" startIcon={<DescriptionRounded />} onClick={handlePdf} disabled={!exportRows.length}>PDF</Button>
-              <Button variant="outlined" startIcon={<ArticleRounded />} onClick={handleWord} disabled={!exportRows.length}>Word</Button>
-              <Button variant="outlined" startIcon={<PrintRounded />} onClick={handlePrint} disabled={!exportRows.length}>Print</Button>
+              <TableExportMenu rows={exportRows} columns={Object.keys(exportRows[0] || {})} fileName={exportFileName} />
               <Button variant="contained" startIcon={<Save />} onClick={handleSaveAll} disabled={loading}>
                 {loading ? "Saving..." : "Save All"}
               </Button>
@@ -384,6 +382,8 @@ const QuickCashBook = () => {
                   </TableCell>
                   <TableCell sx={{ minWidth: 290 }}>
                     <MuiAutocomplete
+                      openOnFocus
+                      filterOptions={(x) => x}
                       freeSolo
                       fullWidth
                       size="small"
@@ -391,6 +391,7 @@ const QuickCashBook = () => {
                       value={row.accountNo || ""}
                       inputValue={row.accountNo || ""}
                       getOptionLabel={(option) => (typeof option === "string" ? option : option.displayString || option.loanId || "")}
+                      onOpen={() => fetchSuggestions(row.accountNo || "", row.id)}
                       onInputChange={(_, newInput) => {
                         fetchSuggestions(newInput, row.id);
                         updateRow(row.id, "accountNo", newInput);

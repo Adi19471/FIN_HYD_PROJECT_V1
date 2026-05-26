@@ -43,6 +43,7 @@ const MonthlyFinance = () => {
   const [open, setOpen] = useState(false);
   const [isEditMode, setIsEditMode] = useState(false);
   const [currentLoanId, setCurrentLoanId] = useState(null);
+  const [paginationModel, setPaginationModel] = useState({ page: 0, pageSize: 10 });
 
 
   const [filters, setFilters] = useState({
@@ -70,6 +71,10 @@ const MonthlyFinance = () => {
         .includes(filters[key].toLowerCase());
     })
   );
+
+  useEffect(() => {
+    setPaginationModel((model) => ({ ...model, page: 0 }));
+  }, [filteredRows.length]);
 
   const getHeader = (label, field) => (
     <div style={{ width: "100%", paddingTop: 2 }}>
@@ -280,8 +285,9 @@ const MonthlyFinance = () => {
 
 
   const searchMembers = useCallback(
-    async (query) => {
-      if (!query || query.trim().length < 2) {
+    async (query = "") => {
+      const searchText = query.trim();
+      if (searchText.length === 1) {
         setOptions([]);
         return;
       }
@@ -289,7 +295,7 @@ const MonthlyFinance = () => {
       try {
         const res = await axios.get(`${API_BASE}/PersonalInfo/autocomplete`, {
           headers,
-          params: { q: query.trim() },
+          params: { q: searchText },
         });
         const list = (res.data || []).map((item) => ({
           id: item.id,
@@ -308,8 +314,9 @@ const MonthlyFinance = () => {
   );
 
   const searchPartners = useCallback(
-    async (query) => {
-      if (!query || query.trim().length < 2) {
+    async (query = "") => {
+      const searchText = query.trim();
+      if (searchText.length === 1) {
         setOptions([]);
         return;
       }
@@ -321,7 +328,7 @@ const MonthlyFinance = () => {
           `${API_BASE}/PersonalInfo/personInfoAutoCompleteByCategory/PARTNER`,
           {
             headers,
-            params: { q: query.trim() }, // maps to @RequestParam String q
+            params: { q: searchText }, // maps to @RequestParam String q
           }
         );
 
@@ -685,11 +692,8 @@ const MonthlyFinance = () => {
           getRowId={(r) => r.id}
           autoHeight
           pageSizeOptions={[10, 25, 50, 100]}
-          initialState={{
-            pagination: {
-              paginationModel: { pageSize: 10, page: 0 },
-            },
-          }}
+          paginationModel={paginationModel}
+          onPaginationModelChange={setPaginationModel}
           pagination
           headerHeight={70}
         />
@@ -737,13 +741,16 @@ const MonthlyFinance = () => {
             <Grid item xs={12} md={6} sm={4}>
               <Autocomplete
                 sx={{ width: "220px" }}
+                openOnFocus
+                filterOptions={(x) => x}
                 options={options}
                 loading={loadingSearch}
                 value={formData.customerId}
+                onOpen={() => searchMembers("")}
                 onChange={(e, v) =>
                   setFormData((p) => ({ ...p, customerId: v }))
                 }
-                onInputChange={(e, v) => v && searchMembers(v)}
+                onInputChange={(e, v) => searchMembers(v || "")}
                 getOptionLabel={(o) => o?.label || ""}
                 renderInput={(params) => (
                   <TextField
@@ -925,13 +932,16 @@ const MonthlyFinance = () => {
                     <Autocomplete
                       fullWidth
                       sx={{ width: "220px" }}
+                      openOnFocus
+                      filterOptions={(x) => x}
                       options={options}
                       loading={loadingSearch}
                       value={formData[field]}
+                      onOpen={() => searchMembers("")}
                       onChange={(e, v) =>
                         setFormData((p) => ({ ...p, [field]: v }))
                       }
-                      onInputChange={(e, v) => v && searchMembers(v)}
+                      onInputChange={(e, v) => searchMembers(v || "")}
                       getOptionLabel={(o) => o?.label || ""}
                       renderInput={(params) => (
                         <TextField
@@ -953,9 +963,12 @@ const MonthlyFinance = () => {
               <Autocomplete
                 fullWidth
                 sx={{ width: "230px" }}
+                openOnFocus
+                filterOptions={(x) => x}
                 options={options}
                 loading={loadingSearch}
                 value={formData.partnerId}
+                onOpen={() => searchPartners("")}
                 onInputChange={(e, v) => searchPartners(v)}
                 onChange={(e, v) =>
                   setFormData((p) => ({ ...p, partnerId: v }))

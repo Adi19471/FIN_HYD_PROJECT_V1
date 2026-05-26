@@ -121,9 +121,12 @@ const Installment_Dues = () => {
 
           <Grid item xs={12} md={3}>
             <Autocomplete
+              openOnFocus
+              filterOptions={(x) => x}
               options={partners || []}
               value={selectedPartner}
               onChange={(_, newValue) => setSelectedPartner(newValue)}
+              onOpen={() => loadPartners("")}
               onInputChange={(_, value) => loadPartners(value)}
               fullWidth
               size="small"

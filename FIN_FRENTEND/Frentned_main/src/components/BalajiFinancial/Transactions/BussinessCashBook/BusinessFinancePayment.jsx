@@ -256,11 +256,14 @@ export default function BusinessFinancePayment({
         <Grid container spacing={2}>
           <Grid item xs={12} md={5}>
             <Autocomplete
+              openOnFocus
+              filterOptions={(x) => x}
               fullWidth
               options={accountList}
               getOptionLabel={(option) => (typeof option === "string" ? option : option.displayString || option.loanId || "")}
               inputValue={searchInput}
               onInputChange={(_, value) => setSearchInput(value)}
+              onOpen={() => fetchAccounts("")}
               sx={{width:"220px"}}
               onChange={(_, value) => {
                 if (value) {

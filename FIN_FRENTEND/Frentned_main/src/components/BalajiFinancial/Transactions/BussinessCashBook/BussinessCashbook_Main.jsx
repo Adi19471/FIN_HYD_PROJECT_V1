@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Box, Chip, CircularProgress, Fade, Paper, Stack, Tab, Tabs, Typography } from "@mui/material";
+import { alpha, Box, Chip, CircularProgress, Fade, Paper, Stack, Tab, Tabs, Typography, useTheme } from "@mui/material";
 import { ReceiptLongRounded } from "@mui/icons-material";
 import { MdCalendarMonth, MdCalendarToday } from "react-icons/md";
 
@@ -12,6 +12,7 @@ const tabs = [
 ];
 
 const BussinessCashbook_Main = () => {
+  const theme = useTheme();
   const [value, setValue] = useState(0);
   const [loading, setLoading] = useState(false);
 
@@ -54,6 +55,9 @@ const BussinessCashbook_Main = () => {
           sx={{
             minHeight: 44,
             "& .MuiTabs-indicator": { display: "none" },
+            "& .MuiTabs-flexContainer": {
+              gap: 1,
+            },
           }}
         >
           {tabs.map((tab, index) => (
@@ -65,14 +69,27 @@ const BussinessCashbook_Main = () => {
               sx={{
                 minHeight: 42,
                 minWidth: 126,
-                borderRadius: 1,
-                mx: 0.5,
+                borderRadius: 999,
                 textTransform: "none",
                 fontWeight: 800,
-                color: value === index ? "primary.contrastText" : "text.primary",
+                color: value === index ? "#ffffff" : "text.primary",
                 bgcolor: value === index ? "primary.main" : "background.paper",
                 border: "1px solid",
                 borderColor: value === index ? "primary.main" : "divider",
+                boxShadow: value === index
+                  ? `0 8px 18px ${alpha(theme.palette.primary.main, 0.28)}`
+                  : "0 1px 2px rgba(15, 23, 42, 0.04)",
+                "& .MuiTab-iconWrapper, & svg": {
+                  color: "inherit",
+                  opacity: 1,
+                  fontSize: 18,
+                },
+                "& .MuiTab-iconWrapper": {
+                  marginRight: 0.75,
+                },
+                "&.Mui-selected": {
+                  color: "#ffffff",
+                },
                 "&:hover": {
                   bgcolor: value === index ? "primary.dark" : "action.hover",
                 },

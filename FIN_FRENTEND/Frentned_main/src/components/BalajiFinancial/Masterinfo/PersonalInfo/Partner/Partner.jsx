@@ -143,6 +143,7 @@ const Partner = ({ personType = "CUSTOMER" }) => {
   const [selectedRecord, setSelectedRecord] = useState(null);
   const [form, setForm] = useState(EMPTY_FORM(personType));
   const [errors, setErrors] = useState({});
+  const [paginationModel, setPaginationModel] = useState({ page: 0, pageSize: 10 });
 
   // Manager autocomplete state
   const [managerOptions, setManagerOptions] = useState([]);
@@ -192,9 +193,14 @@ const Partner = ({ personType = "CUSTOMER" }) => {
     );
   }, [rows, search]);
 
+  useEffect(() => {
+    setPaginationModel((model) => ({ ...model, page: 0 }));
+  }, [filteredRows.length]);
+
   /* ── Manager search (debounced, excludes self) ── */
-  const searchManagers = useCallback(async (query) => {
-    if (!query || query.trim().length < 2) {
+  const searchManagers = useCallback(async (query = "") => {
+    const searchText = query.trim();
+    if (searchText.length === 1) {
       setManagerOptions([]);
       return;
     }
@@ -202,7 +208,7 @@ const Partner = ({ personType = "CUSTOMER" }) => {
     try {
       const res = await axios.get(
         `${API_BASE}/PersonalInfo/personInfoAutoCompleteByCategory/PARTNER`,
-        { headers, params: { q: query.trim() } }
+        { headers, params: { q: searchText } }
       );
 
       const currentId = form.id; // exclude self from manager options
@@ -546,6 +552,9 @@ const Partner = ({ personType = "CUSTOMER" }) => {
             loading={loading}
             rowHeight={52}
             pagination
+            paginationModel={paginationModel}
+            onPaginationModelChange={setPaginationModel}
+            pageSizeOptions={[10, 25, 50, 100]}
             slots={{ toolbar: GridToolbar }}
             sx={{
               border: "none",
@@ -672,6 +681,7 @@ const Partner = ({ personType = "CUSTOMER" }) => {
           <Grid container spacing={2} sx={{ mb: 3 }}>
             <Grid item xs={12}>
               <Autocomplete
+                openOnFocus
                 options={managerOptions}
                 getOptionLabel={(o) => o.label || ""}
                 isOptionEqualToValue={(o, v) => o.id === v.id}
@@ -679,6 +689,7 @@ const Partner = ({ personType = "CUSTOMER" }) => {
                 inputValue={managerInputValue}
                 onInputChange={handleManagerInputChange}
                 onChange={handleManagerChange}
+                onOpen={() => searchManagers("")}
                 loading={loadingManager}
                 filterOptions={(x) => x} // server-side filtering
                 renderOption={(props, option) => (
@@ -729,8 +740,8 @@ const Partner = ({ personType = "CUSTOMER" }) => {
                   />
                 )}
                 noOptionsText={
-                  managerInputValue.length < 2
-                    ? "Type at least 2 characters to search"
+                  managerInputValue.length === 1
+                    ? "Type one more character or clear to show partners"
                     : "No matching partners found"
                 }
                 clearOnEscape

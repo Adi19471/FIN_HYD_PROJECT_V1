@@ -2,6 +2,7 @@ import React from "react";
 import {
   Box,
   Button,
+  Chip,
   Divider,
   Drawer,
   FormControl,
@@ -203,6 +204,7 @@ export default function EnterpriseThemePanel({ open, onClose }) {
           >
             <MenuItem value="glass">Glass</MenuItem>
             <MenuItem value="solid">Solid</MenuItem>
+            <MenuItem value="rounded">Rounded</MenuItem>
             <MenuItem value="compact">Compact</MenuItem>
             <MenuItem value="accent">Accent Line</MenuItem>
           </Select>
@@ -218,6 +220,7 @@ export default function EnterpriseThemePanel({ open, onClose }) {
             <MenuItem value="rounded">Rounded</MenuItem>
             <MenuItem value="soft">Soft Fill</MenuItem>
             <MenuItem value="sharp">Sharp</MenuItem>
+            <MenuItem value="pulse">Pulse</MenuItem>
           </Select>
         </FormControl>
 
@@ -240,6 +243,40 @@ export default function EnterpriseThemePanel({ open, onClose }) {
             <Button size="small" variant="contained">Save</Button>
             <Button size="small" variant="outlined">Export</Button>
             <Button size="small" color="success" variant="contained">Posted</Button>
+          </Stack>
+          <Stack spacing={0.75} sx={{ mt: 2 }}>
+            <Stack direction="row" spacing={1} alignItems="center">
+              <Chip size="small" label={settings.tableStyle} color="primary" variant="outlined" />
+              <Typography variant="body2">Table rows, buttons, menus, forms, and tabs follow this scale.</Typography>
+            </Stack>
+            <Box
+              sx={{
+                display: "grid",
+                gridTemplateColumns: "1.2fr 0.8fr 0.8fr",
+                border: 1,
+                borderColor: "divider",
+                borderRadius: 1,
+                overflow: "hidden",
+                fontSize: "0.82rem",
+              }}
+            >
+              {["Account", "Due", "Status", "Balaji Traders", "12,450", "Open"].map((cell, index) => (
+                <Box
+                  key={`${cell}-${index}`}
+                  sx={{
+                    px: 1,
+                    py: settings.tableDensity === "compact" ? 0.65 : settings.tableDensity === "spacious" ? 1.25 : 0.9,
+                    fontWeight: index < 3 ? 900 : 650,
+                    bgcolor: index < 3 ? "action.hover" : index > 2 && settings.tableStyle === "striped" ? "background.paper" : "transparent",
+                    borderRight: index % 3 !== 2 ? 1 : 0,
+                    borderBottom: index < 3 ? 1 : 0,
+                    borderColor: "divider",
+                  }}
+                >
+                  {cell}
+                </Box>
+              ))}
+            </Box>
           </Stack>
         </Paper>
 

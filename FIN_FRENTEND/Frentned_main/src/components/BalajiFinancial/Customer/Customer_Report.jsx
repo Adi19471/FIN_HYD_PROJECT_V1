@@ -23,6 +23,7 @@ import axios from "axios";
 import { API_BASE } from "lib/config";
 import { getSession } from "src/utils/session";
 import LoadingSpinner from "src/LoadingSpinner";
+import { ReportCompanyHeader, TableExportMenu } from "src/components/ui";
 
 const Customer_Report = () => {
   const [accountOptions, setAccountOptions] = useState([]);
@@ -110,6 +111,8 @@ const Customer_Report = () => {
     return { totalCredits, totalDebits, totalBalance };
   }, [reportData]);
 
+  const exportColumns = ["customerId", "customerName", "credits", "debits", "balance"];
+
   return (
     <Box sx={{ p: 3 }}>
       {/* Search Section */}
@@ -117,6 +120,7 @@ const Customer_Report = () => {
         <Grid container spacing={2} alignItems="center">
           <Grid item xs={12} md={6}>
             <Autocomplete
+              openOnFocus
               options={accountOptions}
               loading={loadingAccounts}
               value={selectedAccount}
@@ -156,23 +160,17 @@ const Customer_Report = () => {
 
           <Grid item xs={12} md={3}>
             <Box sx={{ display: "flex", gap: 1, justifyContent: "flex-end" }}>
-              <Button variant="outlined" size="small">🖨️ Print</Button>
-              <Button variant="outlined" size="small" color="error">PDF</Button>
+              <TableExportMenu rows={reportData} columns={exportColumns} fileName="Customer_Report" />
             </Box>
           </Grid>
         </Grid>
       </Paper>
 
-      {/* Company Header */}
-      <Box sx={{ textAlign: "center", mb: 3 }}>
-        <Typography variant="h5" fontWeight="bold">SRI BALAJI ENTERPRISES</Typography>
-        <Typography>Amerpeta, Hyderabad.</Typography>
-        <Typography variant="body2" sx={{ mt: 1 }}>
-          Date: {dayjs().format("DD-MMM-YYYY")}
-        </Typography>
-      </Box>
-
-      <Divider sx={{ mb: 3 }} />
+      <ReportCompanyHeader
+        title="Customer Report"
+        subtitle={selectedAccount?.label ? `Account Head: ${selectedAccount.label}` : "Select an account head to view report"}
+        date={dayjs()}
+      />
 
       {loadingReport ? (
         <LoadingSpinner />

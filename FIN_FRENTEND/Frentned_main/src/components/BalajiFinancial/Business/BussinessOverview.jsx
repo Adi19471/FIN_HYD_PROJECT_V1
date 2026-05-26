@@ -20,20 +20,13 @@ import {
   Radio,
   RadioGroup,
   FormControl,
-  IconButton,
 } from "@mui/material";
-
-import {
-  Print as PrintIcon,
-  Description as ExcelIcon,
-  PictureAsPdf as PdfIcon,
-} from "@mui/icons-material";
 
 import axios from "axios";
 import { API_BASE } from "lib/config";
 import { getSession } from "src/utils/session";
 import dayjs from "dayjs";
-import { AppDatePicker } from "src/components/ui";
+import { AppDatePicker, ReportCompanyHeader, TableExportMenu } from "src/components/ui";
 
 const token = getSession()?.token || getSession("token") || "";
 
@@ -94,6 +87,32 @@ const BusinessOverview = () => {
   const totalRevenues = revenues
     .filter((r) => r.type === "REVENUES")
     .reduce((sum, r) => sum + (r.amount || 0), 0);
+  const exportRows = [
+    ...loanData.map((loan) => ({
+      section: "Loans Disbursed",
+      name: loan.loanType === "DAILY_FINANCE" ? "DF" : "MF",
+      loansDisbursed: loan.loansDisbursed || 0,
+      interestReceivable: loan.interestReceivable || 0,
+      totalReceivable: loan.sumOfLoansDisbursedAndInterestReceivable || 0,
+      loansPaid: loan.loansPaid || 0,
+      interestPaid: loan.interestPaid || 0,
+      amount: loan.sumOfloansPaidAndInterestPaid || 0,
+    })),
+    ...revenues.filter((r) => r.type === "REVENUES").map((rev) => ({
+      section: "Revenue",
+      name: rev.code,
+      loansDisbursed: "",
+      interestReceivable: "",
+      totalReceivable: "",
+      loansPaid: "",
+      interestPaid: "",
+      amount: rev.amount || 0,
+    })),
+  ];
+  const exportColumns = ["section", "name", "loansDisbursed", "interestReceivable", "totalReceivable", "loansPaid", "interestPaid", "amount"];
+  const reportRange = useDateRange
+    ? `From ${dayjs(fromDate).format("DD-MMM-YYYY")} To ${dayjs(toDate).format("DD-MMM-YYYY")}`
+    : "All Dates";
 
   return (
     <Box sx={{ p: 2, backgroundColor: "#f9f9f9", minHeight: "100vh" }}>
@@ -163,9 +182,7 @@ const BusinessOverview = () => {
             >
               Generate
             </Button>
-            <IconButton><PrintIcon /></IconButton>
-            <IconButton><ExcelIcon /></IconButton>
-            <IconButton><PdfIcon /></IconButton>
+            <TableExportMenu rows={exportRows} columns={exportColumns} fileName="Business_Overview" />
           </Grid>
         </Grid>
       </Paper>
@@ -179,26 +196,11 @@ const BusinessOverview = () => {
         <Alert severity="error" sx={{ mb: 3 }}>{error}</Alert>
       ) : (
         <Paper sx={{ p: 4, backgroundColor: "white", boxShadow: 2 }}>
-          {/* Header */}
-          <Typography variant="h5" align="center" fontWeight="bold">
-            SRI BALAJI ENTERPRISES
-          </Typography>
-          <Typography align="center" gutterBottom>
-            Amerpeta, Hyderabad.
-          </Typography>
-          <Typography align="right" sx={{ mb: 3 }}>
-            Date: {dayjs().format("DD-MMM-YYYY")}
-          </Typography>
-
-          <Typography variant="h6" align="center" sx={{ mb: 4 }}>
-            Business Overview From{" "}
-            {useDateRange 
-              ? dayjs(fromDate).format("DD-MMM-YYYY") 
-              : "All"} To{" "}
-            {useDateRange 
-              ? dayjs(toDate).format("DD-MMM-YYYY") 
-              : "All"}
-          </Typography>
+          <ReportCompanyHeader
+            title="Business Overview"
+            subtitle={reportRange}
+            date={dayjs()}
+          />
 
           {/* Loans Disbursed Information */}
           <Typography variant="subtitle1" sx={{ fontWeight: "bold", mb: 1 }}>

@@ -11,20 +11,19 @@ import {
   Typography,
 } from "@mui/material";
 import {
-  AccountBalanceRounded,
   FullscreenRounded,
   MenuRounded,
   SearchRounded,
   SettingsRounded,
 } from "@mui/icons-material";
 import SearchModal from "../components/ModalSearch";
-import Notifications from "../components/DropdownNotifications";
+import Notifications from "../components/DropdownNotifications.jsx";
 import Help from "../components/DropdownHelp";
 import UserMenu from "../components/DropdownProfile";
 import EnterpriseThemePanel from "../components/EnterpriseThemePanel";
 import ThemeToggle from "../components/ThemeToggle";
 import { useThemeProvider } from "../utils/ThemeContext";
-import { COMPANY_ADDRESS, COMPANY_APP_NAME } from "src/lib/company";
+import { COMPANY_ADDRESS, COMPANY_APP_NAME, COMPANY_LOGO } from "src/lib/company";
 
 const routeLabels = {
   "": "Dashboard",
@@ -68,6 +67,7 @@ function Header({ sidebarOpen, setSidebarOpen }) {
         <Stack direction="row" alignItems="center" spacing={2} sx={{ minWidth: 0 }}>
           <IconButton
             onClick={() => setSidebarOpen(!sidebarOpen)}
+            className="enterprise-header-icon"
             sx={{ display: { lg: "none" } }}
             aria-label="Open navigation"
           >
@@ -76,7 +76,7 @@ function Header({ sidebarOpen, setSidebarOpen }) {
 
           <Link to="/" className="enterprise-brand" aria-label="Sri Balaji Finance dashboard">
             <Box className="enterprise-brand-mark">
-              <AccountBalanceRounded fontSize="small" />
+              <img src={COMPANY_LOGO} alt="" aria-hidden="true" />
             </Box>
             <Box sx={{ display: { xs: "none", sm: "block" }, minWidth: 0 }}>
               <Typography variant="subtitle1" sx={{ lineHeight: 1, fontWeight: 850 }}>

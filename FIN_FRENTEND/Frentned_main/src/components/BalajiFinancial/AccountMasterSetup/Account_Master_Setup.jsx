@@ -41,6 +41,7 @@ import axios from "axios";
 import { toast } from "react-toastify";
 import { API_BASE } from "lib/config";
 import { getSession } from "src/utils/session";
+import { TableExportMenu } from "src/components/ui";
 
 const PERSON_TYPES = ["Customer", "Partner", "Employee", "Vendor"];
 const TRANS_TYPES = ["CREDIT", "DEBIT"];
@@ -52,7 +53,7 @@ const AccountMasterSetup = () => {
   const [search, setSearch] = useState(""); // ✅ FIXED
 
   const [page, setPage] = useState(0);
-  const rowsPerPage = 20;
+  const [rowsPerPage, setRowsPerPage] = useState(20);
 
   const [dialogOpen, setDialogOpen] = useState(false);
   const [isEdit, setIsEdit] = useState(false);
@@ -111,6 +112,7 @@ const AccountMasterSetup = () => {
       row.transType?.toLowerCase().includes(s)
     );
   });
+  const exportColumns = ["id", "type", "masterCode", "code", "personType", "transType", "visibility"];
 
   const handleOpen = (row = null) => {
     if (row) {
@@ -166,8 +168,10 @@ const AccountMasterSetup = () => {
     <Box p={3}>
       {/* HEADER */}
       <Paper sx={{ p: 2, mb: 2 }}>
-        <Box display="flex" justifyContent="space-between">
+        <Box display="flex" justifyContent="space-between" gap={1} flexWrap="wrap">
           <Typography variant="h5">Account Master Setup</Typography>
+          <Box display="flex" gap={1} flexWrap="wrap">
+          <TableExportMenu rows={filteredAccounts} columns={exportColumns} fileName="Account_Master_Setup" />
           <Button
             variant="contained"
             startIcon={<AddIcon />}
@@ -175,6 +179,7 @@ const AccountMasterSetup = () => {
           >
             Add
           </Button>
+          </Box>
         </Box>
       </Paper>
 
@@ -287,7 +292,11 @@ const AccountMasterSetup = () => {
               page={page}
               onPageChange={(e, newPage) => setPage(newPage)}
               rowsPerPage={rowsPerPage}
-              rowsPerPageOptions={[20]}
+              onRowsPerPageChange={(event) => {
+                setRowsPerPage(parseInt(event.target.value, 10));
+                setPage(0);
+              }}
+              rowsPerPageOptions={[10, 20, 50, 100]}
             />
           </>
         )}

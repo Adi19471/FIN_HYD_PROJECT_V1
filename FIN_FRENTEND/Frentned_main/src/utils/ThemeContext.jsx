@@ -15,18 +15,18 @@ const ThemeContext = createContext({
 
 const defaultSettings = {
   mode: "light",
-  colorTheme: "trust",
-  fontFamily: "Inter",
-  fontScale: 1.04,
+  colorTheme: "sunrise",
+  fontFamily: "Manrope",
+  fontScale: 1.08,
   density: "comfortable",
   tableDensity: "compact",
   tableStyle: "striped",
-  formStyle: "filled",
-  iconStyle: "rounded",
+  formStyle: "outlined",
+  iconStyle: "pulse",
   loadingStyle: "pulse",
   sidebarStyle: "expanded",
-  navbarStyle: "glass",
-  radius: 12,
+  navbarStyle: "rounded",
+  radius: 11,
 };
 
 const colorThemes = {
@@ -172,6 +172,9 @@ export default function ThemeProvider({ children }) {
 
   const palette = colorThemes[settings.colorTheme] || colorThemes.trust;
   const isDark = theme === "dark";
+  const fontScale = Number(settings.fontScale || 1);
+  const densityUnit = settings.density === "compact" ? 0.9 : settings.density === "spacious" ? 1.12 : 1;
+  const tableScale = settings.tableDensity === "compact" ? 0.92 : settings.tableDensity === "spacious" ? 1.08 : 1;
 
   const muiTheme = useMemo(
     () =>
@@ -196,7 +199,7 @@ export default function ThemeProvider({ children }) {
         typography: {
           fontFamily:
             fontStacks[settings.fontFamily] || fontStacks.Inter,
-          fontSize: 14 * Number(settings.fontScale || 1),
+          fontSize: 14 * fontScale,
           h1: { fontWeight: 900, letterSpacing: 0 },
           h2: { fontWeight: 900, letterSpacing: 0 },
           h3: { fontWeight: 900, letterSpacing: 0 },
@@ -236,6 +239,37 @@ export default function ThemeProvider({ children }) {
               root: {
                 borderRadius: Math.max(8, settings.radius),
                 minHeight: settings.density === "compact" ? 32 : settings.density === "spacious" ? 44 : 40,
+                paddingLeft: settings.density === "compact" ? 12 : settings.density === "spacious" ? 20 : 16,
+                paddingRight: settings.density === "compact" ? 12 : settings.density === "spacious" ? 20 : 16,
+                fontSize: `${0.875 * fontScale}rem`,
+                lineHeight: 1.25,
+              },
+            },
+          },
+          MuiIconButton: {
+            styleOverrides: {
+              root: {
+                width: settings.density === "compact" ? 34 : settings.density === "spacious" ? 44 : 40,
+                height: settings.density === "compact" ? 34 : settings.density === "spacious" ? 44 : 40,
+                borderRadius: settings.iconStyle === "sharp" ? 6 : settings.iconStyle === "soft" ? 12 : "50%",
+              },
+            },
+          },
+          MuiChip: {
+            styleOverrides: {
+              root: {
+                fontSize: `${0.75 * fontScale}rem`,
+                height: settings.density === "compact" ? 24 : settings.density === "spacious" ? 32 : 28,
+                fontWeight: 800,
+              },
+            },
+          },
+          MuiTab: {
+            styleOverrides: {
+              root: {
+                minHeight: settings.density === "compact" ? 38 : settings.density === "spacious" ? 52 : 44,
+                fontSize: `${0.86 * fontScale}rem`,
+                fontWeight: 800,
               },
             },
           },
@@ -248,12 +282,41 @@ export default function ThemeProvider({ children }) {
             styleOverrides: {
               root: {
                 borderRadius: Math.max(8, settings.radius),
+                minHeight: settings.density === "compact" ? 36 : settings.density === "spacious" ? 50 : 44,
                 backgroundColor:
                   settings.formStyle === "minimal"
                     ? "transparent"
                     : isDark
                     ? "rgba(15,23,42,0.72)"
                     : "rgba(255,255,255,0.9)",
+              },
+            },
+          },
+          MuiInputBase: {
+            styleOverrides: {
+              input: {
+                fontSize: `${0.94 * fontScale}rem`,
+              },
+            },
+          },
+          MuiMenuItem: {
+            styleOverrides: {
+              root: {
+                minHeight: settings.density === "compact" ? 34 : settings.density === "spacious" ? 46 : 40,
+                fontSize: `${0.9 * fontScale}rem`,
+              },
+            },
+          },
+          MuiTableCell: {
+            styleOverrides: {
+              root: {
+                paddingTop: `${10 * densityUnit}px`,
+                paddingBottom: `${10 * densityUnit}px`,
+                fontSize: `${0.86 * fontScale * tableScale}rem`,
+              },
+              head: {
+                fontSize: `${0.78 * fontScale * tableScale}rem`,
+                fontWeight: 900,
               },
             },
           },
@@ -269,7 +332,7 @@ export default function ThemeProvider({ children }) {
             styleOverrides: {
               root: {
                 border: 0,
-                fontSize: settings.tableDensity === "compact" ? 12.5 : settings.tableDensity === "spacious" ? 14 : 13.5,
+                fontSize: `${0.82 * fontScale * tableScale}rem`,
               },
               columnHeaders: {
                 minHeight: settings.tableDensity === "compact" ? "40px !important" : settings.tableDensity === "spacious" ? "56px !important" : "48px !important",
@@ -298,6 +361,7 @@ export default function ThemeProvider({ children }) {
       settings.density,
       settings.tableDensity,
       settings.formStyle,
+      settings.iconStyle,
     ]
   );
 

@@ -1,0 +1,26 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-labelledby="title desc">
+  <title id="title">Sri Balaji Finance Logo</title>
+  <desc id="desc">A blue and green finance mark with a temple roof, rupee symbol, and ledger lines.</desc>
+  <defs>
+    <linearGradient id="bg" x1="80" y1="60" x2="430" y2="455" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#0f62fe"/>
+      <stop offset="1" stop-color="#10b981"/>
+    </linearGradient>
+    <linearGradient id="shine" x1="155" y1="110" x2="357" y2="408" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#ffffff" stop-opacity="0.96"/>
+      <stop offset="1" stop-color="#dff7ff" stop-opacity="0.9"/>
+    </linearGradient>
+  </defs>
+  <rect width="512" height="512" rx="108" fill="#f8fafc"/>
+  <rect x="32" y="32" width="448" height="448" rx="92" fill="url(#bg)"/>
+  <path d="M95 198 256 92l161 106v36H95v-36Z" fill="#ffffff" opacity="0.96"/>
+  <path d="M128 232h256v36H128v-36Z" fill="#c7f9e8" opacity="0.96"/>
+  <path d="M150 285h212c31 0 56 25 56 56v34c0 31-25 56-56 56H150c-31 0-56-25-56-56v-34c0-31 25-56 56-56Z" fill="#0b2f6b" opacity="0.25"/>
+  <path d="M148 268h216c25 0 45 20 45 45v62c0 25-20 45-45 45H148c-25 0-45-20-45-45v-62c0-25 20-45 45-45Z" fill="url(#shine)"/>
+  <path d="M171 317h170" stroke="#0f62fe" stroke-width="18" stroke-linecap="round"/>
+  <path d="M171 362h112" stroke="#10b981" stroke-width="18" stroke-linecap="round"/>
+  <path d="M238 151h55c27 0 48 18 48 43s-21 43-48 43h-28l59 70" fill="none" stroke="#0f62fe" stroke-width="27" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M228 151h116M228 194h116" stroke="#0f62fe" stroke-width="24" stroke-linecap="round"/>
+  <circle cx="376" cy="140" r="28" fill="#facc15"/>
+  <path d="M256 92 95 198h322L256 92Z" fill="#ffffff" opacity="0.14"/>
+</svg>

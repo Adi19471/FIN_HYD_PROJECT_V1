@@ -24,7 +24,7 @@ import PictureAsPdfIcon from "@mui/icons-material/PictureAsPdf";
 import ImageIcon from "@mui/icons-material/Image";
 import LoadingSpinner from "src/LoadingSpinner";
 import { useReactToPrint } from "react-to-print";
-import { AppDatePicker } from "src/components/ui";
+import { AppDatePicker, ReportCompanyHeader, TableExportMenu } from "src/components/ui";
 
 const token = getSession()?.token || getSession("token") || "";
 
@@ -37,9 +37,6 @@ const CustomerOutstanding = () => {
 
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(10);
-
-  const [companyName] = useState("SRI BALAJI ENTERPRISES");
-  const [address] = useState("Amerpeta, Hyderabad.");
 
   // Ref for printing
   const printRef = useRef(null);
@@ -106,6 +103,16 @@ const CustomerOutstanding = () => {
   const formattedDate = selectedDate.format("ddd DD-MMM-YYYY");
 
   const paginatedData = data.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage);
+  const exportColumns = [
+    "sNo",
+    "customerId",
+    "customerName",
+    "noOfLoans",
+    "totalLoansAmount",
+    "totalPaidAmount",
+    "balanceOutstanding",
+    "dueDateOutstanding",
+  ];
 
   return (
     <Box sx={{ p: 3 }}>
@@ -136,40 +143,17 @@ const CustomerOutstanding = () => {
             Generate
           </Button>
 
-          <IconButton color="primary" onClick={handlePrint} title="Print">
-            <PrintIcon />
-          </IconButton>
-          <IconButton color="primary" title="PDF">
-            <PictureAsPdfIcon />
-          </IconButton>
-          <IconButton color="primary" title="Image">
-            <ImageIcon />
-          </IconButton>
+          <TableExportMenu rows={data} columns={exportColumns} fileName="Customer_Outstanding" />
         </Box>
       </Box>
 
       {/* Printable Area */}
       <Paper ref={printRef} elevation={3} sx={{ p: 4 }}>
-        {/* Header */}
-        <Box display="flex" justifyContent="space-between" alignItems="flex-start" mb={3}>
-          <Box>
-            <Typography variant="caption" color="text.secondary">
-              Date: {formattedDate}
-            </Typography>
-          </Box>
-          <Box textAlign="right">
-            <Typography variant="h6" fontWeight="bold">
-              {companyName}
-            </Typography>
-            <Typography variant="body2">{address}</Typography>
-          </Box>
-        </Box>
-
-        <Box textAlign="center" mb={4}>
-          <Typography variant="h6" fontWeight="bold">
-            Customer Outstanding As On {selectedDate.format("DD-MMM-YYYY")}
-          </Typography>
-        </Box>
+        <ReportCompanyHeader
+          title={`Customer Outstanding As On ${selectedDate.format("DD-MMM-YYYY")}`}
+          subtitle={`${mfChecked ? "MF" : ""}${mfChecked && dfChecked ? " and " : ""}${dfChecked ? "DF" : ""} Loans`}
+          date={selectedDate}
+        />
 
         {loading ? (
           <LoadingSpinner />

@@ -49,14 +49,6 @@ import { getSession } from "src/utils/session";
 const formatINR = (value) =>
   `Rs ${Number(value || 0).toLocaleString("en-IN", { maximumFractionDigits: 0 })}`;
 
-const fallbackTransactions = [
-  { id: "TXN-1048", customer: "Rajesh Kumar", type: "Receipt", amount: 18000, status: "Posted" },
-  { id: "TXN-1047", customer: "Lakshmi Traders", type: "Loan", amount: 125000, status: "Approval" },
-  { id: "TXN-1046", customer: "Mohan Rao", type: "Installment", amount: 9200, status: "Overdue" },
-  { id: "TXN-1045", customer: "Sri Sai Stores", type: "Cashbook", amount: 44000, status: "Posted" },
-  { id: "TXN-1044", customer: "Venkata Agency", type: "Receipt", amount: 26500, status: "Posted" },
-];
-
 const modules = [
   { title: "Customer Master", path: "/customer", note: "Profiles, KYC, search, export", icon: GroupsRounded },
   { title: "Daily Finance", path: "/Daily-Finace", note: "Daily loan register and filters", icon: CurrencyRupeeRounded },
@@ -64,15 +56,6 @@ const modules = [
   { title: "Quick Cash Book", path: "/Transactions/Quick_Cash_Book", note: "Fast transaction entry", icon: AddCardRounded },
   { title: "Daily Book", path: "/AccountsModules/DailyBook", note: "Cash movement and day close", icon: ReceiptLongRounded },
   { title: "Collection Report", path: "/Bussiness/BussinessCollectionReportsimport", note: "Daily and monthly collection status", icon: AssessmentRounded },
-];
-
-const fallbackCashflow = [
-  { month: "Jan", income: 42, expense: 24 },
-  { month: "Feb", income: 48, expense: 26 },
-  { month: "Mar", income: 55, expense: 30 },
-  { month: "Apr", income: 51, expense: 27 },
-  { month: "May", income: 63, expense: 32 },
-  { month: "Jun", income: 71, expense: 35 },
 ];
 
 function KpiCard({ item, loading }) {
@@ -128,15 +111,21 @@ export default function Dashboard() {
   const [error, setError] = useState("");
   const [lastUpdated, setLastUpdated] = useState(null);
   const [metrics, setMetrics] = useState({
-    portfolioValue: 18700000,
-    todayCollection: 318000,
-    pendingDues: 684000,
-    activeMembers: 928,
-    dueCases: 42,
-    transactionRows: fallbackTransactions,
+    portfolioValue: 0,
+    todayCollection: 0,
+    pendingDues: 0,
+    activeMembers: 0,
+    dueCases: 0,
+    transactionRows: [],
     collectionRows: [],
     memberRows: [],
     dailySummaryRows: [],
+    dailyTotals: {
+      openingBalance: 0,
+      credits: 0,
+      debits: 0,
+      closingBalance: 0,
+    },
   });
 
   const token = getSession("token") || "";
@@ -165,42 +154,53 @@ export default function Dashboard() {
       const received = collectionRows.reduce((sum, item) => sum + Number(item.receivedCollections || 0), 0);
       const balance = collectionRows.reduce((sum, item) => sum + Number(item.balanceCollections || 0), 0);
       const todayCollection = dailyRows.reduce(
-        (sum, item) => sum + Number(item.creditAmount || item.collectionAmount || item.amount || item.receivedAmount || 0),
+        (sum, item) => sum + Number(item.credit || item.creditAmount || item.collectionAmount || item.amount || item.receivedAmount || 0),
         0
       );
 
-      const transactionRows = dailyRows.length
-        ? dailyRows.slice(0, 8).map((item, index) => ({
-            id: item.transactionId || item.id || `DAY-${index + 1}`,
-            customer: item.customerName || item.name || item.accountName || item.accountNumber || "-",
-            type: item.transactionType || item.transaction || item.accountMastercode || "Daily Book",
-            amount: Number(item.creditAmount || item.debitAmount || item.amount || item.receivedAmount || 0),
-            status: item.status || "Posted",
-          }))
-        : fallbackTransactions;
+      const transactionRows = dailyRows.slice(0, 20).map((item, index) => {
+        const credit = Number(item.credit || item.creditAmount || item.collectionAmount || item.receivedAmount || 0);
+        const debit = Number(item.debit || item.debitAmount || 0);
+
+        return {
+          id: item.transactionId || item.id || `DAY-${index + 1}`,
+          customer: item.customerName || item.name || item.accountName || item.accountNumber || "-",
+          type: item.transactionType || item.transaction || item.accountMastercode || "Daily Book",
+          amount: credit || debit || Number(item.amount || 0),
+          status: item.status || (credit ? "Credit" : debit ? "Debit" : "Posted"),
+        };
+      });
 
       setMetrics({
-        portfolioValue: target || metrics.portfolioValue,
-        todayCollection: todayCollection || received || metrics.todayCollection,
-        pendingDues: balance || metrics.pendingDues,
-        activeMembers: memberRows.length || metrics.activeMembers,
-        dueCases: collectionRows.filter((item) => Number(item.balanceCollections || 0) > 0).length || metrics.dueCases,
+        portfolioValue: target,
+        todayCollection: todayCollection || received,
+        pendingDues: balance,
+        activeMembers: memberRows.length,
+        dueCases: collectionRows.filter((item) => Number(item.balanceCollections || 0) > 0).length,
         transactionRows,
         collectionRows,
         memberRows,
         dailySummaryRows: dailyRows,
+        dailyTotals: {
+          openingBalance: Number(dailySummary.openingBalance || 0),
+          credits: Number(dailySummary.credits || 0),
+          debits: Number(dailySummary.debits || 0),
+          closingBalance: Number(dailySummary.closingBalance || 0),
+        },
       });
       setLastUpdated(dayjs());
     } catch (err) {
-      setError("Dashboard live counts could not be refreshed. Showing last available values.");
+      setError("Dashboard live data could not be refreshed. Please check API connection or login session.");
     } finally {
       setLoading(false);
     }
-  }, [headers, metrics.activeMembers, metrics.dueCases, metrics.pendingDues, metrics.portfolioValue, metrics.todayCollection]);
+  }, [headers]);
 
   useEffect(() => {
     fetchDashboard();
-  }, []);
+    const refreshTimer = window.setInterval(fetchDashboard, 30000);
+    return () => window.clearInterval(refreshTimer);
+  }, [fetchDashboard]);
 
   const kpis = [
     { title: "Portfolio Value", label: formatINR(metrics.portfolioValue), delta: "Live", note: "month target", icon: AccountBalanceRounded, tone: "#0f62fe" },
@@ -217,19 +217,22 @@ export default function Dashboard() {
   }, [metrics.portfolioValue, metrics.todayCollection]);
 
   const collections = useMemo(() => {
-    if (!metrics.collectionRows.length) {
-      return [
-        { label: "DF Active", value: 52 },
-        { label: "DF Matured", value: 61 },
-        { label: "MF Active", value: 76 },
-        { label: "MF Matured", value: 69 },
-      ];
-    }
     return metrics.collectionRows.map((item) => ({
       label: `${String(item.loanType || "").replace("_FINANCE", "")} ${item.loanStatus || ""}`.replace("_", " "),
       value: Number(item.receivedCollections || 0),
     }));
   }, [metrics.collectionRows]);
+
+  const dailyFlowRows = useMemo(
+    () => [
+      {
+        label: dayjs().format("DD-MMM"),
+        credit: Number(metrics.dailyTotals.credits || metrics.todayCollection || 0),
+        debit: Number(metrics.dailyTotals.debits || 0),
+      },
+    ],
+    [metrics.dailyTotals.credits, metrics.dailyTotals.debits, metrics.todayCollection]
+  );
 
   const transactionColumns = [
     { field: "id", headerName: "Txn ID", width: 120 },
@@ -355,7 +358,10 @@ export default function Dashboard() {
 
       <Grid container spacing={2} alignItems="stretch">
         <Grid item xs={12} md={6} xl={4}>
-          <Panel title="Collection Process" subtitle="Current month received by finance status">
+          <Panel
+            title="Collection Process"
+            subtitle={collections.length ? "Current month received by finance status" : "No live collection records for this month"}
+          >
             <Box className="dashboard-chart-box">
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart data={collections} margin={{ top: 18, right: 8, left: 8, bottom: 0 }}>
@@ -370,10 +376,10 @@ export default function Dashboard() {
         </Grid>
 
         <Grid item xs={12} md={6} xl={4}>
-          <Panel title="Revenue And Expense Trend" subtitle="Reference trend in lakh INR">
+          <Panel title="Today Credit And Debit" subtitle="Live daily book totals">
             <Box className="dashboard-chart-box">
               <ResponsiveContainer width="100%" height="100%">
-                <AreaChart data={fallbackCashflow} margin={{ top: 18, right: 12, left: -12, bottom: 0 }}>
+                <AreaChart data={dailyFlowRows} margin={{ top: 18, right: 12, left: -12, bottom: 0 }}>
                   <defs>
                     <linearGradient id="income" x1="0" y1="0" x2="0" y2="1">
                       <stop offset="5%" stopColor="#0f62fe" stopOpacity={0.32} />
@@ -385,11 +391,11 @@ export default function Dashboard() {
                     </linearGradient>
                   </defs>
                   <CartesianGrid strokeDasharray="3 3" vertical={false} opacity={0.35} />
-                  <XAxis dataKey="month" tickLine={false} axisLine={false} />
+                  <XAxis dataKey="label" tickLine={false} axisLine={false} />
                   <YAxis width={38} tickLine={false} axisLine={false} />
-                  <Tooltip />
-                  <Area type="monotone" dataKey="income" stroke="#0f62fe" fill="url(#income)" strokeWidth={3} />
-                  <Area type="monotone" dataKey="expense" stroke="#d97706" fill="url(#expense)" strokeWidth={3} />
+                  <Tooltip formatter={(value) => formatINR(value)} />
+                  <Area type="monotone" dataKey="credit" stroke="#0f62fe" fill="url(#income)" strokeWidth={3} />
+                  <Area type="monotone" dataKey="debit" stroke="#d97706" fill="url(#expense)" strokeWidth={3} />
                 </AreaChart>
               </ResponsiveContainer>
             </Box>
@@ -397,26 +403,20 @@ export default function Dashboard() {
         </Grid>
 
         <Grid item xs={12} xl={4}>
-          <Panel title="Approval Health" subtitle="Workflow and audit status">
+          <Panel title="Daily Book Balance" subtitle="Live opening, credit, debit, and closing values">
             <Stack className="dashboard-approval-list" spacing={2}>
-              <Box>
-                <Stack direction="row" justifyContent="space-between">
-                  <Typography variant="body2">Loan approvals</Typography>
-                  <Typography variant="body2" fontWeight={900}>74%</Typography>
-                </Stack>
-                <LinearProgress variant="determinate" value={74} sx={{ mt: 1, height: 8, borderRadius: 99 }} />
-              </Box>
-              <Box>
-                <Stack direction="row" justifyContent="space-between">
-                  <Typography variant="body2">Collection closure</Typography>
-                  <Typography variant="body2" fontWeight={900}>89%</Typography>
-                </Stack>
-                <LinearProgress variant="determinate" value={89} color="success" sx={{ mt: 1, height: 8, borderRadius: 99 }} />
-              </Box>
-              {["Daily book closed by cashier", "Partner settlement request created", "Receipt ledger exported", "Customer KYC updated"].map((item) => (
-                <Stack key={item} direction="row" spacing={1.2} alignItems="center">
-                  <SavingsRounded color="primary" fontSize="small" />
-                  <Typography variant="body2">{item}</Typography>
+              {[
+                ["Opening Balance", metrics.dailyTotals.openingBalance],
+                ["Total Credits", metrics.dailyTotals.credits],
+                ["Total Debits", metrics.dailyTotals.debits],
+                ["Closing Balance", metrics.dailyTotals.closingBalance],
+              ].map(([label, value]) => (
+                <Stack key={label} direction="row" spacing={1.2} alignItems="center" justifyContent="space-between">
+                  <Stack direction="row" spacing={1.2} alignItems="center">
+                    <SavingsRounded color="primary" fontSize="small" />
+                    <Typography variant="body2">{label}</Typography>
+                  </Stack>
+                  <Typography variant="body2" fontWeight={900}>{formatINR(value)}</Typography>
                 </Stack>
               ))}
             </Stack>
@@ -424,15 +424,7 @@ export default function Dashboard() {
         </Grid>
       </Grid>
 
-      <DataTable
-        rows={metrics.transactionRows}
-        columns={transactionColumns}
-        height={430}
-        title="Recent Transactions"
-        subtitle="Live daily book rows when available, with search, export, print, pagination, and total count."
-        pageSize={10}
-        actions={<Button size="small" endIcon={<ArrowForwardRounded />} onClick={() => navigate("/Customer/Customer_Transactions")}>View All</Button>}
-      />
+      
     </Stack>
   );
 }
