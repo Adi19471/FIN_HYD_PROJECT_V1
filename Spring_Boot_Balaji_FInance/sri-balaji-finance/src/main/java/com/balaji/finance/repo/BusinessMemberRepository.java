@@ -1,5 +1,6 @@
 package com.balaji.finance.repo;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
@@ -15,6 +16,7 @@ import com.balaji.finance.dto.LoanSummaryOfManagerProjection;
 import com.balaji.finance.dto.LoanSummaryOfPartnerProjection;
 import com.balaji.finance.dto.LoanSummaryProjection;
 import com.balaji.finance.dto.LoansGranted;
+import com.balaji.finance.dto.PartnerLoanDetailsProjection;
 import com.balaji.finance.entity.BusinessMember;
 
 public interface BusinessMemberRepository extends JpaRepository<BusinessMember, String> {
@@ -167,14 +169,24 @@ public interface BusinessMemberRepository extends JpaRepository<BusinessMember, 
 			    loanType as loanType,
 			    SUM(amount) AS loansDisbursed
 			FROM BusinessMember
-			WHERE sysDate BETWEEN :fromDate AND :toDate
-			AND loanStatus=:loanStatus
+			WHERE startDate BETWEEN :fromDate AND :toDate
+			AND loanStatus='ACTIVE'
 			GROUP BY loanType
 						  """)
-	List<LoansGranted> findAllTargetCollections(@Param("fromDate") LocalDateTime fromDate,
-			@Param("toDate") LocalDateTime toDate, @Param("loanStatus") String loanStatus);
+	List<LoansGranted> findSumOfActiveLoansInDateRange(@Param("fromDate") LocalDateTime fromDate,
+			@Param("toDate") LocalDateTime toDate);
 
-	
+	@Query("""
+			  SELECT
+			    loanType as loanType,
+			    SUM(amount) AS loansDisbursed
+			FROM BusinessMember
+			WHERE endDate BETWEEN :fromDate AND :toDate
+			AND loanStatus='COMPLETED'
+			GROUP BY loanType
+						  """)
+	List<LoansGranted> findSumOfMatureLoansInDateRange(@Param("fromDate") LocalDateTime fromDate,
+			@Param("toDate") LocalDateTime toDate);
 	
 	@Query("""
 			   SELECT
@@ -327,5 +339,59 @@ public interface BusinessMemberRepository extends JpaRepository<BusinessMember, 
 	        """)
 	List<LoanSummaryOfPartnerProjection> getLoanSummaryOfPartner(
 	        @Param("personalInfoIds") List<String> personalInfoIds);
+	
+	
+	
+	@Query("""
+		       SELECT
+		       
+		        partner.personalInfoId AS partnerId,
+		        partner.firstName as partnerFirstName,
+		        partner.phone as partnerPhoneNumber,
+		        
+		        bm.loanType as loanType,
+		        bm.businessMemberId as businessMemberId,
+		        
+		        customer.personalInfoId AS customerId,
+		        customer.firstName as customerFirstName,
+		        customer.phone as customerPhoneNumber,
+		        
+		        guarentor.personalInfoId AS guarentorId,
+		        guarentor.firstName as guarentorFirstName,
+		        guarentor.phone as guarentorPhoneNumber,
+		      
+		        bm.startDate as startDate,
+		        bm.endDate as endDate,
+		       
+		        bm.amount as amount,
+		        bm.duration as duration,
+		      
+		        bm.installment as installmentPerMonth,
 
+		        COALESCE((
+		            SELECT SUM(e.paidAmount)
+		            FROM EMI e
+		            WHERE e.businessMember = bm
+		            AND e.paymentDate <= :toDate
+		        ), 0) AS totalInstallmentAmountPaid,
+
+		        COALESCE((
+		            SELECT COUNT(e)
+		            FROM EMI e
+		            WHERE e.businessMember = bm
+		            AND e.paymentDate <= :toDate
+		        ), 0) AS noOfEmisPaid
+
+		       FROM BusinessMember as bm
+		       LEFT JOIN bm.customerId customer
+		       LEFT JOIN bm.guarantor1 guarentor
+		       LEFT JOIN bm.partnerId partner
+
+		       WHERE partner.personalInfoId = :partnerInfoId
+		       ORDER BY bm.sequence asc
+		    """)
+		List<PartnerLoanDetailsProjection> getAllLoanDetailsByPartner(
+		        @Param("partnerInfoId") String partnerInfoId,
+		        @Param("toDate") LocalDateTime toDate
+		);
 }

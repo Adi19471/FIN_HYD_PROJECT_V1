@@ -31,18 +31,15 @@ public class BusinessCollectionsReportService {
 		LocalDateTime from = fromDate.atStartOfDay();
 		LocalDateTime to = toDate.atTime(23, 59, 59);
 
-		List<LoansGranted> allTargetCollections = businessMemberRepository.findAllTargetCollections(from, to, "ACTIVE");
+		List<LoansGranted> allTargetCollections = businessMemberRepository.findSumOfActiveLoansInDateRange(from, to);
 		List<CashBookProjection> allreceivedCollections = cashBookRepo
 				.getCreditSummary(Arrays.asList("MF LOAN INSTALLMENT", "DF LOAN INSTALLMENT"), from, to, "ACTIVE");
 
-		List<LoansGranted> allMaturedLoansTargetCollections = businessMemberRepository.findAllTargetCollections(from,
-				to, "COMPLETED");
+		List<LoansGranted> allMaturedLoansTargetCollections = businessMemberRepository
+				.findSumOfMatureLoansInDateRange(from, to);
 		List<CashBookProjection> allMaturedreceivedCollections = cashBookRepo
 				.getCreditSummary(Arrays.asList("MF LOAN INSTALLMENT", "DF LOAN INSTALLMENT"), from, to, "COMPLETED");
-		
-		System.err.println(allTargetCollections);
-		System.err.println(allreceivedCollections);
-		
+
 
 		List<BusinessCollectionsReportResponse> responseList = new ArrayList<>();
 
@@ -56,10 +53,12 @@ public class BusinessCollectionsReportService {
 
 			for (CashBookProjection cb : allreceivedCollections) {
 
-				if (("MF".equals(loanType) && "MF LOAN INSTALLMENT".equals(cb.getAccountMasterCode()))
-						|| ("DF".equals(loanType) && "DF LOAN INSTALLMENT".equals(cb.getAccountMasterCode()))) {
 
-					received.add(cb.getCredit());
+				if (("MONTHLY_FINANCE".equals(loanType) && "MF LOAN INSTALLMENT".equals(cb.getAccountMasterCode()))
+						|| ("DAILY_FINANCE".equals(loanType)
+								&& "DF LOAN INSTALLMENT".equals(cb.getAccountMasterCode()))) {
+
+					received = received.add(cb.getCredit());
 				}
 			}
 
@@ -84,11 +83,11 @@ public class BusinessCollectionsReportService {
 
 			for (CashBookProjection cb : allMaturedreceivedCollections) {
 
-				if (("MF".equals(loanType) && "MF LOAN INSTALLMENT".equals(cb.getAccountMasterCode()))
-						|| ("DF".equals(loanType) && "DF LOAN INSTALLMENT".equals(cb.getAccountMasterCode()))) {
+				if (("MONTHLY_FINANCE".equals(loanType) && "MF LOAN INSTALLMENT".equals(cb.getAccountMasterCode()))
+						|| ("DAILY_FINANCE".equals(loanType)
+								&& "DF LOAN INSTALLMENT".equals(cb.getAccountMasterCode()))) {
 
-
-					received.add(cb.getCredit());
+					received = received.add(cb.getCredit());
 				}
 			}
 

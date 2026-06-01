@@ -8,6 +8,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 import com.balaji.finance.dto.ManagerDetailsProjection;
+import com.balaji.finance.dto.PartnerInformationProjection;
 import com.balaji.finance.dto.PersonsUnderManagerProjection;
 import com.balaji.finance.entity.PersonalInfo;
 
@@ -84,6 +85,24 @@ public interface PersonalInfoRepository extends JpaRepository<PersonalInfo, Stri
 	        """, nativeQuery = true)
 	List<PersonsUnderManagerProjection> findPersonsUnderManager(
 	        @Param("personalInfoId") String personalInfoId);
-	
+
+	@Query("""
+		       SELECT
+		            p as partner,
+		            COALESCE(SUM(cb.credit), 0) AS investments
+
+		       FROM PersonalInfo p
+
+		       LEFT JOIN CashBook cb
+		            ON cb.personalInfo.personalInfoId = p.personalInfoId
+		            AND cb.accountMasterCode = 'CAPITAL'
+
+		       WHERE p.category = 'PARTNER'
+
+		       GROUP BY p
+		       
+		       ORDER BY p.personalInfoId
+		       """)
+		List<PartnerInformationProjection> findAllPartners();
 	
 }
