@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, memo } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import {
   Box,
   Paper,
@@ -12,12 +12,15 @@ import {
   Grid,
   Autocomplete,
   InputAdornment,
+  Stack,
+  alpha,
+  CircularProgress,
 } from "@mui/material";
 import {
   Payments as PaymentsIcon,
 } from "@mui/icons-material";
-
-import dayjs from 'dayjs';
+import { useTheme } from "@mui/material/styles";
+import dayjs from "dayjs";
 
 import axios from "axios";
 import { successToast, errorToast } from "toastify";
@@ -35,8 +38,19 @@ const compactMenuProps = {
   },
 };
 
-// Optimized with memo and useCallback
+const fieldSx = {
+  "& .MuiOutlinedInput-root": {
+    minHeight: 48,
+    borderRadius: 0,
+    backgroundColor: "#ffffff",
+  },
+  "& .MuiInputLabel-root": {
+    fontWeight: 700,
+  },
+};
+
 const Cashbook = () => {
+  const theme = useTheme();
   const getCurrentDateTime = useCallback(() => dayjs().format("YYYY-MM-DD"), []);
 
   const [transactionDate, setTransactionDate] = useState(getCurrentDateTime);
@@ -60,12 +74,14 @@ const Cashbook = () => {
   const [loadingTypes, setLoadingTypes] = useState(false);
   const [submitting, setSubmitting] = useState(false);
 
-  const getAuthHeader = useCallback(() => ({
-    Authorization: `Bearer ${getSession("token") || ""}`,
-    "Content-Type": "application/json",
-  }), []);
+  const getAuthHeader = useCallback(
+    () => ({
+      Authorization: `Bearer ${getSession("token") || ""}`,
+      "Content-Type": "application/json",
+    }),
+    []
+  );
 
-  // Optimized: Load initial data in parallel
   useEffect(() => {
     const fetchInitialData = async () => {
       setLoadingMaster(true);
@@ -87,7 +103,6 @@ const Cashbook = () => {
     fetchInitialData();
   }, [getAuthHeader]);
 
-  // Optimized: Load codes and transaction types in parallel when masterCode changes
   useEffect(() => {
     if (!masterCode) {
       setCodes([]);
@@ -118,13 +133,13 @@ const Cashbook = () => {
     fetchCodes();
   }, [masterCode, getAuthHeader]);
 
-  // Optimized: Load transaction types when code changes
   useEffect(() => {
     if (!masterCode || !code) {
       setTransactionTypes([]);
       setTransactionType("");
       return;
     }
+
     const fetchTransactionTypes = async () => {
       setLoadingTypes(true);
       try {
@@ -142,139 +157,199 @@ const Cashbook = () => {
         setLoadingTypes(false);
       }
     };
+
     fetchTransactionTypes();
   }, [masterCode, code, getAuthHeader]);
 
-  const loadPersonOptions = useCallback(async (query = "") => {
-    if (!masterCode || !code) {
-      setPersonOptions([]);
-      return;
-    }
+  const loadPersonOptions = useCallback(
+    async (query = "") => {
+      if (!masterCode || !code) {
+        setPersonOptions([]);
+        return;
+      }
 
-    const searchText = query.trim();
-    if (searchText.length === 1) {
-      setPersonOptions([]);
-      return;
-    }
+      const searchText = query.trim();
+      if (searchText.length === 1) {
+        setPersonOptions([]);
+        return;
+      }
 
-    setLoadingPersons(true);
-    try {
-      const res = await axios.post(
-        `${API_BASE}/PersonalInfo/personInfoAutoCompleteByCodeAndMasterCode?q=${encodeURIComponent(searchText)}`,
-        { masterCode, code },
-        { headers: getAuthHeader() }
-      );
-      const options = (res.data || []).map((p) => ({
-        label: `${p.id || ""} ${p.firstname || ""} ${p.lastname || ""}`.trim(),
-        value: `${p.id || ""} ${p.firstname || ""} ${p.lastname || ""}`.trim(),
-        data: p,
-      }));
-      setPersonOptions(options);
-    } catch (err) {
-      console.error("Person search failed:", err);
-      setPersonOptions([]);
-    } finally {
-      setLoadingPersons(false);
-    }
-  }, [masterCode, code, getAuthHeader]);
+      setLoadingPersons(true);
+      try {
+        const res = await axios.post(
+          `${API_BASE}/PersonalInfo/personInfoAutoCompleteByCodeAndMasterCode?q=${encodeURIComponent(searchText)}`,
+          { masterCode, code },
+          { headers: getAuthHeader() }
+        );
+        const options = (res.data || []).map((p) => ({
+          label: `${p.id || ""} ${p.firstname || ""} ${p.lastname || ""}`.trim(),
+          value: `${p.id || ""} ${p.firstname || ""} ${p.lastname || ""}`.trim(),
+          data: p,
+        }));
+        setPersonOptions(options);
+      } catch (err) {
+        console.error("Person search failed:", err);
+        setPersonOptions([]);
+      } finally {
+        setLoadingPersons(false);
+      }
+    },
+    [masterCode, code, getAuthHeader]
+  );
 
-  // Person Autocomplete Search - Optimized with debounce
   useEffect(() => {
-    const timeoutId = setTimeout(() => loadPersonOptions(name), 300); // Debounce 300ms
-
+    const timeoutId = setTimeout(() => loadPersonOptions(name), 300);
     return () => clearTimeout(timeoutId);
   }, [name, loadPersonOptions]);
 
-  // Optimized submit handler with useCallback
-  const handleSubmit = useCallback(async (e) => {
-    e.preventDefault();
-    if (!masterCode || !code) return errorToast("Please select Account Group and Code");
-    if (!name.trim()) return errorToast("Please enter Name");
-    if (!transactionType) return errorToast("Please select Transaction Type");
-    if (!amount || isNaN(amount) || Number(amount) <= 0)
-      return errorToast("Please enter valid amount");
+  const handleSubmit = useCallback(
+    async (e) => {
+      e.preventDefault();
+      if (!masterCode || !code) return errorToast("Please select Account Group and Code");
+      if (!name.trim()) return errorToast("Please enter Name");
+      if (!transactionType) return errorToast("Please select Transaction Type");
+      if (!amount || isNaN(amount) || Number(amount) <= 0) {
+        return errorToast("Please enter valid amount");
+      }
 
-    setSubmitting(true);
+      setSubmitting(true);
 
-    const payload = {
-      transactionDate: transactionDate,
-      accountMasterCode: masterCode,
-      accountCode: code,
-      customerId: selectedPerson?.id || name.trim(),
-      particulars: particulars.trim() || "Other Payment",
-      transaction: transactionType,
-      amount: Number(amount),
-    };
+      const payload = {
+        transactionDate,
+        accountMasterCode: masterCode,
+        accountCode: code,
+        customerId: selectedPerson?.id || name.trim(),
+        particulars: particulars.trim() || "Other Payment",
+        transaction: transactionType,
+        amount: Number(amount),
+      };
 
-    try {
-      await axios.post(`${API_BASE}/saveOtherPayments`, payload, {
-        headers: getAuthHeader(),
-      });
-      successToast("Transaction recorded successfully!");
+      try {
+        await axios.post(`${API_BASE}/saveOtherPayments`, payload, {
+          headers: getAuthHeader(),
+        });
+        successToast("Transaction recorded successfully!");
 
-      // Reset form
-      setTransactionDate(transactionDate);
-      setMasterCode("");
-      setCode("");
-      setName("");
-      setSelectedPerson(null);
-      setPersonOptions([]);
-      setTransactionTypes([]);
-      setTransactionType("");
-      setParticulars("");
-      setAmount("");
-    } catch (err) {
-      console.error("Save failed:", err);
-      errorToast(err.response?.data?.message || "Failed to save transaction");
-    } finally {
-      setSubmitting(false);
-    }
-  }, [masterCode, code, name, transactionType, amount, transactionDate, particulars, selectedPerson, getAuthHeader, getCurrentDateTime]);
+        setTransactionDate(transactionDate);
+        setMasterCode("");
+        setCode("");
+        setName("");
+        setSelectedPerson(null);
+        setPersonOptions([]);
+        setTransactionTypes([]);
+        setTransactionType("");
+        setParticulars("");
+        setAmount("");
+      } catch (err) {
+        console.error("Save failed:", err);
+        errorToast(err.response?.data?.message || "Failed to save transaction");
+      } finally {
+        setSubmitting(false);
+      }
+    },
+    [masterCode, code, name, transactionType, amount, transactionDate, particulars, selectedPerson, getAuthHeader]
+  );
 
-  // Show initial loading spinner
   if (initialLoading) {
     return (
-      <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: 400 }}>
+      <Box sx={{ display: "flex", justifyContent: "center", alignItems: "center", minHeight: 400 }}>
         <LoadingSpinner />
       </Box>
     );
   }
 
   return (
-    <Box sx={{ width: "100%", mt: 3, display: "flex", justifyContent: "center" }}>
+    <Box
+      sx={{
+        width: "100%",
+
+        display: "flex",
+    
+      }}
+    >
       <Paper
-        elevation={3}
+        className="enterprise-card"
+        elevation={0}
         sx={{
-          p: 4,
           width: "100%",
-          maxWidth: 1200,
+       
+          overflow: "hidden",
           borderRadius: 0,
+          border: "1px solid",
+          borderColor: "divider",
+          background: "linear-gradient(180deg, #ffffff 0%, #fbfdff 100%)",
+          boxShadow: "0 18px 42px rgba(15, 23, 42, 0.08)",
         }}
       >
-        <Typography
-          variant="h5"
-          sx={{ mb: 4, fontWeight: 600 }}
-          color="primary"
+        <Box
+          sx={{
+            px: { xs: 2, md: 3 },
+            py: 2.25,
+            borderBottom: "1px solid",
+            borderColor: "divider",
+            backgroundColor: alpha(theme.palette.primary.main, 0.045),
+          }}
         >
-          New Transaction / Payment
-        </Typography>
+          <Stack
+            direction={{ xs: "column", sm: "row" }}
+            spacing={1.5}
+            justifyContent="space-between"
+            alignItems={{ xs: "stretch", sm: "center" }}
+          >
+            <Stack direction="row" spacing={1.25} alignItems="center">
+              <Box
+                sx={{
+                  width: 42,
+                  height: 42,
+                  borderRadius: 0,
+                  display: "grid",
+                  placeItems: "center",
+                  color: "primary.main",
+                  backgroundColor: alpha(theme.palette.primary.main, 0.12),
+                }}
+              >
+                <PaymentsIcon fontSize="small" />
+              </Box>
+              <Box>
+                <Typography variant="h5" sx={{ fontWeight: 900, color: "text.primary", lineHeight: 1.15 }}>
+                  New Transaction / Payment
+                </Typography>
+                <Typography variant="body2" color="text.secondary">
+                  Record account payments with group, customer, and transaction details.
+                </Typography>
+              </Box>
+            </Stack>
+            <Box
+              sx={{
+                px: 1.5,
+                py: 0.75,
+                borderRadius: 0,
+                fontSize: 13,
+                fontWeight: 800,
+                color: "primary.dark",
+                backgroundColor: "#ffffff",
+                border: "1px solid",
+                borderColor: alpha(theme.palette.primary.main, 0.2),
+                alignSelf: { xs: "flex-start", sm: "center" },
+              }}
+            >
+              {dayjs(transactionDate).format("DD-MMM-YYYY")}
+            </Box>
+          </Stack>
+        </Box>
 
-        <form onSubmit={handleSubmit}>
-          <Grid container spacing={3} justifyContent="center">
-
-            {/* Date */}
-            <Grid item xs={12} display="flex" justifyContent="center">
+        <Box component="form" onSubmit={handleSubmit} sx={{ p: { xs: 2, md: 3 } }}>
+          <Grid container spacing={2} >
+            <Grid item xs={12} sm={6} md={3}>
               <AppDatePicker
                 label="Transaction Date"
                 value={transactionDate}
                 onChange={setTransactionDate}
-                sx={{ width: 300 }}
+                sx={{ width: "100%", ...fieldSx }}
               />
             </Grid>
-
-            {/* Account Group + Code */}
-            <Grid item>
-              <FormControl sx={{ width: 220 }}>
+            <Grid item xs={12} sm={6} md={3}>
+              <FormControl fullWidth sx={fieldSx} disabled={loadingMaster}>
                 <InputLabel>Account Group</InputLabel>
                 <Select
                   value={masterCode}
@@ -290,13 +365,12 @@ const Cashbook = () => {
                 </Select>
               </FormControl>
             </Grid>
-
-            <Grid item>
-              <FormControl sx={{ width: 220 }}>
+            <Grid item xs={12} sm={6} md={3}>
+              <FormControl fullWidth sx={fieldSx} disabled={!masterCode || loadingCodes}>
                 <InputLabel>Account Code</InputLabel>
                 <Select
                   value={code}
-                  label="Account Code"
+                  label="Account Code" sx={{width:"200px"}}
                   MenuProps={compactMenuProps}
                   onChange={(e) => setCode(e.target.value)}
                 >
@@ -308,12 +382,10 @@ const Cashbook = () => {
                 </Select>
               </FormControl>
             </Grid>
-
-            {/* Name + Particulars */}
-            <Grid item>
+            <Grid item xs={12} sm={6} md={3}>
               <Autocomplete
-                sx={{ width: 280 }}
-                openOnFocus
+                fullWidth
+                openOnFocus  sx={{width:"200px"}}
                 filterOptions={(x) => x}
                 freeSolo
                 value={name}
@@ -330,53 +402,57 @@ const Cashbook = () => {
                   }
                 }}
                 options={personOptions}
+                loading={loadingPersons}
                 slotProps={{
                   paper: { sx: { maxHeight: 320 } },
                   listbox: { sx: { maxHeight: 300 } },
                 }}
-                getOptionLabel={(o) =>
-                  typeof o === "string" ? o : o.label || ""
-                }
-                forcePopupIcon={true} 
+                getOptionLabel={(o) => (typeof o === "string" ? o : o.label || "")}
+                forcePopupIcon
                 renderInput={(params) => (
-                  <TextField {...params} label="Name" />
+                  <TextField
+                    {...params}
+                    label="Name"
+                    sx={fieldSx}
+                    InputProps={{
+                      ...params.InputProps,
+                      endAdornment: (
+                        <>
+                          {loadingPersons && <CircularProgress size={18} />}
+                          {params.InputProps.endAdornment}
+                        </>
+                      ),
+                    }}
+                  />
                 )}
               />
             </Grid>
-
-            <Grid item>
+            <Grid item xs={12} sm={6} md={3}>
               <TextField
+                fullWidth
                 label="Particulars"
                 value={particulars}
                 onChange={(e) => setParticulars(e.target.value)}
-                sx={{ width: 280 }}
+                sx={fieldSx}
               />
             </Grid>
-
-            {/* Amount + Transaction Type (LAST ROW) */}
-            <Grid item>
+            <Grid item xs={12} sm={6} md={2}>
               <TextField
+                fullWidth
                 label="Amount"
-                value={
-                  amount ? Number(amount).toLocaleString("en-IN") : ""
-                }
-                onChange={(e) =>
-                  setAmount(e.target.value.replace(/[^0-9]/g, ""))
-                }
-                sx={{ width: 180 }}
+                value={amount ? Number(amount).toLocaleString("en-IN") : ""}
+                onChange={(e) => setAmount(e.target.value.replace(/[^0-9]/g, ""))}
+                sx={fieldSx}
                 InputProps={{
-                  startAdornment: (
-                    <InputAdornment position="start">₹</InputAdornment>
-                  ),
+                  startAdornment: <InputAdornment position="start">Rs</InputAdornment>,
                 }}
               />
             </Grid>
-
-            <Grid item>
-              <FormControl sx={{ width: 220 }}>
+            <Grid item xs={12} sm={6} md={3}>
+              <FormControl fullWidth sx={fieldSx} disabled={!code || loadingTypes}>
                 <InputLabel>Transaction Type</InputLabel>
                 <Select
-                  value={transactionType}
+                  value={transactionType}  sx={{width:"200px"}}
                   label="Transaction Type"
                   MenuProps={compactMenuProps}
                   onChange={(e) => setTransactionType(e.target.value)}
@@ -389,30 +465,26 @@ const Cashbook = () => {
                 </Select>
               </FormControl>
             </Grid>
-
-            {/* Submit */}
-            <Grid item xs={12}>
-            
-              <Box sx={{ display: "flex", justifyContent: "center" }}>
-                <Button
-                  type="submit"
-                  variant="contained"
-                  size="small"
-                  sx={{
-                    px: 6,
-                    py: 1.3,
-                    borderRadius: 0,
-                    fontWeight: 600,
-                  }}
-                  startIcon={<PaymentsIcon />}
-                >
-                  Record Transaction
-                </Button>
-              </Box>
+            <Grid item xs={12} sm={6} md={4}>
+              <Button
+                type="submit"
+                variant="contained"
+                size="large"
+                fullWidth
+                disabled={submitting}
+                sx={{
+                  minHeight: 48,
+                
+                  fontWeight: 900,
+                  boxShadow: "none",
+                }}
+                startIcon={submitting ? <CircularProgress size={18} color="inherit" /> : <PaymentsIcon />}
+              >
+                {submitting ? "Recording..." : "Record Transaction"}
+              </Button>
             </Grid>
-
           </Grid>
-        </form>
+        </Box>
       </Paper>
     </Box>
   );

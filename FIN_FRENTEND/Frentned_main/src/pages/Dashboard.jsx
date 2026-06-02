@@ -356,73 +356,7 @@ export default function Dashboard() {
         </Grid>
       </Grid>
 
-      <Grid container spacing={2} alignItems="stretch">
-        <Grid item xs={12} md={6} xl={4}>
-          <Panel
-            title="Collection Process"
-            subtitle={collections.length ? "Current month received by finance status" : "No live collection records for this month"}
-          >
-            <Box className="dashboard-chart-box">
-              <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={collections} margin={{ top: 18, right: 8, left: 8, bottom: 0 }}>
-                  <XAxis dataKey="label" interval={0} height={36} tick={{ fontSize: 11 }} tickLine={false} axisLine={false} />
-                  <YAxis hide />
-                  <Tooltip cursor={{ fill: "rgba(15, 98, 254, 0.05)" }} formatter={(value) => formatINR(value)} />
-                  <Bar dataKey="value" fill="var(--brand-success)" radius={[8, 8, 0, 0]} maxBarSize={58} />
-                </BarChart>
-              </ResponsiveContainer>
-            </Box>
-          </Panel>
-        </Grid>
-
-        <Grid item xs={12} md={6} xl={4}>
-          <Panel title="Today Credit And Debit" subtitle="Live daily book totals">
-            <Box className="dashboard-chart-box">
-              <ResponsiveContainer width="100%" height="100%">
-                <AreaChart data={dailyFlowRows} margin={{ top: 18, right: 12, left: -12, bottom: 0 }}>
-                  <defs>
-                    <linearGradient id="income" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="#0f62fe" stopOpacity={0.32} />
-                      <stop offset="95%" stopColor="#0f62fe" stopOpacity={0.02} />
-                    </linearGradient>
-                    <linearGradient id="expense" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="#d97706" stopOpacity={0.28} />
-                      <stop offset="95%" stopColor="#d97706" stopOpacity={0.02} />
-                    </linearGradient>
-                  </defs>
-                  <CartesianGrid strokeDasharray="3 3" vertical={false} opacity={0.35} />
-                  <XAxis dataKey="label" tickLine={false} axisLine={false} />
-                  <YAxis width={38} tickLine={false} axisLine={false} />
-                  <Tooltip formatter={(value) => formatINR(value)} />
-                  <Area type="monotone" dataKey="credit" stroke="#0f62fe" fill="url(#income)" strokeWidth={3} />
-                  <Area type="monotone" dataKey="debit" stroke="#d97706" fill="url(#expense)" strokeWidth={3} />
-                </AreaChart>
-              </ResponsiveContainer>
-            </Box>
-          </Panel>
-        </Grid>
-
-        <Grid item xs={12} xl={4}>
-          <Panel title="Daily Book Balance" subtitle="Live opening, credit, debit, and closing values">
-            <Stack className="dashboard-approval-list" spacing={2}>
-              {[
-                ["Opening Balance", metrics.dailyTotals.openingBalance],
-                ["Total Credits", metrics.dailyTotals.credits],
-                ["Total Debits", metrics.dailyTotals.debits],
-                ["Closing Balance", metrics.dailyTotals.closingBalance],
-              ].map(([label, value]) => (
-                <Stack key={label} direction="row" spacing={1.2} alignItems="center" justifyContent="space-between">
-                  <Stack direction="row" spacing={1.2} alignItems="center">
-                    <SavingsRounded color="primary" fontSize="small" />
-                    <Typography variant="body2">{label}</Typography>
-                  </Stack>
-                  <Typography variant="body2" fontWeight={900}>{formatINR(value)}</Typography>
-                </Stack>
-              ))}
-            </Stack>
-          </Panel>
-        </Grid>
-      </Grid>
+   
 
       
     </Stack>
