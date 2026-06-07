@@ -1,11 +1,14 @@
 package com.balaji.finance.pojo;
 
+import java.util.List;
+
 public class UserSaveReq {
 
 	private Integer id;
 	private String name;
 	private String password;
 	private String role;
+	private List<Long> permissionIds;
 
 	public Integer getId() {
 		return id;
@@ -37,6 +40,14 @@ public class UserSaveReq {
 
 	public void setRole(String role) {
 		this.role = role;
+	}
+
+	public List<Long> getPermissionIds() {
+		return permissionIds;
+	}
+
+	public void setPermissionIds(List<Long> permissionIds) {
+		this.permissionIds = permissionIds;
 	}
 
 }

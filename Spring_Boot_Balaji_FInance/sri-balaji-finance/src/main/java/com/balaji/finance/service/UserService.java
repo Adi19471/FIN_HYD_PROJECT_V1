@@ -9,8 +9,12 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
+import com.balaji.finance.entity.Permission;
+import com.balaji.finance.entity.UserPermission;
 import com.balaji.finance.entity.Users;
 import com.balaji.finance.pojo.UserSaveReq;
+import com.balaji.finance.repo.PermissionRepository;
+import com.balaji.finance.repo.UserPermissionRepository;
 import com.balaji.finance.repo.UserRepo;
 
 @Service
@@ -21,6 +25,12 @@ public class UserService {
 
 	@Autowired
 	private PasswordEncoder passwordEncoder;
+
+	@Autowired
+	private UserPermissionRepository userPermissionRepo;
+
+	@Autowired
+	private PermissionRepository permissionRepository;
 
 	public void saveUser(UserSaveReq userSaveReq) {
 
@@ -37,6 +47,23 @@ public class UserService {
 		user.setRole(userSaveReq.getRole());
 
 		userRepo.save(user);
+
+		if (userSaveReq.getPermissionIds() != null) {
+
+			for (Long permissionId : userSaveReq.getPermissionIds()) {
+
+				Permission permission = permissionRepository.findById(permissionId)
+						.orElseThrow(() -> new IllegalArgumentException("Permission not found: " + permissionId));
+
+				UserPermission mapping = new UserPermission();
+
+				mapping.setUser(user);
+				mapping.setPermission(permission);
+
+				userPermissionRepo.save(mapping);
+			}
+		}
+
 	}
 
 	public void updateUser(UserSaveReq userSaveReq) {
@@ -59,6 +86,24 @@ public class UserService {
 		}
 
 		userRepo.save(user);
+
+		userPermissionRepo.deleteByUser(user);
+
+		if (userSaveReq.getPermissionIds() != null) {
+
+			for (Long permissionId : userSaveReq.getPermissionIds()) {
+
+				Permission permission = permissionRepository.findById(permissionId)
+						.orElseThrow(() -> new IllegalArgumentException("Permission not found: " + permissionId));
+
+				UserPermission mapping = new UserPermission();
+
+				mapping.setUser(user);
+				mapping.setPermission(permission);
+
+				userPermissionRepo.save(mapping);
+			}
+		}
 	}
 
 	public void deleteUser(Integer id) {
@@ -110,7 +155,7 @@ public class UserService {
 
 		return allUsers;
 	}
-	
+
 	public List<String> loadAllUserNames() {
 
 		List<Users> all = userRepo.findAll();

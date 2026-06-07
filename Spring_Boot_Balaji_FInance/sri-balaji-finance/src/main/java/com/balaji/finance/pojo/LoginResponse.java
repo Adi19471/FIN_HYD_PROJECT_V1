@@ -1,20 +1,22 @@
 package com.balaji.finance.pojo;
 
+import java.util.List;
+
 public class LoginResponse {
+
 	private String message;
 	private String token;
-	
-	
+	private String username;
+	private List<String> roles;
 
 	public LoginResponse() {
-		super();
-		// TODO Auto-generated constructor stub
 	}
 
-	public LoginResponse(String message, String token) {
-		super();
+	public LoginResponse(String message, String token, String username, List<String> roles) {
 		this.message = message;
 		this.token = token;
+		this.username = username;
+		this.roles = roles;
 	}
 
 	public String getMessage() {
@@ -31,6 +33,22 @@ public class LoginResponse {
 
 	public void setToken(String token) {
 		this.token = token;
+	}
+
+	public String getUsername() {
+		return username;
+	}
+
+	public void setUsername(String username) {
+		this.username = username;
+	}
+
+	public List<String> getRoles() {
+		return roles;
+	}
+
+	public void setRoles(List<String> roles) {
+		this.roles = roles;
 	}
 
 }

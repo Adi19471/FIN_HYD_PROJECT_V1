@@ -1,30 +1,53 @@
 package com.balaji.finance.config.util;
 
+import java.util.List;
+import java.util.stream.Collectors;
+
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.core.userdetails.User;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 
+import com.balaji.finance.entity.UserRole;
 import com.balaji.finance.entity.Users;
 import com.balaji.finance.repo.UserRepo;
+import com.balaji.finance.repo.UserRoleRepository;
 
 @Service
 public class MyOwnUserDetails implements UserDetailsService {
 
-	@Autowired
-	private UserRepo userRepo;
+    @Autowired
+    private UserRepo userRepository;
 
-	@Override
-	public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
-		// TODO Auto-generated method stub
+    @Autowired
+    private UserRoleRepository userRoleRepository;
 
-		Users user = userRepo.findByName(username);
-		String role = user.getRole() == null ? "USER" : user.getRole();
+    @Override
+    public UserDetails loadUserByUsername(String username)
+            throws UsernameNotFoundException {
 
-		return User.builder().username(user.getName()).password(user.getPassword()).roles(role).build();
+        Users user = userRepository.findByName(username)
+                .orElseThrow(() ->
+                        new UsernameNotFoundException(
+                                "User not found"));
 
-	}
+        List<UserRole> mappings =
+                userRoleRepository.findByUser(user);
 
+        List<GrantedAuthority> authorities =
+                mappings.stream()
+                        .map(mapping ->
+                                new SimpleGrantedAuthority(
+                                        "ROLE_" +
+                                        mapping.getRole()
+                                               .getRoleName()))
+                        .collect(Collectors.toList());
+
+        return new CustomUserDetails(
+                user,
+                authorities);
+    }
 }

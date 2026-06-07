@@ -1,5 +1,7 @@
 package com.balaji.finance.controller;
 
+import java.util.List;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -7,13 +9,13 @@ import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
-import org.springframework.security.core.userdetails.UsernameNotFoundException;
-import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.core.GrantedAuthority;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.balaji.finance.config.util.CustomUserDetails;
 import com.balaji.finance.config.util.JwtUtil;
 import com.balaji.finance.pojo.ErrorResponse;
 import com.balaji.finance.pojo.LoginReqPojo;
@@ -34,22 +36,26 @@ public class LoginController {
 
 		try {
 
-			Authentication auth = authenticationManager.authenticate(
+			Authentication authentication = authenticationManager.authenticate(
 					new UsernamePasswordAuthenticationToken(loginReqPojo.getName(), loginReqPojo.getPassword()));
 
-			String token = jwtUtil.generateToken(loginReqPojo.getName());
+			CustomUserDetails userDetails = (CustomUserDetails) authentication.getPrincipal();
 
-			return ResponseEntity.ok(new LoginResponse("Login success", token));
+			List<String> roles = userDetails.getAuthorities().stream().map(GrantedAuthority::getAuthority).toList();
+
+			String token = jwtUtil.generateToken(userDetails.getUsername(), roles);
+
+			LoginResponse response = new LoginResponse("Login success", token, userDetails.getUsername(), roles);
+
+			return ResponseEntity.ok(response);
 
 		} catch (BadCredentialsException e) {
-			e.printStackTrace();
+
 			return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
 					.body(new ErrorResponse("Invalid username or password"));
-		} catch (UsernameNotFoundException e) {
-			e.printStackTrace();
-			return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new ErrorResponse("User does not exist"));
+
 		} catch (Exception e) {
-			e.printStackTrace();
+
 			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
 					.body(new ErrorResponse("Login failed due to server error"));
 		}
