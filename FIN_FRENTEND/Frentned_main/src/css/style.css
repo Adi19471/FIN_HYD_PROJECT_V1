@@ -624,6 +624,7 @@ body {
   background: color-mix(in srgb, var(--surface-1) 92%, transparent);
   border: 1px solid var(--border-soft);
   box-shadow: var(--shadow-panel);
+  background-clip: padding-box;
 }
 
 .MuiDataGrid-root {
@@ -888,31 +889,92 @@ body {
 .dashboard-panel,
 .dashboard-module {
   height: 100%;
-  padding: 18px;
+  padding: clamp(15px, 1.6vw, 22px);
+  min-width: 0;
 }
 
 .dashboard-kpi {
-  min-height: 164px;
-  transition: transform 160ms ease, border-color 160ms ease, box-shadow 160ms ease;
+  position: relative;
+  min-height: clamp(146px, 14vw, 188px);
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  overflow: hidden;
+  background:
+    linear-gradient(145deg, color-mix(in srgb, var(--surface-1) 98%, transparent), color-mix(in srgb, var(--surface-2) 76%, transparent)),
+    var(--surface-1) !important;
+  box-shadow:
+    0 14px 32px rgba(15, 23, 42, 0.08),
+    inset 0 1px 0 rgba(255, 255, 255, 0.72);
+  transition: transform 160ms ease, border-color 160ms ease, box-shadow 160ms ease, background-color 160ms ease;
+}
+
+.dashboard-kpi::before {
+  content: "";
+  position: absolute;
+  inset: 0 0 auto 0;
+  height: 3px;
+  background: linear-gradient(90deg, var(--brand-primary), var(--brand-success));
+  opacity: 0.9;
 }
 
 .dashboard-kpi:hover {
   transform: translateY(-2px);
   border-color: color-mix(in srgb, var(--brand-primary) 18%, var(--border-soft));
+  box-shadow:
+    0 20px 42px rgba(15, 23, 42, 0.12),
+    inset 0 1px 0 rgba(255, 255, 255, 0.75);
+}
+
+.dashboard-kpi .MuiTypography-body2 {
+  max-width: 100%;
+  color: #475569;
+  font-weight: 750;
+  line-height: 1.25;
+  overflow-wrap: anywhere;
+}
+
+.dashboard-kpi .MuiTypography-h5 {
+  color: #0f172a;
+  font-size: clamp(1.35rem, 2vw, 1.85rem);
+  line-height: 1.08;
+  font-weight: 950;
+  overflow-wrap: anywhere;
+}
+
+.dashboard-kpi .MuiChip-root {
+  height: 34px;
+  max-width: 100%;
+  border-radius: 999px;
+  font-weight: 900;
+}
+
+.dashboard-kpi .MuiChip-label {
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .dashboard-kpi-icon,
 .dashboard-module-icon {
-  width: 44px;
-  height: 44px;
-  flex: 0 0 44px;
+  width: clamp(42px, 4vw, 56px);
+  height: clamp(42px, 4vw, 56px);
+  flex: 0 0 clamp(42px, 4vw, 56px);
   display: grid;
   place-items: center;
-  border-radius: 12px;
+  border-radius: max(10px, calc(var(--app-radius) - 2px));
+  box-shadow: 0 12px 26px color-mix(in srgb, currentColor 14%, transparent);
+}
+
+.dashboard-kpi-icon svg,
+.dashboard-module-icon svg {
+  width: clamp(21px, 2vw, 28px);
+  height: clamp(21px, 2vw, 28px);
 }
 
 .dashboard-module {
   transition: transform 160ms ease, box-shadow 160ms ease, border-color 160ms ease;
+  min-height: 150px;
+  background: linear-gradient(180deg, color-mix(in srgb, var(--surface-1) 98%, transparent), color-mix(in srgb, var(--surface-2) 78%, transparent)) !important;
 }
 
 .dashboard-module:hover {
@@ -923,6 +985,17 @@ body {
 .dashboard-module-icon {
   color: var(--brand-primary);
   background: color-mix(in srgb, var(--brand-primary) 12%, transparent);
+}
+
+.dashboard-module .MuiTypography-subtitle1 {
+  font-weight: 900;
+  line-height: 1.2;
+  overflow-wrap: anywhere;
+}
+
+.dashboard-module .MuiTypography-body2 {
+  line-height: 1.35;
+  overflow-wrap: anywhere;
 }
 
 .dashboard-chart-box {
@@ -957,6 +1030,51 @@ body {
   .dashboard-approval-list {
     min-height: 260px;
     height: 260px;
+  }
+
+  .dashboard-kpi {
+    min-height: 150px;
+  }
+}
+
+@media (max-width: 600px) {
+  .dashboard-hero {
+    padding: 16px;
+  }
+
+  .dashboard-kpi,
+  .dashboard-panel,
+  .dashboard-module {
+    padding: 14px;
+  }
+
+  .dashboard-kpi {
+    min-height: 138px;
+  }
+
+  .dashboard-kpi .MuiStack-root {
+    min-width: 0;
+  }
+
+  .dashboard-kpi-icon,
+  .dashboard-module-icon {
+    width: 42px;
+    height: 42px;
+    flex-basis: 42px;
+  }
+
+  .dashboard-kpi .MuiTypography-h5 {
+    font-size: 1.28rem;
+  }
+}
+
+@media (min-width: 1600px) {
+  .dashboard-kpi {
+    min-height: 196px;
+  }
+
+  .dashboard-panel {
+    padding: 24px;
   }
 }
 

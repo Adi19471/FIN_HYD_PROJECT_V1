@@ -62,18 +62,28 @@ function KpiCard({ item, loading }) {
   const Icon = item.icon;
   return (
     <Paper className="enterprise-card dashboard-kpi" elevation={0}>
-      <Stack direction="row" justifyContent="space-between" alignItems="flex-start">
-        <Box sx={{ minWidth: 0 }}>
-          <Typography variant="body2" color="text.secondary">{item.title}</Typography>
-          {loading ? <Skeleton width={150} height={42} /> : <Typography variant="h5" sx={{ mt: 0.75 }}>{item.label}</Typography>}
+      <Stack direction="row" justifyContent="space-between" alignItems="flex-start" spacing={1.5} sx={{ minWidth: 0 }}>
+        <Box sx={{ minWidth: 0, flex: 1 }}>
+          <Typography variant="body2" color="text.secondary" noWrap title={item.title}>
+            {item.title}
+          </Typography>
+          {loading ? (
+            <Skeleton width="80%" height={42} />
+          ) : (
+            <Typography variant="h5" sx={{ mt: 0.75 }} title={item.label}>
+              {item.label}
+            </Typography>
+          )}
         </Box>
         <Box className="dashboard-kpi-icon" sx={{ color: item.tone, bgcolor: `${item.tone}18` }}>
           <Icon />
         </Box>
       </Stack>
-      <Stack direction="row" spacing={1} alignItems="center" sx={{ mt: 2 }}>
+      <Stack direction="row" spacing={1} alignItems="center" sx={{ mt: 2, minWidth: 0 }}>
         <Chip size="small" label={item.delta} color={item.color || "success"} />
-        <Typography variant="caption" color="text.secondary">{item.note}</Typography>
+        <Typography variant="caption" color="text.secondary" noWrap title={item.note}>
+          {item.note}
+        </Typography>
       </Stack>
     </Paper>
   );
@@ -313,9 +323,9 @@ export default function Dashboard() {
 
       {error && <Alert severity="warning">{error}</Alert>}
 
-      <Grid container spacing={2}>
+      <Grid container spacing={5}>
         {kpis.map((item) => (
-          <Grid item xs={12} sm={6} lg={3} key={item.title}>
+          <Grid item xs={12} sm={6} lg={4} key={item.title}>
             <KpiCard item={item} loading={loading} />
           </Grid>
         ))}
