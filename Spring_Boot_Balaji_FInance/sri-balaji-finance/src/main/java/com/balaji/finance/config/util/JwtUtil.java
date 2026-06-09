@@ -29,8 +29,13 @@ public class JwtUtil {
 
 	public String generateToken(String username, List<String> roles) {
 
-		return Jwts.builder().setSubject(username).claim("roles", roles).setIssuedAt(new Date())
-				.setExpiration(new Date(expiration)).signWith(key).compact();
+		return Jwts.builder()
+		        .setSubject(username)
+		        .claim("roles", roles)
+		        .setIssuedAt(new Date())
+		        .setExpiration(new Date(System.currentTimeMillis() + expiration))
+		        .signWith(key)
+		        .compact();
 	}
 
 	public boolean validateToken(String token) {
