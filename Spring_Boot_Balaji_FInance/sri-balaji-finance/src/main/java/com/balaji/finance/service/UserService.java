@@ -1,7 +1,8 @@
 package com.balaji.finance.service;
 
-import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -16,6 +17,8 @@ import com.balaji.finance.pojo.UserSaveReq;
 import com.balaji.finance.repo.PermissionRepository;
 import com.balaji.finance.repo.UserPermissionRepository;
 import com.balaji.finance.repo.UserRepo;
+
+import jakarta.transaction.Transactional;
 
 @Service
 public class UserService {
@@ -66,6 +69,7 @@ public class UserService {
 
 	}
 
+	@Transactional
 	public void updateUser(UserSaveReq userSaveReq) {
 
 		if (userSaveReq.getId() == null) {
@@ -137,23 +141,48 @@ public class UserService {
 		 * IllegalArgumentException("Role must not be null"); }
 		 */
 	}
-
 	public List<UserSaveReq> loadAllUsers() {
-		List<Users> all = userRepo.findAll();
 
-		List<UserSaveReq> allUsers = new ArrayList<UserSaveReq>();
+	    // Load all users
+	    List<Users> users = userRepo.findAll();
 
-		for (Users user : all) {
+	    if (users.isEmpty()) {
+	        return Collections.emptyList();
+	    }
 
-			UserSaveReq userSaveReq = new UserSaveReq();
-			userSaveReq.setId(user.getId());
-			userSaveReq.setName(user.getName());
-			userSaveReq.setRole(user.getRole());
+	    // Collect user IDs
+	    List<Integer> userIds = users.stream()
+	            .map(Users::getId)
+	            .toList();
 
-			allUsers.add(userSaveReq);
-		}
+	    // Fetch all permissions in single query
+	    List<UserPermission> permissions =
+	            userPermissionRepo.findAllByUserIds(userIds);
 
-		return allUsers;
+	    // Group permission IDs by user ID
+	    Map<Integer, List<Long>> permissionMap = permissions.stream()
+	            .collect(Collectors.groupingBy(
+	                    p -> p.getUser().getId(),
+	                    Collectors.mapping(UserPermission::getId, Collectors.toList())
+	            ));
+
+	    // Convert Users -> DTO
+	    return users.stream().map(user -> {
+
+	        UserSaveReq dto = new UserSaveReq();
+
+	        dto.setId(user.getId());
+	        dto.setName(user.getName());
+	        dto.setRole(user.getRole());
+
+	        // Set permission IDs
+	        dto.setPermissionIds(
+	                permissionMap.getOrDefault(user.getId(), Collections.emptyList())
+	        );
+
+	        return dto;
+
+	    }).toList();
 	}
 
 	public List<String> loadAllUserNames() {

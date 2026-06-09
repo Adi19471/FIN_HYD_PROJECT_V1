@@ -29,6 +29,7 @@ import { motion } from "framer-motion";
 import { successToast, errorToast } from "toastify";
 import { API_BASE } from "lib/config";
 import { setSession } from "src/utils/session";
+import { setAuthToken } from "src/utils/authToken";
 import ThemeToggle from "../ThemeToggle";
 import { COMPANY_ADDRESS, COMPANY_APP_NAME } from "src/lib/company";
 
@@ -73,10 +74,10 @@ const Login = () => {
       const data = await resp.json();
 
       if (resp.ok && data.token) {
-        setSession("token", data.token);
+        const token = setAuthToken(data.token);
         setSession("username", data.name || formData.username);
         if (rememberMe) localStorage.setItem("remembered-user", formData.username.trim());
-        login({ name: data.name || formData.username, token: data.token });
+        login({ name: data.name || formData.username, token });
         successToast("Login successful");
         navigate("/", { replace: true });
       } else {

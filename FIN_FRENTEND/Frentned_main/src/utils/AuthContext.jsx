@@ -8,7 +8,7 @@ const AuthContext = createContext({
   logout: () => {},
 });
 
-const INACTIVITY_TIMEOUT = 5 * 60 * 1000; // 5 minutes
+const INACTIVITY_TIMEOUT = 60 * 60 * 1000; // 60 minutes
 
 export function AuthProvider({ children }) {
   const storedUser = typeof window !== "undefined" ? getSession("user") : null;

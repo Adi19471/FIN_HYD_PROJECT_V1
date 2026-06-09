@@ -1,6 +1,7 @@
 // Lightweight fetch wrapper for API calls
 // Uses `import.meta.env.VITE_API_BASE` as base URL. Returns parsed JSON and
 // throws a consistent Error object on non-2xx responses.
+import { getAuthorizationHeader } from "src/utils/authToken";
 
 const API_BASE = import.meta.env.VITE_API_BASE || "";
 
@@ -42,12 +43,14 @@ async function handleResponse(res) {
 
 export async function apiFetch(path, options = {}) {
   const url = buildUrl(path);
+  const authorization = getAuthorizationHeader();
   const opts = {
     credentials: "include",
     headers: {
       Accept: "application/json",
       ...(options.body && { "Content-Type": "application/json" }),
       ...(options.headers || {}),
+      ...(authorization && { Authorization: authorization }),
     },
     ...options,
   };
