@@ -19,11 +19,6 @@ public class Users {
 	@Column(nullable = false)
 	private String password;
 
-	/*
-	 * @NotBlank
-	 * 
-	 * @Column(nullable = false, length = 50)
-	 */
 	private String role;
 
 

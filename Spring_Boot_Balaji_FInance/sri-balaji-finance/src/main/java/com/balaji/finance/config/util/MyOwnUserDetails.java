@@ -1,7 +1,7 @@
 package com.balaji.finance.config.util;
 
+import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.GrantedAuthority;
@@ -11,43 +11,59 @@ import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 
-import com.balaji.finance.entity.UserRole;
 import com.balaji.finance.entity.Users;
+import com.balaji.finance.repo.PermissionRepository;
+import com.balaji.finance.repo.UserPermissionRepository;
 import com.balaji.finance.repo.UserRepo;
-import com.balaji.finance.repo.UserRoleRepository;
 
 @Service
 public class MyOwnUserDetails implements UserDetailsService {
 
-    @Autowired
-    private UserRepo userRepository;
+	@Autowired
+	private UserRepo userRepository;
 
-    @Autowired
-    private UserRoleRepository userRoleRepository;
+	@Autowired
+	private UserPermissionRepository userPermissionRepo;
 
-    @Override
-    public UserDetails loadUserByUsername(String username)
-            throws UsernameNotFoundException {
+	@Autowired
+	private PermissionRepository permissionRepository;
 
-        Users user = userRepository.findByName(username)
-                .orElseThrow(() ->
-                        new UsernameNotFoundException(
-                                "User not found"));
+	@Override
+	public UserDetails loadUserByUsername(String username)
+	        throws UsernameNotFoundException {
 
-        List<UserRole> mappings =
-                userRoleRepository.findByUser(user);
+	    Users user = userRepository.findByName(username)
+	            .orElseThrow(() ->
+	                    new UsernameNotFoundException("User not found"));
 
-        List<GrantedAuthority> authorities =
-                mappings.stream()
-                        .map(mapping ->
-                                new SimpleGrantedAuthority(
-                                        "ROLE_" +
-                                        mapping.getRole()
-                                               .getRoleName()))
-                        .collect(Collectors.toList());
+	    List<GrantedAuthority> authorities = new ArrayList<>();
 
-        return new CustomUserDetails(
-                user,
-                authorities);
-    }
+	    // Add Role
+	    authorities.add(
+	            new SimpleGrantedAuthority("ROLE_" + user.getRole())
+	    );
+
+	    // Add Permissions
+	    if ("ADMIN".equalsIgnoreCase(user.getRole())) {
+
+	        permissionRepository.findAll()
+	                .forEach(permission ->
+	                        authorities.add(
+	                                new SimpleGrantedAuthority(
+	                                        permission.getScreenName()
+	                                )));
+
+	    } else {
+
+	        userPermissionRepo.findByUser(user)
+	                .forEach(mapping ->
+	                        authorities.add(
+	                                new SimpleGrantedAuthority(
+	                                        mapping.getPermission()
+	                                               .getScreenName()
+	                                )));
+	    }
+
+	    return new CustomUserDetails(user, authorities);
+	}
 }
