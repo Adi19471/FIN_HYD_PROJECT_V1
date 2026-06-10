@@ -37,7 +37,7 @@ public class SecurityConfig {
 				
 				.authorizeHttpRequests(auth -> auth
 						.requestMatchers("/auth/**", "/addUser", "/v3/api-docs/**", "/swagger-ui/**",
-								"/swagger-ui.html", "/swagger-resources/**", "/webjars/**", "/h2-console/**")
+								"/swagger-ui.html", "/swagger-resources/**", "/webjars/**", "/h2-console/**","/users/**","/permissions/**")
 						.permitAll().anyRequest().authenticated())
 
                 .formLogin(form -> form.disable())

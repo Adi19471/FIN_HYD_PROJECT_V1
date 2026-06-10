@@ -50,7 +50,7 @@ public class MyOwnUserDetails implements UserDetailsService {
 	                .forEach(permission ->
 	                        authorities.add(
 	                                new SimpleGrantedAuthority(
-	                                        permission.getRoutePath()
+	                                        permission.getPermissionCode()
 	                                )));
 
 	    } else {
@@ -60,7 +60,7 @@ public class MyOwnUserDetails implements UserDetailsService {
 	                        authorities.add(
 	                                new SimpleGrantedAuthority(
 	                                        mapping.getPermission()
-	                                               .getRoutePath()
+	                                               .getPermissionCode()
 	                                )));
 	    }
 

@@ -1,11 +1,6 @@
 package com.balaji.finance.entity;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.Table;
+import jakarta.persistence.*;
 
 @Entity
 @Table(name = "permissions")
@@ -23,8 +18,8 @@ public class Permission {
 	@Column(name = "screen_name")
 	private String screenName;
 
-	@Column(name = "route_path")
-	private String routePath;
+	@Column(name = "permission_code", unique = true)
+	private String permissionCode;
 
 	public Long getId() {
 		return id;
@@ -58,12 +53,12 @@ public class Permission {
 		this.screenName = screenName;
 	}
 
-	public String getRoutePath() {
-		return routePath;
+	public String getPermissionCode() {
+		return permissionCode;
 	}
 
-	public void setRoutePath(String routePath) {
-		this.routePath = routePath;
+	public void setPermissionCode(String permissionCode) {
+		this.permissionCode = permissionCode;
 	}
 
 }
