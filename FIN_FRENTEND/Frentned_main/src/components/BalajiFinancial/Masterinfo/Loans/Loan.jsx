@@ -1,4 +1,4 @@
-import React, { useState, lazy, Suspense } from "react";
+import React, { useEffect, useMemo, useState, lazy, Suspense } from "react";
 import {
   Box,
   Tabs,
@@ -12,18 +12,31 @@ import { motion, AnimatePresence } from "framer-motion";
 
 import { MdCalendarToday, MdCalendarMonth } from "react-icons/md";
 import LoadingSpinner from "src/LoadingSpinner";
+import { useAuth } from "src/utils/AuthContext";
+import { hasPermissionAccess } from "src/utils/permissions";
 
 const MonthlyFinance = lazy(() => import("./MonthlyFinance/MonthlyFinance"));
 const DailyFinance = lazy(() => import("./DailyFinance/DailyFinace"));
 
 const FinanceTabs = () => {
   const theme = useTheme();
+  const { user } = useAuth();
   const [activeTab, setActiveTab] = useState(0);
 
-  const tabs = [
-    { label: "Daily", icon: <MdCalendarToday size={18} /> },
-    { label: "Monthly", icon: <MdCalendarMonth size={18} /> },
-  ];
+  const tabs = useMemo(
+    () =>
+      [
+        { label: "Daily", icon: <MdCalendarToday size={18} />, component: DailyFinance, permissionCodes: ["LOAN_MAIN_VIEW", "DAILY_FINANCE_VIEW"] },
+        { label: "Monthly", icon: <MdCalendarMonth size={18} />, component: MonthlyFinance, permissionCodes: ["LOAN_MAIN_VIEW", "MONTHLY_FINANCE_VIEW"] },
+      ].filter((tab) => hasPermissionAccess(user, tab.permissionCodes)),
+    [user]
+  );
+
+  useEffect(() => {
+    if (activeTab >= tabs.length) setActiveTab(0);
+  }, [activeTab, tabs.length]);
+
+  const SelectedComponent = tabs[activeTab]?.component;
 
   const handleChange = (event, newValue) => {
     setActiveTab(newValue);
@@ -127,27 +140,15 @@ const FinanceTabs = () => {
             }
           >
             <AnimatePresence mode="wait">
-              {activeTab === 0 && (
+              {SelectedComponent && (
                 <motion.div
-                  key="daily"
+                  key={tabs[activeTab]?.label}
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: -20 }}
                   transition={{ duration: 0.3 }}
                 >
-                  <DailyFinance />
-                </motion.div>
-              )}
-
-              {activeTab === 1 && (
-                <motion.div
-                  key="monthly"
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -20 }}
-                  transition={{ duration: 0.3 }}
-                >
-                  <MonthlyFinance />
+                  <SelectedComponent />
                 </motion.div>
               )}
             </AnimatePresence>

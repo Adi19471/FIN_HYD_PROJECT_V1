@@ -1,5 +1,6 @@
 import { createContext, useContext, useState, useEffect, useCallback } from "react";
 import { setSession, getSession, removeSession } from "./session";
+import { normalizePermissionCodes, normalizeRoles } from "src/utils/permissions";
 
 const AuthContext = createContext({
   isAuthenticated: false,
@@ -15,7 +16,19 @@ export function AuthProvider({ children }) {
   const storedToken = typeof window !== "undefined" ? getSession("token") : null;
   const storedName = typeof window !== "undefined" ? getSession("username") : null;
 
-  const [user, setUser] = useState(storedUser || (storedToken ? { name: storedName || "User", token: storedToken } : null));
+  const normalizeUser = useCallback((userObj) => {
+    if (!userObj) return null;
+
+    return {
+      ...userObj,
+      name: userObj.name || userObj.username || storedName || "User",
+      token: userObj.token || storedToken || "",
+      roles: normalizeRoles(userObj),
+      permissions: normalizePermissionCodes(userObj),
+    };
+  }, [storedName, storedToken]);
+
+  const [user, setUser] = useState(normalizeUser(storedUser || (storedToken ? { name: storedName || "User", token: storedToken } : null)));
 
   const logout = useCallback(() => {
     setUser(null);
@@ -83,7 +96,7 @@ export function AuthProvider({ children }) {
     };
   }, [user, updateActivity, logout]);
 
-  const login = (userObj) => setUser(userObj);
+  const login = (userObj) => setUser(normalizeUser(userObj));
 
   const isAuthenticated = !!user;
 

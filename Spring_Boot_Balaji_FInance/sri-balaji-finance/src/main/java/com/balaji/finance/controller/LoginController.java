@@ -55,7 +55,7 @@ public class LoginController {
 					.body(new ErrorResponse("Invalid username or password"));
 
 		} catch (Exception e) {
-
+			e.printStackTrace();
 			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
 					.body(new ErrorResponse("Login failed due to server error"));
 		}

@@ -1,4 +1,5 @@
 import { lazy } from "react";
+import { PATH_PERMISSION_CODES } from "./utils/permissions";
 
 const Dashboard = lazy(() => import("./pages/Dashboard"));
 
@@ -170,9 +171,13 @@ const Partner_Loan_Limit = lazy(()=> import("./components/BalajiFinancial/Partne
 const Partner_Settelment = lazy(()=> import("./components/BalajiFinancial/PartnerReports/Partner_Settelment"))
 const Performance = lazy(()=> import("./components/BalajiFinancial/PartnerReports/Performance"))
 
+const withPermissions = (route) => ({
+  ...route,
+  permissionCodes: route.permissionCodes ?? PATH_PERMISSION_CODES[route.path] ?? [],
+});
+
 const routes = [
 
-  { path: "/customer", element: Custmer, exact: true },
   { path: "/", element: Dashboard,  exact: true },
   { path: "/login", element: Login, public: true, exact: true },
   { path: "/unauthorized", element: Unauthorized, public: true, exact: true },
@@ -249,6 +254,6 @@ const routes = [
 
 
 
-];
+].map(withPermissions);
 
 export default routes;

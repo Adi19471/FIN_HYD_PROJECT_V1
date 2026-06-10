@@ -29,41 +29,40 @@ public class MyOwnUserDetails implements UserDetailsService {
 	private PermissionRepository permissionRepository;
 
 	@Override
-	public UserDetails loadUserByUsername(String username)
-	        throws UsernameNotFoundException {
+	public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
 
-	    Users user = userRepository.findByName(username)
-	            .orElseThrow(() ->
-	                    new UsernameNotFoundException("User not found"));
+		Users user = userRepository.findByName(username)
+				.orElseThrow(() -> new UsernameNotFoundException("User not found"));
 
-	    List<GrantedAuthority> authorities = new ArrayList<>();
+		List<GrantedAuthority> authorities = new ArrayList<>();
 
-	    // Add Role
-	    authorities.add(
-	            new SimpleGrantedAuthority("ROLE_" + user.getRole())
-	    );
+		// Safe role handling
+		String role = user.getRole();
 
-	    // Add Permissions
-	    if ("ADMIN".equalsIgnoreCase(user.getRole())) {
+		System.out.println("ROLE FROM DB: " + role);
 
-	        permissionRepository.findAll()
-	                .forEach(permission ->
-	                        authorities.add(
-	                                new SimpleGrantedAuthority(
-	                                        permission.getPermissionCode()
-	                                )));
+		if (role == null || role.trim().isEmpty()) {
+			throw new RuntimeException("Role is null or empty");
+		}
 
-	    } else {
+		if (!role.startsWith("ROLE_")) {
+			role = "ROLE_" + role;
+		}
 
-	        userPermissionRepo.findByUser(user)
-	                .forEach(mapping ->
-	                        authorities.add(
-	                                new SimpleGrantedAuthority(
-	                                        mapping.getPermission()
-	                                               .getPermissionCode()
-	                                )));
-	    }
+		authorities.add(new SimpleGrantedAuthority(role));
 
-	    return new CustomUserDetails(user, authorities);
+		// Permissions
+		if ("ADMIN".equalsIgnoreCase(user.getRole()) || "ROLE_ADMIN".equalsIgnoreCase(user.getRole())) {
+
+			permissionRepository.findAll()
+					.forEach(permission -> authorities.add(new SimpleGrantedAuthority(permission.getPermissionCode())));
+
+		} else {
+
+			userPermissionRepo.findByUser(user).forEach(mapping -> authorities
+					.add(new SimpleGrantedAuthority(mapping.getPermission().getPermissionCode())));
+		}
+
+		return new CustomUserDetails(user, authorities);
 	}
 }

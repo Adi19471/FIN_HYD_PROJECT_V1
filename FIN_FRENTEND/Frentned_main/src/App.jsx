@@ -59,7 +59,7 @@ function App() {
                 path="/"
                 element={
                   isAuthenticated ? (
-                    <PrivateRoute>
+                    <PrivateRoute requiredPermissions={route.permissionCodes}>
                       <Element />
                     </PrivateRoute>
                   ) : (
@@ -76,7 +76,7 @@ function App() {
               key={index}
               path={route.path}
               element={
-                <PrivateRoute allowedRoles={route.roles}>
+                <PrivateRoute allowedRoles={route.roles} requiredPermissions={route.permissionCodes}>
                   <Element />
                 </PrivateRoute>
               }

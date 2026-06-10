@@ -30,6 +30,7 @@ import { successToast, errorToast } from "toastify";
 import { API_BASE } from "lib/config";
 import { setSession } from "src/utils/session";
 import { setAuthToken } from "src/utils/authToken";
+import { getDefaultAuthorizedPath, normalizePermissionCodes, normalizeRoles } from "src/utils/permissions";
 import ThemeToggle from "../ThemeToggle";
 import { COMPANY_ADDRESS, COMPANY_APP_NAME } from "src/lib/company";
 
@@ -75,11 +76,19 @@ const Login = () => {
 
       if (resp.ok && data.token) {
         const token = setAuthToken(data.token);
-        setSession("username", data.name || formData.username);
+        const name = data.name || data.username || formData.username;
+        const user = {
+          name,
+          token,
+          roles: normalizeRoles(data),
+          permissions: normalizePermissionCodes(data),
+        };
+
+        setSession("username", name);
         if (rememberMe) localStorage.setItem("remembered-user", formData.username.trim());
-        login({ name: data.name || formData.username, token });
+        login(user);
         successToast("Login successful");
-        navigate("/", { replace: true });
+        navigate(getDefaultAuthorizedPath(user), { replace: true });
       } else {
         errorToast(data.message || "Invalid credentials");
       }

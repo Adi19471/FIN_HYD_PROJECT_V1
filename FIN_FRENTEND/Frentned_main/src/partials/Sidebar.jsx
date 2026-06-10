@@ -47,6 +47,8 @@ import {
 
 import ThemeToggle from "../components/ThemeToggle";
 import { COMPANY_ADDRESS, COMPANY_APP_NAME, COMPANY_LOGO } from "src/lib/company";
+import { useAuth } from "src/utils/AuthContext";
+import { hasPermissionAccess, PATH_PERMISSION_CODES } from "src/utils/permissions";
 import "./Sidebar.css";
 
 export const sidebarGroups = [
@@ -151,6 +153,7 @@ export const sidebarGroups = [
 
 function Sidebar({ sidebarOpen, setSidebarOpen }) {
   const { pathname } = useLocation();
+  const { user } = useAuth();
   const trigger = useRef(null);
   const sidebar = useRef(null);
 
@@ -162,9 +165,23 @@ function Sidebar({ sidebarOpen, setSidebarOpen }) {
 
   const pathnameLower = pathname.toLowerCase();
 
+  const visibleGroups = useMemo(
+    () =>
+      sidebarGroups
+        .filter((group) => group.key !== "auth")
+        .map((group) => ({
+          ...group,
+          items: group.items.filter((item) => hasPermissionAccess(user, PATH_PERMISSION_CODES[item.path])),
+        }))
+        .filter((group) => group.items.length > 0),
+    [user]
+  );
+
+  const canViewDashboard = hasPermissionAccess(user, PATH_PERMISSION_CODES["/"]);
+
   const activeGroup = useMemo(
-    () => sidebarGroups.find((group) => group.match.some((path) => pathnameLower.startsWith(path))),
-    [pathnameLower]
+    () => visibleGroups.find((group) => group.match.some((path) => pathnameLower.startsWith(path))),
+    [pathnameLower, visibleGroups]
   );
 
   useEffect(() => {
@@ -244,17 +261,19 @@ function Sidebar({ sidebarOpen, setSidebarOpen }) {
         <div className="admin-sidebar-section-label">Main Menu</div>
 
         <nav className="admin-sidebar-nav">
-          <NavLink
-            to="/"
-            onClick={() => announceWorkspaceOpen({ label: "Dashboard", path: "/" })}
-            className={({ isActive }) => `admin-sidebar-link ${isActive ? "is-active" : ""}`}
-            title="Dashboard"
-          >
-            <Home className="admin-sidebar-icon" />
-            <span>Dashboard</span>
-          </NavLink>
+          {canViewDashboard && (
+            <NavLink
+              to="/"
+              onClick={() => announceWorkspaceOpen({ label: "Dashboard", path: "/" })}
+              className={({ isActive }) => `admin-sidebar-link ${isActive ? "is-active" : ""}`}
+              title="Dashboard"
+            >
+              <Home className="admin-sidebar-icon" />
+              <span>Dashboard</span>
+            </NavLink>
+          )}
 
-          {sidebarGroups.map((group) => {
+          {visibleGroups.map((group) => {
             const Icon = group.icon;
             const isOpen = openGroup === group.key;
             const isGroupActive = activeGroup?.key === group.key;
