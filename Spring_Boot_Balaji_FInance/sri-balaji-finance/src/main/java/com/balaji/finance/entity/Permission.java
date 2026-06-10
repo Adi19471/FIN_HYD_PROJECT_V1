@@ -1,5 +1,6 @@
 package com.balaji.finance.entity;
 
+import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -15,8 +16,15 @@ public class Permission {
 	private Long id;
 
 	private String menu;
+
+	@Column(name = "sub_menu")
 	private String subMenu;
+
+	@Column(name = "screen_name")
 	private String screenName;
+
+	@Column(name = "route_path")
+	private String routePath;
 
 	public Long getId() {
 		return id;
@@ -48,6 +56,14 @@ public class Permission {
 
 	public void setScreenName(String screenName) {
 		this.screenName = screenName;
+	}
+
+	public String getRoutePath() {
+		return routePath;
+	}
+
+	public void setRoutePath(String routePath) {
+		this.routePath = routePath;
 	}
 
 }
