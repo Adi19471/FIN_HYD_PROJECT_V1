@@ -105,4 +105,6 @@ public interface PersonalInfoRepository extends JpaRepository<PersonalInfo, Stri
 		       """)
 		List<PartnerInformationProjection> findAllPartners();
 	
+	
+	
 }
