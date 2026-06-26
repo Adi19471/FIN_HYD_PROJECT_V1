@@ -21,7 +21,7 @@ public class PartnerLoanLimitService {
 
 	public List<PartnerLoanLimitResponse> getAllPartnerLoanLimits() {
 
-		List<PartnerInformationProjection> allPartners = personalInfoRepository.findAllPartners();
+		List<PartnerInformationProjection> allPartners = personalInfoRepository.findAllPartnersAndInvestments();
 
 		List<PartnerLoanLimitResponse> responseList = new ArrayList<>();
 

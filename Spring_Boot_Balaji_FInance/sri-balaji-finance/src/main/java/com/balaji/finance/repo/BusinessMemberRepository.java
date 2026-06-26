@@ -1,6 +1,5 @@
 package com.balaji.finance.repo;
 
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
@@ -16,6 +15,7 @@ import com.balaji.finance.dto.LoanSummaryOfManagerProjection;
 import com.balaji.finance.dto.LoanSummaryOfPartnerProjection;
 import com.balaji.finance.dto.LoanSummaryProjection;
 import com.balaji.finance.dto.LoansGranted;
+import com.balaji.finance.dto.PartnerBusniessProjection;
 import com.balaji.finance.dto.PartnerLoanDetailsProjection;
 import com.balaji.finance.entity.BusinessMember;
 
@@ -394,4 +394,52 @@ public interface BusinessMemberRepository extends JpaRepository<BusinessMember, 
 		        @Param("partnerInfoId") String partnerInfoId,
 		        @Param("toDate") LocalDateTime toDate
 		);
+	
+	
+	
+	@Query("""
+		    SELECT
+		        bm.partnerId.personalInfoId AS personalInfoId,
+
+		        SUM(CASE
+		                WHEN bm.loanType = 'DAILY_FINANCE'
+		                THEN 1
+		                ELSE 0
+		            END) AS dailyLoanCount,
+
+		        COALESCE(
+		            SUM(CASE
+		                    WHEN bm.loanType = 'DAILY_FINANCE'
+		                    THEN bm.amount
+		                    ELSE 0
+		                END),
+		            0
+		        ) AS dailyLoanAmount,
+
+		        SUM(CASE
+		                WHEN bm.loanType = 'MONTHLY_FINANCE'
+		                THEN 1
+		                ELSE 0
+		            END) AS monthlyLoanCount,
+
+		        COALESCE(
+		            SUM(CASE
+		                    WHEN bm.loanType = 'MONTHLY_FINANCE'
+		                    THEN bm.amount
+		                    ELSE 0
+		                END),
+		            0
+		        ) AS monthlyLoanAmount
+
+		    FROM BusinessMember bm
+
+		    WHERE bm.partnerId.personalInfoId IN :personalInfoIds
+		      AND bm.startDate BETWEEN :fromDate AND :toDate
+
+		    GROUP BY bm.partnerId.personalInfoId
+		""")
+		List<PartnerBusniessProjection> getBusinessReportOfPartners(
+		        @Param("personalInfoIds") List<String> personalInfoIds,
+		        @Param("fromDate") LocalDateTime from,
+		        @Param("toDate") LocalDateTime to);
 }

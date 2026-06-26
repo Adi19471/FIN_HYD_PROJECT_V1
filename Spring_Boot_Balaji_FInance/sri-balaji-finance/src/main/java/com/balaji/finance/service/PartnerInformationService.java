@@ -19,7 +19,7 @@ public class PartnerInformationService {
 
 	public List<ParnterInformationResponse> getAllPartners() {
 
-		List<PartnerInformationProjection> partners = personalInfoRepository.findAllPartners();
+		List<PartnerInformationProjection> partners = personalInfoRepository.findAllPartnersAndInvestments();
 
 		List<ParnterInformationResponse> responseList = new ArrayList<>();
 
