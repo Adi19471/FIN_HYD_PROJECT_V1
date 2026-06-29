@@ -19,7 +19,7 @@ import {
   PersonRounded,
   SettingsRounded,
 } from "@mui/icons-material";
-import { useAuth } from "../utils/AuthContext";
+import { useAuth } from "../utils/authStore";
 
 function DropdownProfile({ align }) {
   const [anchorEl, setAnchorEl] = useState(null);
@@ -61,14 +61,6 @@ function DropdownProfile({ align }) {
           aria-expanded={open ? "true" : undefined}
         >
           <Avatar className="enterprise-profile-avatar">{initials || <PersonRounded fontSize="small" />}</Avatar>
-          <Box className="enterprise-profile-copy">
-            <Typography variant="body2" noWrap>
-              {userName}
-            </Typography>
-            <Typography variant="caption" noWrap>
-              {userRole}
-            </Typography>
-          </Box>
           <KeyboardArrowDownRounded className={`enterprise-profile-chevron ${open ? "is-open" : ""}`} />
         </Box>
       </Tooltip>

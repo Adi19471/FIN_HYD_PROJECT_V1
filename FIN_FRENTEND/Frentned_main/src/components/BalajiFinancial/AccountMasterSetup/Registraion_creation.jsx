@@ -97,12 +97,12 @@ const Registration_creation = () => {
     setForm(
       row
         ? {
-            id: row.id ?? "",
-            name: row.name ?? "",
-            password: "",
-            role: normalizeRole(row.role),
-            permissionIds: row.permissionIds || [],
-          }
+          id: row.id ?? "",
+          name: row.name ?? "",
+          password: "",
+          role: normalizeRole(row.role),
+          permissionIds: row.permissionIds || [],
+        }
         : emptyForm
     );
     setModalOpen(true);
@@ -151,10 +151,16 @@ const Registration_creation = () => {
 
     setSaving(true);
     try {
-      await registrationService.saveUser(form);
+      if (form.id) {
+        await registrationService.updateUser(form);
+
+      } else {
+        await registrationService.saveUser(form);
+      }
       toast.success(form.id ? "User updated successfully" : "User created successfully");
       handleClose();
       await loadUsers();
+
     } catch (err) {
       console.error("Save failed:", err);
       toast.error(err?.response?.data?.message || "Operation failed");
@@ -171,7 +177,7 @@ const Registration_creation = () => {
 
     setSaving(true);
     try {
-      await registrationService.saveUser(form);
+      await registrationService.updateUser(form);
       toast.success("Menu permissions saved successfully");
       handlePermissionsClose();
       await loadUsers();

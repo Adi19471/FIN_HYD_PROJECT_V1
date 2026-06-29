@@ -74,7 +74,11 @@ function Header({ sidebarOpen, setSidebarOpen }) {
             <MenuRounded />
           </IconButton>
 
-          <Link to="/" className="enterprise-brand" aria-label="Sri Balaji Finance dashboard">
+          <Link
+            to="/"
+            className="enterprise-brand enterprise-header-brand"
+            aria-label="Sri Balaji Finance dashboard"
+          >
             <Box className="enterprise-brand-mark">
               <img src={COMPANY_LOGO} alt="" aria-hidden="true" />
             </Box>

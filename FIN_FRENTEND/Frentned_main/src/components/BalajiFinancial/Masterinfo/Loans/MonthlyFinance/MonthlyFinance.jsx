@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useCallback } from "react";
-import { DataGrid, GridToolbar } from '@mui/x-data-grid';
+import { DataGrid } from '@mui/x-data-grid';
 import axios from "axios";
 import { successToast, errorToast } from "toastify";
 import { API_BASE } from "lib/config";
@@ -7,7 +7,6 @@ import LoadingSpinner from "src/LoadingSpinner";
 import { getSession } from "src/utils/session";
 import {
   Dialog,
-  DialogTitle,
   DialogContent,
   DialogActions,
   Button,
@@ -20,17 +19,20 @@ import {
   IconButton,
   Chip,
   AppBar,
+  Paper,
+  Stack,
   Toolbar,
 } from "@mui/material";
 import {
   Close as CloseIcon,
   Save as SaveIcon,
   Edit as EditIcon,
-  Delete as DeleteIcon,
+  SearchRounded,
+  TuneRounded,
+  RestartAltRounded,
 } from "@mui/icons-material";
 import dayjs from "dayjs";
-import ReportToolbar from "../../../ReportsAll/ReportToolbar";
-import { AppDatePicker } from "src/components/ui";
+import { AppDatePicker, TableExportMenu } from "src/components/ui";
 
 
 const FIXED_DURATION_MONTHS = 10;
@@ -44,6 +46,8 @@ const MonthlyFinance = () => {
   const [isEditMode, setIsEditMode] = useState(false);
   const [currentLoanId, setCurrentLoanId] = useState(null);
   const [paginationModel, setPaginationModel] = useState({ page: 0, pageSize: 10 });
+  const [globalSearch, setGlobalSearch] = useState("");
+  const [showColumnFilters, setShowColumnFilters] = useState(false);
 
 
   const [filters, setFilters] = useState({
@@ -72,49 +76,47 @@ const MonthlyFinance = () => {
     })
   );
 
+  const searchedRows = filteredRows.filter((row) => {
+    const searchText = globalSearch.trim().toLowerCase();
+    if (!searchText) return true;
+    return Object.values(row).some((value) => String(value ?? "").toLowerCase().includes(searchText));
+  });
+
   useEffect(() => {
     setPaginationModel((model) => ({ ...model, page: 0 }));
-  }, [filteredRows.length]);
+  }, [searchedRows.length]);
 
   const getHeader = (label, field) => (
-    <div style={{ width: "100%", paddingTop: 2 }}>
-
-      {/* Header Label (bigger & clear) */}
-      <div
-        style={{
-          fontWeight: 600,
-          fontSize: "14px",
-          marginBottom: 4,
-          lineHeight: 1.2
-        }}
-      >
+    <Box sx={{ width: "100%", pt: 0.25 }}>
+      <Box sx={{ fontWeight: 900, fontSize: 12, lineHeight: 1.2, mb: showColumnFilters ? 0.5 : 0 }}>
         {label}
-      </div>
-
-      {/* Compact Filter Box */}
-      <TextField
-        variant="outlined"
-        size="small"
-        value={filters[field]}
-        onChange={(e) =>
-          setFilters((prev) => ({
-            ...prev,
-            [field]: e.target.value,
-          }))
-        }
-        placeholder="Filter"
-        fullWidth
-        sx={{
-          "& .MuiOutlinedInput-root": {
-            height: 26,              // 🔥 reduce height
-            fontSize: "12px",
-          },
-          "& .MuiOutlinedInput-input": {
-            padding: "4px 8px",     // 🔥 tighter padding
+      </Box>
+      {showColumnFilters && (
+        <TextField
+          variant="outlined"
+          size="small"
+          value={filters[field]}
+          onChange={(e) =>
+            setFilters((prev) => ({
+              ...prev,
+              [field]: e.target.value,
+            }))
           }
-        }}
-      />
-    </div>
+          placeholder="Filter"
+          fullWidth
+          sx={{
+            "& .MuiOutlinedInput-root": {
+              height: 28,
+              fontSize: "12px",
+              bgcolor: "#fff",
+            },
+            "& .MuiOutlinedInput-input": {
+              padding: "4px 8px",
+            }
+          }}
+        />
+      )}
+    </Box>
   );
 
   const clearFilters = () => {
@@ -132,6 +134,7 @@ const MonthlyFinance = () => {
       g3Name: "",
       partnerId: ""
     });
+    setGlobalSearch("");
   };
 
 
@@ -559,7 +562,7 @@ const MonthlyFinance = () => {
 
     {
       field: "id",
-      width: 100,
+      width: 170,
       renderHeader: () => getHeader("Acc No", "id"),
     },
     {
@@ -619,11 +622,7 @@ const MonthlyFinance = () => {
     },
   ];
 
-  return (
-    <>
-   <ReportToolbar
-  data={filteredRows}
-  columns={[
+  const exportColumns = [
     "id",
     "customerName",
     "amount",
@@ -636,67 +635,82 @@ const MonthlyFinance = () => {
     "g2Name",
     "g3Name",
     "partnerId",
-  ]}
-  fileName="Monthly_Finance_Report"
-  tableId="monthlyFinanceTable"
-/>
-      <Box sx={{ p: 3 }}>
+  ];
 
-        <Box
+  return (
+    <>
+      <Box sx={{ p: { xs: 1.5, md: 2.5 } }}>
+        <Paper
+          elevation={0}
+          className="enterprise-card"
           sx={{
+            p: 2,
+            mb: 2,
             display: "flex",
             justifyContent: "space-between",
             alignItems: "center",
-            mb: 3,
+            gap: 2,
+            flexWrap: "wrap",
           }}
         >
-          <Typography variant="h5" fontWeight={600} color="#1e293b">
-            Monthly Finance
-          </Typography>
+          <Box sx={{ minWidth: 0 }}>
+            <Typography variant="h5" fontWeight={900} color="#1e293b">
+              Monthly Finance
+            </Typography>
+            <Typography variant="body2" color="text.secondary">
+              {searchedRows.length} of {rows.length} loans
+            </Typography>
+          </Box>
 
+          <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap sx={{ alignItems: "center" }}>
+            <TextField
+              value={globalSearch}
+              onChange={(event) => setGlobalSearch(event.target.value)}
+              placeholder="Search account, customer, amount, date..."
+              size="small"
+              sx={{ width: { xs: "100%", sm: 360, md: 460 } }}
+              InputProps={{
+                startAdornment: <SearchRounded fontSize="small" sx={{ mr: 1, color: "text.secondary" }} />,
+              }}
+            />
+            <Button
+              variant={showColumnFilters ? "contained" : "outlined"}
+              startIcon={<TuneRounded />}
+              onClick={() => setShowColumnFilters((value) => !value)}
+            >
+              Filter
+            </Button>
+            <Button variant="outlined" startIcon={<RestartAltRounded />} onClick={clearFilters}>
+              Clear
+            </Button>
+            <TableExportMenu rows={searchedRows} columns={exportColumns} fileName="Monthly_Finance_Report" />
+            <Button variant="contained" startIcon={<SaveIcon />} onClick={handleNewButton}>
+              New Loan
+            </Button>
+          </Stack>
+        </Paper>
 
-        </Box>
-        <Box
-          sx={{
-            display: "flex",
-            justifyContent: "space-between",
-            alignItems: "center",
-            mb: 3,
-          }}
-        >
-
-          <Button
-            variant="contained"
-            onClick={clearFilters}
-            sx={{ textTransform: "none", fontWeight: 600 }}
-          >
-            Clear Filters
-          </Button>
-
-          <Button
-            variant="contained"
-            startIcon={<SaveIcon />}
-            onClick={() => {
-              handleNewButton();
+        <Box sx={{ height: "min(640px, calc(100vh - 260px))", minHeight: 460, width: "100%" }}>
+          <DataGrid
+            rows={searchedRows}
+            columns={columns}
+            loading={loading}
+            getRowId={(r) => r.id}
+            pageSizeOptions={[10, 25, 50, 100]}
+            paginationModel={paginationModel}
+            onPaginationModelChange={setPaginationModel}
+            pagination
+            disableRowSelectionOnClick
+            rowHeight={52}
+            columnHeaderHeight={showColumnFilters ? 76 : 48}
+            sx={{
+              bgcolor: "#fff",
+              "& .MuiDataGrid-cell": { fontWeight: 700 },
+              "& .MuiDataGrid-columnHeaderTitle": { fontWeight: 900 },
+              "& .MuiDataGrid-virtualScroller": { overflowAnchor: "none" },
             }}
-            sx={{ textTransform: "none", fontWeight: 600 }}
-          >
-            New Loan
-          </Button>
+          />
         </Box>
-
-        <DataGrid
-          rows={filteredRows}
-          columns={columns}
-          loading={loading}
-          getRowId={(r) => r.id}
-          autoHeight
-          pageSizeOptions={[10, 25, 50, 100]}
-          paginationModel={paginationModel}
-          onPaginationModelChange={setPaginationModel}
-          pagination
-          headerHeight={70}
-        />
 
 
 
@@ -740,7 +754,7 @@ const MonthlyFinance = () => {
           <Grid container spacing={3} sx={{ mt: 1 }}>
             <Grid item xs={12} md={6} sm={4}>
               <Autocomplete
-                sx={{ width: "220px" }}
+                sx={{ width: "100%", minWidth: { md: 320 } }}
                 openOnFocus
                 filterOptions={(x) => x}
                 options={options}
@@ -931,7 +945,7 @@ const MonthlyFinance = () => {
                   <Grid item xs={12} sm={6}>
                     <Autocomplete
                       fullWidth
-                      sx={{ width: "220px" }}
+                      sx={{ width: "100%", minWidth: { sm: 320 } }}
                       openOnFocus
                       filterOptions={(x) => x}
                       options={options}
@@ -962,7 +976,7 @@ const MonthlyFinance = () => {
             <Grid item xs={12} md={6}>
               <Autocomplete
                 fullWidth
-                sx={{ width: "230px" }}
+                sx={{ width: "100%", minWidth: { md: 320 } }}
                 openOnFocus
                 filterOptions={(x) => x}
                 options={options}

@@ -1,14 +1,13 @@
 import React, { useState } from "react";
-import { alpha, Box, Chip, CircularProgress, Fade, Paper, Stack, Tab, Tabs, Typography, useTheme } from "@mui/material";
-import { ReceiptLongRounded } from "@mui/icons-material";
-import { MdCalendarMonth, MdCalendarToday } from "react-icons/md";
+import { alpha, Box, CircularProgress, Fade, Paper, Stack, Tab, Tabs, Typography, useTheme } from "@mui/material";
+import { CalendarMonthRounded, PointOfSaleRounded, TodayRounded } from "@mui/icons-material";
 
 import BussinessDailyFinance from "./Bussiness_DailyFinance/BussinessDailyFinance";
 import BussinessMonthlyFinance from "./Bussiness_MonthlyFinance/Bussiness_MonthlyFinance";
 
 const tabs = [
-  { label: "Daily", icon: <MdCalendarToday /> },
-  { label: "Monthly", icon: <MdCalendarMonth /> },
+  { label: "Daily", icon: <TodayRounded fontSize="small" /> },
+  { label: "Monthly", icon: <CalendarMonthRounded fontSize="small" /> },
 ];
 
 const BussinessCashbook_Main = () => {
@@ -37,14 +36,10 @@ const BussinessCashbook_Main = () => {
         }}
       >
         <Stack direction="row" alignItems="center" spacing={1.25} flexWrap="wrap">
-          <ReceiptLongRounded color="primary" />
+          <PointOfSaleRounded color="primary" />
           <Box>
             <Typography variant="h5">Transactions</Typography>
-            <Typography variant="body2" color="text.secondary">
-              Daily and monthly finance collections use one consistent format.
-            </Typography>
           </Box>
-          <Chip size="small" label={tabs[value].label} color="primary" variant="outlined" />
         </Stack>
 
         <Tabs

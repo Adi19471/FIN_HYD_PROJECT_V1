@@ -18,6 +18,7 @@ const defaultSettings = {
   colorTheme: "sunrise",
   fontFamily: "Manrope",
   fontScale: 1.08,
+  screenScale: 1,
   density: "comfortable",
   tableDensity: "compact",
   tableStyle: "striped",
@@ -147,6 +148,7 @@ export default function ThemeProvider({ children }) {
     document.documentElement.dataset.loadingStyle = settings.loadingStyle;
     document.documentElement.dataset.navbarStyle = settings.navbarStyle;
     document.documentElement.style.setProperty("--app-font-scale", settings.fontScale);
+    document.documentElement.style.setProperty("--app-screen-zoom", settings.screenScale || 1);
     document.documentElement.style.setProperty("--app-radius", `${settings.radius}px`);
     document.documentElement.style.setProperty("--app-font-family", fontStacks[settings.fontFamily] || fontStacks.Inter);
 
@@ -161,6 +163,7 @@ export default function ThemeProvider({ children }) {
     settings.density,
     settings.fontFamily,
     settings.fontScale,
+    settings.screenScale,
     settings.radius,
     settings.tableDensity,
     settings.tableStyle,
@@ -296,6 +299,7 @@ export default function ThemeProvider({ children }) {
             styleOverrides: {
               input: {
                 fontSize: `${0.94 * fontScale}rem`,
+                fontWeight: 700,
               },
             },
           },
@@ -333,6 +337,7 @@ export default function ThemeProvider({ children }) {
               root: {
                 border: 0,
                 fontSize: `${0.82 * fontScale * tableScale}rem`,
+                fontWeight: 700,
               },
               columnHeaders: {
                 minHeight: settings.tableDensity === "compact" ? "40px !important" : settings.tableDensity === "spacious" ? "56px !important" : "48px !important",
@@ -343,6 +348,9 @@ export default function ThemeProvider({ children }) {
               columnHeaderTitle: {
                 fontWeight: 800,
                 color: isDark ? "#cbd5e1" : "#334155",
+              },
+              cell: {
+                fontWeight: 700,
               },
               row: {
                 minHeight: settings.tableDensity === "compact" ? "40px !important" : settings.tableDensity === "spacious" ? "56px !important" : "48px !important",
@@ -357,6 +365,7 @@ export default function ThemeProvider({ children }) {
       isDark,
       settings.fontFamily,
       settings.fontScale,
+      settings.screenScale,
       settings.radius,
       settings.density,
       settings.tableDensity,

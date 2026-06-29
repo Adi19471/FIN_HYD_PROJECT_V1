@@ -99,7 +99,14 @@ const Distubuted = () => {
         </Grid>
       </Paper>
 
-      <DataTable rows={rows} columns={columns} loading={loading} title="Distributed Loan Details" height={580} />
+      <DataTable
+        rows={rows}
+        columns={columns}
+        loading={loading}
+        title="Distributed Loan Details"
+        height="calc(100vh - 300px)"
+        pageSize={50}
+      />
     </Stack>
   );
 };

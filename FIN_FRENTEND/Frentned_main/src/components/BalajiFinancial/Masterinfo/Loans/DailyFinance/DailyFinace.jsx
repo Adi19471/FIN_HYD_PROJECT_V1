@@ -5,7 +5,7 @@ import { API_BASE } from "lib/config";
 import LoadingSpinner from "src/LoadingSpinner";
 import { getSession } from "src/utils/session";
 import { CircularProgress } from "@mui/material";
-import { DataGrid, GridToolbar } from '@mui/x-data-grid';
+import { DataGrid } from '@mui/x-data-grid';
 
 import {
   Button,
@@ -17,22 +17,24 @@ import {
   IconButton,
   Chip,
   Dialog,
-  DialogTitle,
   DialogContent,
   DialogActions,
   AppBar,
+  Paper,
+  Stack,
   Toolbar,
 } from "@mui/material";
 import {
   Close as CloseIcon,
   Save as SaveIcon,
   Edit as EditIcon,
-  Delete as DeleteIcon,
+  SearchRounded,
+  TuneRounded,
+  RestartAltRounded,
 } from "@mui/icons-material";
 
 import dayjs from "dayjs";
-import ReportToolbar from "../../../ReportsAll/ReportToolbar";
-import { AppDatePicker } from "src/components/ui";
+import { AppDatePicker, TableExportMenu } from "src/components/ui";
 
 const LOAN_TYPE = { DAILY_FINANCE: "DAILY_FINANCE" };
 const FIXED_DURATION_DAYS = 100;
@@ -47,6 +49,8 @@ const DailyFinance = () => {
   const [isEditMode, setIsEditMode] = useState(false);
   const [currentLoanId, setCurrentLoanId] = useState(null);
   const [paginationModel, setPaginationModel] = useState({ page: 0, pageSize: 10 });
+  const [globalSearch, setGlobalSearch] = useState("");
+  const [showColumnFilters, setShowColumnFilters] = useState(false);
 
 
   const [filters, setFilters] = useState({
@@ -55,7 +59,9 @@ const DailyFinance = () => {
     amount: "",
     interestRate: "",
     installment: "",
-    interestAmount: "",
+    interest: "",
+    processingFee: "",
+    duration: "",
     startDate: "",
     endDate: "",
     g1Name: "",
@@ -74,49 +80,47 @@ const DailyFinance = () => {
     })
   );
 
+  const searchedRows = filteredRows.filter((row) => {
+    const searchText = globalSearch.trim().toLowerCase();
+    if (!searchText) return true;
+    return Object.values(row).some((value) => String(value ?? "").toLowerCase().includes(searchText));
+  });
+
   useEffect(() => {
     setPaginationModel((model) => ({ ...model, page: 0 }));
-  }, [filteredRows.length]);
+  }, [searchedRows.length]);
 
   const getHeader = (label, field) => (
-    <div style={{ width: "100%", paddingTop: 2 }}>
-
-      {/* Header Label (bigger & clear) */}
-      <div
-        style={{
-          fontWeight: 600,
-          fontSize: "14px",
-          marginBottom: 4,
-          lineHeight: 1.2
-        }}
-      >
+    <Box sx={{ width: "100%", pt: 0.25 }}>
+      <Box sx={{ fontWeight: 900, fontSize: 12, lineHeight: 1.2, mb: showColumnFilters ? 0.5 : 0 }}>
         {label}
-      </div>
-
-      {/* Compact Filter Box */}
-      <TextField
-        variant="outlined"
-        size="small"
-        value={filters[field]}
-        onChange={(e) =>
-          setFilters((prev) => ({
-            ...prev,
-            [field]: e.target.value,
-          }))
-        }
-        placeholder="Filter"
-        fullWidth
-        sx={{
-          "& .MuiOutlinedInput-root": {
-            height: 26,              // 🔥 reduce height
-            fontSize: "12px",
-          },
-          "& .MuiOutlinedInput-input": {
-            padding: "4px 8px",     // 🔥 tighter padding
+      </Box>
+      {showColumnFilters && (
+        <TextField
+          variant="outlined"
+          size="small"
+          value={filters[field]}
+          onChange={(e) =>
+            setFilters((prev) => ({
+              ...prev,
+              [field]: e.target.value,
+            }))
           }
-        }}
-      />
-    </div>
+          placeholder="Filter"
+          fullWidth
+          sx={{
+            "& .MuiOutlinedInput-root": {
+              height: 28,
+              fontSize: "12px",
+              bgcolor: "#fff",
+            },
+            "& .MuiOutlinedInput-input": {
+              padding: "4px 8px",
+            }
+          }}
+        />
+      )}
+    </Box>
   );
 
 
@@ -128,7 +132,9 @@ const DailyFinance = () => {
       amount: "",
       interestRate: "",
       installment: "",
-      interestAmount: "",
+      interest: "",
+      processingFee: "",
+      duration: "",
       startDate: "",
       endDate: "",
       g1Name: "",
@@ -136,6 +142,7 @@ const DailyFinance = () => {
       g3Name: "",
       partnerId: ""
     });
+    setGlobalSearch("");
   };
 
   // ------------------------------
@@ -531,7 +538,7 @@ const DailyFinance = () => {
     // 🔹 Basic Info
     {
       field: "id",
-      width: 120,
+      width: 170,
       renderHeader: () => getHeader("Acc No", "id"),
     },
     {
@@ -609,11 +616,7 @@ const DailyFinance = () => {
     },
   ];
 
-  return (
-    <>
-<ReportToolbar
-  data={filteredRows}
-  columns={[
+  const exportColumns = [
     "id",
     "customerName",
     "amount",
@@ -628,67 +631,84 @@ const DailyFinance = () => {
     "g2Name",
     "g3Name",
     "partnerId",
-  ]}
-  fileName="Daily_Finance_Report"
-  tableId="dailyFinanceTable"
-/>
+  ];
+
+  return (
+    <>
       {/* MAIN PAGE */}
-      <Box sx={{ p: 3 }}>
-        <Box
+      <Box sx={{ p: { xs: 1.5, md: 2.5 } }}>
+        <Paper
+          elevation={0}
+          className="enterprise-card"
           sx={{
+            p: 2,
+            mb: 2,
             display: "flex",
             justifyContent: "space-between",
             alignItems: "center",
-            mb: 3,
+            gap: 2,
+            flexWrap: "wrap",
           }}
         >
-          <Typography variant="h5" fontWeight={600}>
-            DAILY FINANCE
-          </Typography>
-        </Box>
-        <Box
-          sx={{
-            display: "flex",
-            justifyContent: "space-between",
-            alignItems: "center",
-            mb: 3,
-          }}
-        >
+          <Box sx={{ minWidth: 0 }}>
+            <Typography variant="h5" fontWeight={900}>
+              Daily Finance
+            </Typography>
+            <Typography variant="body2" color="text.secondary">
+              {searchedRows.length} of {rows.length} loans
+            </Typography>
+          </Box>
 
-          <Button
-            variant="contained"
-            onClick={clearFilters}
-            sx={{ textTransform: "none", fontWeight: 600 }}
-          >
-            Clear Filters
-          </Button>
+          <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap sx={{ alignItems: "center" }}>
+            <TextField
+              value={globalSearch}
+              onChange={(event) => setGlobalSearch(event.target.value)}
+              placeholder="Search account, customer, amount, date..."
+              size="small"
+              sx={{ width: { xs: "100%", sm: 360, md: 460 } }}
+              InputProps={{
+                startAdornment: <SearchRounded fontSize="small" sx={{ mr: 1, color: "text.secondary" }} />,
+              }}
+            />
+            <Button
+              variant={showColumnFilters ? "contained" : "outlined"}
+              startIcon={<TuneRounded />}
+              onClick={() => setShowColumnFilters((value) => !value)}
+            >
+              Filter
+            </Button>
+            <Button variant="outlined" startIcon={<RestartAltRounded />} onClick={clearFilters}>
+              Clear
+            </Button>
+            <TableExportMenu rows={searchedRows} columns={exportColumns} fileName="Daily_Finance_Report" />
+            <Button variant="contained" startIcon={<SaveIcon />} onClick={handleNewButton}>
+              New Loan
+            </Button>
+          </Stack>
+        </Paper>
 
-          <Button
-            variant="contained"
-            startIcon={<SaveIcon />}
-            onClick={() => {
-              handleNewButton();
+        <Box sx={{ height: "min(640px, calc(100vh - 260px))", minHeight: 460, width: "100%" }}>
+          <DataGrid
+            rows={searchedRows}
+            columns={columns}
+            loading={loading}
+            getRowId={(r) => r.id}
+            pageSizeOptions={[10, 25, 50, 100]}
+            paginationModel={paginationModel}
+            onPaginationModelChange={setPaginationModel}
+            pagination
+            disableRowSelectionOnClick
+            rowHeight={52}
+            columnHeaderHeight={showColumnFilters ? 76 : 48}
+            sx={{
+              bgcolor: "#fff",
+              "& .MuiDataGrid-cell": { fontWeight: 700 },
+              "& .MuiDataGrid-columnHeaderTitle": { fontWeight: 900 },
+              "& .MuiDataGrid-virtualScroller": { overflowAnchor: "none" },
             }}
-            sx={{ textTransform: "none", fontWeight: 600 }}
-          >
-            New Loan
-          </Button>
+          />
         </Box>
-
       </Box>
-
-      <DataGrid
-        rows={filteredRows}
-        columns={columns}
-        loading={loading}
-        autoHeight
-        getRowId={(r) => r.id}
-        pageSizeOptions={[10, 25, 50, 100]}
-        paginationModel={paginationModel}
-        onPaginationModelChange={setPaginationModel}
-        pagination
-        slots={{ toolbar: GridToolbar }}
-      />
 
 
       {/* Loading Spinner Overlay */ }
@@ -731,7 +751,7 @@ const DailyFinance = () => {
         <Grid item xs={12} md={6} sm={4}>
           <Autocomplete
             fullWidth
-            sx={{ width: "220px" }}
+            sx={{ width: "100%", minWidth: { md: 320 } }}
             openOnFocus
             filterOptions={(x) => x}
             options={options}
@@ -908,7 +928,7 @@ const DailyFinance = () => {
           <Grid item xs={12} md={6} key={field}>
             <Autocomplete
               fullWidth
-              sx={{ width: "230px" }}
+              sx={{ width: "100%", minWidth: { md: 320 } }}
               openOnFocus
               filterOptions={(x) => x}
               options={options}
@@ -936,7 +956,7 @@ const DailyFinance = () => {
         <Grid item xs={12} md={6}>
           <Autocomplete
             fullWidth
-            sx={{ width: "230px" }}
+            sx={{ width: "100%", minWidth: { md: 320 } }}
             openOnFocus
             filterOptions={(x) => x}
             options={options}

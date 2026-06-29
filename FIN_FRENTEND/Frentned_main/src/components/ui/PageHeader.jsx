@@ -15,14 +15,6 @@ import {
   RefreshRounded,
   TuneRounded,
 } from "@mui/icons-material";
-import { COMPANY_ADDRESS, COMPANY_NAME } from "src/lib/company";
-
-const reportDateLabel = () => new Date().toLocaleDateString("en-GB", {
-  day: "2-digit",
-  month: "short",
-  year: "numeric",
-}).replace(/ /g, "-");
-
 /**
  * PageHeader - Consistent header for all pages
  * @param {string} title - Page title
@@ -43,7 +35,7 @@ const PageHeader = ({
   addButtonLabel = "Add New",
   totalCount,
   loading = false,
-  subtitle = "Manage records, filters, exports, and approvals from one workspace.",
+  subtitle = "",
   onRefresh,
   onFilterClick,
   actions,
@@ -65,21 +57,15 @@ const PageHeader = ({
           alignItems: { xs: "stretch", sm: "center" },
           gap: 2,
         }}
-      >
+        >
         <Box>
           <Stack direction="row" alignItems="center" spacing={1.5} flexWrap="wrap">
             <Typography variant="h5">{title}</Typography>
             {totalCount !== undefined && <Chip size="small" label={`${totalCount} records`} color="primary" />}
           </Stack>
-          <Typography variant="caption" color="primary" sx={{ display: "block", mt: 0.35, fontWeight: 800 }}>
-            {COMPANY_NAME} / {COMPANY_ADDRESS} / Date: {reportDateLabel()}
-          </Typography>
-          <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
-            {subtitle}
-          </Typography>
-          {totalCount !== undefined && (
-            <Typography variant="caption" color="text.secondary" sx={{ display: { xs: "block", sm: "none" } }}>
-              Total: {totalCount}
+          {subtitle && (
+            <Typography variant="body2" color="text.secondary" sx={{ mt: 0.35, fontWeight: 650 }}>
+              {subtitle}
             </Typography>
           )}
         </Box>

@@ -9,7 +9,7 @@ import routes from "./routes";
 import PrivateRoute from "./components/PrivateRoute";
 import Layout from "./components/Layout";
 import LoadingSpinner from "./LoadingSpinner";
-import { useAuth } from "./utils/AuthContext";
+import { useAuth } from "./utils/authStore";
 import { COMPANY_APP_NAME } from "src/lib/company";
 
 function App() {

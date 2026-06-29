@@ -21,7 +21,7 @@ export const registrationApi = {
   },
 
   saveUser(payload) {
-    return axios.put(`${API_BASE}/users`, payload, getAuthHeaders());
+    return axios.post(`${API_BASE}/users`, payload, getAuthHeaders());
   },
 
   updateUser(payload) {

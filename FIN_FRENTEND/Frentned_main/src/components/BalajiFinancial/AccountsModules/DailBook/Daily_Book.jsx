@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import dayjs from "dayjs";
 import axios from "axios";
 import { Box, Button, Grid, Paper, Stack, Typography } from "@mui/material";
-import { useAuth } from "src/utils/AuthContext";
+import { useAuth } from "src/utils/authStore";
 import { API_BASE } from "lib/config";
 import { getSession } from "src/utils/session";
 import { successToast, errorToast } from "toastify";

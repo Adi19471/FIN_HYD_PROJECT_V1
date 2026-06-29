@@ -1,6 +1,6 @@
 import React from "react";
 import { Navigate } from "react-router-dom";
-import { useAuth } from "../utils/AuthContext";
+import { useAuth } from "../utils/authStore";
 import { hasPermissionAccess, normalizeRoles } from "src/utils/permissions";
 
 export default function PrivateRoute({ children, allowedRoles, requiredPermissions }) {

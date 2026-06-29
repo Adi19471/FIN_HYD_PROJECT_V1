@@ -1,13 +1,7 @@
-import { createContext, useContext, useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { setSession, getSession, removeSession } from "./session";
+import { AuthContext } from "src/utils/authStore";
 import { normalizePermissionCodes, normalizeRoles } from "src/utils/permissions";
-
-const AuthContext = createContext({
-  isAuthenticated: false,
-  user: null,
-  login: () => {},
-  logout: () => {},
-});
 
 const INACTIVITY_TIMEOUT = 60 * 60 * 1000; // 60 minutes
 
@@ -106,5 +100,3 @@ export function AuthProvider({ children }) {
     </AuthContext.Provider>
   );
 }
-
-export const useAuth = () => useContext(AuthContext);

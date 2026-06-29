@@ -10,6 +10,7 @@
 :root {
   --app-font-family: "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
   --app-font-scale: 1.04;
+  --app-screen-zoom: 1;
   --app-radius: 12px;
   --app-density-scale: 1;
   --app-table-scale: 0.92;
@@ -87,8 +88,13 @@ body {
     #f5f7fb;
 }
 
+#root {
+  zoom: var(--app-screen-zoom);
+}
+
 .MuiTypography-root {
   letter-spacing: 0 !important;
+  font-weight: 700;
 }
 
 .MuiTypography-body1 {
@@ -117,7 +123,7 @@ body {
 
 .MuiInputBase-input {
   font-size: calc(0.94rem * var(--app-font-scale)) !important;
-  font-weight: 600;
+  font-weight: 700;
 }
 
 .dark body {
@@ -128,9 +134,7 @@ body {
 }
 
 .enterprise-shell {
-  background:
-    radial-gradient(circle at top left, rgba(15, 98, 254, 0.08), transparent 32rem),
-    linear-gradient(180deg, rgba(255, 255, 255, 0.78), rgba(241, 245, 249, 0.9));
+  background: #eef2f7;
 }
 
 .dark .enterprise-shell {
@@ -140,40 +144,38 @@ body {
 }
 
 .enterprise-main {
-  background-image: linear-gradient(rgba(15, 23, 42, 0.035) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(15, 23, 42, 0.035) 1px, transparent 1px);
-  background-size: 28px 28px;
+  background: #eef2f7;
 }
 
 .workspace-tabs {
   display: flex;
   align-items: center;
   gap: 8px;
-  min-height: 46px;
-  margin-bottom: 16px;
-  padding: 6px;
+  min-height: 38px;
+  margin-bottom: 10px;
+  padding: 4px;
   overflow-x: auto;
   border: 1px solid var(--border-soft);
-  border-radius: var(--app-radius);
-  background: color-mix(in srgb, var(--surface-1) 90%, transparent);
-  box-shadow: 0 12px 28px rgba(15, 23, 42, 0.06);
+  border-radius: 8px;
+  background: #ffffff;
+  box-shadow: none;
 }
 
 .workspace-tab {
-  min-width: 126px;
-  max-width: 240px;
-  min-height: 34px;
+  min-width: 104px;
+  max-width: 168px;
+  min-height: 30px;
   display: inline-flex;
   align-items: center;
   justify-content: space-between;
   gap: 8px;
-  padding: 7px 8px 7px 12px;
+  padding: 5px 7px 5px 10px;
   border: 1px solid transparent;
   border-radius: 8px;
   color: var(--text-muted);
   background: transparent;
   text-decoration: none;
-  font-size: 13px;
+  font-size: 12px;
   font-weight: 850;
   white-space: nowrap;
 }
@@ -196,9 +198,9 @@ body {
 }
 
 .workspace-tab-close {
-  width: 22px;
-  height: 22px;
-  flex: 0 0 22px;
+  width: 20px;
+  height: 20px;
+  flex: 0 0 20px;
   display: grid;
   place-items: center;
   border: 0;
@@ -349,6 +351,16 @@ body {
   color: #fff;
   background: linear-gradient(135deg, var(--brand-primary), var(--brand-secondary));
   box-shadow: 0 14px 26px color-mix(in srgb, var(--brand-primary) 28%, transparent);
+}
+
+.enterprise-header-brand {
+  display: none;
+}
+
+@media (max-width: 1023px) {
+  .enterprise-header-brand {
+    display: inline-flex;
+  }
 }
 
 .enterprise-brand-mark svg {
@@ -644,17 +656,21 @@ body {
 
 .MuiDataGrid-columnHeader {
   background: var(--surface-2);
+  border-right: 1px solid var(--border-soft) !important;
 }
 
 .MuiDataGrid-columnHeaderTitle {
   font-size: calc(0.75rem * var(--app-font-scale) * var(--app-table-scale));
-  font-weight: 800 !important;
+  font-weight: 900 !important;
   letter-spacing: 0;
   text-transform: uppercase;
 }
 
 .MuiDataGrid-cell {
   font-size: calc(0.8125rem * var(--app-font-scale) * var(--app-table-scale));
+  font-weight: 700;
+  border-right: 1px solid var(--border-soft) !important;
+  border-bottom: 1px solid var(--border-soft) !important;
 }
 
 .MuiDataGrid-footerContainer {
@@ -681,6 +697,53 @@ body {
 .MuiTablePagination-root {
   border-top: 1px solid var(--border-soft);
   background: var(--surface-1);
+}
+
+.MuiTablePagination-toolbar {
+  justify-content: center;
+  gap: 16px;
+  min-height: 52px !important;
+  padding-inline: 16px !important;
+}
+
+.MuiTablePagination-spacer {
+  display: none;
+}
+
+.MuiTablePagination-selectLabel,
+.MuiTablePagination-displayedRows {
+  margin: 0 !important;
+  font-weight: 800 !important;
+}
+
+.MuiTablePagination-actions {
+  margin-left: 0 !important;
+}
+
+.MuiDataGrid-toolbarContainer {
+  align-items: center !important;
+  justify-content: flex-end !important;
+}
+
+.MuiDataGrid-toolbarQuickFilter {
+  margin-left: auto !important;
+}
+
+@media (max-width: 640px) {
+  .MuiTablePagination-toolbar {
+    flex-wrap: wrap;
+    gap: 10px;
+    padding-block: 8px !important;
+  }
+
+  .MuiDataGrid-toolbarContainer {
+    justify-content: stretch !important;
+  }
+
+  .MuiDataGrid-toolbarQuickFilter {
+    width: 100%;
+    margin-left: 0 !important;
+  }
 }
 
 .MuiMenu-paper {
@@ -795,32 +858,15 @@ body {
 }
 
 .dashboard-hero {
-  padding: clamp(22px, 3vw, 34px);
+  padding: clamp(16px, 2vw, 24px);
   overflow: hidden;
-  background:
-    linear-gradient(135deg, color-mix(in srgb, var(--brand-primary) 12%, transparent), transparent 46%),
-    linear-gradient(180deg, color-mix(in srgb, var(--surface-1) 96%, transparent), var(--surface-1));
+  background: #ffffff;
 }
 
 .dashboard-hero-redesign {
   position: relative;
-  border-radius: calc(var(--app-radius) + 4px) !important;
-  background:
-    linear-gradient(120deg, color-mix(in srgb, var(--brand-primary) 13%, transparent), transparent 42%),
-    linear-gradient(315deg, color-mix(in srgb, var(--brand-success) 8%, transparent), transparent 46%),
-    color-mix(in srgb, var(--surface-1) 96%, transparent) !important;
-}
-
-.dashboard-hero-redesign::after {
-  content: "";
-  position: absolute;
-  inset: auto 3% -42px auto;
-  width: 340px;
-  height: 140px;
-  border-radius: 999px;
-  background: color-mix(in srgb, var(--brand-primary) 9%, transparent);
-  filter: blur(18px);
-  pointer-events: none;
+  border-radius: 8px !important;
+  background: #ffffff !important;
 }
 
 .dashboard-hero-copy {
@@ -835,10 +881,10 @@ body {
   z-index: 1;
   width: min(100%, 430px);
   padding: 18px;
-  border-radius: var(--app-radius);
+  border-radius: 8px;
   border: 1px solid color-mix(in srgb, var(--brand-primary) 14%, var(--border-soft));
-  background: color-mix(in srgb, var(--surface-1) 82%, transparent);
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.72), 0 18px 42px rgba(15, 23, 42, 0.08);
+  background: #f8fafc;
+  box-shadow: none;
 }
 
 .dashboard-operator-icon {
@@ -852,13 +898,13 @@ body {
 }
 
 .dashboard-strip {
-  min-height: 100px;
+  min-height: 82px;
   display: flex;
   flex-direction: column;
   justify-content: center;
   gap: 4px;
   padding: 13px;
-  border-radius: 12px;
+  border-radius: 8px;
   border: 1px solid var(--border-soft);
   background: var(--surface-1);
 }
@@ -895,17 +941,13 @@ body {
 
 .dashboard-kpi {
   position: relative;
-  min-height: clamp(146px, 14vw, 188px);
+  min-height: 132px;
   display: flex;
   flex-direction: column;
   justify-content: space-between;
   overflow: hidden;
-  background:
-    linear-gradient(145deg, color-mix(in srgb, var(--surface-1) 98%, transparent), color-mix(in srgb, var(--surface-2) 76%, transparent)),
-    var(--surface-1) !important;
-  box-shadow:
-    0 14px 32px rgba(15, 23, 42, 0.08),
-    inset 0 1px 0 rgba(255, 255, 255, 0.72);
+  background: #ffffff !important;
+  box-shadow: none;
   transition: transform 160ms ease, border-color 160ms ease, box-shadow 160ms ease, background-color 160ms ease;
 }
 
@@ -919,11 +961,9 @@ body {
 }
 
 .dashboard-kpi:hover {
-  transform: translateY(-2px);
+  transform: translateY(-1px);
   border-color: color-mix(in srgb, var(--brand-primary) 18%, var(--border-soft));
-  box-shadow:
-    0 20px 42px rgba(15, 23, 42, 0.12),
-    inset 0 1px 0 rgba(255, 255, 255, 0.75);
+  box-shadow: none;
 }
 
 .dashboard-kpi .MuiTypography-body2 {
@@ -956,13 +996,13 @@ body {
 
 .dashboard-kpi-icon,
 .dashboard-module-icon {
-  width: clamp(42px, 4vw, 56px);
-  height: clamp(42px, 4vw, 56px);
-  flex: 0 0 clamp(42px, 4vw, 56px);
+  width: 42px;
+  height: 42px;
+  flex: 0 0 42px;
   display: grid;
   place-items: center;
-  border-radius: max(10px, calc(var(--app-radius) - 2px));
-  box-shadow: 0 12px 26px color-mix(in srgb, currentColor 14%, transparent);
+  border-radius: 8px;
+  box-shadow: none;
 }
 
 .dashboard-kpi-icon svg,
@@ -973,8 +1013,8 @@ body {
 
 .dashboard-module {
   transition: transform 160ms ease, box-shadow 160ms ease, border-color 160ms ease;
-  min-height: 150px;
-  background: linear-gradient(180deg, color-mix(in srgb, var(--surface-1) 98%, transparent), color-mix(in srgb, var(--surface-2) 78%, transparent)) !important;
+  min-height: 116px;
+  background: #ffffff !important;
 }
 
 .dashboard-module:hover {
@@ -1218,8 +1258,8 @@ body {
 
 /* Modern Scrollbar Styling */
 ::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
+  width: 14px;
+  height: 14px;
 }
 
 ::-webkit-scrollbar-track {
@@ -1228,8 +1268,9 @@ body {
 }
 
 ::-webkit-scrollbar-thumb {
-  background: rgba(0, 0, 0, 0.15);
-  border-radius: 4px;
+  background: rgba(0, 0, 0, 0.28);
+  border: 3px solid rgba(255, 255, 255, 0.65);
+  border-radius: 999px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
@@ -1242,7 +1283,8 @@ body {
 }
 
 .dark ::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.15);
+  background: rgba(255, 255, 255, 0.32);
+  border-color: rgba(15, 23, 42, 0.72);
 }
 
 .dark ::-webkit-scrollbar-thumb:hover {

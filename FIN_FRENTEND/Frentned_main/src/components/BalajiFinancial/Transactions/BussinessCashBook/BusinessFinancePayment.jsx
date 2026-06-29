@@ -1,6 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import {
-  Alert,
   Autocomplete,
   Box,
   Button,
@@ -44,7 +43,6 @@ const defaultForm = () => ({
 export default function BusinessFinancePayment({
   mode,
   title,
-  subtitle,
   loanType,
   loadEndpoint,
   saveEndpoint,
@@ -239,11 +237,7 @@ export default function BusinessFinancePayment({
               <PaymentsRounded color="primary" />
               <Typography variant="h5">{title}</Typography>
               <Chip label={mode} size="small" color="primary" variant="outlined" />
-              <Chip label={`${rows.length} schedule rows`} size="small" variant="outlined" />
             </Stack>
-            <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
-              {subtitle}
-            </Typography>
           </Box>
           {loading && <CircularProgress size={28} />}
         </Stack>
@@ -251,7 +245,7 @@ export default function BusinessFinancePayment({
 
       <Paper className="enterprise-card" elevation={0} sx={{ p: 2.5 }}>
         <Typography variant="subtitle1" sx={{ mb: 2, fontWeight: 900 }}>
-          Customer Details
+          Customer
         </Typography>
         <Grid container spacing={2}>
           <Grid item xs={12} md={5}>
@@ -259,12 +253,12 @@ export default function BusinessFinancePayment({
               openOnFocus
               filterOptions={(x) => x}
               fullWidth
-              options={accountList}
+
+          options={accountList}
               getOptionLabel={(option) => (typeof option === "string" ? option : option.displayString || option.loanId || "")}
               inputValue={searchInput}
               onInputChange={(_, value) => setSearchInput(value)}
               onOpen={() => fetchAccounts("")}
-              sx={{width:"220px"}}
               onChange={(_, value) => {
                 if (value) {
                   const loanId = typeof value === "string" ? value : value.loanId;
@@ -373,13 +367,8 @@ export default function BusinessFinancePayment({
         </Grid>
       </Grid>
 
-      {!selectedLoanId && (
-        <Alert severity="info">Select a customer account to load payment details and schedule rows.</Alert>
-      )}
-
       <DataTable
         title={`${title} - Installment Schedule`}
-        subtitle="Search the schedule, view total row count, print, and download PDF, Excel, or Word."
         rows={rows}
         columns={columns}
         loading={loading}

@@ -66,6 +66,24 @@ export const registrationService = {
     return registrationApi.saveUser(payload);
   },
 
+
+   async updateUser(form) {
+    const payload = {
+      id: form.id ? Number(form.id) : 0,
+      name: form.name.trim(),
+      password: form.password?.trim() || null,
+      role: form.role?.trim() || null,
+      permissionIds: normalizePermissionIds(form.permissionIds),
+    };
+
+    if (form.id && !payload.password) {
+      delete payload.password;
+    }
+
+    return registrationApi.updateUser(payload);
+  },
+
+
   deleteUser(id) {
     return registrationApi.deleteUser(id);
   },

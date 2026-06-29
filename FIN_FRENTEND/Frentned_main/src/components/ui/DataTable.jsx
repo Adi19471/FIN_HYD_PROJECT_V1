@@ -19,7 +19,9 @@ import {
   DescriptionRounded,
   FileDownloadRounded,
   PrintRounded,
+  SearchRounded,
   TableViewRounded,
+  TuneRounded,
 } from "@mui/icons-material";
 import * as XLSX from "xlsx";
 import jsPDF from "jspdf";
@@ -163,15 +165,15 @@ export function TableExportMenu({ rows, columns, fileName, buttonLabel = "Downlo
       <Menu anchorEl={anchorEl} open={Boolean(anchorEl)} onClose={closeMenu}>
         <MenuItem onClick={handleExcel}>
           <ListItemIcon><TableViewRounded fontSize="small" color="success" /></ListItemIcon>
-          <ListItemText primary="Excel workbook" secondary=".xlsx" />
+          <ListItemText primary="Download Excel" secondary=".xlsx" />
         </MenuItem>
         <MenuItem onClick={handlePdf}>
           <ListItemIcon><DescriptionRounded fontSize="small" color="error" /></ListItemIcon>
-          <ListItemText primary="PDF report" secondary=".pdf" />
+          <ListItemText primary="Download PDF" secondary=".pdf" />
         </MenuItem>
         <MenuItem onClick={handleWord}>
           <ListItemIcon><ArticleRounded fontSize="small" color="primary" /></ListItemIcon>
-          <ListItemText primary="Word document" secondary=".doc" />
+          <ListItemText primary="Download Word" secondary=".doc" />
         </MenuItem>
         <MenuItem onClick={handlePrint}>
           <ListItemIcon><PrintRounded fontSize="small" /></ListItemIcon>
@@ -201,7 +203,7 @@ const DataTable = ({
   subtitle,
   pageSize = 25,
   initialState,
-  showCompany = true,
+  showCompany = false,
   actions,
   ...otherProps
 }) => {
@@ -248,22 +250,18 @@ const DataTable = ({
             background: "linear-gradient(180deg, rgba(255,255,255,0.96), rgba(248,250,252,0.88))",
           }}
         >
-          <Box>
+          <Box sx={{ minWidth: 0 }}>
             {showCompany && (
               <Typography variant="caption" color="primary" sx={{ fontWeight: 900 }}>
                 {COMPANY_NAME} / {COMPANY_ADDRESS} / Date: {reportDateLabel()}
               </Typography>
             )}
             {title && <Typography variant="subtitle1" sx={{ mt: showCompany ? 0.25 : 0 }}>{title}</Typography>}
-            {subtitle && (
-              <Typography variant="body2" color="text.secondary">
-                {subtitle}
-              </Typography>
-            )}
           </Box>
           <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
             <Chip size="small" label={`${rows.length} records`} color="primary" variant="outlined" />
-            <Chip size="small" label="Search + Filters" variant="outlined" />
+            <Chip size="small" icon={<SearchRounded />} label="Search" variant="outlined" />
+            <Chip size="small" icon={<TuneRounded />} label="Filter" variant="outlined" />
             <TableExportMenu rows={rows} columns={columns} fileName={tableTitle} />
             {actions}
           </Stack>
@@ -311,10 +309,20 @@ const DataTable = ({
               px: 2,
               py: 1.25,
               gap: 1,
+              alignItems: "center",
+              justifyContent: "flex-end",
               borderBottom: "1px solid",
               borderColor: "divider",
               background:
                 "linear-gradient(180deg, rgba(248,250,252,0.9), rgba(255,255,255,0.78))",
+            },
+            "& .MuiDataGrid-toolbarContainer .MuiButton-root": {
+              minHeight: 34,
+            },
+            "& .MuiDataGrid-toolbarQuickFilter": {
+              minWidth: { xs: "100%", sm: 260 },
+              maxWidth: { xs: "100%", sm: 360 },
+              marginLeft: { xs: 0, sm: "auto" },
             },
             "& .MuiDataGrid-columnHeaders, & .MuiDataGrid-columnHeader": {
               backgroundColor: "#f8fafc",
@@ -367,9 +375,28 @@ const DataTable = ({
               outlineOffset: "-2px",
             },
             "& .MuiDataGrid-footerContainer": {
+              minHeight: 54,
               borderTop: "1px solid",
               borderColor: "divider",
               backgroundColor: "#fff",
+              justifyContent: "center",
+              px: 2,
+            },
+            "& .MuiDataGrid-footerContainer .MuiTablePagination-root": {
+              width: "100%",
+            },
+            "& .MuiDataGrid-footerContainer .MuiTablePagination-toolbar": {
+              width: "100%",
+              justifyContent: "center",
+              gap: 2,
+              px: 0,
+            },
+            "& .MuiDataGrid-footerContainer .MuiTablePagination-spacer": {
+              display: "none",
+            },
+            "& .MuiDataGrid-footerContainer .MuiTablePagination-selectLabel, & .MuiDataGrid-footerContainer .MuiTablePagination-displayedRows": {
+              margin: 0,
+              fontWeight: 800,
             },
             "& .MuiDataGrid-overlayWrapper": {
               minHeight: 260,

@@ -31,10 +31,13 @@ const quickPages = [
   { name: "Quick Cash Book", link: "/Transactions/Quick_Cash_Book", group: "Transactions", keywords: "quick entry cash collection", icon: AddCardRounded },
   { name: "Business Cash Book", link: "/BussinessCashBook_Main", group: "Transactions", keywords: "daily monthly finance payment", icon: ReceiptLongRounded },
   { name: "Daily Book", link: "/AccountsModules/DailyBook", group: "Accounts", keywords: "day close cash movement", icon: ReceiptLongRounded },
+  { name: "Loans", link: "/Loan", group: "Loans", keywords: "daily monthly finance account number ac no", icon: AccountBalanceRounded },
+  { name: "Distributed Loans", link: "/Loans/Distubuted", group: "Loans", keywords: "disbursed loan distributed user report", icon: AssessmentRounded },
+  { name: "Account Master Ledger", link: "/AccountsModules/AccountMasterLedger", group: "Accounts", keywords: "capital names particulars ledger", icon: ReceiptLongRounded },
   { name: "Business Collections Report", link: "/Bussiness/BussinessCollectionReportsimport", group: "Reports", keywords: "collections report df mf", icon: AssessmentRounded },
   { name: "Customer Profiles", link: "/customer", group: "Master", keywords: "customer kyc profile", icon: GroupsRounded },
-  { name: "Daily Finance", link: "/Daily-Finace", group: "Loans", keywords: "daily loan register", icon: AccountBalanceRounded },
-  { name: "Monthly Finance", link: "/Monthly-Finance", group: "Loans", keywords: "monthly loan register", icon: AccountBalanceRounded },
+  { name: "Daily Finance", link: "/Daily-Finace", group: "Loans", keywords: "daily loan register account ac no", icon: AccountBalanceRounded },
+  { name: "Monthly Finance", link: "/Monthly-Finance", group: "Loans", keywords: "monthly loan register account ac no", icon: AccountBalanceRounded },
 ];
 
 function ModalSearch({ id, searchId, modalOpen, setModalOpen }) {

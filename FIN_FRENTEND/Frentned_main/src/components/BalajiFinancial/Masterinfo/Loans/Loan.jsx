@@ -10,9 +10,9 @@ import {
 } from "@mui/material";
 import { motion, AnimatePresence } from "framer-motion";
 
-import { MdCalendarToday, MdCalendarMonth } from "react-icons/md";
+import { CalendarMonthRounded, TodayRounded } from "@mui/icons-material";
 import LoadingSpinner from "src/LoadingSpinner";
-import { useAuth } from "src/utils/AuthContext";
+import { useAuth } from "src/utils/authStore";
 import { hasPermissionAccess } from "src/utils/permissions";
 
 const MonthlyFinance = lazy(() => import("./MonthlyFinance/MonthlyFinance"));
@@ -26,8 +26,8 @@ const FinanceTabs = () => {
   const tabs = useMemo(
     () =>
       [
-        { label: "Daily", icon: <MdCalendarToday size={18} />, component: DailyFinance, permissionCodes: ["LOAN_MAIN_VIEW", "DAILY_FINANCE_VIEW"] },
-        { label: "Monthly", icon: <MdCalendarMonth size={18} />, component: MonthlyFinance, permissionCodes: ["LOAN_MAIN_VIEW", "MONTHLY_FINANCE_VIEW"] },
+        { label: "Daily", icon: <TodayRounded fontSize="small" />, component: DailyFinance, permissionCodes: ["LOAN_MAIN_VIEW", "DAILY_FINANCE_VIEW"] },
+        { label: "Monthly", icon: <CalendarMonthRounded fontSize="small" />, component: MonthlyFinance, permissionCodes: ["LOAN_MAIN_VIEW", "MONTHLY_FINANCE_VIEW"] },
       ].filter((tab) => hasPermissionAccess(user, tab.permissionCodes)),
     [user]
   );
@@ -52,17 +52,18 @@ const FinanceTabs = () => {
     >
       {/* Main Card */}
       <Paper
-        elevation={6}
+        elevation={0}
+        className="enterprise-card"
         sx={{
-          borderRadius: 0,
+          borderRadius: 2,
           overflow: "hidden",
         }}
       >
         {/* Header */}
         <Box
           sx={{
-            px: { xs: 2, md: 3 },
-            py: 2,
+            px: { xs: 2, md: 2.5 },
+            py: 1.5,
             borderBottom: "1px solid #e2e8f0",
             display: "flex",
             alignItems: "center",
@@ -71,15 +72,11 @@ const FinanceTabs = () => {
             gap: 2,
           }}
         >
-          <Typography
-            variant="h6"
-            sx={{
-              fontWeight: 700,
-              letterSpacing: 0.6,
-            }}
-          >
-            Personal Accounts
-          </Typography>
+          <Box>
+            <Typography variant="h6" sx={{ fontWeight: 900 }}>
+              Loans
+            </Typography>
+          </Box>
 
           {/* Tabs */}
           <Tabs
@@ -90,8 +87,7 @@ const FinanceTabs = () => {
               "& .MuiTabs-indicator": {
                 height: 3,
                 borderRadius: 2,
-                background:
-                  "linear-gradient(90deg,#3b82f6,#06b6d4)",
+                background: theme.palette.primary.main,
               },
             }}
           >
@@ -104,7 +100,7 @@ const FinanceTabs = () => {
                   <Typography
                     sx={{
                       fontSize: "0.9rem",
-                      fontWeight: 600,
+                      fontWeight: 850,
                       textTransform: "capitalize",
                     }}
                   >
@@ -128,7 +124,7 @@ const FinanceTabs = () => {
         {/* Content */}
         <Box
           sx={{
-            p: { xs: 2, md: 3 },
+            p: { xs: 1.5, md: 2 },
             minHeight: "60vh",
           }}
         >

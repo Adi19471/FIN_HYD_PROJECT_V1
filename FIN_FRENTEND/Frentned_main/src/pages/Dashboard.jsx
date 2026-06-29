@@ -15,20 +15,17 @@ import {
   Typography,
 } from "@mui/material";
 import {
-  AccountBalanceRounded,
-  AddCardRounded,
   ApprovalRounded,
   ArrowForwardRounded,
   AssessmentRounded,
-  CurrencyRupeeRounded,
-  GroupsRounded,
+  ContactsRounded,
+  PointOfSaleRounded,
   LaunchRounded,
   PaymentsRounded,
   ReceiptLongRounded,
   RefreshRounded,
-  SavingsRounded,
+  RequestQuoteRounded,
   TrendingUpRounded,
-  WarningAmberRounded,
 } from "@mui/icons-material";
 import {
   Area,
@@ -41,7 +38,6 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
-import { DataTable } from "src/components/ui";
 import { COMPANY_ADDRESS, COMPANY_NAME } from "src/lib/company";
 import { API_BASE } from "lib/config";
 import { getSession } from "src/utils/session";
@@ -50,44 +46,13 @@ const formatINR = (value) =>
   `Rs ${Number(value || 0).toLocaleString("en-IN", { maximumFractionDigits: 0 })}`;
 
 const modules = [
-  { title: "Customer Master", path: "/customer", note: "Profiles, KYC, search, export", icon: GroupsRounded },
-  { title: "Daily Finance", path: "/Daily-Finace", note: "Daily loan register and filters", icon: CurrencyRupeeRounded },
-  { title: "Monthly Finance", path: "/Monthly-Finance", note: "Monthly loan creation and reports", icon: AccountBalanceRounded },
-  { title: "Quick Cash Book", path: "/Transactions/Quick_Cash_Book", note: "Fast transaction entry", icon: AddCardRounded },
-  { title: "Daily Book", path: "/AccountsModules/DailyBook", note: "Cash movement and day close", icon: ReceiptLongRounded },
-  { title: "Collection Report", path: "/Bussiness/BussinessCollectionReportsimport", note: "Daily and monthly collection status", icon: AssessmentRounded },
+  { title: "Customer Master", path: "/customer", icon: ContactsRounded },
+  { title: "Daily Finance", path: "/Daily-Finace", icon: PaymentsRounded },
+  { title: "Monthly Finance", path: "/Monthly-Finance", icon: RequestQuoteRounded },
+  { title: "Quick Cash Book", path: "/Transactions/Quick_Cash_Book", icon: PointOfSaleRounded },
+  { title: "Daily Book", path: "/AccountsModules/DailyBook", icon: ReceiptLongRounded },
+  { title: "Collection Report", path: "/Bussiness/BussinessCollectionReportsimport", icon: AssessmentRounded },
 ];
-
-function KpiCard({ item, loading }) {
-  const Icon = item.icon;
-  return (
-    <Paper className="enterprise-card dashboard-kpi" elevation={0}>
-      <Stack direction="row" justifyContent="space-between" alignItems="flex-start" spacing={1.5} sx={{ minWidth: 0 }}>
-        <Box sx={{ minWidth: 0, flex: 1 }}>
-          <Typography variant="body2" color="text.secondary" noWrap title={item.title}>
-            {item.title}
-          </Typography>
-          {loading ? (
-            <Skeleton width="80%" height={42} />
-          ) : (
-            <Typography variant="h5" sx={{ mt: 0.75 }} title={item.label}>
-              {item.label}
-            </Typography>
-          )}
-        </Box>
-        <Box className="dashboard-kpi-icon" sx={{ color: item.tone, bgcolor: `${item.tone}18` }}>
-          <Icon />
-        </Box>
-      </Stack>
-      <Stack direction="row" spacing={1} alignItems="center" sx={{ mt: 2, minWidth: 0 }}>
-        <Chip size="small" label={item.delta} color={item.color || "success"} />
-        <Typography variant="caption" color="text.secondary" noWrap title={item.note}>
-          {item.note}
-        </Typography>
-      </Stack>
-    </Paper>
-  );
-}
 
 function MetricStrip({ title, value, note, tone = "primary" }) {
   return (
@@ -105,7 +70,6 @@ function Panel({ title, subtitle, action, children }) {
       <Stack direction="row" justifyContent="space-between" alignItems="flex-start" spacing={2} sx={{ mb: 2 }}>
         <Box>
           <Typography variant="h6">{title}</Typography>
-          <Typography variant="body2" color="text.secondary">{subtitle}</Typography>
         </Box>
         {action}
       </Stack>
@@ -212,13 +176,6 @@ export default function Dashboard() {
     return () => window.clearInterval(refreshTimer);
   }, [fetchDashboard]);
 
-  const kpis = [
-    { title: "Portfolio Value", label: formatINR(metrics.portfolioValue), delta: "Live", note: "month target", icon: AccountBalanceRounded, tone: "#0f62fe" },
-    { title: "Today Collection", label: formatINR(metrics.todayCollection), delta: "Today", note: dayjs().format("DD-MMM"), icon: PaymentsRounded, tone: "#059669" },
-    { title: "Pending Dues", label: formatINR(metrics.pendingDues), delta: `${metrics.dueCases} cases`, note: "collection balance", icon: WarningAmberRounded, tone: "#d97706", color: "warning" },
-    { title: "Active Members", label: String(metrics.activeMembers), delta: "Realtime", note: "personal info", icon: GroupsRounded, tone: "#4338ca" },
-  ];
-
   const completionRate = useMemo(() => {
     const target = Number(metrics.portfolioValue || 0);
     const received = Number(metrics.todayCollection || 0);
@@ -272,15 +229,11 @@ export default function Dashboard() {
               {lastUpdated && <Chip size="small" label={`Updated ${lastUpdated.format("hh:mm A")}`} variant="outlined" />}
             </Stack>
             <Typography variant="h3" sx={{ mt: 2 }}>{COMPANY_NAME}</Typography>
-            <Typography variant="body1" color="text.secondary" sx={{ mt: 1, maxWidth: 720 }}>
-              Collections, dues, ledgers, loans, reports, and cash operations in one finance control room.
-            </Typography>
-
             <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap sx={{ mt: 2.5 }}>
               <Button startIcon={<RefreshRounded />} variant="contained" onClick={fetchDashboard} disabled={loading}>
                 Refresh Counts
               </Button>
-              <Button startIcon={<AddCardRounded />} variant="outlined" onClick={() => navigate("/Transactions/Quick_Cash_Book")}>
+              <Button startIcon={<PointOfSaleRounded />} variant="outlined" onClick={() => navigate("/Transactions/Quick_Cash_Book")}>
                 Quick Entry
               </Button>
               <Button startIcon={<ReceiptLongRounded />} variant="outlined" onClick={() => navigate("/AccountsModules/DailyBook")}>
@@ -323,19 +276,10 @@ export default function Dashboard() {
 
       {error && <Alert severity="warning">{error}</Alert>}
 
-      <Grid container spacing={5}>
-        {kpis.map((item) => (
-          <Grid item xs={12} sm={6} lg={4} key={item.title}>
-            <KpiCard item={item} loading={loading} />
-          </Grid>
-        ))}
-      </Grid>
-
       <Grid container spacing={2}>
         <Grid item xs={12}>
           <Panel
             title="Finance Workspace"
-            subtitle="Most-used operations with the same compact action style."
             action={<Button size="small" endIcon={<ArrowForwardRounded />} onClick={() => navigate("/Bussiness/BussinessCollectionReportsimport")}>Reports</Button>}
           >
             <Grid container spacing={2}>
@@ -348,8 +292,7 @@ export default function Dashboard() {
                         <Box className="dashboard-module-icon"><Icon /></Box>
                         <Box sx={{ minWidth: 0, flex: 1 }}>
                           <Typography variant="subtitle1">{module.title}</Typography>
-                          <Typography variant="body2" color="text.secondary">{module.note}</Typography>
-                          <Stack direction="row" spacing={1} sx={{ mt: 1.4 }}>
+                          <Stack direction="row" spacing={1} sx={{ mt: 1 }}>
                             <Button size="small" variant="contained" onClick={() => navigate(module.path)}>Open</Button>
                             <Button size="small" variant="outlined" startIcon={<LaunchRounded />} onClick={() => openInNewTab(module.path)}>
                               New Tab

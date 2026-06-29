@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import {
+  Button,
   IconButton,
   Menu,
   MenuItem,
@@ -9,28 +10,47 @@ import {
   Typography,
   Box,
   Paper,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogTitle,
+  Stack,
+  Chip,
 } from "@mui/material";
 import HelpOutlineIcon from "@mui/icons-material/HelpOutline";
-import DescriptionIcon from "@mui/icons-material/Description";
 import SupportAgentIcon from "@mui/icons-material/SupportAgent";
 import EmailIcon from "@mui/icons-material/Email";
-import { Link } from "react-router-dom";
+import PhoneIcon from "@mui/icons-material/Phone";
+import LocationOnIcon from "@mui/icons-material/LocationOn";
+import BusinessIcon from "@mui/icons-material/Business";
+import InfoOutlinedIcon from "@mui/icons-material/InfoOutlined";
+
+const companyDetails = {
+  name: "AK Technology",
+  phone: "8341553216",
+  city: "Hyderabad",
+  email: "accadamic.info2023@gmail.com",
+};
 
 export default function DropdownHelp() {
   const [anchorEl, setAnchorEl] = useState(null);
+  const [detailsOpen, setDetailsOpen] = useState(false);
 
   const open = Boolean(anchorEl);
   const handleClick = (event) => setAnchorEl(event.currentTarget);
   const handleClose = () => setAnchorEl(null);
+  const openDetails = () => {
+    handleClose();
+    setDetailsOpen(true);
+  };
+  const closeDetails = () => setDetailsOpen(false);
 
   return (
     <Box>
-      {/* Help Icon */}
-      <IconButton color="inherit" onClick={handleClick}>
+      <IconButton color="inherit" onClick={handleClick} aria-label="Open help">
         <HelpOutlineIcon sx={{ fontSize: 24 }} />
       </IconButton>
 
-      {/* MUI Menu */}
       <Menu
         anchorEl={anchorEl}
         open={open}
@@ -48,56 +68,105 @@ export default function DropdownHelp() {
           horizontal: "right",
         }}
       >
-        {/* Header */}
         <Box sx={{ px: 2, py: 1 }}>
-          <Typography
-            variant="subtitle2"
-            fontWeight="bold"
-            color="text.secondary"
-          >
-            Need Help?
+          <Typography variant="subtitle2" fontWeight="bold" color="text.secondary">
+            Help & Support
+          </Typography>
+          <Typography variant="caption" color="text.secondary">
+            {companyDetails.name}
           </Typography>
         </Box>
 
         <Divider />
 
-        {/* Help Menu Items */}
         <Paper elevation={0}>
-          {/* Documentation */}
-          <MenuItem component={Link} to="/documentation" onClick={handleClose}>
+          <MenuItem onClick={openDetails}>
             <ListItemIcon>
-              <DescriptionIcon color="primary" />
+              <BusinessIcon color="primary" />
             </ListItemIcon>
-            <ListItemText
-              primary="Documentation"
-              secondary="Guides & tutorials"
-            />
+            <ListItemText primary="Company Details" secondary="AK Technology" />
           </MenuItem>
 
           <Divider />
 
-          {/* Support */}
-          <MenuItem component={Link} to="/support" onClick={handleClose}>
+          <MenuItem component="a" href={`tel:${companyDetails.phone}`} onClick={handleClose}>
             <ListItemIcon>
-              <SupportAgentIcon color="success" />
+              <PhoneIcon color="success" />
             </ListItemIcon>
-            <ListItemText
-              primary="Support Center"
-              secondary="Get technical help"
-            />
+            <ListItemText primary="Call Support" secondary={companyDetails.phone} />
           </MenuItem>
 
           <Divider />
 
-          {/* Contact */}
-          <MenuItem component={Link} to="/contact" onClick={handleClose}>
+          <MenuItem component="a" href={`mailto:${companyDetails.email}`} onClick={handleClose}>
             <ListItemIcon>
               <EmailIcon color="action" />
             </ListItemIcon>
-            <ListItemText primary="Contact Us" secondary="Send us a message" />
+            <ListItemText primary="Email Support" secondary={companyDetails.email} />
           </MenuItem>
         </Paper>
       </Menu>
+
+      <Dialog open={detailsOpen} onClose={closeDetails} fullWidth maxWidth="sm">
+        <DialogTitle sx={{ pb: 1 }}>
+          <Stack direction="row" spacing={1.25} alignItems="center">
+            <BusinessIcon color="primary" />
+            <Box>
+              <Typography variant="h6">{companyDetails.name}</Typography>
+              <Typography variant="caption" color="text.secondary">
+                Application support and client service
+              </Typography>
+            </Box>
+          </Stack>
+        </DialogTitle>
+        <DialogContent dividers>
+          <Stack spacing={1.5}>
+            <Paper variant="outlined" sx={{ p: 1.5, borderRadius: 2 }}>
+              <Stack direction="row" spacing={1.25} alignItems="center">
+                <PhoneIcon color="success" />
+                <Box>
+                  <Typography variant="caption" color="text.secondary">Phone</Typography>
+                  <Typography variant="subtitle2">{companyDetails.phone}</Typography>
+                </Box>
+              </Stack>
+            </Paper>
+
+            <Paper variant="outlined" sx={{ p: 1.5, borderRadius: 2 }}>
+              <Stack direction="row" spacing={1.25} alignItems="center">
+                <EmailIcon color="primary" />
+                <Box sx={{ minWidth: 0 }}>
+                  <Typography variant="caption" color="text.secondary">Email</Typography>
+                  <Typography variant="subtitle2" sx={{ overflowWrap: "anywhere" }}>{companyDetails.email}</Typography>
+                </Box>
+              </Stack>
+            </Paper>
+
+            <Paper variant="outlined" sx={{ p: 1.5, borderRadius: 2 }}>
+              <Stack direction="row" spacing={1.25} alignItems="center">
+                <LocationOnIcon color="error" />
+                <Box>
+                  <Typography variant="caption" color="text.secondary">Location</Typography>
+                  <Typography variant="subtitle2">{companyDetails.city}</Typography>
+                </Box>
+              </Stack>
+            </Paper>
+
+            <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
+              <Chip icon={<SupportAgentIcon />} label="Client Support" variant="outlined" />
+              <Chip icon={<InfoOutlinedIcon />} label="Software Assistance" variant="outlined" />
+            </Stack>
+          </Stack>
+        </DialogContent>
+        <DialogActions>
+          <Button component="a" href={`tel:${companyDetails.phone}`} startIcon={<PhoneIcon />} variant="contained">
+            Call
+          </Button>
+          <Button component="a" href={`mailto:${companyDetails.email}`} startIcon={<EmailIcon />} variant="outlined">
+            Email
+          </Button>
+          <Button onClick={closeDetails}>Close</Button>
+        </DialogActions>
+      </Dialog>
     </Box>
   );
 }

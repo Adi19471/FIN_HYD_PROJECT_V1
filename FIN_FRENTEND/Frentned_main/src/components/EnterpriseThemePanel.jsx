@@ -40,6 +40,14 @@ const fontOptions = [
   "System",
 ];
 
+const zoomOptions = [
+  { value: 0.5, label: "50%" },
+  { value: 0.75, label: "75%" },
+  { value: 1, label: "100%" },
+  { value: 1.25, label: "125%" },
+  { value: 1.5, label: "150%" },
+];
+
 export default function EnterpriseThemePanel({ open, onClose }) {
   const { currentTheme, settings, changeCurrentTheme, updateThemeSetting, resetThemeSettings } =
     useThemeProvider();
@@ -111,14 +119,29 @@ export default function EnterpriseThemePanel({ open, onClose }) {
         <Box>
           <Typography variant="subtitle2">Font Size</Typography>
           <Slider
-            min={0.9}
-            max={1.12}
+            min={1}
+            max={1.28}
             step={0.02}
             value={Number(settings.fontScale)}
             onChange={(_, value) => updateThemeSetting("fontScale", value)}
             valueLabelDisplay="auto"
           />
         </Box>
+
+        <FormControl fullWidth size="small">
+          <InputLabel>Screen Zoom</InputLabel>
+          <Select
+            label="Screen Zoom"
+            value={Number(settings.screenScale || 1)}
+            onChange={(event) => updateThemeSetting("screenScale", Number(event.target.value))}
+          >
+            {zoomOptions.map((option) => (
+              <MenuItem value={option.value} key={option.value}>
+                {option.label}
+              </MenuItem>
+            ))}
+          </Select>
+        </FormControl>
 
         <Box>
           <Typography variant="subtitle2" sx={{ mb: 1 }}>

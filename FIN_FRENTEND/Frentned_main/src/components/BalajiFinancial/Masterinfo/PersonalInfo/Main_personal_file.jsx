@@ -8,10 +8,10 @@ import {
   alpha,
   useTheme,
 } from "@mui/material";
-import { Person, Work, Groups, Storefront } from "@mui/icons-material";
+import { BadgeRounded, ContactsRounded, HandshakeRounded, StoreRounded } from "@mui/icons-material";
 
 import LoadingSpinner from "../../../../LoadingSpinner";
-import { useAuth } from "src/utils/AuthContext";
+import { useAuth } from "src/utils/authStore";
 import { hasPermissionAccess } from "src/utils/permissions";
 
 
@@ -47,10 +47,10 @@ const MainPersonalFile = () => {
   const tabs = useMemo(
     () =>
       [
-        { label: "CUSTOMER", icon: <Person />, component: Customer, type: "CUSTOMER", permissionCodes: ["CUSTOMER_VIEW"] },
-        { label: "EMPLOYEE", icon: <Work />, component: Employee, type: "EMPLOYEE", permissionCodes: ["EMPLOYEE_VIEW"] },
-        { label: "PARTNER", icon: <Groups />, component: PartnerComponent, type: "PARTNER", permissionCodes: ["PARTNER_VIEW"] },
-        { label: "VENDOR", icon: <Storefront />, component: Vendor, type: "VENDOR", permissionCodes: ["VENDOR_VIEW"] },
+        { label: "CUSTOMER", icon: <ContactsRounded />, component: Customer, type: "CUSTOMER", permissionCodes: ["CUSTOMER_VIEW"] },
+        { label: "EMPLOYEE", icon: <BadgeRounded />, component: Employee, type: "EMPLOYEE", permissionCodes: ["EMPLOYEE_VIEW"] },
+        { label: "PARTNER", icon: <HandshakeRounded />, component: PartnerComponent, type: "PARTNER", permissionCodes: ["PARTNER_VIEW"] },
+        { label: "VENDOR", icon: <StoreRounded />, component: Vendor, type: "VENDOR", permissionCodes: ["VENDOR_VIEW"] },
       ].filter((tab) => hasPermissionAccess(user, tab.permissionCodes)),
     [user]
   );

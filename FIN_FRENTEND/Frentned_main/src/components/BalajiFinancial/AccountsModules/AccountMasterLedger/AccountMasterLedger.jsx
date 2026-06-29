@@ -73,7 +73,9 @@ const AccountMasterLedger = () => {
         return {
           id: index + 1,
           date: item.date || item.txnDate || "",
-          description: item.description || item.particulars || "",
+          transCode: item.transCode || item.accountMastercode || masterName,
+          name: item.name || item.accountName || "",
+          particulars: item.particulars || item.description || "",
           debit,
           credit,
           balance: item.balance || item.runningBalance || runningBalance,
@@ -93,7 +95,9 @@ const AccountMasterLedger = () => {
   const columns = [
     { field: "id", headerName: "S.No", width: 80 },
     { field: "date", headerName: "Date", width: 140 },
-    { field: "description", headerName: "Description", flex: 1, minWidth: 260 },
+    { field: "transCode", headerName: "Code", width: 130 },
+    { field: "name", headerName: "Name", flex: 1, minWidth: 240 },
+    { field: "particulars", headerName: "Particulars", flex: 1, minWidth: 220 },
     { field: "debit", headerName: "Debit", width: 150, align: "right", headerAlign: "right", valueFormatter: (value) => formatINR(value) },
     { field: "credit", headerName: "Credit", width: 150, align: "right", headerAlign: "right", valueFormatter: (value) => formatINR(value) },
     { field: "balance", headerName: "Balance", width: 160, align: "right", headerAlign: "right", valueFormatter: (value) => formatINR(value) },
