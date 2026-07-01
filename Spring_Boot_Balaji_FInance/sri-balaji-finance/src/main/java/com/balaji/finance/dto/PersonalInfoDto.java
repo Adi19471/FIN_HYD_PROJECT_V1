@@ -34,6 +34,7 @@ public class PersonalInfoDto {
 	private boolean bussinessexemption;
 	private String introname;
 	private String personalInfoManagerId;
+	private boolean groupManager;
 
 	// ---------- GETTERS & SETTERS ----------
 
@@ -235,6 +236,14 @@ public class PersonalInfoDto {
 
 	public void setPersonalInfoManagerId(String personalInfoManagerId) {
 		this.personalInfoManagerId = personalInfoManagerId;
+	}
+
+	public boolean isGroupManager() {
+		return groupManager;
+	}
+
+	public void setGroupManager(boolean groupManager) {
+		this.groupManager = groupManager;
 	}
 
 }

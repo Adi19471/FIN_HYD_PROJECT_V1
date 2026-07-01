@@ -103,5 +103,20 @@ public interface PersonalInfoRepository extends JpaRepository<PersonalInfo, Stri
 			ORDER BY p.personalInfoId
 			""")
 	List<PersonalInfo> findAllPartners();
+	
+	@Query("""
+			    SELECT u FROM PersonalInfo u
+			    WHERE u.disable = false
+			      AND (
+			            u.personalInfoId LIKE CONCAT('%', :keyword, '%')
+			         OR u.firstName LIKE CONCAT('%', :keyword, '%')
+			         OR u.lastName LIKE CONCAT('%', :keyword, '%')
+			         OR u.mobile LIKE CONCAT('%', :keyword, '%')
+			         OR u.phone LIKE CONCAT('%', :keyword, '%')
+			      )
+			      AND u.groupManager = true
+			""")
+	public List<PersonalInfo> findAllGroupManagers(@Param("keyword") String keyWord);
+
 
 }

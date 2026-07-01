@@ -74,8 +74,6 @@ public class PersonalInfoController {
 		return ResponseEntity.ok().body(personalInfoDto);
 	}
 
-	
-	
 	@GetMapping("/findAll")
 	public ResponseEntity<List<PersonalInfoDto>> findAll() {
 
@@ -102,13 +100,21 @@ public class PersonalInfoController {
 
 		return ResponseEntity.ok().body(toBeReturnedDtoList);
 	}
-	
+
 	@GetMapping("/personInfoAutoCompleteByCategory/{category}")
 	public ResponseEntity<List<PersonalInfoAutoCompletePojo>> personInfoAutoCompleteByCategory(@RequestParam String q,
 			@PathVariable String category) {
 
 		List<PersonalInfoAutoCompletePojo> toBeReturnedDtoList = personalInfoService.personInfoAutoCompleteByCategory(q,
 				category);
+
+		return ResponseEntity.ok().body(toBeReturnedDtoList);
+	}
+
+	@GetMapping("/groupManagerAutoComplete")
+	public ResponseEntity<List<PersonalInfoAutoCompletePojo>> personInfoAutoCompleteByCategory(@RequestParam String q) {
+
+		List<PersonalInfoAutoCompletePojo> toBeReturnedDtoList = personalInfoService.groupManagerAutocomplete(q);
 
 		return ResponseEntity.ok().body(toBeReturnedDtoList);
 	}

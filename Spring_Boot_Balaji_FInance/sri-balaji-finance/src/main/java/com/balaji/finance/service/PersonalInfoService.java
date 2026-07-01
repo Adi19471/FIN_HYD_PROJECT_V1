@@ -108,7 +108,7 @@ public class PersonalInfoService {
 		personalInfo.setOldId(personalInfoDto.getOldid());
 		personalInfo.setCategory(type);
 		personalInfo.setDisable(personalInfoDto.isDisable());
-		
+		personalInfo.setGroupManager(personalInfoDto.isGroupManager());
 		
 		Optional<PersonalInfo> manager = personalInfoRepository.findById(personalInfoDto.getPersonalInfoManagerId());
 		if (manager.isPresent()) {
@@ -161,8 +161,9 @@ public class PersonalInfoService {
 
 			personalInfo.setOldId(personalInfoDto.getOldid());
 			personalInfo.setDisable(personalInfoDto.isDisable());
+			personalInfo.setGroupManager(personalInfoDto.isGroupManager());
 			
-
+			
 			Optional<PersonalInfo> manager = personalInfoRepository.findById(personalInfoDto.getPersonalInfoManagerId());
 			if (manager.isPresent()) {
 				personalInfo.setPersonalInfoManager(manager.get());
@@ -255,6 +256,8 @@ public class PersonalInfoService {
 					? p.getPersonalInfoManager().getPersonalInfoId()
 					: null);
 			
+			personalInfoDto.setGroupManager(p.isGroupManager());
+			
 			
 			toBeReturnedDtoList.add(personalInfoDto);
 
@@ -309,6 +312,9 @@ public class PersonalInfoService {
 			personalInfoDto.setPersonalInfoManagerId(personalInfoDbObject.getPersonalInfoManager() != null
 					? personalInfoDbObject.getPersonalInfoManager().getPersonalInfoId()
 					: null);
+			
+			
+			personalInfoDto.setGroupManager(personalInfoDbObject.isGroupManager());
 
 			returnList.add(personalInfoDto);
 
@@ -369,6 +375,9 @@ public class PersonalInfoService {
 			personalInfoDto.setPersonalInfoManagerId(personalInfoDbObject.getPersonalInfoManager() != null
 					? personalInfoDbObject.getPersonalInfoManager().getPersonalInfoId()
 					: null);
+			
+			personalInfoDto.setGroupManager(personalInfoDbObject.isGroupManager());
+
 
 			return personalInfoDto;
 		
@@ -443,6 +452,28 @@ public class PersonalInfoService {
 
 		List<PersonalInfo> allPersonalInfoList = personalInfoRepository.personalInfoAutoComplete(false, keyword,
 				personTypesList);
+
+		List<PersonalInfoAutoCompletePojo> toBeReturnedDtoList = new ArrayList<PersonalInfoAutoCompletePojo>();
+
+		allPersonalInfoList.stream().forEach(p -> {
+
+			PersonalInfoAutoCompletePojo personalInfoAutoCompletePojo = new PersonalInfoAutoCompletePojo();
+			personalInfoAutoCompletePojo.setId(p.getPersonalInfoId());
+
+			personalInfoAutoCompletePojo.setFirstname(p.getFirstName());
+			personalInfoAutoCompletePojo.setLastname(p.getLastName());
+			personalInfoAutoCompletePojo.setGender(p.getGender());
+
+			toBeReturnedDtoList.add(personalInfoAutoCompletePojo);
+
+		});
+
+		return toBeReturnedDtoList;
+	}
+	
+	public List<PersonalInfoAutoCompletePojo> groupManagerAutocomplete(String keyword) {
+
+		List<PersonalInfo> allPersonalInfoList = personalInfoRepository.findAllGroupManagers(keyword);
 
 		List<PersonalInfoAutoCompletePojo> toBeReturnedDtoList = new ArrayList<PersonalInfoAutoCompletePojo>();
 

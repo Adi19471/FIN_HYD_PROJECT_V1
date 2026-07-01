@@ -98,10 +98,13 @@ public class PersonalInfo {
 
 	@Column(name = "SEQUENCE")
 	private Long sequence;
-	
+
 	@ManyToOne(fetch = FetchType.LAZY)
 	@JoinColumn(name = "PERSONAL_INFO_MANAGER_ID")
 	private PersonalInfo personalInfoManager;
+
+	@Column(name = "GROUP_MANAGER")
+	private boolean groupManager;
 
 	@CreatedDate
 	@Column(updatable = false)
@@ -116,8 +119,6 @@ public class PersonalInfo {
 
 	@LastModifiedBy
 	private String modifiedBy;
-	
-	
 
 	public String getPersonalInfoId() {
 		return personalInfoId;
@@ -283,7 +284,6 @@ public class PersonalInfo {
 		return occupation;
 	}
 
-
 	public PersonalInfo getPersonalInfoManager() {
 		return personalInfoManager;
 	}
@@ -358,6 +358,14 @@ public class PersonalInfo {
 
 	public void setSequence(Long sequence) {
 		this.sequence = sequence;
+	}
+
+	public boolean isGroupManager() {
+		return groupManager;
+	}
+
+	public void setGroupManager(boolean groupManager) {
+		this.groupManager = groupManager;
 	}
 
 }
