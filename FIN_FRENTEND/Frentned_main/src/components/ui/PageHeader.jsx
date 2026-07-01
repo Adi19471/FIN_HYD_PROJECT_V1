@@ -5,7 +5,6 @@ import {
   Button,
   TextField,
   InputAdornment,
-  Paper,
   Stack,
   Chip,
 } from "@mui/material";
@@ -41,14 +40,7 @@ const PageHeader = ({
   actions,
 }) => {
   return (
-    <Paper
-      className="enterprise-card"
-      elevation={0}
-      sx={{
-        p: { xs: 2, md: 2.5 },
-        mb: 3,
-      }}
-    >
+    <Box sx={{ mb: 1.5, px: 0.5 }}>
       <Box
         sx={{
           display: "flex",
@@ -63,11 +55,6 @@ const PageHeader = ({
             <Typography variant="h5">{title}</Typography>
             {totalCount !== undefined && <Chip size="small" label={`${totalCount} records`} color="primary" />}
           </Stack>
-          {subtitle && (
-            <Typography variant="body2" color="text.secondary" sx={{ mt: 0.35, fontWeight: 650 }}>
-              {subtitle}
-            </Typography>
-          )}
         </Box>
 
         <Box
@@ -127,7 +114,7 @@ const PageHeader = ({
           </Stack>
         </Box>
       </Box>
-    </Paper>
+    </Box>
   );
 };
 

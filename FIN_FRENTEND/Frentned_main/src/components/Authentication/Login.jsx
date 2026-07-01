@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useAuth } from "../../utils/authStore";
 import { useNavigate } from "react-router-dom";
 import {
@@ -11,21 +11,23 @@ import {
   IconButton,
   InputAdornment,
   Link,
-  Paper,
   Stack,
   TextField,
   Typography,
 } from "@mui/material";
 import {
   AccountBalanceRounded,
+  AutoAwesomeRounded,
+  BoltRounded,
+  InsightsRounded,
   LockRounded,
   PersonRounded,
   ShieldRounded,
-  TrendingUpRounded,
+  VerifiedUserRounded,
   Visibility,
   VisibilityOff,
 } from "@mui/icons-material";
-import { motion } from "framer-motion";
+import { AnimatePresence, motion } from "framer-motion";
 import { successToast, errorToast } from "toastify";
 import { API_BASE } from "lib/config";
 import { setSession } from "src/utils/session";
@@ -33,6 +35,21 @@ import { setAuthToken } from "src/utils/authToken";
 import { getDefaultAuthorizedPath, normalizePermissionCodes, normalizeRoles } from "src/utils/permissions";
 import ThemeToggle from "../ThemeToggle";
 import { COMPANY_ADDRESS, COMPANY_APP_NAME } from "src/lib/company";
+import "./Login.css";
+
+const ROTATING_WORDS = ["clarity.", "automation.", "intelligence.", "control."];
+
+const FEATURES = [
+  { icon: ShieldRounded, title: "Secure Access", text: "Token-based authentication" },
+  { icon: InsightsRounded, title: "Live Insights", text: "Collections & portfolio KPIs" },
+  { icon: BoltRounded, title: "AI Assisted", text: "Smart reports & ledgers" },
+];
+
+const STATS = [
+  { value: "99.9%", label: "Uptime" },
+  { value: "24/7", label: "Monitoring" },
+  { value: "Real-time", label: "Insights" },
+];
 
 const Login = () => {
   const { login } = useAuth();
@@ -43,6 +60,19 @@ const Login = () => {
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [rememberMe, setRememberMe] = useState(true);
+  const [wordIndex, setWordIndex] = useState(0);
+
+  // Prefill a previously remembered username.
+  useEffect(() => {
+    const remembered = localStorage.getItem("remembered-user");
+    if (remembered) setFormData((prev) => ({ ...prev, username: remembered }));
+  }, []);
+
+  // Rotate the headline word for a living, "AI" feel.
+  useEffect(() => {
+    const id = setInterval(() => setWordIndex((i) => (i + 1) % ROTATING_WORDS.length), 2600);
+    return () => clearInterval(id);
+  }, []);
 
   const handleChange = (field) => (event) => {
     setFormData((prev) => ({ ...prev, [field]: event.target.value }));
@@ -86,6 +116,7 @@ const Login = () => {
 
         setSession("username", name);
         if (rememberMe) localStorage.setItem("remembered-user", formData.username.trim());
+        else localStorage.removeItem("remembered-user");
         login(user);
         successToast("Login successful");
         navigate(getDefaultAuthorizedPath(user), { replace: true });
@@ -101,69 +132,107 @@ const Login = () => {
   };
 
   return (
-    <Box className="login-enterprise">
-      <Box className="login-visual">
-        <Box className="login-visual-overlay" />
-        <Stack spacing={4} sx={{ position: "relative", zIndex: 2, maxWidth: 720 }}>
-          <Stack direction="row" spacing={1.5} alignItems="center">
-            <Box className="login-brand-mark">
+    <Box className="auth-root">
+      {/* ---------------- Left visual ---------------- */}
+      <Box className="auth-visual">
+        <Box className="auth-grid" />
+        <Box className="auth-orb one" />
+        <Box className="auth-orb two" />
+        <Box className="auth-orb three" />
+
+        <motion.div
+          className="auth-visual-inner"
+          initial={{ opacity: 0, y: 24 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, ease: "easeOut" }}
+        >
+          <Box className="auth-brand">
+            <Box className="auth-brand-mark">
               <AccountBalanceRounded />
             </Box>
             <Box>
-              <Typography variant="h5" color="white">
-                {COMPANY_APP_NAME}
-              </Typography>
-              <Typography variant="body2" sx={{ color: "rgba(255,255,255,0.72)" }}>
-                {COMPANY_ADDRESS}
-              </Typography>
+              <Box className="auth-brand-name">{COMPANY_APP_NAME}</Box>
+              <Box className="auth-brand-sub">{COMPANY_ADDRESS}</Box>
             </Box>
-          </Stack>
-
-          <Box>
-            <Typography variant="h2" sx={{ color: "white", maxWidth: 680 }}>
-              Enterprise-grade finance operations, built for clarity.
-            </Typography>
-            <Typography variant="h6" sx={{ color: "rgba(255,255,255,0.72)", mt: 2, fontWeight: 500 }}>
-              Manage cashbooks, ledgers, loans, dues, approvals, and reports with a modern banking interface.
-            </Typography>
           </Box>
 
-          <Stack direction={{ xs: "column", md: "row" }} spacing={2}>
-            {[
-              { icon: ShieldRounded, title: "Secure Access", text: "Token based authentication" },
-              { icon: TrendingUpRounded, title: "Live Insights", text: "Collections and portfolio KPIs" },
-              { icon: AccountBalanceRounded, title: "ERP Ready", text: "Reports, ledgers, audit flows" },
-            ].map((item) => {
+          <Box className="auth-chip">
+            <span className="auth-live-dot" />
+            <AutoAwesomeRounded />
+            AI-powered finance command center
+          </Box>
+
+          <h1 className="auth-headline">
+            Enterprise finance,
+            <br />
+            built for{" "}
+            <AnimatePresence mode="wait">
+              <motion.span
+                key={ROTATING_WORDS[wordIndex]}
+                className="accent"
+                initial={{ opacity: 0, y: 14 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -14 }}
+                transition={{ duration: 0.35 }}
+              >
+                {ROTATING_WORDS[wordIndex]}
+              </motion.span>
+            </AnimatePresence>
+          </h1>
+
+          <p className="auth-subtext">
+            Manage cashbooks, ledgers, loans, dues, approvals, and reports with a modern,
+            intelligent banking workspace.
+          </p>
+
+          <Box className="auth-features">
+            {FEATURES.map((item, index) => {
               const Icon = item.icon;
               return (
-                <Paper key={item.title} className="login-feature" elevation={0}>
-                  <Icon />
-                  <Typography variant="subtitle2" color="white">
-                    {item.title}
-                  </Typography>
-                  <Typography variant="caption">{item.text}</Typography>
-                </Paper>
+                <motion.div
+                  key={item.title}
+                  className="auth-feature"
+                  initial={{ opacity: 0, y: 18 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.4, delay: 0.2 + index * 0.1 }}
+                >
+                  <Box className="auth-feature-icon">
+                    <Icon fontSize="small" />
+                  </Box>
+                  <Box className="auth-feature-title">{item.title}</Box>
+                  <Box className="auth-feature-text">{item.text}</Box>
+                </motion.div>
               );
             })}
-          </Stack>
-        </Stack>
+          </Box>
+
+          <Box className="auth-stats">
+            {STATS.map((stat) => (
+              <Box key={stat.label}>
+                <Box className="auth-stat-value">{stat.value}</Box>
+                <Box className="auth-stat-label">{stat.label}</Box>
+              </Box>
+            ))}
+          </Box>
+        </motion.div>
       </Box>
 
-      <Box className="login-panel-wrap">
-        <Box sx={{ position: "absolute", top: 22, right: 24 }}>
+      {/* ---------------- Right form ---------------- */}
+      <Box className="auth-form-side">
+        <Box className="auth-theme-toggle">
           <ThemeToggle />
         </Box>
 
         <motion.div
-          initial={{ opacity: 0, y: 18 }}
+          initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.35, ease: "easeOut" }}
-          style={{ width: "100%", maxWidth: 460 }}
+          transition={{ duration: 0.4, ease: "easeOut" }}
+          style={{ width: "100%", maxWidth: 440 }}
         >
-          <Paper className="enterprise-card login-panel" elevation={0}>
-            <Stack spacing={1} sx={{ mb: 3 }}>
-              <Typography variant="h4">Welcome back</Typography>
-              <Typography variant="body2" color="text.secondary">
+          <Box className="auth-card">
+            <Stack spacing={0.5} sx={{ mb: 3 }}>
+              <Typography className="auth-card-title">Welcome back</Typography>
+              <Typography className="auth-card-sub">
                 Sign in to continue to the enterprise finance command center.
               </Typography>
             </Stack>
@@ -178,6 +247,7 @@ const Login = () => {
                   error={!!errors.username}
                   helperText={errors.username}
                   autoComplete="username"
+                  autoFocus
                   InputProps={{
                     startAdornment: (
                       <InputAdornment position="start">
@@ -222,7 +292,15 @@ const Login = () => {
                   </Link>
                 </Stack>
 
-                <Button type="submit" fullWidth variant="contained" size="large" disabled={loading} sx={{ py: 1.35 }}>
+                <Button
+                  type="submit"
+                  fullWidth
+                  variant="contained"
+                  size="large"
+                  disabled={loading}
+                  startIcon={!loading && <ShieldRounded />}
+                  sx={{ py: 1.4, fontWeight: 700, fontSize: "0.98rem" }}
+                >
                   {loading ? <CircularProgress size={24} color="inherit" /> : "Sign in securely"}
                 </Button>
               </Stack>
@@ -230,10 +308,14 @@ const Login = () => {
 
             <Divider sx={{ my: 3 }} />
 
-            <Typography variant="caption" color="text.secondary">
-              Protected workspace for authorized finance users. Activity may be logged for audit and compliance.
-            </Typography>
-          </Paper>
+            <Box className="auth-secure-note">
+              <VerifiedUserRounded />
+              <span>
+                Protected workspace for authorized finance users. Activity may be logged for
+                audit and compliance.
+              </span>
+            </Box>
+          </Box>
         </motion.div>
       </Box>
     </Box>

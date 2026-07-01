@@ -4,9 +4,7 @@ import {
   Button,
   Grid,
   Paper,
-  Stack,
   TextField,
-  Typography,
 } from "@mui/material";
 import axios from "axios";
 import dayjs from "dayjs";
@@ -22,6 +20,9 @@ import {
   AppDatePicker,
   DataTable,
   PageHeader,
+  ReportCompanyHeader,
+  ReportToolbar,
+  useReportZoom,
 } from "src/components/ui";
 
 const Bussiness_Reports = () => {
@@ -32,13 +33,19 @@ const Bussiness_Reports = () => {
   const [toDate, setToDate] = useState(dayjs());
   const [percentage, setPercentage] = useState(10);
 
+  const zoom = useReportZoom();
+
   const headers = {
     Authorization: `Bearer ${getSession("token") || ""}`,
     "Content-Type": "application/json",
   };
 
   const formatAmount = (value) =>
+
+    
     Number(value || 0).toLocaleString("en-IN");
+
+
 
   const generateReport = async () => {
     try {
@@ -162,30 +169,26 @@ const Bussiness_Reports = () => {
 
   return (
     <>
-      <PageHeader title="Business Report" />
+      <PageHeader
+        title="Business Report"
+        subtitle="Partner-wise business report with totals, search, exports and print."
+        totalCount={rows.length}
+        onRefresh={generateReport}
+        loading={loading}
+      />
 
-      <Paper sx={{ p: 3 }}>
-        <Box textAlign="center" mb={3}>
-          <Typography variant="h4" fontWeight="bold">
-            SRI BALAJI ENTERPRISES
-          </Typography>
+      <ReportToolbar
+        onGenerate={generateReport}
+        onRefresh={generateReport}
+        loading={loading}
+        rows={rows}
+        columns={columns}
+        fileName="Business-Report"
+        zoom={zoom}
+      />
 
-          <Typography variant="subtitle1">
-            Yella Reddy Guda, Hyderabad
-          </Typography>
-
-          <Typography mt={1}>
-            Date : {dayjs().format("DD-MMM-YYYY")}
-          </Typography>
-
-          <Typography
-            variant="h6"
-            fontWeight="bold"
-            mt={2}
-          >
-            Business Report
-          </Typography>
-        </Box>
+      <Paper sx={{ p: 3, mt: 2 }}>
+        <ReportCompanyHeader title="Business Report" />
 
         <Grid container spacing={2} mb={3}>
           <Grid item xs={12} md={3}>
@@ -228,13 +231,15 @@ const Bussiness_Reports = () => {
           </Grid>
         </Grid>
 
-        <DataTable
-          rows={rows}
-          columns={columns}
-          loading={loading}
-          autoHeight
-          disableRowSelectionOnClick
-        />
+        <Box ref={zoom.targetRef}>
+          <DataTable
+            rows={rows}
+            columns={columns}
+            loading={loading}
+            autoHeight
+            disableRowSelectionOnClick
+          />
+        </Box>
       </Paper>
     </>
   );

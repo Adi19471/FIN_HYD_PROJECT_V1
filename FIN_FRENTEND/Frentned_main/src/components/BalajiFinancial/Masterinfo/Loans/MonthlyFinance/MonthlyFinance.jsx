@@ -639,78 +639,88 @@ const MonthlyFinance = () => {
 
   return (
     <>
-      <Box sx={{ p: { xs: 1.5, md: 2.5 } }}>
+      <Box >
         <Paper
           elevation={0}
           className="enterprise-card"
           sx={{
-            p: 2,
-            mb: 2,
+            overflow: "hidden",
             display: "flex",
-            justifyContent: "space-between",
-            alignItems: "center",
-            gap: 2,
-            flexWrap: "wrap",
+            flexDirection: "column",
+            height: "min(720px, calc(100vh - 200px))",
+            minHeight: 500,
           }}
         >
-          <Box sx={{ minWidth: 0 }}>
-            <Typography variant="h5" fontWeight={900} color="#1e293b">
-              Monthly Finance
-            </Typography>
-            <Typography variant="body2" color="text.secondary">
-              {searchedRows.length} of {rows.length} loans
-            </Typography>
+          {/* Header toolbar */}
+          <Box
+            sx={{
+              p: 2,
+              borderBottom: "1px solid #e2e8f0",
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center",
+              gap: 2,
+              flexWrap: "wrap",
+            }}
+          >
+           
+
+            <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap sx={{ alignItems: "center" }}>
+              <TextField
+                value={globalSearch}
+                onChange={(event) => setGlobalSearch(event.target.value)}
+                placeholder="Search account, customer, amount, date..."
+                size="small"
+                sx={{ width: { xs: "100%", sm: 360, md: 460 } }}
+                InputProps={{
+                  startAdornment: <SearchRounded fontSize="small" sx={{ mr: 1, color: "text.secondary" }} />,
+                }}
+              />
+              <Button
+                variant={showColumnFilters ? "contained" : "outlined"}
+                startIcon={<TuneRounded />}
+                onClick={() => setShowColumnFilters((value) => !value)}
+              >
+                Filter
+              </Button>
+              <Typography variant="body2" color="text.secondary">
+                {searchedRows.length} of {rows.length} loans
+              </Typography>
+              <Button variant="outlined" startIcon={<RestartAltRounded />} onClick={clearFilters}>
+                Clear
+              </Button>
+              <TableExportMenu rows={searchedRows} columns={exportColumns} fileName="Monthly_Finance_Report" />
+              <Button variant="contained" startIcon={<SaveIcon />} onClick={handleNewButton}>
+                New Loan
+              </Button>
+            </Stack>
           </Box>
 
-          <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap sx={{ alignItems: "center" }}>
-            <TextField
-              value={globalSearch}
-              onChange={(event) => setGlobalSearch(event.target.value)}
-              placeholder="Search account, customer, amount, date..."
-              size="small"
-              sx={{ width: { xs: "100%", sm: 360, md: 460 } }}
-              InputProps={{
-                startAdornment: <SearchRounded fontSize="small" sx={{ mr: 1, color: "text.secondary" }} />,
+          {/* Table */}
+          <Box sx={{ flex: 1, minHeight: 0, width: "100%" }}>
+            <DataGrid
+              rows={searchedRows}
+              columns={columns}
+              loading={loading}
+              getRowId={(r) => r.id}
+              pageSizeOptions={[10, 25, 50, 100]}
+              paginationModel={paginationModel}
+              onPaginationModelChange={setPaginationModel}
+              pagination
+              disableRowSelectionOnClick
+              rowHeight={52}
+              columnHeaderHeight={showColumnFilters ? 76 : 48}
+              sx={{
+                height: "100%",
+                border: "none",
+                bgcolor: "#fff",
+                "& .MuiDataGrid-cell": { fontWeight: 700 },
+                "& .MuiDataGrid-columnHeaderTitle": { fontWeight: 900 },
+                "& .MuiDataGrid-virtualScroller": { overflowAnchor: "none" },
               }}
             />
-            <Button
-              variant={showColumnFilters ? "contained" : "outlined"}
-              startIcon={<TuneRounded />}
-              onClick={() => setShowColumnFilters((value) => !value)}
-            >
-              Filter
-            </Button>
-            <Button variant="outlined" startIcon={<RestartAltRounded />} onClick={clearFilters}>
-              Clear
-            </Button>
-            <TableExportMenu rows={searchedRows} columns={exportColumns} fileName="Monthly_Finance_Report" />
-            <Button variant="contained" startIcon={<SaveIcon />} onClick={handleNewButton}>
-              New Loan
-            </Button>
-          </Stack>
+          </Box>
         </Paper>
-
-        <Box sx={{ height: "min(640px, calc(100vh - 260px))", minHeight: 460, width: "100%" }}>
-          <DataGrid
-            rows={searchedRows}
-            columns={columns}
-            loading={loading}
-            getRowId={(r) => r.id}
-            pageSizeOptions={[10, 25, 50, 100]}
-            paginationModel={paginationModel}
-            onPaginationModelChange={setPaginationModel}
-            pagination
-            disableRowSelectionOnClick
-            rowHeight={52}
-            columnHeaderHeight={showColumnFilters ? 76 : 48}
-            sx={{
-              bgcolor: "#fff",
-              "& .MuiDataGrid-cell": { fontWeight: 700 },
-              "& .MuiDataGrid-columnHeaderTitle": { fontWeight: 900 },
-              "& .MuiDataGrid-virtualScroller": { overflowAnchor: "none" },
-            }}
-          />
-        </Box>
 
 
 

@@ -22,7 +22,7 @@ const BussinessCashbook_Main = () => {
   };
 
   return (
-    <Box sx={{ p: { xs: 1.5, md: 2.5 } }}>
+    <Box >
       <Paper
         className="enterprise-card"
         elevation={0}
@@ -45,48 +45,38 @@ const BussinessCashbook_Main = () => {
         <Tabs
           value={value}
           onChange={handleChange}
-          variant="scrollable"
-          scrollButtons="auto"
           sx={{
-            minHeight: 44,
-            "& .MuiTabs-indicator": { display: "none" },
-            "& .MuiTabs-flexContainer": {
-              gap: 1,
+            minHeight: 40,
+            "& .MuiTabs-indicator": {
+              height: 3,
+              borderRadius: 2,
+              background: theme.palette.primary.main,
             },
           }}
         >
-          {tabs.map((tab, index) => (
+          {tabs.map((tab) => (
             <Tab
               key={tab.label}
               icon={tab.icon}
               iconPosition="start"
-              label={tab.label}
+              label={
+                <Typography
+                  sx={{
+                    fontSize: "0.9rem",
+                    fontWeight: 850,
+                    textTransform: "capitalize",
+                  }}
+                >
+                  {tab.label}
+                </Typography>
+              }
               sx={{
-                minHeight: 42,
-                minWidth: 126,
-                borderRadius: 999,
-                textTransform: "none",
-                fontWeight: 800,
-                color: value === index ? "#ffffff" : "text.primary",
-                bgcolor: value === index ? "primary.main" : "background.paper",
-                border: "1px solid",
-                borderColor: value === index ? "primary.main" : "divider",
-                boxShadow: value === index
-                  ? `0 8px 18px ${alpha(theme.palette.primary.main, 0.28)}`
-                  : "0 1px 2px rgba(15, 23, 42, 0.04)",
-                "& .MuiTab-iconWrapper, & svg": {
-                  color: "inherit",
-                  opacity: 1,
-                  fontSize: 18,
-                },
-                "& .MuiTab-iconWrapper": {
-                  marginRight: 0.75,
-                },
-                "&.Mui-selected": {
-                  color: "#ffffff",
-                },
+                minHeight: 40,
+                px: 3,
+                borderRadius: 2,
+                transition: "0.25s",
                 "&:hover": {
-                  bgcolor: value === index ? "primary.dark" : "action.hover",
+                  bgcolor: alpha(theme.palette.primary.main, 0.08),
                 },
               }}
             />
@@ -94,7 +84,7 @@ const BussinessCashbook_Main = () => {
         </Tabs>
       </Paper>
 
-      <Box sx={{ mt: 2.5, minHeight: 400, position: "relative" }}>
+      <Box sx={{  minHeight: 400, position: "relative" }}>
         <Fade in={loading}>
           <Box
             sx={{

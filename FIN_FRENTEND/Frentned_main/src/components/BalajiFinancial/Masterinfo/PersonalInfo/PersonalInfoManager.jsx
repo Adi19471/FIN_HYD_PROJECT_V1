@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   Box,
   Button,
@@ -17,8 +17,10 @@ import {
   Typography,
 } from "@mui/material";
 import {
+  AddRounded,
   ContentCopyRounded,
   EditRounded,
+  RefreshRounded,
   SaveRounded,
   VisibilityRounded,
 } from "@mui/icons-material";
@@ -26,8 +28,7 @@ import axios from "axios";
 import { API_BASE } from "lib/config";
 import { errorToast, successToast } from "toastify";
 import { getSession } from "src/utils/session";
-import { DataTable, PageHeader } from "src/components/ui";
-import ReportToolbar from "../../ReportsAll/ReportToolbar";
+import { DataTable } from "src/components/ui";
 
 const TYPE_LABELS = {
   CUSTOMER: "Customer",
@@ -70,7 +71,6 @@ const PersonalInfoManager = ({ personType = "CUSTOMER" }) => {
   const [rows, setRows] = useState([]);
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
-  const [search, setSearch] = useState("");
   const [modalOpen, setModalOpen] = useState(false);
   const [viewModalOpen, setViewModalOpen] = useState(false);
   const [isEdit, setIsEdit] = useState(false);
@@ -101,17 +101,6 @@ const PersonalInfoManager = ({ personType = "CUSTOMER" }) => {
   useEffect(() => {
     fetchData();
   }, [personType]);
-
-  const filteredRows = useMemo(() => {
-    const term = search.trim().toLowerCase();
-    if (!term) return rows;
-
-    return rows.filter((row) =>
-      [row.id, row.firstname, row.lastname, row.mobile, row.address, row.occupation]
-        .filter(Boolean)
-        .some((value) => value.toString().toLowerCase().includes(term))
-    );
-  }, [rows, search]);
 
   const openAddForm = () => {
     setForm(blankForm(personType));
@@ -223,63 +212,37 @@ const PersonalInfoManager = ({ personType = "CUSTOMER" }) => {
   ];
 
   return (
-    <Box sx={{ mt: 2 }}>
-      <PageHeader
-        title={`${label}s`}
-        subtitle={`Manage ${label.toLowerCase()} profiles, contact details, IDs, and report exports.`}
-        searchPlaceholder={`Search ${label.toLowerCase()} name, ID, mobile, address...`}
-        searchValue={search}
-        onSearchChange={setSearch}
-        onAddClick={openAddForm}
-        addButtonLabel={`Add ${label}`}
-        totalCount={filteredRows.length}
-        loading={loading}
-        onRefresh={fetchData}
-      />
-
-      <ReportToolbar
-        data={filteredRows}
-        columns={["id", "firstname", "lastname", "mobile", "occupation", "address"]}
-        fileName={`${personType}_Report`}
-        tableId={`${personType.toLowerCase()}ReportTable`}
-      />
-
+    <Box>
       <DataTable
-        rows={filteredRows}
+        rows={rows}
         columns={columns}
         getRowId={(r) => r.id}
         loading={loading}
-        height="calc(100vh - 310px)"
-        title={`${label} register`}
-        subtitle="Use column filters, quick search, density, export, and pagination from this grid."
+        height="calc(100vh - 170px)"
+        title={`${label}s`}
+        actions={
+          <>
+            <Button
+              size="small"
+              variant="outlined"
+              startIcon={<RefreshRounded />}
+              onClick={fetchData}
+              disabled={loading}
+            >
+              Refresh
+            </Button>
+            <Button
+              size="small"
+              variant="contained"
+              startIcon={<AddRounded />}
+              onClick={openAddForm}
+              disabled={loading}
+            >
+              Add {label}
+            </Button>
+          </>
+        }
       />
-
-      <Box sx={{ display: "none" }}>
-        <table id={`${personType.toLowerCase()}ReportTable`}>
-          <thead>
-            <tr>
-              <th>ID</th>
-              <th>First Name</th>
-              <th>Last Name</th>
-              <th>Mobile</th>
-              <th>Occupation</th>
-              <th>Address</th>
-            </tr>
-          </thead>
-          <tbody>
-            {filteredRows.map((row) => (
-              <tr key={row.id}>
-                <td>{row.id}</td>
-                <td>{row.firstname}</td>
-                <td>{row.lastname}</td>
-                <td>{row.mobile}</td>
-                <td>{row.occupation}</td>
-                <td>{row.address}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </Box>
 
       <Dialog open={modalOpen} onClose={() => setModalOpen(false)} maxWidth="md" fullWidth>
         <DialogTitle>{isEdit ? "Edit" : "Add New"} {label}</DialogTitle>

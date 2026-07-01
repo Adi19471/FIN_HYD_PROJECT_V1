@@ -14,7 +14,7 @@ function Layout({ children }) {
         <Header sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} />
 
         <main className="grow enterprise-main">
-          <div className="w-full max-w-[1840px] mx-auto px-4 sm:px-6 lg:px-8 py-5 lg:py-7">
+          <div className="">
             <motion.div
               key={window.location.pathname}
               initial={{ opacity: 0, y: 12 }}

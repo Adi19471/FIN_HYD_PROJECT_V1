@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo, useState } from "react";
 import {
+  Box,
   Button,
   Checkbox,
   FormControlLabel,
@@ -12,7 +13,13 @@ import axios from "axios";
 import dayjs from "dayjs";
 import { API_BASE } from "lib/config";
 import { getSession } from "src/utils/session";
-import { DataTable, PageHeader } from "src/components/ui";
+import {
+  DataTable,
+  PageHeader,
+  ReportCompanyHeader,
+  ReportToolbar,
+  useReportZoom,
+} from "src/components/ui";
 
 const formatAmount = (amount) => Number(amount || 0).toLocaleString("en-IN");
 const formatDecimal = (amount) => Number(amount || 0).toFixed(1);
@@ -33,6 +40,8 @@ const Group_Bussiness = () => {
     }),
     [token]
   );
+
+  const zoom = useReportZoom();
 
   const [loading, setLoading] = useState(false);
   const [rows, setRows] = useState([]);
@@ -138,6 +147,16 @@ const Group_Bussiness = () => {
         loading={loading}
       />
 
+      <ReportToolbar
+        onGenerate={fetchReport}
+        onRefresh={fetchReport}
+        loading={loading}
+        rows={rows}
+        columns={columns}
+        fileName="Group-Business"
+        zoom={zoom}
+      />
+
       <Paper className="enterprise-card" elevation={0} sx={{ p: 2 }}>
         <Grid container spacing={2} alignItems="center">
           <Grid item xs={12} md={2}>
@@ -164,6 +183,11 @@ const Group_Bussiness = () => {
         </Grid>
       </Paper>
 
+      <Box ref={zoom.targetRef} sx={{ display: "flex", flexDirection: "column", gap: 2.5 }}>
+        <Paper className="enterprise-card" elevation={0} sx={{ p: 2 }}>
+          <ReportCompanyHeader title="Group Business Report" />
+        </Paper>
+
       <DataTable
         rows={rows}
         columns={columns}
@@ -185,10 +209,12 @@ const Group_Bussiness = () => {
         height={430}
         pageSize={25}
         hideFooter
+        showExport={false}
         disableColumnFilter
         disableColumnSelector
         disableDensitySelector
       />
+      </Box>
     </Stack>
   );
 };

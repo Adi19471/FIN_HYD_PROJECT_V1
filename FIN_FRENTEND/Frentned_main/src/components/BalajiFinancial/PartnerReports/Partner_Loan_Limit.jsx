@@ -1,10 +1,7 @@
 import React, { useState } from "react";
 import {
   Box,
-  Button,
   Paper,
-  Stack,
-  Typography,
 } from "@mui/material";
 import axios from "axios";
 import dayjs from "dayjs";
@@ -19,11 +16,16 @@ import {
 import {
   DataTable,
   PageHeader,
+  ReportCompanyHeader,
+  ReportToolbar,
+  useReportZoom,
 } from "src/components/ui";
 
 const Partner_Loan_Limit = () => {
   const [rows, setRows] = useState([]);
   const [loading, setLoading] = useState(false);
+
+  const zoom = useReportZoom();
 
   const headers = {
     Authorization: `Bearer ${getSession("token") || ""}`,
@@ -102,60 +104,36 @@ const Partner_Loan_Limit = () => {
 
   return (
     <>
-      <PageHeader title="Partner Loan Limit Report" />
+      <PageHeader
+        title="Partner Loan Limit Report"
+        subtitle="Authorised vs current loan limits per partner."
+        totalCount={rows.length}
+        onRefresh={getPartnerLoanLimits}
+        loading={loading}
+      />
 
-      <Paper elevation={3} sx={{ p: 3 }}>
-        {/* Company Header */}
+      <ReportToolbar
+        onGenerate={getPartnerLoanLimits}
+        onRefresh={getPartnerLoanLimits}
+        loading={loading}
+        rows={rows}
+        columns={columns}
+        fileName="Partner-Loan-Limit"
+        zoom={zoom}
+      />
 
-        <Box textAlign="center" mb={3}>
-          <Typography variant="h4" fontWeight="bold">
-            SRI BALAJI ENTERPRISES
-          </Typography>
+      <Paper elevation={3} sx={{ p: 3, mt: 2 }}>
+        <ReportCompanyHeader title="Partner Loan Limit Information" />
 
-          <Typography variant="subtitle1">
-            Yella Reddy Guda, Hyderabad
-          </Typography>
-
-          <Typography sx={{ mt: 1 }}>
-            Date : {dayjs().format("DD-MMM-YYYY")}
-          </Typography>
-
-          <Typography
-            variant="h6"
-            fontWeight="bold"
-            sx={{ mt: 2 }}
-          >
-            Partner Loan Limit Information
-          </Typography>
+        <Box ref={zoom.targetRef}>
+          <DataTable
+            rows={rows}
+            columns={columns}
+            loading={loading}
+            autoHeight
+            disableRowSelectionOnClick
+          />
         </Box>
-
-        {/* Generate Button */}
-
-        <Stack
-          direction="row"
-          justifyContent="flex-end"
-          spacing={2}
-          mb={2}
-        >
-          <Button
-            variant="contained"
-            color="primary"
-            onClick={getPartnerLoanLimits}
-            disabled={loading}
-          >
-            {loading ? "Loading..." : "Generate"}
-          </Button>
-        </Stack>
-
-        {/* Data Table */}
-
-        <DataTable
-          rows={rows}
-          columns={columns}
-          loading={loading}
-          autoHeight
-          disableRowSelectionOnClick
-        />
       </Paper>
     </>
   );

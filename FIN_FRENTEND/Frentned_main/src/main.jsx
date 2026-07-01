@@ -23,14 +23,15 @@ ReactDOM.createRoot(document.getElementById("root")).render(
         <ThemeProvider>
           <App />
           <ToastContainer
-            position="top-right"
-            autoClose={2800}
+            position="top-center"
+            autoClose={2000}
             newestOnTop
             closeOnClick
             pauseOnHover
             draggable
-            theme="colored"
             limit={4}
+            theme="colored"
+            toastClassName="custom-toast"
           />
         </ThemeProvider>
       </AuthProvider>

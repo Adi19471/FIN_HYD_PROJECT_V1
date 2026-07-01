@@ -4,14 +4,13 @@ import axios from "axios";
 import * as XLSX from "xlsx";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
-import { successToast, errorToast } from "toastify";
+import { successToast, errorToast, warningToast, infoToast } from "toastify";
 import { API_BASE } from "lib/config";
 import { getSession } from "src/utils/session";
 import { AppDatePicker, TableExportMenu } from "src/components/ui";
 import { COMPANY_ADDRESS, COMPANY_NAME } from "src/lib/company";
 
 import {
-  Alert,
   Box,
   Button,
   Divider,
@@ -49,13 +48,23 @@ const formatNumber = (value) => {
 
 const parseNumber = (value) => String(value || "").replace(/,/g, "");
 
+// Show alert messages as toastify toasts based on severity
+const notify = ({ text, severity = "info" }) => {
+  const toastBySeverity = {
+    success: successToast,
+    error: errorToast,
+    warning: warningToast,
+    info: infoToast,
+  };
+  (toastBySeverity[severity] || infoToast)(text);
+};
+
 const QuickCashBook = () => {
   const [transactionDate, setTransactionDate] = useState(dayjs());
   const [rows, setRows] = useState([blankRow()]);
   const [accountSuggestions, setAccountSuggestions] = useState([]);
   const [loading, setLoading] = useState(false);
   const [fetchingAccount, setFetchingAccount] = useState(null);
-  const [alertMsg, setAlertMsg] = useState({ text: "", severity: "info" });
   const [isAddingRow, setIsAddingRow] = useState(false);
 
   const token = getSession("token");
@@ -104,14 +113,14 @@ const QuickCashBook = () => {
         const currentAccount = rows.find((row) => row.id === currentRowId)?.accountNo?.trim();
         const filtered = Array.isArray(res.data)
           ? res.data.filter((option) => {
-              const accountNo = String(option.loanId || option.displayString || "").trim();
-              return accountNo === currentAccount || !usedAccounts.has(accountNo);
-            })
+            const accountNo = String(option.loanId || option.displayString || "").trim();
+            return accountNo === currentAccount || !usedAccounts.has(accountNo);
+          })
           : [];
         setAccountSuggestions(filtered);
       } catch (err) {
         setAccountSuggestions([]);
-        setAlertMsg({ text: "Account dropdown data could not be loaded.", severity: "warning" });
+        notify({ text: "Account dropdown data could not be loaded.", severity: "warning" });
       }
     },
     [rows, token, usedAccounts]
@@ -133,22 +142,22 @@ const QuickCashBook = () => {
         prev.map((row) =>
           row.id === rowId
             ? {
-                ...row,
-                accountNo,
-                name: res.data.name || "Unknown",
-                installment: Number(res.data.installment || 0),
-                dueAmount: Number(res.data.dueAmount || 0),
-                lateFee: Number(res.data.lateFee || 0),
-                paidAmount: 0,
-                paidLateFee: 0,
-              }
+              ...row,
+              accountNo,
+              name: res.data.name || "Unknown",
+              installment: Number(res.data.installment || 0),
+              dueAmount: Number(res.data.dueAmount || 0),
+              lateFee: Number(res.data.lateFee || 0),
+              paidAmount: 0,
+              paidLateFee: 0,
+            }
             : row
         )
       );
-      setAlertMsg({ text: `Loaded ${accountNo}.`, severity: "success" });
+      notify({ text: `Loaded ${accountNo}.`, severity: "success" });
     } catch (err) {
       const message = err.response?.data?.message || err.response?.data?.error || `No record found for ${accountNo}`;
-      setAlertMsg({ text: message, severity: "warning" });
+      notify({ text: message, severity: "warning" });
     } finally {
       setFetchingAccount(null);
     }
@@ -169,7 +178,7 @@ const QuickCashBook = () => {
   const handleSaveAll = async () => {
     if (!filledRows.length) return errorToast("No valid records to save");
     if (!payableRows.length) {
-      setAlertMsg({ text: "Enter Paid Amount or Paid Late Fee for at least one account before saving.", severity: "warning" });
+      notify({ text: "Enter Paid Amount or Paid Late Fee for at least one account before saving.", severity: "warning" });
       return errorToast("No payment amount entered");
     }
 
@@ -193,7 +202,7 @@ const QuickCashBook = () => {
       });
 
       successToast("Saved successfully");
-      setAlertMsg({ text: `${payableRows.length} quick cash rows saved successfully.`, severity: "success" });
+      notify({ text: `${payableRows.length} quick cash rows saved successfully.`, severity: "success" });
       setRows([blankRow()]);
     } catch (error) {
       const responseData = error.response?.data;
@@ -204,7 +213,7 @@ const QuickCashBook = () => {
         error.message ||
         "Save failed. Check account number, payment date, and paid amount.";
       console.error("Quick Cash Book save failed", error);
-      setAlertMsg({ text: message, severity: "error" });
+      notify({ text: message, severity: "error" });
       errorToast(message);
     } finally {
       setLoading(false);
@@ -294,32 +303,28 @@ const QuickCashBook = () => {
   };
 
   return (
-    <Box sx={{ p: { xs: 1.5, md: 2.5 } }}>
-      <Paper
-        elevation={0}
-        sx={{
-          p: { xs: 2, md: 3 },
-          mb: 2,
-          border: "1px solid",
-          borderColor: "divider",
-          borderRadius: 1,
-          bgcolor: "#fff",
-          boxShadow: "0 12px 34px rgba(15, 23, 42, 0.06)",
-        }}
-      >
-        <Stack spacing={2}>
-          <Stack direction={{ xs: "column", md: "row" }} justifyContent="space-between" spacing={2}>
-            <Box>
-              <Typography variant="h5">Quick Cash Book</Typography>
-              <Typography variant="body2" color="text.secondary" sx={{ mt: 0.35 }}>
-                Fast collection entry with date, totals, exports, and print.
-              </Typography>
-            </Box>
+    <Box >
+      <Paper className="enterprise-card" elevation={0} sx={{ p: { xs: 2, md: 2.5 } }}>
+        {/* Header */}
+        <Stack
+          direction={{ xs: "column", md: "row" }}
+          justifyContent="space-between"
+          alignItems={{ xs: "stretch", md: "center" }}
+          spacing={2}
+        >
+          <Typography variant="h5">Quick Cash Book</Typography>
+          <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap justifyContent="flex-end">
+            <TableExportMenu rows={exportRows} columns={Object.keys(exportRows[0] || {})} fileName={exportFileName} />
+            <Button variant="contained" startIcon={<Save />} onClick={handleSaveAll} disabled={loading}>
+              {loading ? "Saving..." : "Save All"}
+            </Button>
           </Stack>
+        </Stack>
 
-          <Divider />
+        <Divider sx={{ my: 2 }} />
 
-          <Grid container spacing={2} alignItems="center">
+        {/* Summary */}
+        <Grid container spacing={2} alignItems="center">
             <Grid item xs={12} sm={6} md={3}>
               <AppDatePicker label="Date" value={transactionDate} onChange={(value) => setTransactionDate(dayjs(value))} />
             </Grid>
@@ -344,22 +349,25 @@ const QuickCashBook = () => {
                 fullWidth
               />
             </Grid>
-          </Grid>
+        </Grid>
 
-          <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap justifyContent="flex-end">
-              <TableExportMenu rows={exportRows} columns={Object.keys(exportRows[0] || {})} fileName={exportFileName} />
-              <Button variant="contained" startIcon={<Save />} onClick={handleSaveAll} disabled={loading}>
-                {loading ? "Saving..." : "Save All"}
-              </Button>
-          </Stack>
-        </Stack>
-      </Paper>
+        <Divider sx={{ my: 2 }} />
 
-      {alertMsg.text && <Alert severity={alertMsg.severity} sx={{ mb: 2 }}>{alertMsg.text}</Alert>}
-
-      <Paper className="enterprise-card" elevation={0} sx={{ p: 1 }}>
+        {/* Table */}
         <TableContainer>
-          <Table size="small">
+          <Table
+            size="small"
+            sx={{
+              "& .MuiTableCell-root": {
+                border: "1px solid",
+                borderColor: "divider",
+              },
+              "& .MuiTableCell-head": {
+                backgroundColor: "#f8fafc",
+                fontWeight: 800,
+              },
+            }}
+          >
             <TableHead>
               <TableRow>
                 <TableCell align="center">Action</TableCell>
@@ -367,7 +375,7 @@ const QuickCashBook = () => {
                 <TableCell>Customer</TableCell>
                 <TableCell>Installment</TableCell>
                 <TableCell>Due</TableCell>
-                <TableCell>Late Fee</TableCell>
+                <TableCell>LateFee</TableCell>
                 <TableCell>Paid Amount</TableCell>
                 <TableCell>Paid Late Fee</TableCell>
               </TableRow>
@@ -454,16 +462,19 @@ const QuickCashBook = () => {
             </TableBody>
           </Table>
         </TableContainer>
-      </Paper>
 
-      <Stack direction="row" spacing={2} alignItems="center" flexWrap="wrap" useFlexGap sx={{ mt: 2 }}>
-        <Button variant="outlined" startIcon={<Add />} onClick={() => addNewRowWithPrefix("")}>
-          Add New Row
-        </Button>
-        <Typography fontWeight={900}>
-          Total Collected: Rs {totalCollected.toLocaleString("en-IN")} | Late Fee: Rs {totalLateFeeCollected.toLocaleString("en-IN")}
-        </Typography>
-      </Stack>
+        <Divider sx={{ my: 2 }} />
+
+        {/* Footer */}
+        <Stack direction="row" spacing={2} alignItems="center" flexWrap="wrap" useFlexGap>
+          <Button variant="outlined" startIcon={<Add />} onClick={() => addNewRowWithPrefix("")}>
+            Add New Row
+          </Button>
+          <Typography fontWeight={900}>
+            Total Collected: Rs {totalCollected.toLocaleString("en-IN")} | Late Fee: Rs {totalLateFeeCollected.toLocaleString("en-IN")}
+          </Typography>
+        </Stack>
+      </Paper>
     </Box>
   );
 };

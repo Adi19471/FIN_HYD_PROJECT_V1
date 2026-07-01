@@ -98,12 +98,14 @@ const MainPersonalFile = () => {
                 icon={tab.icon}
                 iconPosition="start"
                 label={
-                  <Typography fontWeight={600} fontSize="0.95rem">
+                  <Typography fontWeight={600} fontSize="0.78rem">
                     {tab.label}
                   </Typography>
                 }
                 sx={{
-                  py: 2,
+                  py: 1.5,
+                  minHeight: 48,
+                  "& .MuiSvgIcon-root": { fontSize: "1.1rem" },
                   color: value === index ? colors.active : colors.inactive,
                   "&.Mui-selected": {
                     color: colors.active,
@@ -120,7 +122,7 @@ const MainPersonalFile = () => {
         {/* Content */}
         <Box
           sx={{
-            p: { xs: 2, md: 3 },
+            p: { xs: 1.5, md: 2 },
             minHeight: "55vh",
           }}
         >

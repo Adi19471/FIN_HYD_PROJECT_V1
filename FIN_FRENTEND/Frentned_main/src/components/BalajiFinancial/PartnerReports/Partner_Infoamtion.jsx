@@ -10,7 +10,13 @@ import axios from "axios";
 import { API_BASE } from "lib/config";
 import { getSession } from "src/utils/session";
 import { errorToast } from "toastify";
-import { DataTable, PageHeader } from "src/components/ui";
+import {
+  DataTable,
+  PageHeader,
+  ReportCompanyHeader,
+  ReportToolbar,
+  useReportZoom,
+} from "src/components/ui";
 
 const formatAmount = (amount) =>
   Number(amount || 0).toLocaleString("en-IN");
@@ -18,6 +24,8 @@ const formatAmount = (amount) =>
 const Partner_Infoamtion = () => {
   const [loading, setLoading] = useState(false);
   const [rows, setRows] = useState([]);
+
+  const zoom = useReportZoom();
 
   // TOKEN
   const token = getSession()?.token || getSession("token") || "";
@@ -134,9 +142,27 @@ const Partner_Infoamtion = () => {
 
   return (
     <Box p={2}>
-      <PageHeader title="Partner Information" />
+      <PageHeader
+        title="Partner Information"
+        subtitle="Master list of all partners with shares, investment and status."
+        totalCount={rows.length}
+        onRefresh={getPartnerInformation}
+        loading={loading}
+      />
 
-      <Paper elevation={2} sx={{ mt: 2 }}>
+      <ReportToolbar
+        onGenerate={getPartnerInformation}
+        onRefresh={getPartnerInformation}
+        loading={loading}
+        rows={rows}
+        columns={columns}
+        fileName="Partner-Information"
+        zoom={zoom}
+      />
+
+      <Paper elevation={2} sx={{ mt: 2, p: 2 }}>
+        <ReportCompanyHeader title="Partner Information" />
+
         {loading ? (
           <Box
             display="flex"
@@ -147,14 +173,16 @@ const Partner_Infoamtion = () => {
             <CircularProgress />
           </Box>
         ) : (
-          <DataTable
-            rows={rows}
-            columns={columns}
-            getRowId={(row) => row.partnerId}
-            autoHeight
-            pageSize={10}
-            rowsPerPageOptions={[10, 25, 50]}
-          />
+          <Box ref={zoom.targetRef}>
+            <DataTable
+              rows={rows}
+              columns={columns}
+              getRowId={(row) => row.partnerId}
+              autoHeight
+              pageSize={10}
+              rowsPerPageOptions={[10, 25, 50]}
+            />
+          </Box>
         )}
       </Paper>
     </Box>

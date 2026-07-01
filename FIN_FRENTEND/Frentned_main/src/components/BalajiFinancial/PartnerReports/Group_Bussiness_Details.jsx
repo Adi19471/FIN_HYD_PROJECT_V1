@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo, useState } from "react";
 import {
+  Box,
   Button,
   Checkbox,
   FormControlLabel,
@@ -13,7 +14,13 @@ import axios from "axios";
 import dayjs from "dayjs";
 import { API_BASE } from "lib/config";
 import { getSession } from "src/utils/session";
-import { DataTable, PageHeader } from "src/components/ui";
+import {
+  DataTable,
+  PageHeader,
+  ReportCompanyHeader,
+  ReportToolbar,
+  useReportZoom,
+} from "src/components/ui";
 
 const managerOptions = [
   { value: "P3", label: "P001 - JAYARANJAN ROKKAM" },
@@ -27,6 +34,8 @@ const formatDecimal = (amount) => Number(amount || 0).toFixed(1);
 const GroupBusinessDetails = () => {
   const token = getSession()?.token || getSession("token") || "";
   const headers = useMemo(() => ({ Authorization: `Bearer ${token}` }), [token]);
+
+  const zoom = useReportZoom();
 
   const [loading, setLoading] = useState(false);
   const [rows, setRows] = useState([]);
@@ -119,6 +128,16 @@ const GroupBusinessDetails = () => {
         loading={loading}
       />
 
+      <ReportToolbar
+        onGenerate={fetchReport}
+        onRefresh={fetchReport}
+        loading={loading}
+        rows={rows}
+        columns={columns}
+        fileName="Group-Business-Details"
+        zoom={zoom}
+      />
+
       <Paper className="enterprise-card" elevation={0} sx={{ p: 2 }}>
         <Grid container spacing={2} alignItems="center">
           <Grid item xs={12} md={3}>
@@ -155,6 +174,11 @@ const GroupBusinessDetails = () => {
         </Grid>
       </Paper>
 
+      <Box ref={zoom.targetRef} sx={{ display: "flex", flexDirection: "column", gap: 2.5 }}>
+        <Paper className="enterprise-card" elevation={0} sx={{ p: 2 }}>
+          <ReportCompanyHeader title={`${selectedManager?.label || "Group"} - Group Business Details`} />
+        </Paper>
+
       <DataTable
         rows={rows}
         columns={columns}
@@ -176,10 +200,12 @@ const GroupBusinessDetails = () => {
         height={380}
         pageSize={25}
         hideFooter
+        showExport={false}
         disableColumnFilter
         disableColumnSelector
         disableDensitySelector
       />
+      </Box>
     </Stack>
   );
 };

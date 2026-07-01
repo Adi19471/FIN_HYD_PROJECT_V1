@@ -16,7 +16,13 @@ import dayjs from "dayjs";
 import { API_BASE } from "lib/config";
 import { getSession } from "src/utils/session";
 import { errorToast } from "toastify";
-import { DataTable, PageHeader } from "src/components/ui";
+import {
+  DataTable,
+  PageHeader,
+  ReportCompanyHeader,
+  ReportToolbar,
+  useReportZoom,
+} from "src/components/ui";
 
 const formatAmount = (amount) =>
   Number(amount || 0).toLocaleString("en-IN");
@@ -32,6 +38,8 @@ const Partner_Settelment = () => {
     dayjs().format("YYYY-MM-DD")
   );
   const [rows, setRows] = useState([]);
+
+  const zoom = useReportZoom();
 
   // TOKEN
   const token = getSession()?.token || getSession("token") || "";
@@ -226,7 +234,23 @@ const Partner_Settelment = () => {
 
   return (
     <Box p={2}>
-      <PageHeader title="Partner Settlement" />
+      <PageHeader
+        title="Partner Settlement"
+        subtitle="Loan-wise settlement position for a partner on a target date."
+        totalCount={rows.length}
+        onRefresh={getSettlementData}
+        loading={loading}
+      />
+
+      <ReportToolbar
+        onGenerate={getSettlementData}
+        onRefresh={getSettlementData}
+        loading={loading}
+        rows={rows}
+        columns={columns}
+        fileName="Partner-Settlement"
+        zoom={zoom}
+      />
 
       {/* FILTERS */}
       <Paper sx={{ p: 2, mt: 2, mb: 2 }}>
@@ -275,7 +299,9 @@ const Partner_Settelment = () => {
       </Paper>
 
       {/* TABLE */}
-      <Paper elevation={2}>
+      <Paper elevation={2} sx={{ p: 2 }}>
+        <ReportCompanyHeader title="Partner Settlement" />
+
         {loading ? (
           <Box
             height="300px"
@@ -286,14 +312,16 @@ const Partner_Settelment = () => {
             <CircularProgress />
           </Box>
         ) : (
-          <DataTable
-            rows={rows}
-            columns={columns}
-            getRowId={(row, index) => `${row.loanId}-${index}`}
-            autoHeight
-            pageSize={10}
-            rowsPerPageOptions={[10, 25, 50]}
-          />
+          <Box ref={zoom.targetRef}>
+            <DataTable
+              rows={rows}
+              columns={columns}
+              getRowId={(row, index) => `${row.loanId}-${index}`}
+              autoHeight
+              pageSize={10}
+              rowsPerPageOptions={[10, 25, 50]}
+            />
+          </Box>
         )}
       </Paper>
     </Box>

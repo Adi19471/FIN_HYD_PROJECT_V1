@@ -16,7 +16,7 @@ const ThemeContext = createContext({
 const defaultSettings = {
   mode: "light",
   colorTheme: "sunrise",
-  fontFamily: "Manrope",
+  fontFamily: "Tahoma",
   fontScale: 1.08,
   screenScale: 1,
   density: "comfortable",
@@ -27,7 +27,7 @@ const defaultSettings = {
   loadingStyle: "pulse",
   sidebarStyle: "expanded",
   navbarStyle: "rounded",
-  radius: 11,
+  radius: 0,
 };
 
 const colorThemes = {
@@ -83,6 +83,7 @@ const colorThemes = {
 };
 
 const fontStacks = {
+  Tahoma: 'Tahoma, Verdana, Geneva, "Segoe UI", sans-serif',
   Inter: '"Inter", system-ui, sans-serif',
   Roboto: '"Roboto", system-ui, sans-serif',
   Poppins: '"Poppins", Inter, system-ui, sans-serif',
@@ -97,6 +98,19 @@ const readSettings = () => {
   try {
     const legacyTheme = localStorage.getItem("theme");
     const persisted = JSON.parse(localStorage.getItem("enterprise-ui-settings") || "{}");
+    // One-time migration to the new app default font (Tahoma). Upgrades the
+    // previous auto-defaults while respecting any other explicit user choice.
+    if (localStorage.getItem("ui-font-v2") !== "1") {
+      if (!persisted.fontFamily || persisted.fontFamily === "Manrope" || persisted.fontFamily === "Inter") {
+        persisted.fontFamily = "Tahoma";
+      }
+      localStorage.setItem("ui-font-v2", "1");
+    }
+    // One-time migration to square corners (radius 0) across the app.
+    if (localStorage.getItem("ui-radius-v1") !== "1") {
+      persisted.radius = 0;
+      localStorage.setItem("ui-radius-v1", "1");
+    }
     return {
       ...defaultSettings,
       mode: legacyTheme || defaultSettings.mode,
@@ -240,7 +254,7 @@ export default function ThemeProvider({ children }) {
             defaultProps: { disableElevation: true },
             styleOverrides: {
               root: {
-                borderRadius: Math.max(8, settings.radius),
+                borderRadius: settings.radius,
                 minHeight: settings.density === "compact" ? 32 : settings.density === "spacious" ? 44 : 40,
                 paddingLeft: settings.density === "compact" ? 12 : settings.density === "spacious" ? 20 : 16,
                 paddingRight: settings.density === "compact" ? 12 : settings.density === "spacious" ? 20 : 16,
@@ -284,7 +298,7 @@ export default function ThemeProvider({ children }) {
           MuiOutlinedInput: {
             styleOverrides: {
               root: {
-                borderRadius: Math.max(8, settings.radius),
+                borderRadius: settings.radius,
                 minHeight: settings.density === "compact" ? 36 : settings.density === "spacious" ? 50 : 44,
                 backgroundColor:
                   settings.formStyle === "minimal"
@@ -327,7 +341,7 @@ export default function ThemeProvider({ children }) {
           MuiDialog: {
             styleOverrides: {
               paper: {
-                borderRadius: settings.radius + 4,
+                borderRadius: settings.radius,
                 overflow: "hidden",
               },
             },

@@ -1,0 +1,292 @@
+/* ============================================================
+   Sri Balaji Finance - Login (2026 AI edition)
+   Scoped styles. Theme-aware via global CSS variables.
+   ============================================================ */
+
+.auth-root {
+  min-height: 100vh;
+  display: grid;
+  grid-template-columns: minmax(0, 1.1fr) minmax(440px, 0.9fr);
+  background: var(--surface-2);
+  overflow: hidden;
+}
+
+/* ---------------- Left visual panel ---------------- */
+.auth-visual {
+  position: relative;
+  display: flex;
+  align-items: center;
+  padding: clamp(36px, 5.5vw, 88px);
+  overflow: hidden;
+  isolation: isolate;
+  background:
+    linear-gradient(125deg,
+      color-mix(in srgb, var(--brand-primary) 92%, #000) 0%,
+      var(--brand-primary) 38%,
+      var(--brand-secondary) 72%,
+      #070c18 100%);
+  background-size: 220% 220%;
+  animation: auth-aurora 18s ease infinite;
+}
+
+@keyframes auth-aurora {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+/* faint engineering grid + edge fade */
+.auth-grid {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background-image:
+    linear-gradient(rgba(255, 255, 255, 0.07) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.07) 1px, transparent 1px);
+  background-size: 40px 40px;
+  -webkit-mask-image: radial-gradient(circle at 30% 30%, #000, transparent 85%);
+  mask-image: radial-gradient(circle at 30% 30%, #000, transparent 85%);
+}
+
+/* floating glow orbs */
+.auth-orb {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(60px);
+  opacity: 0.55;
+  z-index: -1;
+  animation: auth-float 14s ease-in-out infinite;
+}
+.auth-orb.one {
+  width: 360px; height: 360px;
+  top: -90px; right: -60px;
+  background: radial-gradient(circle, rgba(125, 211, 252, 0.9), transparent 70%);
+}
+.auth-orb.two {
+  width: 320px; height: 320px;
+  bottom: -120px; left: 8%;
+  background: radial-gradient(circle, rgba(167, 139, 250, 0.8), transparent 70%);
+  animation-delay: -5s;
+}
+.auth-orb.three {
+  width: 240px; height: 240px;
+  top: 38%; left: 44%;
+  background: radial-gradient(circle, rgba(56, 189, 248, 0.55), transparent 70%);
+  animation-delay: -9s;
+}
+
+@keyframes auth-float {
+  0%, 100% { transform: translate3d(0, 0, 0) scale(1); }
+  50% { transform: translate3d(0, -28px, 0) scale(1.08); }
+}
+
+.auth-visual-inner {
+  position: relative;
+  z-index: 2;
+  width: 100%;
+  max-width: 640px;
+  color: #fff;
+}
+
+/* brand */
+.auth-brand {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-bottom: clamp(28px, 5vh, 56px);
+}
+.auth-brand-mark {
+  width: 56px;
+  height: 56px;
+  display: grid;
+  place-items: center;
+  border-radius: 18px;
+  color: #fff;
+  background: linear-gradient(145deg, rgba(255, 255, 255, 0.28), rgba(255, 255, 255, 0.08));
+  border: 1px solid rgba(255, 255, 255, 0.35);
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.25), inset 0 1px 0 rgba(255, 255, 255, 0.4);
+  backdrop-filter: blur(14px);
+}
+.auth-brand-mark svg { font-size: 30px; }
+.auth-brand-name { font-size: 1.35rem; font-weight: 800; letter-spacing: 0.2px; line-height: 1.1; }
+.auth-brand-sub { font-size: 0.85rem; color: rgba(255, 255, 255, 0.72); margin-top: 2px; }
+
+/* AI status chip */
+.auth-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 7px 14px;
+  border-radius: 999px;
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.3px;
+  color: #fff;
+  background: rgba(255, 255, 255, 0.12);
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  backdrop-filter: blur(12px);
+  margin-bottom: 22px;
+}
+.auth-chip svg { font-size: 16px; }
+.auth-live-dot {
+  width: 8px; height: 8px; border-radius: 50%;
+  background: #34d399;
+  box-shadow: 0 0 0 0 rgba(52, 211, 153, 0.7);
+  animation: auth-pulse 1.8s infinite;
+}
+@keyframes auth-pulse {
+  0% { box-shadow: 0 0 0 0 rgba(52, 211, 153, 0.6); }
+  70% { box-shadow: 0 0 0 10px rgba(52, 211, 153, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(52, 211, 153, 0); }
+}
+
+/* headline */
+.auth-headline {
+  font-size: clamp(2.1rem, 4vw, 3.4rem);
+  font-weight: 850;
+  line-height: 1.06;
+  letter-spacing: -1px;
+  margin: 0;
+}
+.auth-headline .accent {
+  background: linear-gradient(90deg, #ffffff, #bae6fd 45%, #a78bfa);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  display: inline-block;
+  min-height: 1.1em;
+}
+.auth-subtext {
+  font-size: clamp(0.95rem, 1.4vw, 1.12rem);
+  color: rgba(255, 255, 255, 0.78);
+  margin: 18px 0 0;
+  max-width: 520px;
+  line-height: 1.6;
+}
+
+/* feature cards */
+.auth-features {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 14px;
+  margin-top: clamp(28px, 5vh, 48px);
+}
+.auth-feature {
+  padding: 16px;
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  backdrop-filter: blur(14px);
+  transition: transform 0.25s ease, background 0.25s ease, border-color 0.25s ease;
+}
+.auth-feature:hover {
+  transform: translateY(-4px);
+  background: rgba(255, 255, 255, 0.16);
+  border-color: rgba(255, 255, 255, 0.3);
+}
+.auth-feature-icon {
+  width: 38px; height: 38px;
+  display: grid; place-items: center;
+  border-radius: 11px;
+  margin-bottom: 10px;
+  color: #fff;
+  background: rgba(255, 255, 255, 0.18);
+}
+.auth-feature-title { color: #fff; font-weight: 750; font-size: 0.92rem; }
+.auth-feature-text { color: rgba(255, 255, 255, 0.68); font-size: 0.78rem; margin-top: 2px; }
+
+/* stat ticker */
+.auth-stats {
+  display: flex;
+  gap: clamp(20px, 4vw, 44px);
+  margin-top: clamp(26px, 4vh, 40px);
+  flex-wrap: wrap;
+}
+.auth-stat-value {
+  font-size: clamp(1.3rem, 2.2vw, 1.8rem);
+  font-weight: 850;
+  color: #fff;
+  line-height: 1;
+}
+.auth-stat-label {
+  font-size: 0.76rem;
+  color: rgba(255, 255, 255, 0.62);
+  margin-top: 6px;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+}
+
+/* ---------------- Right form panel ---------------- */
+.auth-form-side {
+  position: relative;
+  min-height: 100vh;
+  display: grid;
+  place-items: center;
+  padding: 32px;
+  background:
+    radial-gradient(circle at 80% 0%, color-mix(in srgb, var(--brand-primary) 14%, transparent), transparent 26rem),
+    radial-gradient(circle at 0% 100%, color-mix(in srgb, var(--brand-secondary) 12%, transparent), transparent 24rem),
+    var(--surface-2);
+}
+
+.auth-theme-toggle {
+  position: absolute;
+  top: 22px;
+  right: 26px;
+  z-index: 5;
+}
+
+.auth-card {
+  position: relative;
+  width: 100%;
+  max-width: 440px;
+  padding: clamp(28px, 4vw, 44px);
+  border-radius: 22px;
+  background: color-mix(in srgb, var(--surface-1) 94%, transparent);
+  border: 1px solid var(--border-soft);
+  box-shadow: 0 30px 70px rgba(15, 23, 42, 0.16);
+  overflow: hidden;
+}
+/* animated top accent line */
+.auth-card::before {
+  content: "";
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 3px;
+  background: linear-gradient(90deg, transparent, var(--brand-primary), var(--brand-secondary), transparent);
+  background-size: 200% 100%;
+  animation: auth-scan 3.2s linear infinite;
+}
+@keyframes auth-scan {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+.auth-card-title { font-size: 1.75rem; font-weight: 850; letter-spacing: -0.5px; color: var(--text-strong); }
+.auth-card-sub { font-size: 0.9rem; color: var(--text-muted); margin-top: 6px; }
+
+.auth-secure-note {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  font-size: 0.76rem;
+  color: var(--text-muted);
+  line-height: 1.5;
+}
+.auth-secure-note svg { font-size: 16px; margin-top: 1px; color: var(--brand-primary); flex-shrink: 0; }
+
+/* ---------------- Responsive ---------------- */
+@media (max-width: 1024px) {
+  .auth-root { grid-template-columns: 1fr; }
+  .auth-visual { min-height: 46vh; }
+  .auth-form-side { min-height: auto; padding: 28px 16px 44px; }
+  .auth-features { grid-template-columns: repeat(3, 1fr); }
+}
+@media (max-width: 560px) {
+  .auth-features { grid-template-columns: 1fr; }
+  .auth-stats { gap: 22px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .auth-visual, .auth-orb, .auth-card::before, .auth-live-dot { animation: none; }
+}

@@ -2,7 +2,6 @@ import React, { useEffect, Suspense } from "react";
 import { Routes, Route, useLocation, Navigate } from "react-router-dom";
 
 import "./css/style.css";
-import "./charts/ChartjsConfig";
 import "./App.css";
 
 import routes from "./routes";

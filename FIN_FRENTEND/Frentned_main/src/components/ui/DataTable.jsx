@@ -13,15 +13,20 @@ import {
   Stack,
   Typography,
 } from "@mui/material";
-import { DataGrid, GridToolbar } from "@mui/x-data-grid";
+import {
+  DataGrid,
+  GridToolbarContainer,
+  GridToolbarColumnsButton,
+  GridToolbarFilterButton,
+  GridToolbarDensitySelector,
+  GridToolbarQuickFilter,
+} from "@mui/x-data-grid";
 import {
   ArticleRounded,
   DescriptionRounded,
   FileDownloadRounded,
   PrintRounded,
-  SearchRounded,
   TableViewRounded,
-  TuneRounded,
 } from "@mui/icons-material";
 import * as XLSX from "xlsx";
 import jsPDF from "jspdf";
@@ -185,6 +190,24 @@ export function TableExportMenu({ rows, columns, fileName, buttonLabel = "Downlo
 }
 
 /**
+ * GridToolbar - the single toolbar for every table: column visibility, filter,
+ * density, a quick search box, and ONE export menu (Excel / PDF / Word / Print).
+ * This is the only download entry point per table - no duplicate export buttons.
+ */
+function CustomGridToolbar({ rows, columns, fileName, showExport }) {
+  return (
+    <GridToolbarContainer>
+      <GridToolbarColumnsButton />
+      <GridToolbarFilterButton />
+      <GridToolbarDensitySelector />
+      <Box sx={{ flex: 1 }} />
+      <GridToolbarQuickFilter debounceMs={350} placeholder="Search table..." />
+      {showExport && <TableExportMenu rows={rows} columns={columns} fileName={fileName} />}
+    </GridToolbarContainer>
+  );
+}
+
+/**
  * DataTable - Consistent DataGrid wrapper
  * @param {Array} rows - Table rows data
  * @param {Array} columns - Column definitions
@@ -204,6 +227,7 @@ const DataTable = ({
   pageSize = 25,
   initialState,
   showCompany = false,
+  showExport = true,
   actions,
   ...otherProps
 }) => {
@@ -258,11 +282,8 @@ const DataTable = ({
             )}
             {title && <Typography variant="subtitle1" sx={{ mt: showCompany ? 0.25 : 0 }}>{title}</Typography>}
           </Box>
-          <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
+          <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap alignItems="center">
             <Chip size="small" label={`${rows.length} records`} color="primary" variant="outlined" />
-            <Chip size="small" icon={<SearchRounded />} label="Search" variant="outlined" />
-            <Chip size="small" icon={<TuneRounded />} label="Filter" variant="outlined" />
-            <TableExportMenu rows={rows} columns={columns} fileName={tableTitle} />
             {actions}
           </Stack>
         </Stack>
@@ -290,13 +311,14 @@ const DataTable = ({
           rows={rows}
           columns={columns}
           getRowId={getRowId}
-          slots={{ toolbar: GridToolbar }}
+          showToolbar
+          slots={{ toolbar: CustomGridToolbar }}
           slotProps={{
             toolbar: {
-              showQuickFilter: true,
-              quickFilterProps: { debounceMs: 350 },
-              csvOptions: { fileName: tableTitle },
-              printOptions: { disableToolbarButton: false },
+              rows,
+              columns,
+              fileName: tableTitle,
+              showExport,
             },
           }}
           rowHeight={rowHeight}

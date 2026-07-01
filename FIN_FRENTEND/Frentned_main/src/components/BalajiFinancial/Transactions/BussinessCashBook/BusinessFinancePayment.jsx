@@ -6,6 +6,7 @@ import {
   Checkbox,
   Chip,
   CircularProgress,
+  Divider,
   FormControlLabel,
   Grid,
   Paper,
@@ -49,6 +50,7 @@ export default function BusinessFinancePayment({
 }) {
   const token = getSession("token");
   const headers = useMemo(() => ({ Authorization: `Bearer ${token || ""}` }), [token]);
+  const heading = title || `${mode} Finance Collection`;
   const [accountList, setAccountList] = useState([]);
   const [loadingAccounts, setLoadingAccounts] = useState(false);
   const [searchInput, setSearchInput] = useState("");
@@ -129,7 +131,7 @@ export default function BusinessFinancePayment({
     if (!receipt) return;
     const total = principal + lateFee;
     receipt.document.write(`
-      <html><head><title>${title} Receipt</title><style>
+      <html><head><title>${heading} Receipt</title><style>
       body{font-family:Arial,sans-serif;padding:24px;color:#111827}
       .box{border:1px solid #cbd5e1;padding:22px;border-radius:10px}
       h1{margin:0 0 6px;text-align:center;font-size:22px} p{text-align:center;margin:4px 0 20px;color:#475569}
@@ -137,7 +139,7 @@ export default function BusinessFinancePayment({
       td:last-child{text-align:right;font-weight:700}.total td{font-size:18px;border-top:2px solid #111827}
       </style></head><body><div class="box">
       <h1>SRI BALAJI ENTERPRISES</h1><p>Amerpeta, Hyderabad.</p>
-      <h2>${title}</h2><table>
+      <h2>${heading}</h2><table>
       <tr><td>Account No</td><td>${form.accountNo}</td></tr>
       <tr><td>Partner</td><td>${form.partnerName || "-"}</td></tr>
       <tr><td>Guarantor</td><td>${form.guarantorName || "-"}</td></tr>
@@ -229,24 +231,17 @@ export default function BusinessFinancePayment({
   ];
 
   return (
-    <Stack spacing={2.5}>
-      <Paper className="enterprise-card" elevation={0} sx={{ p: { xs: 2, md: 2.5 } }}>
-        <Stack direction={{ xs: "column", md: "row" }} justifyContent="space-between" spacing={2}>
-          <Box>
-            <Stack direction="row" spacing={1} alignItems="center" flexWrap="wrap">
-              <PaymentsRounded color="primary" />
-              <Typography variant="h5">{title}</Typography>
-              <Chip label={mode} size="small" color="primary" variant="outlined" />
-            </Stack>
-          </Box>
-          {loading && <CircularProgress size={28} />}
-        </Stack>
-      </Paper>
-
+    <Stack spacing={2}>
       <Paper className="enterprise-card" elevation={0} sx={{ p: 2.5 }}>
-        <Typography variant="subtitle1" sx={{ mb: 2, fontWeight: 900 }}>
-          Customer
-        </Typography>
+        <Stack direction="row" spacing={1} alignItems="center" flexWrap="wrap" sx={{ mb: 2 }}>
+          <PaymentsRounded color="primary" />
+          <Typography variant="subtitle1" sx={{ fontWeight: 900 }}>
+            Customer
+          </Typography>
+          <Chip label={mode} size="small" color="primary" variant="outlined" />
+          <Box sx={{ flexGrow: 1 }} />
+          {loading && <CircularProgress size={22} />}
+        </Stack>
         <Grid container spacing={2}>
           <Grid item xs={12} md={5}>
             <Autocomplete
@@ -295,80 +290,76 @@ export default function BusinessFinancePayment({
             <TextField label="Guarantor" value={form.guarantorName} fullWidth InputProps={{ readOnly: true }} />
           </Grid>
         </Grid>
+
+        <Divider sx={{ my: 2.5 }} />
+
+        {/* Loan Details */}
+        <Stack direction="row" spacing={1} alignItems="center" sx={{ mb: 2 }}>
+          <AccountBalanceWalletRounded color="primary" />
+          <Typography variant="subtitle1" sx={{ fontWeight: 900 }}>Loan Details</Typography>
+        </Stack>
+        <Grid container spacing={2}>
+          <Grid item xs={6} sm={3}>
+            <TextField label="Loan Amount" value={money(form.loanAmount)} fullWidth InputProps={{ readOnly: true }} />
+          </Grid>
+          <Grid item xs={6} sm={3}>
+            <TextField label="Installment" value={money(form.installmentAmount)} fullWidth InputProps={{ readOnly: true }} />
+          </Grid>
+          <Grid item xs={6} sm={3}>
+            <TextField label="Period From" value={form.periodFrom || "-"} fullWidth InputProps={{ readOnly: true }} />
+          </Grid>
+          <Grid item xs={6} sm={3}>
+            <TextField label="Period To" value={form.periodTo || "-"} fullWidth InputProps={{ readOnly: true }} />
+          </Grid>
+        </Grid>
+
+        <Divider sx={{ my: 2.5 }} />
+
+        {/* Record Payment */}
+        <Stack direction="row" spacing={1} alignItems="center" sx={{ mb: 2 }}>
+          <ReceiptLongRounded color="primary" />
+          <Typography variant="subtitle1" sx={{ fontWeight: 900 }}>Record Payment</Typography>
+        </Stack>
+        <Grid container spacing={2}>
+          <Grid item xs={12} sm={6} md={2.4}>
+            <AppDatePicker label="Payment Date" value={form.date} onChange={(value) => setForm((prev) => ({ ...prev, date: dayjs(value) }))} />
+          </Grid>
+          <Grid item xs={6} sm={6} md={2.4}>
+            <TextField label="Paid So Far" value={money(form.paid)} fullWidth InputProps={{ readOnly: true }} />
+          </Grid>
+          <Grid item xs={6} sm={6} md={2.4}>
+            <TextField label="Balance" value={money(form.balance)} fullWidth InputProps={{ readOnly: true }} />
+          </Grid>
+          <Grid item xs={6} sm={6} md={2.4}>
+            <TextField
+              label="Amount Paid"
+              value={form.amountPaid ? money(form.amountPaid) : ""}
+              onChange={(event) => setForm((prev) => ({ ...prev, amountPaid: numericInput(event.target.value) }))}
+              fullWidth
+            />
+          </Grid>
+          <Grid item xs={6} sm={6} md={2.4}>
+            <TextField
+              label="Late Fee"
+              value={form.lateFeePaid ? money(form.lateFeePaid) : ""}
+              onChange={(event) => setForm((prev) => ({ ...prev, lateFeePaid: numericInput(event.target.value) }))}
+              fullWidth
+            />
+          </Grid>
+        </Grid>
+        <Stack direction={{ xs: "column", sm: "row" }} spacing={2} alignItems={{ xs: "stretch", sm: "center" }} justifyContent="flex-end" sx={{ mt: 2.5 }}>
+          <FormControlLabel
+            control={<Checkbox checked={printReceipt} onChange={(event) => setPrintReceipt(event.target.checked)} />}
+            label="Print receipt after save"
+          />
+          <Button variant="contained" onClick={handlePay} disabled={loading || !selectedLoanId}>
+            {loading ? "Processing..." : "Record Payment"}
+          </Button>
+        </Stack>
       </Paper>
 
-      <Grid container spacing={2.5}>
-        <Grid item xs={12} lg={5}>
-          <Paper className="enterprise-card" elevation={0} sx={{ p: 2.5, height: "100%" }}>
-            <Stack direction="row" spacing={1} alignItems="center" sx={{ mb: 2 }}>
-              <AccountBalanceWalletRounded color="primary" />
-              <Typography variant="subtitle1">Loan Details</Typography>
-            </Stack>
-            <Grid container spacing={2}>
-              <Grid item xs={6}>
-                <TextField label="Loan Amount" value={money(form.loanAmount)} fullWidth InputProps={{ readOnly: true }} />
-              </Grid>
-              <Grid item xs={6}>
-                <TextField label="Installment" value={money(form.installmentAmount)} fullWidth InputProps={{ readOnly: true }} />
-              </Grid>
-              <Grid item xs={6}>
-                <TextField label="Period From" value={form.periodFrom || "-"} fullWidth InputProps={{ readOnly: true }} />
-              </Grid>
-              <Grid item xs={6}>
-                <TextField label="Period To" value={form.periodTo || "-"} fullWidth InputProps={{ readOnly: true }} />
-              </Grid>
-            </Grid>
-          </Paper>
-        </Grid>
-
-        <Grid item xs={12} lg={7}>
-          <Paper className="enterprise-card" elevation={0} sx={{ p: 2.5, height: "100%" }}>
-            <Stack direction="row" spacing={1} alignItems="center" sx={{ mb: 2 }}>
-              <ReceiptLongRounded color="primary" />
-              <Typography variant="subtitle1">Record Payment</Typography>
-            </Stack>
-            <Grid container spacing={2}>
-              <Grid item xs={12} sm={4}>
-                <AppDatePicker label="Payment Date" value={form.date} onChange={(value) => setForm((prev) => ({ ...prev, date: dayjs(value) }))} />
-              </Grid>
-              <Grid item xs={6} sm={4}>
-                <TextField label="Paid So Far" value={money(form.paid)} fullWidth InputProps={{ readOnly: true }} />
-              </Grid>
-              <Grid item xs={6} sm={4}>
-                <TextField label="Balance" value={money(form.balance)} fullWidth InputProps={{ readOnly: true }} />
-              </Grid>
-              <Grid item xs={6}>
-                <TextField
-                  label="Amount Paid"
-                  value={form.amountPaid ? money(form.amountPaid) : ""}
-                  onChange={(event) => setForm((prev) => ({ ...prev, amountPaid: numericInput(event.target.value) }))}
-                  fullWidth
-                />
-              </Grid>
-              <Grid item xs={6}>
-                <TextField
-                  label="Late Fee"
-                  value={form.lateFeePaid ? money(form.lateFeePaid) : ""}
-                  onChange={(event) => setForm((prev) => ({ ...prev, lateFeePaid: numericInput(event.target.value) }))}
-                  fullWidth
-                />
-              </Grid>
-            </Grid>
-            <Stack direction={{ xs: "column", sm: "row" }} spacing={2} alignItems={{ xs: "stretch", sm: "center" }} sx={{ mt: 2.5 }}>
-              <FormControlLabel
-                control={<Checkbox checked={printReceipt} onChange={(event) => setPrintReceipt(event.target.checked)} />}
-                label="Print receipt after save"
-              />
-              <Button variant="contained" onClick={handlePay} disabled={loading || !selectedLoanId}>
-                {loading ? "Processing..." : "Record Payment"}
-              </Button>
-            </Stack>
-          </Paper>
-        </Grid>
-      </Grid>
-
       <DataTable
-        title={`${title} - Installment Schedule`}
+        title={`${heading} - Installment Schedule`}
         rows={rows}
         columns={columns}
         loading={loading}

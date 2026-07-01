@@ -2,7 +2,7 @@ import React, { useState, useEffect, useMemo } from 'react';
 import {
   Box, Paper, TextField, Button, Checkbox, FormControlLabel,
   Table, TableBody, TableCell, TableContainer, TableHead, TableRow,
-  TablePagination, InputAdornment, Alert, CircularProgress, Chip, Grid,
+  TablePagination, InputAdornment, Alert, CircularProgress, Chip, Stack,
 } from '@mui/material';
 import {
   DeleteForever as DeleteIcon,
@@ -152,40 +152,82 @@ const DeleteTransactions = () => {
   };
 
   return (
-    <Box sx={{ p: { xs: 2, md: 3 } }}>
-      <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 2, mb: 3, alignItems: 'center' }}>
-        <Box sx={{ width: 210 }}>
-          <AppDatePicker label="Transaction Date" value={date} onChange={setDate} />
+    <Box >
+      <Paper className="enterprise-card" elevation={0} sx={{ overflow: "hidden" }}>
+        {/* Toolbar */}
+        <Box sx={{ p: 2, borderBottom: "1px solid", borderColor: "divider" }}>
+          <Stack
+            direction={{ xs: "column", md: "row" }}
+            spacing={1.5}
+            alignItems={{ xs: "stretch", md: "center" }}
+            flexWrap="wrap"
+            useFlexGap
+          >
+            <Box sx={{ width: { xs: "100%", sm: 210 } }}>
+              <AppDatePicker label="Transaction Date" value={date} onChange={setDate} />
+            </Box>
+            <FormControlLabel
+              control={<Checkbox checked={showDeleted} onChange={(e) => setShowDeleted(e.target.checked)} />}
+              label="Show Deleted Transactions"
+            />
+            <Box sx={{ flexGrow: 1 }} />
+            <Button variant="outlined" startIcon={<ViewIcon />} onClick={fetchTransactions} disabled={loading}>
+              Refresh
+            </Button>
+            {!showDeleted && (
+              <Button
+                variant="contained"
+                color="error"
+                startIcon={<DeleteIcon />}
+                onClick={handleDelete}
+                disabled={selectedGroups.size === 0 || loading}
+              >
+                Delete ({getAllSelectedTransactionIds().length})
+              </Button>
+            )}
+          </Stack>
+
+          <Stack direction={{ xs: "column", md: "row" }} spacing={1.5} sx={{ mt: 1.5 }}>
+            <TextField
+              fullWidth
+              size="small"
+              label="Search"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              placeholder="Search..."
+              InputProps={{ startAdornment: <InputAdornment position="start"><SearchIcon fontSize="small" /></InputAdornment> }}
+            />
+            {!showDeleted && (
+              <TextField
+                fullWidth
+                size="small"
+                label="Comments (Required)"
+                value={comments}
+                onChange={(e) => setComments(e.target.value)}
+                placeholder="Reason for deletion"
+              />
+            )}
+          </Stack>
+
+          {success && <Alert severity="success" sx={{ mt: 1.5 }}>{success}</Alert>}
+          {error && <Alert severity="error" sx={{ mt: 1.5 }}>{error}</Alert>}
         </Box>
 
-        <FormControlLabel control={<Checkbox checked={showDeleted} onChange={(e) => setShowDeleted(e.target.checked)} />} label="Show Deleted Transactions" />
-
-        <Button variant="contained" startIcon={<ViewIcon />} onClick={fetchTransactions} disabled={loading}>Refresh</Button>
-
-        {!showDeleted && (
-          <Button variant="contained" color="error" startIcon={<DeleteIcon />} onClick={handleDelete} disabled={selectedGroups.size === 0 || loading}>
-            Delete ({getAllSelectedTransactionIds().length})
-          </Button>
-        )}
-      </Box>
-
-      <Grid container spacing={2} sx={{ mb: 3 }}>
-        <Grid item xs={12} md={6}>
-          <TextField fullWidth label="Search" value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Search..." InputProps={{ startAdornment: <SearchIcon /> }} />
-        </Grid>
-        {!showDeleted && (
-          <Grid item xs={12} md={6}>
-            <TextField fullWidth label="Comments (Required)" value={comments} onChange={(e) => setComments(e.target.value)} placeholder="Reason for deletion" />
-          </Grid>
-        )}
-      </Grid>
-
-      {success && <Alert severity="success" sx={{ mb: 2 }}>{success}</Alert>}
-      {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
-
-      <Paper elevation={3}>
         <TableContainer sx={{ maxHeight: 700 }}>
-          <Table stickyHeader size="small">
+          <Table
+            stickyHeader
+            size="small"
+            sx={{
+              "& .MuiTableCell-root": {
+                border: "1px solid",
+                borderColor: "divider",
+              },
+              "& .MuiTableCell-head": {
+                backgroundColor: "#f8fafc",
+                fontWeight: 800,
+              },
+            }}
+          >
             <TableHead>
               <TableRow>
                 {!showDeleted && (

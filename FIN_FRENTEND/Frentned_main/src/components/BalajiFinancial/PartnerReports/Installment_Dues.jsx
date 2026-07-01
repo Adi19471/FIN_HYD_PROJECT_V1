@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useState } from "react";
 import {
   Autocomplete,
+  Box,
   Button,
   Checkbox,
   FormControlLabel,
@@ -15,12 +16,19 @@ import dayjs from "dayjs";
 import { API_BASE } from "lib/config";
 import { getSession } from "src/utils/session";
 import { errorToast } from "toastify";
-import { DataTable, PageHeader } from "src/components/ui";
+import {
+  DataTable,
+  PageHeader,
+  ReportCompanyHeader,
+  ReportToolbar,
+  useReportZoom,
+} from "src/components/ui";
 
 const formatAmount = (amount) => Number(amount || 0).toLocaleString("en-IN");
 const formatDate = (value) => (value ? dayjs(value).format("DD-MMM-YYYY") : "-");
 
 const Installment_Dues = () => {
+  const zoom = useReportZoom();
   const [loading, setLoading] = useState(false);
   const [rows, setRows] = useState([]);
   const [partners, setPartners] = useState([]);
@@ -110,6 +118,16 @@ const Installment_Dues = () => {
         loading={loading}
       />
 
+      <ReportToolbar
+        onGenerate={generateReport}
+        onRefresh={generateReport}
+        loading={loading}
+        rows={rows}
+        columns={columns}
+        fileName="Installment-Dues"
+        zoom={zoom}
+      />
+
       <Paper className="enterprise-card" elevation={0} sx={{ p: 2 }}>
         <Grid container spacing={2} alignItems="center">
           <Grid item xs={12} md={3}>
@@ -150,15 +168,21 @@ const Installment_Dues = () => {
         </Grid>
       </Paper>
 
-      <DataTable
-        rows={rows}
-        columns={columns}
-        loading={loading}
-        title="Installment Dues Ledger"
-        subtitle="MUI grid table with pagination, search, sorting, Excel, PDF, Word, and print downloads."
-        height={640}
-        pageSize={25}
-      />
+      <Box ref={zoom.targetRef} sx={{ display: "flex", flexDirection: "column", gap: 2.5 }}>
+        <Paper className="enterprise-card" elevation={0} sx={{ p: 2 }}>
+          <ReportCompanyHeader title="Installment Dues Report" />
+        </Paper>
+
+        <DataTable
+          rows={rows}
+          columns={columns}
+          loading={loading}
+          title="Installment Dues Ledger"
+          subtitle="MUI grid table with pagination, search, sorting, Excel, PDF, Word, and print downloads."
+          height={640}
+          pageSize={25}
+        />
+      </Box>
     </Stack>
   );
 };

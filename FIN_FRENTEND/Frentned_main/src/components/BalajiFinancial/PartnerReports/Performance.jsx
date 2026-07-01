@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo, useState } from "react";
 import {
+  Box,
   Button,
   Checkbox,
   FormControlLabel,
@@ -13,11 +14,18 @@ import dayjs from "dayjs";
 import { API_BASE } from "lib/config";
 import { getSession } from "src/utils/session";
 import { errorToast } from "toastify";
-import { DataTable, PageHeader } from "src/components/ui";
+import {
+  DataTable,
+  PageHeader,
+  ReportCompanyHeader,
+  ReportToolbar,
+  useReportZoom,
+} from "src/components/ui";
 
 const formatAmount = (amount) => Number(amount || 0).toLocaleString("en-IN");
 
 const Performance = () => {
+  const zoom = useReportZoom();
   const token = getSession()?.token || getSession("token") || "";
   const headers = useMemo(() => ({ Authorization: `Bearer ${token}` }), [token]);
 
@@ -107,6 +115,16 @@ const Performance = () => {
         loading={loading}
       />
 
+      <ReportToolbar
+        onGenerate={fetchPerformance}
+        onRefresh={fetchPerformance}
+        loading={loading}
+        rows={rows}
+        columns={columns}
+        fileName="Partner-Performance"
+        zoom={zoom}
+      />
+
       <Paper className="enterprise-card" elevation={0} sx={{ p: 2 }}>
         <Grid container spacing={2} alignItems="center">
           <Grid item xs={12} md={2}>
@@ -129,6 +147,11 @@ const Performance = () => {
         </Grid>
       </Paper>
 
+      <Box ref={zoom.targetRef} sx={{ display: "flex", flexDirection: "column", gap: 2.5 }}>
+        <Paper className="enterprise-card" elevation={0} sx={{ p: 2 }}>
+          <ReportCompanyHeader title="Partner Performance Report" />
+        </Paper>
+
       <DataTable
         rows={rows}
         columns={columns}
@@ -150,10 +173,12 @@ const Performance = () => {
         height={390}
         pageSize={25}
         hideFooter
+        showExport={false}
         disableColumnFilter
         disableColumnSelector
         disableDensitySelector
       />
+      </Box>
     </Stack>
   );
 };

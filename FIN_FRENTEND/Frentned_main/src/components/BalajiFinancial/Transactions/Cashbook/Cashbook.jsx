@@ -311,12 +311,10 @@ const Cashbook = () => {
                 <PaymentsIcon fontSize="small" />
               </Box>
               <Box>
-                <Typography variant="h5" sx={{ fontWeight: 900, color: "text.primary", lineHeight: 1.15 }}>
+                <Typography variant="h6" sx={{ fontWeight: 900, color: "text.white", lineHeight: 1.15 }}>
                   New Transaction / Payment
                 </Typography>
-                <Typography variant="body2" color="text.secondary">
-                  Record account payments with group, customer, and transaction details.
-                </Typography>
+            
               </Box>
             </Stack>
             <Box
@@ -370,7 +368,7 @@ const Cashbook = () => {
                 <InputLabel>Account Code</InputLabel>
                 <Select
                   value={code}
-                  label="Account Code" sx={{width:"200px"}}
+                  label="Account Code" sx={{width:220}}
                   MenuProps={compactMenuProps}
                   onChange={(e) => setCode(e.target.value)}
                 >
@@ -385,7 +383,7 @@ const Cashbook = () => {
             <Grid item xs={12} sm={6} md={3}>
               <Autocomplete
                 fullWidth
-                openOnFocus  sx={{width:"200px"}}
+                openOnFocus
                 filterOptions={(x) => x}
                 freeSolo
                 value={name}
@@ -436,7 +434,7 @@ const Cashbook = () => {
                 sx={fieldSx}
               />
             </Grid>
-            <Grid item xs={12} sm={6} md={2}>
+            <Grid item xs={12} sm={6} md={3}>
               <TextField
                 fullWidth
                 label="Amount"
@@ -452,7 +450,7 @@ const Cashbook = () => {
               <FormControl fullWidth sx={fieldSx} disabled={!code || loadingTypes}>
                 <InputLabel>Transaction Type</InputLabel>
                 <Select
-                  value={transactionType}  sx={{width:"200px"}}
+                  value={transactionType} sx={{width:220}}
                   label="Transaction Type"
                   MenuProps={compactMenuProps}
                   onChange={(e) => setTransactionType(e.target.value)}
@@ -465,7 +463,7 @@ const Cashbook = () => {
                 </Select>
               </FormControl>
             </Grid>
-            <Grid item xs={12} sm={6} md={4}>
+            <Grid item xs={12} sm={6} md={3} sx={{ display: "flex", alignItems: "stretch" }}>
               <Button
                 type="submit"
                 variant="contained"
@@ -474,7 +472,6 @@ const Cashbook = () => {
                 disabled={submitting}
                 sx={{
                   minHeight: 48,
-                
                   fontWeight: 900,
                   boxShadow: "none",
                 }}
