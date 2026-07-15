@@ -9,12 +9,14 @@ import org.springframework.data.annotation.LastModifiedBy;
 import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
+import jakarta.persistence.Basic;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EntityListeners;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
+import jakarta.persistence.Lob;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 
@@ -119,6 +121,17 @@ public class PersonalInfo {
 
 	@LastModifiedBy
 	private String modifiedBy;
+
+	@Column(name = "PROFILE_PIC_NAME")
+	private String profilePicName;
+
+	@Column(name = "PROFILE_PIC_CONTENT_TYPE")
+	private String profilePicContentType;
+
+	@Lob
+	@Basic(fetch = FetchType.LAZY)
+	@Column(name = "PROFILE_PIC")
+	private byte[] profilePic;
 
 	public String getPersonalInfoId() {
 		return personalInfoId;
@@ -366,6 +379,30 @@ public class PersonalInfo {
 
 	public void setGroupManager(boolean groupManager) {
 		this.groupManager = groupManager;
+	}
+
+	public String getProfilePicName() {
+		return profilePicName;
+	}
+
+	public void setProfilePicName(String profilePicName) {
+		this.profilePicName = profilePicName;
+	}
+
+	public String getProfilePicContentType() {
+		return profilePicContentType;
+	}
+
+	public void setProfilePicContentType(String profilePicContentType) {
+		this.profilePicContentType = profilePicContentType;
+	}
+
+	public byte[] getProfilePic() {
+		return profilePic;
+	}
+
+	public void setProfilePic(byte[] profilePic) {
+		this.profilePic = profilePic;
 	}
 
 }

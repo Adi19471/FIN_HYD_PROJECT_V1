@@ -1,5 +1,6 @@
 package com.balaji.finance.service;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -7,7 +8,9 @@ import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.User;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 
 import com.balaji.finance.dto.PersonalInfoAutoCompletePojo;
 import com.balaji.finance.dto.PersonalInfoDto;
@@ -15,6 +18,8 @@ import com.balaji.finance.entity.PersonalInfo;
 import com.balaji.finance.repo.AccountMasterRepo;
 import com.balaji.finance.repo.PersonalInfoRepository;
 import com.balaji.finance.util.PersonalSequenceService;
+
+import jakarta.transaction.Transactional;
 
 @Service
 public class PersonalInfoService {
@@ -493,4 +498,26 @@ public class PersonalInfoService {
 		return toBeReturnedDtoList;
 	}
 
+	public void uploadProfilePic(String personalInfoId, MultipartFile file) throws IOException {
+
+		if (file == null || file.isEmpty()) {
+			throw new IllegalArgumentException("File is empty");
+		}
+
+		PersonalInfo personalInfo = personalInfoRepository.findById(personalInfoId)
+				.orElseThrow(() -> new RuntimeException("PersonalInfo not found"));
+
+		personalInfo.setProfilePic(file.getBytes());
+		personalInfo.setProfilePicName(file.getOriginalFilename());
+		personalInfo.setProfilePicContentType(file.getContentType());
+
+		personalInfoRepository.save(personalInfo);
+	}
+
+	@Transactional
+	public PersonalInfo getProfilePic(String personalInfoId) {
+
+		return personalInfoRepository.findById(personalInfoId)
+				.orElseThrow(() -> new RuntimeException("PersonalInfo not found"));
+	}
 }
