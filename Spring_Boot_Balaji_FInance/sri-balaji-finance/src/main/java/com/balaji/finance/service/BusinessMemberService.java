@@ -9,6 +9,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -16,11 +17,13 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
 import com.balaji.finance.dto.BusinessMemberDto;
+import com.balaji.finance.dto.PaidInstallmentProjection;
 import com.balaji.finance.entity.AccountMaster;
 import com.balaji.finance.entity.BusinessMember;
 import com.balaji.finance.entity.CashBook;
 import com.balaji.finance.entity.EMI;
 import com.balaji.finance.entity.LoanStatus;
+import com.balaji.finance.entity.PaymentAllocation;
 import com.balaji.finance.entity.PersonalInfo;
 import com.balaji.finance.exception.ApiException;
 import com.balaji.finance.pojo.BusinessMemberAutoCompletePojo;
@@ -28,6 +31,7 @@ import com.balaji.finance.repo.AccountMasterRepo;
 import com.balaji.finance.repo.BusinessMemberRepository;
 import com.balaji.finance.repo.CashBookRepo;
 import com.balaji.finance.repo.EmiRepo;
+import com.balaji.finance.repo.PaymentAllocationRepo;
 import com.balaji.finance.repo.PersonalInfoRepository;
 import com.balaji.finance.util.DfNumberService;
 import com.balaji.finance.util.MfNumberService;
@@ -53,6 +57,9 @@ public class BusinessMemberService {
 	private EmiRepo emiRepo;
 
 	@Autowired
+	private PaymentAllocationRepo paymentAllocationRepo;
+
+	@Autowired
 	private MfNumberService mfNumberService;
 
 	@Autowired
@@ -60,7 +67,6 @@ public class BusinessMemberService {
 
 	public String generateId(String type, int year) {
 
-		
 		String generatedId = null;
 
 		switch (type) {
@@ -90,8 +96,7 @@ public class BusinessMemberService {
 		String[] split = businessMember.getBusinessMemberId().split("-");
 		businessMember.setSequence(Integer.valueOf(split[1]));
 		businessMember.setYear(year);
-		
-		
+
 		businessMemberRepository.save(businessMember);
 
 		BusinessMemberDto businessMemberDto = new BusinessMemberDto();
@@ -109,8 +114,6 @@ public class BusinessMemberService {
 
 			BusinessMember businessMember = businessMemberInDb.get();
 
-			
-
 			if (businessMember.getAmount() == null) {
 				return saveBusinessMember(businessMemberDto, businessMember, type);
 			} else {
@@ -124,10 +127,10 @@ public class BusinessMemberService {
 		}
 
 	}
-	
+
 	// Saving Loan for First Time
 	public String saveBusinessMember(BusinessMemberDto businessMemberDto, BusinessMember businessMember, String type) {
-		
+
 		if (businessMemberDto.getCustomerId() != null && !businessMemberDto.getCustomerId().isBlank()) {
 			Optional<PersonalInfo> customerOptional = personalInfoRepository
 					.findById(businessMemberDto.getCustomerId());
@@ -167,15 +170,20 @@ public class BusinessMemberService {
 		businessMember.setStartDate(businessMemberDto.getStartDate().atTime(LocalTime.now()));
 		businessMember.setEndDate(businessMemberDto.getEndDate().atTime(LocalTime.now()));
 
-		businessMember.setAmount(businessMemberDto.getAmount() != null ? businessMemberDto.getAmount() : BigDecimal.ZERO);
+		businessMember
+				.setAmount(businessMemberDto.getAmount() != null ? businessMemberDto.getAmount() : BigDecimal.ZERO);
 		businessMember.setDuration(businessMemberDto.getDuration() != null ? businessMemberDto.getDuration() : 0);
-		businessMember.setInterest(businessMemberDto.getInterest() != null ? businessMemberDto.getInterest() : BigDecimal.ZERO);
+		businessMember.setInterest(
+				businessMemberDto.getInterest() != null ? businessMemberDto.getInterest() : BigDecimal.ZERO);
 
-		businessMember.setInstallment(businessMemberDto.getInstallment() != null ? businessMemberDto.getInstallment() : BigDecimal.ZERO);
+		businessMember.setInstallment(
+				businessMemberDto.getInstallment() != null ? businessMemberDto.getInstallment() : BigDecimal.ZERO);
 		businessMember.setStatus(businessMemberDto.isStatus());
 
-		businessMember.setPartPrincipal(businessMemberDto.getPartPrincipal() != null ? businessMemberDto.getPartPrincipal() : 0);
-		businessMember.setPartInterest(businessMemberDto.getPartInterest() != null ? businessMemberDto.getPartInterest() : 0);
+		businessMember.setPartPrincipal(
+				businessMemberDto.getPartPrincipal() != null ? businessMemberDto.getPartPrincipal() : 0);
+		businessMember
+				.setPartInterest(businessMemberDto.getPartInterest() != null ? businessMemberDto.getPartInterest() : 0);
 
 		businessMember.setChequeReminder(businessMemberDto.isChequeReminder());
 		businessMember.setBusinessId(businessMemberDto.getBusinessId());
@@ -191,17 +199,9 @@ public class BusinessMemberService {
 
 		businessMemberRepository.save(businessMember);
 
-	
-		
-		
-		
-		
 		String currentUser = SecurityContextHolder.getContext().getAuthentication().getName();
 		LocalDateTime currentDate = LocalDateTime.now();
 
-		
-		
-		
 		switch (type) {
 		case "DAILY_FINANCE":
 
@@ -255,8 +255,6 @@ public class BusinessMemberService {
 				cashBookRepo.save(dfProcessingFeeCashBook);
 
 			}
-
-		
 
 			if (businessMember.getInterest().compareTo(BigDecimal.ZERO) > 0) {
 
@@ -358,20 +356,18 @@ public class BusinessMemberService {
 	// update
 	public String updateBusinessMember(BusinessMemberDto businessMemberDto, BusinessMember businessMember,
 			String type) {
-
 		
-		
-		boolean hasPayments = emiRepo.existsByBusinessMember_BusinessMemberIdAndPaidAmountGreaterThan(
-				businessMember.getBusinessMemberId(), BigDecimal.ZERO);
+		BigDecimal totalPaidOfLoan = emiRepo.getTotalPaidOfLoan(businessMember.getBusinessMemberId());
 
-		Long hasCashEntries = cashBookRepo
-				.findCollectionsCountOnAccount(businessMember.getBusinessMemberId());
+		BigDecimal loanAmount = businessMemberDto.getAmount();
 
-		if (hasPayments || hasCashEntries > 0) {
-			throw new ApiException("Loan cannot be edited after payment/transaction started",HttpStatus.BAD_REQUEST);
+		if (loanAmount.compareTo(totalPaidOfLoan) < 0) {
+			throw new ApiException(
+					String.format("Loan amount (%s) cannot be less than the total amount already paid (%s).",
+							loanAmount, totalPaidOfLoan),
+					HttpStatus.BAD_REQUEST);
 		}
-		
-		
+
 		String currentUser = SecurityContextHolder.getContext().getAuthentication().getName();
 		LocalDateTime currentDate = LocalDateTime.now();
 
@@ -384,7 +380,8 @@ public class BusinessMemberService {
 			if ((businessMember.getAmount() != null && businessMemberDto.getAmount() != null
 					&& businessMember.getAmount().compareTo(businessMemberDto.getAmount()) != 0)
 					|| (businessMember.getStartDate() != null && businessMemberDto.getStartDate() != null
-							&& businessMember.getStartDate().toLocalDate().compareTo(businessMemberDto.getStartDate()) != 0)) {
+							&& businessMember.getStartDate().toLocalDate()
+									.compareTo(businessMemberDto.getStartDate()) != 0)) {
 
 				CashBook loanCashBook = null;
 				Optional<CashBook> optionalCashbook = null;
@@ -412,9 +409,10 @@ public class BusinessMemberService {
 
 			// Updating DocCharges Record
 			if ((businessMember.getProcessingFee() != null && businessMemberDto.getProcessingFee() != null
-					&& businessMember.getProcessingFee().compareTo(businessMemberDto.getProcessingFee()) != 0) 
+					&& businessMember.getProcessingFee().compareTo(businessMemberDto.getProcessingFee()) != 0)
 					|| (businessMember.getStartDate() != null && businessMemberDto.getStartDate() != null
-					  && businessMember.getStartDate().toLocalDate().compareTo(businessMemberDto.getStartDate()) != 0)) {
+							&& businessMember.getStartDate().toLocalDate()
+									.compareTo(businessMemberDto.getStartDate()) != 0)) {
 
 				CashBook dfProcessingFeeCashBook = null;
 				Optional<CashBook> optionalCashbook = null;
@@ -446,7 +444,8 @@ public class BusinessMemberService {
 			if ((businessMember.getInterest() != null && businessMemberDto.getInterest() != null
 					&& businessMember.getInterest().compareTo(businessMemberDto.getInterest()) != 0)
 					|| (businessMember.getStartDate() != null && businessMemberDto.getStartDate() != null
-							&& businessMember.getStartDate().toLocalDate().compareTo(businessMemberDto.getStartDate()) != 0)) {
+							&& businessMember.getStartDate().toLocalDate()
+									.compareTo(businessMemberDto.getStartDate()) != 0)) {
 
 				CashBook dfIntrestCashBook = null;
 				Optional<CashBook> optionalCashbook = null;
@@ -468,7 +467,6 @@ public class BusinessMemberService {
 				cashBookRepo.save(dfIntrestCashBook);
 
 			}
-			
 
 			break;
 		case "MONTHLY_FINANCE":
@@ -477,7 +475,8 @@ public class BusinessMemberService {
 			if ((businessMember.getAmount() != null && businessMemberDto.getAmount() != null
 					&& businessMember.getAmount().compareTo(businessMemberDto.getAmount()) != 0)
 					|| (businessMember.getStartDate() != null && businessMemberDto.getStartDate() != null
-							&& businessMember.getStartDate().toLocalDate().compareTo(businessMemberDto.getStartDate()) != 0)) {
+							&& businessMember.getStartDate().toLocalDate()
+									.compareTo(businessMemberDto.getStartDate()) != 0)) {
 
 				CashBook mFLoanCashBook = null;
 				Optional<CashBook> optionalCashbook = null;
@@ -507,7 +506,8 @@ public class BusinessMemberService {
 			if ((businessMember.getProcessingFee() != null && businessMemberDto.getProcessingFee() != null
 					&& businessMember.getProcessingFee().compareTo(businessMemberDto.getProcessingFee()) != 0)
 					|| (businessMember.getStartDate() != null && businessMemberDto.getStartDate() != null
-							&& businessMember.getStartDate().toLocalDate().compareTo(businessMemberDto.getStartDate()) != 0)) {
+							&& businessMember.getStartDate().toLocalDate()
+									.compareTo(businessMemberDto.getStartDate()) != 0)) {
 
 				CashBook mfProcessingFeeCashBook = null;
 				Optional<CashBook> optionalCashbook = null;
@@ -534,21 +534,17 @@ public class BusinessMemberService {
 
 			}
 
-			
-
 			break;
 
 		default:
 			break;
 		}
-		
+
 		// Updating Emis Record
-		boolean updateEMIs =
-		        !Objects.equals(businessMember.getDuration(), businessMemberDto.getDuration())
-		     || !Objects.equals(businessMember.getAmount(), businessMemberDto.getAmount())
-		     || !Objects.equals(businessMember.getInterest(), businessMemberDto.getInterest());
-		
-		
+		boolean updateEMIs = !Objects.equals(businessMember.getDuration(), businessMemberDto.getDuration())
+				|| !Objects.equals(businessMember.getAmount(), businessMemberDto.getAmount())
+				|| !Objects.equals(businessMember.getInterest(), businessMemberDto.getInterest());
+
 		if (customerOptional.isPresent()) {
 			businessMember.setCustomerId(customerOptional.get());
 		}
@@ -578,11 +574,7 @@ public class BusinessMemberService {
 
 		businessMember
 				.setAmount(businessMemberDto.getAmount() != null ? businessMemberDto.getAmount() : BigDecimal.ZERO);
-		
-		
-		
-		
-		
+
 		businessMember.setDuration(businessMemberDto.getDuration() != null ? businessMemberDto.getDuration() : 0);
 
 		businessMember.setInterest(
@@ -603,8 +595,10 @@ public class BusinessMemberService {
 		businessMember.setInterestRate(businessMemberDto.getInterestRate());
 
 		businessMemberRepository.save(businessMember);
-		
+
 		if (updateEMIs) {
+
+			paymentAllocationRepo.deleteByEMI_BusinessMember(businessMember);
 			emiRepo.deleteByBusinessMember_BusinessMemberId(businessMember.getBusinessMemberId());
 
 			// regenerate EMI
@@ -614,6 +608,19 @@ public class BusinessMemberService {
 				generateEMIScheduleForDays(businessMember);
 			}
 
+		}
+
+		boolean hasPayments = emiRepo.existsByBusinessMember_BusinessMemberIdAndPaidAmountGreaterThan(
+				businessMember.getBusinessMemberId(), BigDecimal.ZERO);
+
+		Long hasCashEntries = cashBookRepo.findCollectionsCountOnAccount(businessMember.getBusinessMemberId());
+
+		if (hasPayments || hasCashEntries > 0) {
+
+			updateDayEmisOnceAfterCollectionsPaid(businessMember);
+
+			// throw new ApiException("Loan cannot be edited after payment/transaction
+			// started",HttpStatus.BAD_REQUEST);
 		}
 
 		return "Loan updated successfully!";
@@ -809,64 +816,62 @@ public class BusinessMemberService {
 		return loanList;
 	}
 
-	
 	@Transactional
 	public void generateEMIScheduleForMonth(BusinessMember member) {
 
-	    int months = member.getDuration();
+		int months = member.getDuration();
 
-	    BigDecimal principal = member.getAmount();
-	    BigDecimal totalInterest = member.getInterest();
+		BigDecimal principal = member.getAmount();
+		BigDecimal totalInterest = member.getInterest();
 
-	    BigDecimal totalPayable = principal.add(totalInterest);
+		BigDecimal totalPayable = principal.add(totalInterest);
 
-	    // EMI calculation
-	    BigDecimal emiAmount = totalPayable.divide(
-	            BigDecimal.valueOf(months), 2, RoundingMode.HALF_UP);
+		// EMI calculation
+		BigDecimal emiAmount = totalPayable.divide(BigDecimal.valueOf(months), 2, RoundingMode.HALF_UP);
 
-	    BigDecimal principalPerEMI = principal.divide(
-	            BigDecimal.valueOf(months), 2, RoundingMode.HALF_UP);
+		BigDecimal principalPerEMI = principal.divide(BigDecimal.valueOf(months), 2, RoundingMode.HALF_UP);
 
-	    BigDecimal interestPerEMI = totalInterest.divide(
-	            BigDecimal.valueOf(months), 2, RoundingMode.HALF_UP);
+		BigDecimal interestPerEMI = totalInterest.divide(BigDecimal.valueOf(months), 2, RoundingMode.HALF_UP);
 
-	    List<EMI> emiList = new ArrayList<>(months);
+		List<EMI> emiList = new ArrayList<>(months);
 
-	    BigDecimal totalPrincipalAssigned = BigDecimal.ZERO;
-	    BigDecimal totalInterestAssigned = BigDecimal.ZERO;
+		BigDecimal totalPrincipalAssigned = BigDecimal.ZERO;
+		BigDecimal totalInterestAssigned = BigDecimal.ZERO;
 
-	    for (int i = 1; i <= months; i++) {
+		for (int i = 1; i <= months; i++) {
 
-	        EMI emi = new EMI();
-	        emi.setBusinessMember(member);
-	        emi.setInstallmentNumber(i);
+			EMI emi = new EMI();
+			emi.setBusinessMember(member);
+			emi.setInstallmentNumber(i);
 
-	        // Adjust last EMI for rounding difference
-	        if (i == months) {
-	            emi.setPrincipalAmount(principal.subtract(totalPrincipalAssigned));
-	            emi.setInterestAmount(totalInterest.subtract(totalInterestAssigned));
-	            emi.setTotalAmount(
-	                    emi.getPrincipalAmount().add(emi.getInterestAmount())
-	            );
-	        } else {
-	            emi.setPrincipalAmount(principalPerEMI);
-	            emi.setInterestAmount(interestPerEMI);
-	            emi.setTotalAmount(emiAmount);
+			// Adjust last EMI for rounding difference
+			if (i == months) {
 
-	            totalPrincipalAssigned = totalPrincipalAssigned.add(principalPerEMI);
-	            totalInterestAssigned = totalInterestAssigned.add(interestPerEMI);
-	        }
+				emi.setPrincipalAmount(principal.subtract(totalPrincipalAssigned));
+				emi.setInterestAmount(totalInterest.subtract(totalInterestAssigned));
+				emi.setTotalAmount(emi.getPrincipalAmount().add(emi.getInterestAmount()));
 
-	        emi.setPaidAmount(BigDecimal.ZERO);
-	        emi.setDueDate(member.getStartDate().plusMonths(i));
-	        emi.setStatus("PENDING");
+			} else {
 
-	        emiList.add(emi);
-	    }
+				emi.setPrincipalAmount(principalPerEMI);
+				emi.setInterestAmount(interestPerEMI);
+				emi.setTotalAmount(emiAmount);
 
-	    emiRepo.saveAll(emiList);
+				totalPrincipalAssigned = totalPrincipalAssigned.add(principalPerEMI);
+				totalInterestAssigned = totalInterestAssigned.add(interestPerEMI);
+
+			}
+
+			emi.setPaidAmount(BigDecimal.ZERO);
+			emi.setDueDate(member.getStartDate().plusMonths(i));
+			emi.setStatus("PENDING");
+
+			emiList.add(emi);
+		}
+
+		emiRepo.saveAll(emiList);
 	}
-	
+
 	public void generateEMIScheduleForDays(BusinessMember member) {
 
 		int days = member.getDuration(); // Loan duration in months
@@ -890,4 +895,59 @@ public class BusinessMemberService {
 
 		}
 	}
+
+	public void updateDayEmisOnceAfterCollectionsPaid(BusinessMember member) {
+
+		List<EMI> allEMIs = emiRepo.findByBusinessMember(member);
+
+		List<PaidInstallmentProjection> collectionsPaidForDailyLoan = cashBookRepo
+				.getCollectionsPaidForDailyLoan(member.getBusinessMemberId());
+
+		for (PaidInstallmentProjection pmp : collectionsPaidForDailyLoan) {
+
+			BigDecimal remainingPayment = pmp.getInstallmentPaidAtTime();
+			String paymentRefId = pmp.getPaymentRefId();
+			LocalDateTime transactionDate = pmp.getTransactionDate();
+
+			List<EMI> pendingEMIs = allEMIs.stream().filter(emi -> !emi.getStatus().equalsIgnoreCase("PAID"))
+					.collect(Collectors.toList());
+
+			for (EMI emi : pendingEMIs) {
+
+				if (remainingPayment.compareTo(BigDecimal.ZERO) <= 0) {
+					break;
+				}
+
+				BigDecimal emiRemaining = emi.getRemainingAmount();
+
+				// 🔹 Calculate allocation
+				BigDecimal allocation = remainingPayment.min(emiRemaining);
+
+				PaymentAllocation pa = new PaymentAllocation();
+				pa.setPaymentRefId(paymentRefId); // from your UUID
+				pa.setEmi(emi);
+				pa.setAllocatedAmount(allocation);
+
+				paymentAllocationRepo.save(pa);
+
+				emi.setPaidAmount(emi.getPaidAmount().add(allocation));
+				emi.setPaymentDate(transactionDate);
+
+				if (emi.getPaidAmount().compareTo(emi.getTotalAmount()) >= 0) {
+					emi.setStatus("PAID");
+				} else if (emi.getPaidAmount().compareTo(BigDecimal.ZERO) > 0) {
+					emi.setStatus("PARTIAL");
+				} else {
+					emi.setStatus("PENDING");
+				}
+
+				emiRepo.save(emi);
+
+				remainingPayment = remainingPayment.subtract(allocation);
+			}
+
+		}
+
+	}
+
 }

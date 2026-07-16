@@ -91,5 +91,10 @@ public interface EmiRepo extends JpaRepository<EMI, Integer> {
 	List<PartnerDueAmountProjection> getDueAmountOfEveryPartner(
 	        @Param("personalInfoIds") List<String> personalInfoIds);
 	
-	
+	@Query("""
+			    SELECT COALESCE(SUM(e.paidAmount), 0)
+			    FROM EMI e
+			    WHERE e.businessMember.businessMemberId = :businessMemberId
+			""")
+	BigDecimal getTotalPaidOfLoan(@Param("businessMemberId") String businessMemberId);
 }

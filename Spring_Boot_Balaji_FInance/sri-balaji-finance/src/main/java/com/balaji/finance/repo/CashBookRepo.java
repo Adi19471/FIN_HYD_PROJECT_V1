@@ -18,6 +18,7 @@ import com.balaji.finance.dto.CustomerTransactionsProjection;
 import com.balaji.finance.dto.DateWiseCashBookProjection;
 import com.balaji.finance.dto.DateWiseCollectionsProjection;
 import com.balaji.finance.dto.LoanCollectionProjection;
+import com.balaji.finance.dto.PaidInstallmentProjection;
 import com.balaji.finance.dto.PartnerCreditSummaryProjection;
 import com.balaji.finance.dto.PartnerPerformanceReport;
 import com.balaji.finance.dto.RevenueExpenseProjection;
@@ -578,5 +579,38 @@ public interface CashBookRepo extends JpaRepository<CashBook, Long> {
 			    partner.LAST_NAME
 			""", nativeQuery = true)
 	List<PartnerPerformanceReport> getLoanSummaryOfPartners();
+	
+	
+	
+	@Query(value = """
+			SELECT
+			    TRANS_DATE as transactionDate,
+			    PAYMENT_REF_ID AS paymentRefId,
+			    SUM(CREDIT) AS installmentPaidAtTime
+			FROM cash_book
+			WHERE ACCOUNT_MASTER_CODE IN (
+			    'DF LOAN INSTALLMENT',
+			    'DF INTEREST'
+			)
+			AND BUSINESS_MEMBER_ID = :businessMemberId
+			GROUP BY PAYMENT_REF_ID,TRANS_DATE
+			""", nativeQuery = true)
+	List<PaidInstallmentProjection> getCollectionsPaidForDailyLoan(@Param("businessMemberId") String businessMemberId);
+
+	@Query(value = """
+			SELECT
+			    TRANS_DATE as transactionDate,
+			    PAYMENT_REF_ID AS paymentRefId,
+			    SUM(CREDIT) AS installmentPaidAtTime
+			FROM cash_book
+			WHERE ACCOUNT_MASTER_CODE IN (
+			    'MF LOAN INSTALLMENT',
+			    'MF INTEREST'
+			)
+			AND BUSINESS_MEMBER_ID = :businessMemberId
+			GROUP BY PAYMENT_REF_ID,TRANS_DATE
+			""", nativeQuery = true)
+	List<PaidInstallmentProjection> getCollectionsPaidForMonthlyLoan(
+			@Param("businessMemberId") String businessMemberId);
 
 }
