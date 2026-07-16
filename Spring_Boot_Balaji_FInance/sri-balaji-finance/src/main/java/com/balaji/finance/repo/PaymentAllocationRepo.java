@@ -14,5 +14,5 @@ public interface PaymentAllocationRepo extends JpaRepository<PaymentAllocation, 
 	void deleteByPaymentRefId(String paymentRefId);
 	
 	
-	void deleteByEMI_BusinessMember(BusinessMember businessMember);
+	void deleteByEmi_BusinessMember(BusinessMember businessMember);
 }

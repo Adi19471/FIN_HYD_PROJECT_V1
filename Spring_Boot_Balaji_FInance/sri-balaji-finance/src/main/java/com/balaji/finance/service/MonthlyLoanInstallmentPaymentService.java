@@ -4,6 +4,7 @@ import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
@@ -344,7 +345,7 @@ public class MonthlyLoanInstallmentPaymentService {
 
 		BusinessMember bm = opt.get();
 		
-		LocalDateTime transactionDate = LocalDateTime.parse(dateStr, DATE_FORMAT);
+		LocalDateTime transactionDate = LocalDate.parse(dateStr, DateTimeFormatter.ofPattern("yyyy-MM-dd")).atTime(LocalTime.now());;
 
 		List<EMI> allEMIs = emiRepo.findByBusinessMember(bm);
 		BigDecimal totalRemaining = allEMIs.stream().map(EMI::getRemainingAmount).reduce(BigDecimal.ZERO,

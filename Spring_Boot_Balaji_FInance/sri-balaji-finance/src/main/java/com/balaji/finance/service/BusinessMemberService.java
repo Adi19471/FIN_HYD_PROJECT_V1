@@ -598,7 +598,7 @@ public class BusinessMemberService {
 
 		if (updateEMIs) {
 
-			paymentAllocationRepo.deleteByEMI_BusinessMember(businessMember);
+			paymentAllocationRepo.deleteByEmi_BusinessMember(businessMember);
 			emiRepo.deleteByBusinessMember_BusinessMemberId(businessMember.getBusinessMemberId());
 
 			// regenerate EMI
@@ -610,17 +610,13 @@ public class BusinessMemberService {
 
 		}
 
-		boolean hasPayments = emiRepo.existsByBusinessMember_BusinessMemberIdAndPaidAmountGreaterThan(
-				businessMember.getBusinessMemberId(), BigDecimal.ZERO);
 
 		Long hasCashEntries = cashBookRepo.findCollectionsCountOnAccount(businessMember.getBusinessMemberId());
+		
+		System.err.println(hasCashEntries +" ::hasCashEntries");
 
-		if (hasPayments || hasCashEntries > 0) {
-
-			updateDayEmisOnceAfterCollectionsPaid(businessMember);
-
-			// throw new ApiException("Loan cannot be edited after payment/transaction
-			// started",HttpStatus.BAD_REQUEST);
+		if (hasCashEntries > 0) {
+			updateEmisOnceAfterCollectionsPaid(businessMember);
 		}
 
 		return "Loan updated successfully!";
@@ -896,12 +892,25 @@ public class BusinessMemberService {
 		}
 	}
 
-	public void updateDayEmisOnceAfterCollectionsPaid(BusinessMember member) {
+	public void updateEmisOnceAfterCollectionsPaid(BusinessMember member) {
 
 		List<EMI> allEMIs = emiRepo.findByBusinessMember(member);
+		
+		List<PaidInstallmentProjection> collectionsPaidForDailyLoan = null;
 
-		List<PaidInstallmentProjection> collectionsPaidForDailyLoan = cashBookRepo
-				.getCollectionsPaidForDailyLoan(member.getBusinessMemberId());
+		switch (member.getLoanType()) {
+		case "DAILY_FINANCE":
+			collectionsPaidForDailyLoan = cashBookRepo.getCollectionsPaidForDailyLoan(member.getBusinessMemberId());
+			break;
+
+		case "MONTHLY_FINANCE":
+			collectionsPaidForDailyLoan = cashBookRepo.getCollectionsPaidForMonthlyLoan(member.getBusinessMemberId());
+			break;
+
+		default:
+			throw new IllegalArgumentException("Unknown type: " + member.getLoanType());
+		}
+        
 
 		for (PaidInstallmentProjection pmp : collectionsPaidForDailyLoan) {
 
