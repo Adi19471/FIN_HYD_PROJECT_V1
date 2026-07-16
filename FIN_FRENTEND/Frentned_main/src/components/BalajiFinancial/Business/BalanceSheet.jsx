@@ -627,7 +627,12 @@ const BalanceSheet = () => {
           ) : (
             <Stack spacing={2}>
               <Grid container spacing={1.5}>
-                <Grid item xs={12} sm={6} lg={4}>
+                <Grid
+                  size={{
+                    xs: 12,
+                    sm: 6,
+                    lg: 4
+                  }}>
                   <Paper elevation={0} sx={{ p: { xs: 1.25, md: 1.75 }, border: "1px solid #d6dee8", borderRadius: 0, bgcolor: "#f8fffd", height: "100%" }}>
                     <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 800 }}>
                       TOTAL ASSETS
@@ -637,7 +642,12 @@ const BalanceSheet = () => {
                     </Typography>
                   </Paper>
                 </Grid>
-                <Grid item xs={12} sm={6} lg={4}>
+                <Grid
+                  size={{
+                    xs: 12,
+                    sm: 6,
+                    lg: 4
+                  }}>
                   <Paper elevation={0} sx={{ p: { xs: 1.25, md: 1.75 }, border: "1px solid #d6dee8", borderRadius: 0, bgcolor: "#f8fbff", height: "100%" }}>
                     <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 800 }}>
                       TOTAL LIABILITIES
@@ -647,7 +657,12 @@ const BalanceSheet = () => {
                     </Typography>
                   </Paper>
                 </Grid>
-                <Grid item xs={12} sm={12} lg={4}>
+                <Grid
+                  size={{
+                    xs: 12,
+                    sm: 12,
+                    lg: 4
+                  }}>
                   <Paper elevation={0} sx={{ p: { xs: 1.25, md: 1.75 }, border: "1px solid #d6dee8", borderRadius: 0, bgcolor: difference === 0 ? "#f8fffd" : "#fffbeb", height: "100%" }}>
                     <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 800 }}>
                       DIFFERENCE
@@ -660,10 +675,20 @@ const BalanceSheet = () => {
               </Grid>
 
               <Grid container spacing={{ xs: 1.5, md: 2 }} alignItems="stretch">
-                <Grid item xs={12} lg={6} sx={{ minHeight: 0, display: "flex" }}>
+                <Grid
+                  sx={{ minHeight: 0, display: "flex" }}
+                  size={{
+                    xs: 12,
+                    lg: 6
+                  }}>
                   {renderSection("ASSETS", groupedData.ASSETS, "#0f766e")}
                 </Grid>
-                <Grid item xs={12} lg={6} sx={{ minHeight: 0, display: "flex" }}>
+                <Grid
+                  sx={{ minHeight: 0, display: "flex" }}
+                  size={{
+                    xs: 12,
+                    lg: 6
+                  }}>
                   {renderSection("LIABILITIES", groupedData.LIABILITIES, "#1d4ed8")}
                 </Grid>
               </Grid>

@@ -66,7 +66,7 @@ const FormGrid = ({
         };
 
         return (
-          <Grid item key={name || index} {...gridSize}>
+          <Grid key={name || index} size={gridSize}>
             <field.component
               name={name}
               label={label}
@@ -101,7 +101,11 @@ export const FormRow = ({ children, spacing = 2 }) => {
   return (
     <Grid container spacing={spacing}>
       {React.Children.map(children, (child) => (
-        <Grid item xs={12} sm={6}>
+        <Grid
+          size={{
+            xs: 12,
+            sm: 6
+          }}>
           {child}
         </Grid>
       ))}

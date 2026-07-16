@@ -103,36 +103,54 @@ const Usercollectionledger = () => {
         onRefresh={fetchLedger}
         loading={loading}
       />
-
       <Paper className="enterprise-card" elevation={0} sx={{ p: 2 }}>
         <Grid container spacing={2} alignItems="center">
-          <Grid item xs={12} md={3}>
+          <Grid
+            size={{
+              xs: 12,
+              md: 3
+            }}>
             <TextField select label="User" sx={{width:"220px"}} value={userName} onChange={(event) => setUserName(event.target.value)} fullWidth size="small">
               {users.map((user, index) => (
                 <MenuItem key={index} value={user}>{user}</MenuItem>
               ))}
             </TextField>
           </Grid>
-          <Grid item xs={12} md={3}>
+          <Grid
+            size={{
+              xs: 12,
+              md: 3
+            }}>
             <RadioGroup row value={dateMode} onChange={(event) => setDateMode(event.target.value)}>
               <FormControlLabel value="all" control={<Radio />} label="All" />
               <FormControlLabel value="range" control={<Radio />} label="Date Range" />
             </RadioGroup>
           </Grid>
-          <Grid item xs={12} md={2}>
+          <Grid
+            size={{
+              xs: 12,
+              md: 2
+            }}>
             <AppDatePicker label="From Date" value={fromDate} onChange={setFromDate} disabled={dateMode === "all"} />
           </Grid>
-          <Grid item xs={12} md={2}>
+          <Grid
+            size={{
+              xs: 12,
+              md: 2
+            }}>
             <AppDatePicker label="To Date" value={toDate} onChange={setToDate} disabled={dateMode === "all"} />
           </Grid>
-          <Grid item xs={12} md={2}>
+          <Grid
+            size={{
+              xs: 12,
+              md: 2
+            }}>
             <Button fullWidth variant="contained" onClick={fetchLedger} disabled={loading}>
               {loading ? <CircularProgress size={22} color="inherit" /> : "Generate"}
             </Button>
           </Grid>
         </Grid>
       </Paper>
-
       <DataTable rows={rows} columns={columns} loading={loading} title="User Collection Details" height={520} />
     </Stack>
   );

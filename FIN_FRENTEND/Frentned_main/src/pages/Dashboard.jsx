@@ -256,16 +256,16 @@ export default function Dashboard() {
               </Box>
             </Stack>
             <Grid container spacing={1.25}>
-              <Grid item xs={6}>
+              <Grid size={6}>
                 <MetricStrip title="Collection" value={formatINR(metrics.todayCollection)} note="today" tone="success" />
               </Grid>
-              <Grid item xs={6}>
+              <Grid size={6}>
                 <MetricStrip title="Pending" value={formatINR(metrics.pendingDues)} note={`${metrics.dueCases} cases`} tone="warning" />
               </Grid>
-              <Grid item xs={6}>
+              <Grid size={6}>
                 <MetricStrip title="Members" value={metrics.activeMembers} note="active" tone="primary" />
               </Grid>
-              <Grid item xs={6}>
+              <Grid size={6}>
                 <MetricStrip title="Completion" value={`${completionRate}%`} note="against target" tone="info" />
               </Grid>
             </Grid>
@@ -273,11 +273,9 @@ export default function Dashboard() {
         </Stack>
         {loading && <LinearProgress sx={{ mt: 2, borderRadius: 99 }} />}
       </Paper>
-
       {error && <Alert severity="warning">{error}</Alert>}
-
       <Grid container spacing={2}>
-        <Grid item xs={12}>
+        <Grid size={12}>
           <Panel
             title="Finance Workspace"
             action={<Button size="small" endIcon={<ArrowForwardRounded />} onClick={() => navigate("/Bussiness/BussinessCollectionReportsimport")}>Reports</Button>}
@@ -286,7 +284,13 @@ export default function Dashboard() {
               {modules.map((module) => {
                 const Icon = module.icon;
                 return (
-                  <Grid item xs={12} sm={6} xl={4} key={module.path}>
+                  <Grid
+                    key={module.path}
+                    size={{
+                      xs: 12,
+                      sm: 6,
+                      xl: 4
+                    }}>
                     <Paper className="enterprise-card dashboard-module" elevation={0} sx={{ boxShadow: "none" }}>
                       <Stack direction="row" spacing={1.5} alignItems="flex-start">
                         <Box className="dashboard-module-icon"><Icon /></Box>
@@ -308,10 +312,6 @@ export default function Dashboard() {
           </Panel>
         </Grid>
       </Grid>
-
-   
-
-      
     </Stack>
   );
 }

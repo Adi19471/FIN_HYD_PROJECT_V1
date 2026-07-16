@@ -241,7 +241,6 @@ const Partner_Settelment = () => {
         onRefresh={getSettlementData}
         loading={loading}
       />
-
       <ReportToolbar
         onGenerate={getSettlementData}
         onRefresh={getSettlementData}
@@ -251,11 +250,14 @@ const Partner_Settelment = () => {
         fileName="Partner-Settlement"
         zoom={zoom}
       />
-
       {/* FILTERS */}
       <Paper sx={{ p: 2, mt: 2, mb: 2 }}>
         <Grid container spacing={2} alignItems="center">
-          <Grid item xs={12} md={5}>
+          <Grid
+            size={{
+              xs: 12,
+              md: 5
+            }}>
             <Autocomplete
               options={partners}
               value={selectedPartner}
@@ -273,7 +275,11 @@ const Partner_Settelment = () => {
             />
           </Grid>
 
-          <Grid item xs={12} md={3}>
+          <Grid
+            size={{
+              xs: 12,
+              md: 3
+            }}>
             <TextField
               type="date"
               label="Target Date"
@@ -286,7 +292,11 @@ const Partner_Settelment = () => {
             />
           </Grid>
 
-          <Grid item xs={12} md={2}>
+          <Grid
+            size={{
+              xs: 12,
+              md: 2
+            }}>
             <Button
               variant="contained"
               fullWidth
@@ -297,7 +307,6 @@ const Partner_Settelment = () => {
           </Grid>
         </Grid>
       </Paper>
-
       {/* TABLE */}
       <Paper elevation={2} sx={{ p: 2 }}>
         <ReportCompanyHeader title="Partner Settlement" />

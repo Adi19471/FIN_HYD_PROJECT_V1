@@ -142,7 +142,11 @@ const Customer_Dues = () => {
       {/* Search Section */}
       <Paper sx={{ p: 2, mb: 3 }}>
         <Grid container spacing={2} alignItems="center">
-          <Grid item xs={12} md={6}>
+          <Grid
+            size={{
+              xs: 12,
+              md: 6
+            }}>
             <Autocomplete
               openOnFocus
               freeSolo
@@ -175,7 +179,11 @@ const Customer_Dues = () => {
             />
           </Grid>
 
-          <Grid item xs={12} md={2}>
+          <Grid
+            size={{
+              xs: 12,
+              md: 2
+            }}>
             <Button
               variant="contained"
               fullWidth
@@ -186,20 +194,22 @@ const Customer_Dues = () => {
             </Button>
           </Grid>
 
-          <Grid item xs={12} md={4}>
+          <Grid
+            size={{
+              xs: 12,
+              md: 4
+            }}>
             <Box sx={{ display: "flex", gap: 1, justifyContent: "flex-end" }}>
               <TableExportMenu rows={duesData} columns={exportColumns} fileName="Customer_Dues" />
             </Box>
           </Grid>
         </Grid>
       </Paper>
-
       <ReportCompanyHeader
         title="Customer Dues"
         subtitle={selectedCustomer?.label ? `Customer: ${selectedCustomer.label}` : "Search and select a customer to view dues"}
         date={dayjs()}
       />
-
       {loadingDues ? (
         <LoadingSpinner />
       ) : error ? (

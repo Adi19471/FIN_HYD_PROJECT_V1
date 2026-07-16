@@ -243,7 +243,11 @@ export default function BusinessFinancePayment({
           {loading && <CircularProgress size={22} />}
         </Stack>
         <Grid container spacing={2}>
-          <Grid item xs={12} md={5}>
+          <Grid
+            size={{
+              xs: 12,
+              md: 5
+            }}>
             <Autocomplete
               openOnFocus
               filterOptions={(x) => x}
@@ -280,13 +284,28 @@ export default function BusinessFinancePayment({
               )}
             />
           </Grid>
-          <Grid item xs={12} sm={4} md={2.2}>
+          <Grid
+            size={{
+              xs: 12,
+              sm: 4,
+              md: 2.2
+            }}>
             <TextField label="Account No" value={form.accountNo} fullWidth InputProps={{ readOnly: true }} />
           </Grid>
-          <Grid item xs={12} sm={4} md={2.4}>
+          <Grid
+            size={{
+              xs: 12,
+              sm: 4,
+              md: 2.4
+            }}>
             <TextField label="Partner Name" value={form.partnerName} fullWidth InputProps={{ readOnly: true }} />
           </Grid>
-          <Grid item xs={12} sm={4} md={2.4}>
+          <Grid
+            size={{
+              xs: 12,
+              sm: 4,
+              md: 2.4
+            }}>
             <TextField label="Guarantor" value={form.guarantorName} fullWidth InputProps={{ readOnly: true }} />
           </Grid>
         </Grid>
@@ -299,16 +318,32 @@ export default function BusinessFinancePayment({
           <Typography variant="subtitle1" sx={{ fontWeight: 900 }}>Loan Details</Typography>
         </Stack>
         <Grid container spacing={2}>
-          <Grid item xs={6} sm={3}>
+          <Grid
+            size={{
+              xs: 6,
+              sm: 3
+            }}>
             <TextField label="Loan Amount" value={money(form.loanAmount)} fullWidth InputProps={{ readOnly: true }} />
           </Grid>
-          <Grid item xs={6} sm={3}>
+          <Grid
+            size={{
+              xs: 6,
+              sm: 3
+            }}>
             <TextField label="Installment" value={money(form.installmentAmount)} fullWidth InputProps={{ readOnly: true }} />
           </Grid>
-          <Grid item xs={6} sm={3}>
+          <Grid
+            size={{
+              xs: 6,
+              sm: 3
+            }}>
             <TextField label="Period From" value={form.periodFrom || "-"} fullWidth InputProps={{ readOnly: true }} />
           </Grid>
-          <Grid item xs={6} sm={3}>
+          <Grid
+            size={{
+              xs: 6,
+              sm: 3
+            }}>
             <TextField label="Period To" value={form.periodTo || "-"} fullWidth InputProps={{ readOnly: true }} />
           </Grid>
         </Grid>
@@ -321,16 +356,36 @@ export default function BusinessFinancePayment({
           <Typography variant="subtitle1" sx={{ fontWeight: 900 }}>Record Payment</Typography>
         </Stack>
         <Grid container spacing={2}>
-          <Grid item xs={12} sm={6} md={2.4}>
+          <Grid
+            size={{
+              xs: 12,
+              sm: 6,
+              md: 2.4
+            }}>
             <AppDatePicker label="Payment Date" value={form.date} onChange={(value) => setForm((prev) => ({ ...prev, date: dayjs(value) }))} />
           </Grid>
-          <Grid item xs={6} sm={6} md={2.4}>
+          <Grid
+            size={{
+              xs: 6,
+              sm: 6,
+              md: 2.4
+            }}>
             <TextField label="Paid So Far" value={money(form.paid)} fullWidth InputProps={{ readOnly: true }} />
           </Grid>
-          <Grid item xs={6} sm={6} md={2.4}>
+          <Grid
+            size={{
+              xs: 6,
+              sm: 6,
+              md: 2.4
+            }}>
             <TextField label="Balance" value={money(form.balance)} fullWidth InputProps={{ readOnly: true }} />
           </Grid>
-          <Grid item xs={6} sm={6} md={2.4}>
+          <Grid
+            size={{
+              xs: 6,
+              sm: 6,
+              md: 2.4
+            }}>
             <TextField
               label="Amount Paid"
               value={form.amountPaid ? money(form.amountPaid) : ""}
@@ -338,7 +393,12 @@ export default function BusinessFinancePayment({
               fullWidth
             />
           </Grid>
-          <Grid item xs={6} sm={6} md={2.4}>
+          <Grid
+            size={{
+              xs: 6,
+              sm: 6,
+              md: 2.4
+            }}>
             <TextField
               label="Late Fee"
               value={form.lateFeePaid ? money(form.lateFeePaid) : ""}
@@ -357,7 +417,6 @@ export default function BusinessFinancePayment({
           </Button>
         </Stack>
       </Paper>
-
       <DataTable
         title={`${heading} - Installment Schedule`}
         rows={rows}

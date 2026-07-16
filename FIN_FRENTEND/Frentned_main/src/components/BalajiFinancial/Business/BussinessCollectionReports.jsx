@@ -144,7 +144,12 @@ const BussinessCollectionReports = () => {
             { label: "Matured Received", value: matured.receivedCollections },
             { label: "Matured Balance", value: matured.balanceCollections },
           ].map((item) => (
-            <Grid item xs={12} sm={6} key={item.label}>
+            <Grid
+              key={item.label}
+              size={{
+                xs: 12,
+                sm: 6
+              }}>
               <Box sx={{ p: 1.5, border: 1, borderColor: "divider", borderRadius: 1, bgcolor: "background.paper" }}>
                 <Typography variant="caption" color="text.secondary">{item.label}</Typography>
                 <Typography fontWeight={900}>Rs {money(item.value)}</Typography>
@@ -197,28 +202,45 @@ const BussinessCollectionReports = () => {
           </Stack>
         </Stack>
       </Paper>
-
       <Grid container spacing={2}>
-        <Grid item xs={12} md={4}>
+        <Grid
+          size={{
+            xs: 12,
+            md: 4
+          }}>
           <SummaryCard title="Target Collections" value={totals.target} note="Total expected collection" icon={CalendarMonthRounded} />
         </Grid>
-        <Grid item xs={12} md={4}>
+        <Grid
+          size={{
+            xs: 12,
+            md: 4
+          }}>
           <SummaryCard title="Received Collections" value={totals.received} note="Total amount received" color="success" icon={TrendingUpRounded} />
         </Grid>
-        <Grid item xs={12} md={4}>
+        <Grid
+          size={{
+            xs: 12,
+            md: 4
+          }}>
           <SummaryCard title="Collection Balance" value={totals.balance} note="Pending collection balance" color="warning" icon={AssessmentRounded} />
         </Grid>
       </Grid>
-
       <Grid container spacing={2}>
-        <Grid item xs={12} lg={6}>
+        <Grid
+          size={{
+            xs: 12,
+            lg: 6
+          }}>
           <FinanceBlock title="Daily Finance" data={groupedData.DAILY_FINANCE} />
         </Grid>
-        <Grid item xs={12} lg={6}>
+        <Grid
+          size={{
+            xs: 12,
+            lg: 6
+          }}>
           <FinanceBlock title="Monthly Finance" data={groupedData.MONTHLY_FINANCE} />
         </Grid>
       </Grid>
-
       <DataTable
         rows={rows}
         columns={columns}

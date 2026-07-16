@@ -165,20 +165,23 @@ const Maturity = () => {
           </Stack>
         </Stack>
       </Paper>
-
       {error && (
         <Paper className="enterprise-card" elevation={0} sx={{ p: 2, borderColor: "error.light" }}>
           <Typography color="error.main" fontWeight={800}>{error}</Typography>
         </Paper>
       )}
-
       <Grid container spacing={2}>
         {[
           { label: "Total Amount", value: totals.amount },
           { label: "Total Paid", value: totals.paid },
           { label: "Total Due", value: totals.due },
         ].map((item) => (
-          <Grid item xs={12} md={4} key={item.label}>
+          <Grid
+            key={item.label}
+            size={{
+              xs: 12,
+              md: 4
+            }}>
             <Paper className="enterprise-card" elevation={0} sx={{ p: 2 }}>
               <Typography variant="body2" color="text.secondary">{item.label}</Typography>
               <Typography variant="h5">Rs {money(item.value)}</Typography>
@@ -186,7 +189,6 @@ const Maturity = () => {
           </Grid>
         ))}
       </Grid>
-
       <DataTable
         rows={rows}
         columns={columns}

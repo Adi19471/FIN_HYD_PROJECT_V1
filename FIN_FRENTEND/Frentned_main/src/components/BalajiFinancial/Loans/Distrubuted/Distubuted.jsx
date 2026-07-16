@@ -82,23 +82,33 @@ const Distubuted = () => {
         onRefresh={getDisbursedList}
         loading={loading}
       />
-
       <Paper className="enterprise-card" elevation={0} sx={{ p: 2 }}>
         <Grid container spacing={2} alignItems="center">
-          <Grid item xs={12} md={4}>
+          <Grid
+            size={{
+              xs: 12,
+              md: 4
+            }}>
             <AppDatePicker label="From Date" value={fromDate} onChange={setFromDate} />
           </Grid>
-          <Grid item xs={12} md={4}>
+          <Grid
+            size={{
+              xs: 12,
+              md: 4
+            }}>
             <AppDatePicker label="To Date" value={toDate} onChange={setToDate} />
           </Grid>
-          <Grid item xs={12} md={4}>
+          <Grid
+            size={{
+              xs: 12,
+              md: 4
+            }}>
             <Button fullWidth variant="contained" onClick={getDisbursedList} disabled={loading}>
               Generate
             </Button>
           </Grid>
         </Grid>
       </Paper>
-
       <DataTable
         rows={rows}
         columns={columns}

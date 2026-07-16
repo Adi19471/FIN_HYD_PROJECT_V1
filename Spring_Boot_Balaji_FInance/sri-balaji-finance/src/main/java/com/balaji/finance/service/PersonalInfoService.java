@@ -7,6 +7,7 @@ import java.util.List;
 import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.User;
 import org.springframework.stereotype.Service;
@@ -15,6 +16,7 @@ import org.springframework.web.multipart.MultipartFile;
 import com.balaji.finance.dto.PersonalInfoAutoCompletePojo;
 import com.balaji.finance.dto.PersonalInfoDto;
 import com.balaji.finance.entity.PersonalInfo;
+import com.balaji.finance.exception.ApiException;
 import com.balaji.finance.repo.AccountMasterRepo;
 import com.balaji.finance.repo.PersonalInfoRepository;
 import com.balaji.finance.util.PersonalSequenceService;
@@ -501,11 +503,11 @@ public class PersonalInfoService {
 	public void uploadProfilePic(String personalInfoId, MultipartFile file) throws IOException {
 
 		if (file == null || file.isEmpty()) {
-			throw new IllegalArgumentException("File is empty");
+			throw new ApiException("File is empty", HttpStatus.BAD_REQUEST);
 		}
 
 		PersonalInfo personalInfo = personalInfoRepository.findById(personalInfoId)
-				.orElseThrow(() -> new RuntimeException("PersonalInfo not found"));
+				.orElseThrow(() -> new ApiException("PersonalInfo not found", HttpStatus.NOT_FOUND));
 
 		personalInfo.setProfilePic(file.getBytes());
 		personalInfo.setProfilePicName(file.getOriginalFilename());
@@ -517,7 +519,13 @@ public class PersonalInfoService {
 	@Transactional
 	public PersonalInfo getProfilePic(String personalInfoId) {
 
-		return personalInfoRepository.findById(personalInfoId)
-				.orElseThrow(() -> new RuntimeException("PersonalInfo not found"));
+		PersonalInfo personalInfo = personalInfoRepository.findById(personalInfoId)
+				.orElseThrow(() -> new ApiException("PersonalInfo not found", HttpStatus.NOT_FOUND));
+
+		if (personalInfo.getProfilePic() == null || personalInfo.getProfilePicContentType() == null) {
+			throw new ApiException("Profile photo not uploaded yet", HttpStatus.NOT_FOUND);
+		}
+
+		return personalInfo;
 	}
 }

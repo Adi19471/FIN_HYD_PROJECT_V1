@@ -118,7 +118,11 @@ const Customer_Report = () => {
       {/* Search Section */}
       <Paper sx={{ p: 2, mb: 3 }}>
         <Grid container spacing={2} alignItems="center">
-          <Grid item xs={12} md={6}>
+          <Grid
+            size={{
+              xs: 12,
+              md: 6
+            }}>
             <Autocomplete
               openOnFocus
               options={accountOptions}
@@ -147,7 +151,11 @@ const Customer_Report = () => {
             />
           </Grid>
 
-          <Grid item xs={12} md={3}>
+          <Grid
+            size={{
+              xs: 12,
+              md: 3
+            }}>
             <Button
               variant="contained"
               fullWidth
@@ -158,20 +166,22 @@ const Customer_Report = () => {
             </Button>
           </Grid>
 
-          <Grid item xs={12} md={3}>
+          <Grid
+            size={{
+              xs: 12,
+              md: 3
+            }}>
             <Box sx={{ display: "flex", gap: 1, justifyContent: "flex-end" }}>
               <TableExportMenu rows={reportData} columns={exportColumns} fileName="Customer_Report" />
             </Box>
           </Grid>
         </Grid>
       </Paper>
-
       <ReportCompanyHeader
         title="Customer Report"
         subtitle={selectedAccount?.label ? `Account Head: ${selectedAccount.label}` : "Select an account head to view report"}
         date={dayjs()}
       />
-
       {loadingReport ? (
         <LoadingSpinner />
       ) : error ? (
@@ -210,7 +220,7 @@ const Customer_Report = () => {
               <TableBody>
                 {loadingReport ? (
                   // Skeleton rows while loading
-                  Array.from(new Array(5)).map((_, index) => (
+                  (Array.from(new Array(5)).map((_, index) => (
                     <TableRow key={index}>
                       <TableCell sx={{ border: "1px solid #ccc" }}><Skeleton /></TableCell>
                       <TableCell sx={{ border: "1px solid #ccc" }}><Skeleton /></TableCell>
@@ -219,7 +229,7 @@ const Customer_Report = () => {
                       <TableCell align="right"><Skeleton /></TableCell>
                       <TableCell align="right"><Skeleton /></TableCell>
                     </TableRow>
-                  ))
+                  )))
                 ) : (
                   reportData
                     .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)

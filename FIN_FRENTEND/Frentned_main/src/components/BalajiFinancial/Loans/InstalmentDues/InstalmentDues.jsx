@@ -94,30 +94,44 @@ const InstalmentDues = () => {
         onRefresh={getInstallmentDues}
         loading={loading}
       />
-
       <Paper className="enterprise-card" elevation={0} sx={{ p: 2 }}>
         <Grid container spacing={2} alignItems="center">
-          <Grid item xs={12} md={3}>
+          <Grid
+            size={{
+              xs: 12,
+              md: 3
+            }}>
             <TextField select label="Loan Type" sx={{width:"220px"}} fullWidth size="small" value={loanType} onChange={(event) => setLoanType(event.target.value)}>
               {loanTypes.map((type) => (
                 <MenuItem key={type.value} value={type.value}>{type.label}</MenuItem>
               ))}
             </TextField>
           </Grid>
-          <Grid item xs={12} md={3}>
+          <Grid
+            size={{
+              xs: 12,
+              md: 3
+            }}>
             <AppDatePicker label="From Date" value={fromDate} onChange={setFromDate} />
           </Grid>
-          <Grid item xs={12} md={3}>
+          <Grid
+            size={{
+              xs: 12,
+              md: 3
+            }}>
             <AppDatePicker label="To Date" value={toDate} onChange={setToDate} />
           </Grid>
-          <Grid item xs={12} md={3}>
+          <Grid
+            size={{
+              xs: 12,
+              md: 3
+            }}>
             <Button fullWidth variant="contained" onClick={getInstallmentDues} disabled={loading}>
               Generate
             </Button>
           </Grid>
         </Grid>
       </Paper>
-
       <DataTable rows={rows} columns={columns} loading={loading} title="Instalment Due Details" height={580} />
     </Stack>
   );

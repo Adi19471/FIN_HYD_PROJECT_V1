@@ -146,7 +146,6 @@ const Group_Bussiness = () => {
         onRefresh={fetchReport}
         loading={loading}
       />
-
       <ReportToolbar
         onGenerate={fetchReport}
         onRefresh={fetchReport}
@@ -156,33 +155,51 @@ const Group_Bussiness = () => {
         fileName="Group-Business"
         zoom={zoom}
       />
-
       <Paper className="enterprise-card" elevation={0} sx={{ p: 2 }}>
         <Grid container spacing={2} alignItems="center">
-          <Grid item xs={12} md={2}>
+          <Grid
+            size={{
+              xs: 12,
+              md: 2
+            }}>
             <FormControlLabel control={<Checkbox checked={dateFilter} onChange={(event) => setDateFilter(event.target.checked)} />} label="Date Range" />
           </Grid>
 
-          <Grid item xs={12} md={3}>
+          <Grid
+            size={{
+              xs: 12,
+              md: 3
+            }}>
             <TextField fullWidth size="small" type="date" label="From Date" InputLabelProps={{ shrink: true }} value={fromDate} disabled={!dateFilter} onChange={(event) => setFromDate(event.target.value)} />
           </Grid>
 
-          <Grid item xs={12} md={3}>
+          <Grid
+            size={{
+              xs: 12,
+              md: 3
+            }}>
             <TextField fullWidth size="small" type="date" label="To Date" InputLabelProps={{ shrink: true }} value={toDate} disabled={!dateFilter} onChange={(event) => setToDate(event.target.value)} />
           </Grid>
 
-          <Grid item xs={12} md={2}>
+          <Grid
+            size={{
+              xs: 12,
+              md: 2
+            }}>
             <FormControlLabel control={<Checkbox checked={balancesOnly} onChange={(event) => setBalancesOnly(event.target.checked)} />} label="Balances only" />
           </Grid>
 
-          <Grid item xs={12} md={2}>
+          <Grid
+            size={{
+              xs: 12,
+              md: 2
+            }}>
             <Button fullWidth variant="contained" onClick={fetchReport} disabled={loading}>
               Generate
             </Button>
           </Grid>
         </Grid>
       </Paper>
-
       <Box ref={zoom.targetRef} sx={{ display: "flex", flexDirection: "column", gap: 2.5 }}>
         <Paper className="enterprise-card" elevation={0} sx={{ p: 2 }}>
           <ReportCompanyHeader title="Group Business Report" />

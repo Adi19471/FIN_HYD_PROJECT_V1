@@ -34,7 +34,8 @@ import {
 } from "@mui/icons-material";
 
 import dayjs from "dayjs";
-import { AppDatePicker, TableExportMenu } from "src/components/ui";
+import { AppDatePicker, TableExportMenu, ProfilePhotoBox } from "src/components/ui";
+import LoanDetailsDialog from "../LoanDetailsDialog";
 
 const LOAN_TYPE = { DAILY_FINANCE: "DAILY_FINANCE" };
 const FIXED_DURATION_DAYS = 100;
@@ -51,6 +52,15 @@ const DailyFinance = () => {
   const [paginationModel, setPaginationModel] = useState({ page: 0, pageSize: 10 });
   const [globalSearch, setGlobalSearch] = useState("");
   const [showColumnFilters, setShowColumnFilters] = useState(false);
+  const [viewOpen, setViewOpen] = useState(false);
+  const [viewAccountNo, setViewAccountNo] = useState(null);
+  const [viewCustomerId, setViewCustomerId] = useState(null);
+
+  const handleViewLoan = (row) => {
+    setViewAccountNo(row.id);
+    setViewCustomerId(row.customerId);
+    setViewOpen(true);
+  };
 
 
   const [filters, setFilters] = useState({
@@ -215,6 +225,7 @@ const DailyFinance = () => {
       //  USE HERE
       const enriched = loans.map((loan) => ({
         id: loan?.id ?? "N/A",
+        customerId: loan?.customerId ?? null,
 
         customerName: getMemberName(loan?.customerId),
 
@@ -540,6 +551,20 @@ const DailyFinance = () => {
       field: "id",
       width: 170,
       renderHeader: () => getHeader("Acc No", "id"),
+      renderCell: (params) => (
+        <Box
+          component="span"
+          onClick={() => handleViewLoan(params.row)}
+          sx={{
+            color: "primary.main",
+            fontWeight: 700,
+            cursor: "pointer",
+            textDecoration: "underline",
+          }}
+        >
+          {params.value}
+        </Box>
+      ),
     },
     {
       field: "customerName",
@@ -703,6 +728,8 @@ const DailyFinance = () => {
               columns={columns}
               loading={loading}
               getRowId={(r) => r.id}
+              autosizeOnMount
+              autosizeOptions={{ includeHeaders: true, includeOutliers: true, expand: true }}
               pageSizeOptions={[10, 25, 50, 100]}
               paginationModel={paginationModel}
               onPaginationModelChange={setPaginationModel}
@@ -722,294 +749,362 @@ const DailyFinance = () => {
           </Box>
         </Paper>
       </Box>
-
-
       {/* Loading Spinner Overlay */ }
-  {
-    loading && rows.length === 0 && (
-      <Box sx={{ display: "flex", justifyContent: "center", alignItems: "center", height: "300px" }}>
-        <LoadingSpinner />
-      </Box>
-    )
-  }
-
-  {/* DIALOG MODAL */ }
-  <Dialog
-    open={open}
-    onClose={handleClose}
-    maxWidth="md"
-    fullWidth
-    PaperProps={{
-      sx: { borderRadius: 3, overflow: "hidden" },
-    }}
-  >
-    <AppBar position="relative" color="transparent" elevation={0}>
-      <Toolbar>
-        <Typography variant="h6" sx={{ flex: 1, fontWeight: 700 }}>
-          {isEditMode ? "Edit Loan" : "New Daily Finance Loan"}
-        </Typography>
-        <IconButton edge="end" color="inherit" onClick={handleClose}>
-          <CloseIcon />
-        </IconButton>
-      </Toolbar>
-    </AppBar>
-
-    <DialogContent sx={{ mt: 2 }}>
-      <Typography variant="subtitle2" color="text.secondary" gutterBottom>
-        {`Account No: ${currentLoanId}`}
-      </Typography>
-
-      {/* BASIC INFO */}
-      <Grid container spacing={3} sx={{ mt: 1 }}>
-        <Grid item xs={12} md={6} sm={4}>
-          <Autocomplete
-            fullWidth
-            sx={{ width: "100%", minWidth: { md: 320 } }}
-            openOnFocus
-            filterOptions={(x) => x}
-            options={options}
-            loading={loadingSearch}
-            value={formData.customerId}
-            onOpen={() => searchMembers("")}
-            onInputChange={(e, v) => searchMembers(v)}
-            onChange={(e, v) =>
-              setFormData((p) => ({ ...p, customerId: v }))
-            }
-            getOptionLabel={(o) => o?.label || ""}
-            renderInput={(params) => (
-              <TextField {...params} label="Customer *" />
-            )}
-          />
-        </Grid>
-
-        <Grid item xs={12} md={6}>
-          <AppDatePicker
-            label="Loan Date"
-            value={formData.startDate}
-            onChange={(value) => setFormData((p) => ({ ...p, startDate: dayjs(value) }))}
-            size="medium"
-          />
-        </Grid>
-
-        <Grid item xs={12} md={6}>
-          <AppDatePicker
-            label="Maturity Date"
-            value={formData.endDate}
-            onChange={() => {}}
-            disabled
-            size="medium"
-          />
-        </Grid>
-      </Grid>
-
-      {/* LOAN DETAILS */}
-      <Box sx={{ mt: 4 }}>
-        <Chip
-          label="LOAN DETAILS"
-          sx={{ bgcolor: "#14b8a6", color: "white", fontWeight: 600 }}
-        />
-      </Box>
-
-      <Grid container spacing={3} sx={{ mt: 1 }}>
-        <Grid item xs={12} md={6}>
-          <TextField
-            fullWidth
-            label="Loan Amount *"
-            type="text"                    // Changed to text for better control
-            value={formData.amount
-              ? Number(formData.amount).toLocaleString('en-IN')
-              : ""
-            }
-            onChange={(e) => {
-              // Remove commas and non-numeric characters
-              const rawValue = e.target.value.replace(/[^0-9]/g, '');
-              setFormData((p) => ({
-                ...p,
-                amount: rawValue
-              }));
-            }}
-            InputProps={{
-              startAdornment: <Typography sx={{ mr: 1, color: 'text.secondary' }}>₹</Typography>,
-            }}
-            placeholder="0"
-          />
-        </Grid>
-
-        <Grid item xs={12} md={6}>
-          <TextField
-            fullWidth
-            label="Interest %"
-            type="number"
-            value={formData.interestRate}
-            onChange={(e) =>
-              setFormData((p) => ({
-                ...p,
-                interestRate: e.target.value,
-              }))
-            }
-          />
-        </Grid>
-
-
-        <Grid item xs={12} md={6}>
-          <TextField
-            fullWidth
-            label="Total Interest Amount (100 Days)"
-            type="text"                    // Changed from number to text for better formatting
-            value={
-              formData.interestAmountForAllDays
-                ? `${Number(formData.interestAmountForAllDays).toLocaleString("en-IN")}`
-                : ""
-            }
-            InputProps={{
-              readOnly: true,
-              startAdornment: (
-                <Typography sx={{ mr: 1, color: 'text.secondary' }}>₹</Typography>
-              )
-            }}
-          />
-        </Grid>
-
-        <Grid item xs={12} md={6}>
-          <TextField
-            fullWidth
-            label="Daily Installment"
-            value={
-              formData.installment
-                ? `₹${Number(formData.installment).toLocaleString("en-IN")}`
-                : ""
-            }
-            InputProps={{ readOnly: true }}
-          />
-        </Grid>
-
-        <Grid item xs={12} md={6}>
-          <TextField
-            fullWidth
-            label="Duration"
-            value="100 Days Fixed"
-            InputProps={{ readOnly: true }}
-          />
-        </Grid>
-
-        <Grid item xs={12} md={6}>
-          <TextField
-            fullWidth
-            label="Processing Fee"
-            type="text"
-            value={
-              formData.processingFee
-                ? Number(formData.processingFee).toLocaleString("en-IN")
-                : ""
-            }
-            onChange={(e) => {
-              // Remove commas before saving
-              const rawValue = e.target.value.replace(/,/g, "");
-
-              // Allow only numbers
-              if (!isNaN(rawValue)) {
-                setFormData((p) => ({
-                  ...p,
-                  processingFee: rawValue,
-                }));
-              }
-            }}
-          />
-        </Grid>
-
-        <Grid item xs={12} md={12}>
-          <TextField
-            fullWidth
-            label="Security / Remarks"
-            value={formData.security}
-            onChange={(e) =>
-              setFormData((p) => ({ ...p, security: e.target.value }))
-            }
-          />
-        </Grid>
-      </Grid>
-
-      {/* Guarantors */}
-      <Box sx={{ mt: 4 }}>
-        <Chip
-          label="GUARANTORS"
-          sx={{ bgcolor: "#8b5cf6", color: "white", fontWeight: 600 }}
-        />
-      </Box>
-      <Grid container spacing={3} sx={{ mt: 1 }}>
-        {["guarantor1", "guarantor2", "guarantor3"].map((field, idx) => (
-          <Grid item xs={12} md={6} key={field}>
-            <Autocomplete
-              fullWidth
-              sx={{ width: "100%", minWidth: { md: 320 } }}
-              openOnFocus
-              filterOptions={(x) => x}
-              options={options}
-              value={formData[field]}
-              onOpen={() => searchMembers("")}
-              onInputChange={(e, v) => searchMembers(v)}
-              onChange={(e, v) =>
-                setFormData((p) => ({ ...p, [field]: v }))
-              }
-              getOptionLabel={(o) => o?.label || ""}
-              renderInput={(params) => (
-                <TextField
-                  {...params}
-                  label={`Guarantor ${idx + 1}${idx === 0 ? " *" : ""}`}
-                  fullWidth
-                />
-              )}
-            />
-          </Grid>
-        ))}
-      </Grid>
-
-      {/* PARTNER */}
-      <Grid container spacing={2} sx={{ mt: 1 }}>
-        <Grid item xs={12} md={6}>
-          <Autocomplete
-            fullWidth
-            sx={{ width: "100%", minWidth: { md: 320 } }}
-            openOnFocus
-            filterOptions={(x) => x}
-            options={options}
-            loading={loadingSearch}
-            value={formData.partnerId}
-            onOpen={() => searchMembers("")}
-            onInputChange={(e, v) => searchMembers(v)}
-            onChange={(e, v) =>
-              setFormData((p) => ({ ...p, partnerId: v }))
-            }
-            getOptionLabel={(o) => o?.label || ""}
-            renderInput={(params) => (
-              <TextField {...params} label="Partner / Agent *" fullWidth />
-            )}
-          />
-        </Grid>
-      </Grid>
-
-    </DialogContent>
-
-    <DialogActions sx={{ p: 2 }}>
-      <Button variant="outlined" onClick={handleClose}>
-        Cancel
-      </Button>
-      <Button
-        variant="contained"
-        onClick={handleSave}
-        disabled={loading}
-        startIcon={
-          loading ? <CircularProgress size={20} color="inherit" /> : null
-        }
+      {
+        loading && rows.length === 0 && (
+          <Box sx={{ display: "flex", justifyContent: "center", alignItems: "center", height: "300px" }}>
+            <LoadingSpinner />
+          </Box>
+        )
+      }
+      {/* DIALOG MODAL */ }
+      <Dialog
+        open={open}
+        onClose={handleClose}
+        maxWidth="md"
+        fullWidth
+        PaperProps={{
+          sx: { borderRadius: 3, overflow: "hidden" },
+        }}
       >
-        {loading
-          ? "Processing..."
-          : isEditMode
-            ? "Update Loan"
-            : "Create Loan"}
-      </Button>
-    </DialogActions>
-  </Dialog>
+        <AppBar position="relative" color="transparent" elevation={0}>
+          <Toolbar>
+            <Typography variant="h6" sx={{ flex: 1, fontWeight: 700 }}>
+              {isEditMode ? "Edit Loan" : "New Daily Finance Loan"}
+            </Typography>
+            <IconButton edge="end" color="inherit" onClick={handleClose}>
+              <CloseIcon />
+            </IconButton>
+          </Toolbar>
+        </AppBar>
+
+        <DialogContent sx={{ mt: 2 }}>
+          <Typography variant="subtitle2" color="text.secondary" gutterBottom>
+            {`Account No: ${currentLoanId}`}
+          </Typography>
+
+          {/* BASIC INFO */}
+          <Grid container spacing={3} sx={{ mt: 1 }}>
+            <Grid
+              sx={{ display: "flex", justifyContent: { xs: "flex-start", sm: "center" } }}
+              size={{
+                xs: 12,
+                sm: 2
+              }}>
+              <ProfilePhotoBox
+                personalInfoId={formData.customerId?.id}
+                editable
+                width={90}
+                height={100}
+              />
+            </Grid>
+
+            <Grid
+              size={{
+                xs: 12,
+                md: 6,
+                sm: 4
+              }}>
+              <Autocomplete
+                fullWidth
+                sx={{ width: "100%", minWidth: { md: 320 } }}
+                openOnFocus
+                filterOptions={(x) => x}
+                options={options}
+                loading={loadingSearch}
+                value={formData.customerId}
+                onOpen={() => searchMembers("")}
+                onInputChange={(e, v) => searchMembers(v)}
+                onChange={(e, v) =>
+                  setFormData((p) => ({ ...p, customerId: v }))
+                }
+                getOptionLabel={(o) => o?.label || ""}
+                renderInput={(params) => (
+                  <TextField {...params} label="Customer *" />
+                )}
+              />
+            </Grid>
+
+            <Grid
+              size={{
+                xs: 12,
+                md: 6
+              }}>
+              <AppDatePicker
+                label="Loan Date"
+                value={formData.startDate}
+                onChange={(value) => setFormData((p) => ({ ...p, startDate: dayjs(value) }))}
+                size="medium"
+              />
+            </Grid>
+
+            <Grid
+              size={{
+                xs: 12,
+                md: 6
+              }}>
+              <AppDatePicker
+                label="Maturity Date"
+                value={formData.endDate}
+                onChange={() => {}}
+                disabled
+                size="medium"
+              />
+            </Grid>
+          </Grid>
+
+          {/* LOAN DETAILS */}
+          <Box sx={{ mt: 4 }}>
+            <Chip
+              label="LOAN DETAILS"
+              sx={{ bgcolor: "#14b8a6", color: "white", fontWeight: 600 }}
+            />
+          </Box>
+
+          <Grid container spacing={3} sx={{ mt: 1 }}>
+            <Grid
+              size={{
+                xs: 12,
+                md: 6
+              }}>
+              <TextField
+                fullWidth
+                label="Loan Amount *"
+                type="text"                    // Changed to text for better control
+                value={formData.amount
+                  ? Number(formData.amount).toLocaleString('en-IN')
+                  : ""
+                }
+                onChange={(e) => {
+                  // Remove commas and non-numeric characters
+                  const rawValue = e.target.value.replace(/[^0-9]/g, '');
+                  setFormData((p) => ({
+                    ...p,
+                    amount: rawValue
+                  }));
+                }}
+                InputProps={{
+                  startAdornment: <Typography sx={{ mr: 1, color: 'text.secondary' }}>₹</Typography>,
+                }}
+                placeholder="0"
+              />
+            </Grid>
+
+            <Grid
+              size={{
+                xs: 12,
+                md: 6
+              }}>
+              <TextField
+                fullWidth
+                label="Interest %"
+                type="number"
+                value={formData.interestRate}
+                onChange={(e) =>
+                  setFormData((p) => ({
+                    ...p,
+                    interestRate: e.target.value,
+                  }))
+                }
+              />
+            </Grid>
+
+
+            <Grid
+              size={{
+                xs: 12,
+                md: 6
+              }}>
+              <TextField
+                fullWidth
+                label="Total Interest Amount (100 Days)"
+                type="text"                    // Changed from number to text for better formatting
+                value={
+                  formData.interestAmountForAllDays
+                    ? `${Number(formData.interestAmountForAllDays).toLocaleString("en-IN")}`
+                    : ""
+                }
+                InputProps={{
+                  readOnly: true,
+                  startAdornment: (
+                    <Typography sx={{ mr: 1, color: 'text.secondary' }}>₹</Typography>
+                  )
+                }}
+              />
+            </Grid>
+
+            <Grid
+              size={{
+                xs: 12,
+                md: 6
+              }}>
+              <TextField
+                fullWidth
+                label="Daily Installment"
+                value={
+                  formData.installment
+                    ? `₹${Number(formData.installment).toLocaleString("en-IN")}`
+                    : ""
+                }
+                InputProps={{ readOnly: true }}
+              />
+            </Grid>
+
+            <Grid
+              size={{
+                xs: 12,
+                md: 6
+              }}>
+              <TextField
+                fullWidth
+                label="Duration"
+                value="100 Days Fixed"
+                InputProps={{ readOnly: true }}
+              />
+            </Grid>
+
+            <Grid
+              size={{
+                xs: 12,
+                md: 6
+              }}>
+              <TextField
+                fullWidth
+                label="Processing Fee"
+                type="text"
+                value={
+                  formData.processingFee
+                    ? Number(formData.processingFee).toLocaleString("en-IN")
+                    : ""
+                }
+                onChange={(e) => {
+                  // Remove commas before saving
+                  const rawValue = e.target.value.replace(/,/g, "");
+
+                  // Allow only numbers
+                  if (!isNaN(rawValue)) {
+                    setFormData((p) => ({
+                      ...p,
+                      processingFee: rawValue,
+                    }));
+                  }
+                }}
+              />
+            </Grid>
+
+            <Grid
+              size={{
+                xs: 12,
+                md: 12
+              }}>
+              <TextField
+                fullWidth
+                label="Security / Remarks"
+                value={formData.security}
+                onChange={(e) =>
+                  setFormData((p) => ({ ...p, security: e.target.value }))
+                }
+              />
+            </Grid>
+          </Grid>
+
+          {/* Guarantors */}
+          <Box sx={{ mt: 4 }}>
+            <Chip
+              label="GUARANTORS"
+              sx={{ bgcolor: "#8b5cf6", color: "white", fontWeight: 600 }}
+            />
+          </Box>
+          <Grid container spacing={3} sx={{ mt: 1 }}>
+            {["guarantor1", "guarantor2", "guarantor3"].map((field, idx) => (
+              <Grid
+                key={field}
+                size={{
+                  xs: 12,
+                  md: 6
+                }}>
+                <Autocomplete
+                  fullWidth
+                  sx={{ width: "100%", minWidth: { md: 320 } }}
+                  openOnFocus
+                  filterOptions={(x) => x}
+                  options={options}
+                  value={formData[field]}
+                  onOpen={() => searchMembers("")}
+                  onInputChange={(e, v) => searchMembers(v)}
+                  onChange={(e, v) =>
+                    setFormData((p) => ({ ...p, [field]: v }))
+                  }
+                  getOptionLabel={(o) => o?.label || ""}
+                  renderInput={(params) => (
+                    <TextField
+                      {...params}
+                      label={`Guarantor ${idx + 1}${idx === 0 ? " *" : ""}`}
+                      fullWidth
+                    />
+                  )}
+                />
+              </Grid>
+            ))}
+          </Grid>
+
+          {/* PARTNER */}
+          <Grid container spacing={2} sx={{ mt: 1 }}>
+            <Grid
+              size={{
+                xs: 12,
+                md: 6
+              }}>
+              <Autocomplete
+                fullWidth
+                sx={{ width: "100%", minWidth: { md: 320 } }}
+                openOnFocus
+                filterOptions={(x) => x}
+                options={options}
+                loading={loadingSearch}
+                value={formData.partnerId}
+                onOpen={() => searchMembers("")}
+                onInputChange={(e, v) => searchMembers(v)}
+                onChange={(e, v) =>
+                  setFormData((p) => ({ ...p, partnerId: v }))
+                }
+                getOptionLabel={(o) => o?.label || ""}
+                renderInput={(params) => (
+                  <TextField {...params} label="Partner / Agent *" fullWidth />
+                )}
+              />
+            </Grid>
+          </Grid>
+
+        </DialogContent>
+
+        <DialogActions sx={{ p: 2 }}>
+          <Button variant="outlined" onClick={handleClose}>
+            Cancel
+          </Button>
+          <Button
+            variant="contained"
+            onClick={handleSave}
+            disabled={loading}
+            startIcon={
+              loading ? <CircularProgress size={20} color="inherit" /> : null
+            }
+          >
+            {loading
+              ? "Processing..."
+              : isEditMode
+                ? "Update Loan"
+                : "Create Loan"}
+          </Button>
+        </DialogActions>
+      </Dialog>
+      <LoanDetailsDialog
+        open={viewOpen}
+        onClose={() => setViewOpen(false)}
+        accountNo={viewAccountNo}
+        personalInfoId={viewCustomerId}
+        loadEndpoint="loadDFLoanInformation"
+      />
     </>
   );
 };

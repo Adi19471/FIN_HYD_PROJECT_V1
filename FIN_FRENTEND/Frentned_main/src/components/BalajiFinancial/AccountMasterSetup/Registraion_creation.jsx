@@ -304,14 +304,12 @@ const Registration_creation = () => {
         loading={loading || saving}
         onRefresh={loadUsers}
       />
-
       <ReportToolbar
         data={filteredRows}
         columns={["id", "name", "role"]}
         fileName="User_Management_Report"
         tableId="userManagementTable"
       />
-
       <DataTable
         rows={filteredRows}
         columns={columns}
@@ -321,7 +319,6 @@ const Registration_creation = () => {
         title="User register"
         subtitle="Use the shield action to assign API menu permissions to a user."
       />
-
       <Box sx={{ display: "none" }}>
         <table id="userManagementTable">
           <thead>
@@ -344,7 +341,6 @@ const Registration_creation = () => {
           </tbody>
         </table>
       </Box>
-
       <Dialog open={modalOpen} onClose={handleClose} maxWidth="sm" fullWidth>
         <DialogTitle sx={{ pb: 1, display: "flex", alignItems: "center", gap: 1 }}>
           <Typography variant="h6" sx={{ fontWeight: 600, flex: 1 }}>
@@ -357,7 +353,7 @@ const Registration_creation = () => {
         <Divider />
         <DialogContent sx={{ pt: 3 }}>
           <Grid container spacing={2.5}>
-            <Grid item xs={12}>
+            <Grid size={12}>
               <TextField
                 fullWidth
                 label="Name"
@@ -376,7 +372,7 @@ const Registration_creation = () => {
               />
             </Grid>
 
-            <Grid item xs={12}>
+            <Grid size={12}>
               <TextField
                 fullWidth
                 label={form.id ? "New Password (optional)" : "Password"}
@@ -397,7 +393,7 @@ const Registration_creation = () => {
               />
             </Grid>
 
-            <Grid item xs={12}>
+            <Grid size={12}>
               <TextField
                 fullWidth
                 label="Role"
@@ -430,7 +426,6 @@ const Registration_creation = () => {
           </Button>
         </DialogActions>
       </Dialog>
-
       <Dialog open={permissionsOpen} onClose={handlePermissionsClose} maxWidth="md" fullWidth>
         <DialogTitle sx={{ pb: 1, display: "flex", alignItems: "center", gap: 1 }}>
           <AdminPanelSettingsIcon color="primary" />

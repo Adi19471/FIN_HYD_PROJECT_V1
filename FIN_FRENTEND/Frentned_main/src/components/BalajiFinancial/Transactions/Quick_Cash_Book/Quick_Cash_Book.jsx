@@ -70,6 +70,15 @@ const QuickCashBook = () => {
   const token = getSession("token");
   const inputRefs = useRef({});
 
+  const setFieldRef = (rowId, field) => (element) => {
+    if (!inputRefs.current[rowId]) inputRefs.current[rowId] = {};
+    inputRefs.current[rowId][field] = element;
+  };
+
+  const focusField = (rowId, field) => {
+    inputRefs.current[rowId]?.[field]?.focus();
+  };
+
   const filledRows = useMemo(() => rows.filter((row) => row.accountNo?.trim()), [rows]);
   const usedAccounts = useMemo(() => new Set(filledRows.map((row) => row.accountNo.trim())), [filledRows]);
   const totalCollected = useMemo(() => rows.reduce((sum, row) => sum + Number(row.paidAmount || 0), 0), [rows]);
@@ -85,7 +94,7 @@ const QuickCashBook = () => {
     const newRow = blankRow(basePrefix);
     setRows((prev) => [...prev, newRow]);
     setTimeout(() => {
-      inputRefs.current[newRow.id]?.focus();
+      focusField(newRow.id, "accountNo");
       setIsAddingRow(false);
     }, 150);
   };
@@ -167,7 +176,7 @@ const QuickCashBook = () => {
     const finalValue = value?.trim();
     if (!finalValue) return;
     updateRow(rowId, "accountNo", finalValue);
-    fetchAccountRecord(finalValue, rowId);
+    return fetchAccountRecord(finalValue, rowId);
   };
 
   const payableRows = useMemo(
@@ -325,13 +334,28 @@ const QuickCashBook = () => {
 
         {/* Summary */}
         <Grid container spacing={2} alignItems="center">
-            <Grid item xs={12} sm={6} md={3}>
+            <Grid
+              size={{
+                xs: 12,
+                sm: 6,
+                md: 3
+              }}>
               <AppDatePicker label="Date" value={transactionDate} onChange={(value) => setTransactionDate(dayjs(value))} />
             </Grid>
-            <Grid item xs={12} sm={6} md={3}>
+            <Grid
+              size={{
+                xs: 12,
+                sm: 6,
+                md: 3
+              }}>
               <TextField label="Records" size="small" value={filledRows.length} InputProps={{ readOnly: true }} fullWidth />
             </Grid>
-            <Grid item xs={12} sm={6} md={3}>
+            <Grid
+              size={{
+                xs: 12,
+                sm: 6,
+                md: 3
+              }}>
               <TextField
                 label="Paid Total"
                 size="small"
@@ -340,7 +364,12 @@ const QuickCashBook = () => {
                 fullWidth
               />
             </Grid>
-            <Grid item xs={12} sm={6} md={3}>
+            <Grid
+              size={{
+                xs: 12,
+                sm: 6,
+                md: 3
+              }}>
               <TextField
                 label="Late Fee Total"
                 size="small"
@@ -409,12 +438,18 @@ const QuickCashBook = () => {
                         handleAccountCommit(row.id, selected);
                       }}
                       onBlur={() => handleAccountCommit(row.id, row.accountNo)}
-                      onKeyDown={(event) => event.key === "Enter" && handleAccountCommit(row.id, row.accountNo)}
+                      onKeyDown={async (event) => {
+                        if (event.key === "Enter") {
+                          event.preventDefault();
+                          await handleAccountCommit(row.id, row.accountNo);
+                          focusField(row.id, "paidAmount");
+                        }
+                      }}
                       renderInput={(params) => (
                         <TextField
                           {...params}
                           placeholder="Enter Account No"
-                          inputRef={(element) => (inputRefs.current[row.id] = element)}
+                          inputRef={setFieldRef(row.id, "accountNo")}
                           size="small"
                           helperText={fetchingAccount === row.accountNo ? "Loading..." : " "}
                         />
@@ -435,6 +470,13 @@ const QuickCashBook = () => {
                         if (/^\d*$/.test(value)) updateRow(row.id, "paidAmount", value === "" ? "" : Number(value));
                       }}
                       onBlur={(event) => event.target.value === "" && updateRow(row.id, "paidAmount", 0)}
+                      onKeyDown={(event) => {
+                        if (event.key === "Enter") {
+                          event.preventDefault();
+                          focusField(row.id, "paidLateFee");
+                        }
+                      }}
+                      inputRef={setFieldRef(row.id, "paidAmount")}
                       fullWidth
                     />
                   </TableCell>
@@ -454,6 +496,7 @@ const QuickCashBook = () => {
                           addNewRowWithPrefix(row.accountNo.trim().replace(/\d+$/, ""));
                         }
                       }}
+                      inputRef={setFieldRef(row.id, "paidLateFee")}
                       fullWidth
                     />
                   </TableCell>

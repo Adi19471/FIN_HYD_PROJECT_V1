@@ -119,7 +119,7 @@ const BusinessOverview = () => {
       {/* Top Controls */}
       <Paper sx={{ p: 2, mb: 3 }}>
         <Grid container spacing={2} alignItems="center">
-          <Grid item>
+          <Grid>
             <FormControl component="fieldset">
               <RadioGroup
                 row
@@ -132,7 +132,7 @@ const BusinessOverview = () => {
             </FormControl>
           </Grid>
 
-          <Grid item>
+          <Grid>
             <AppDatePicker
               label="From"
               value={fromDate}
@@ -142,7 +142,7 @@ const BusinessOverview = () => {
             />
           </Grid>
 
-          <Grid item>
+          <Grid>
             <AppDatePicker
               label="To"
               value={toDate}
@@ -152,7 +152,7 @@ const BusinessOverview = () => {
             />
           </Grid>
 
-          <Grid item xs>
+          <Grid size="grow">
             <FormControlLabel
               control={
                 <Checkbox
@@ -173,7 +173,7 @@ const BusinessOverview = () => {
             />
           </Grid>
 
-          <Grid item>
+          <Grid>
             <Button 
               variant="contained" 
               color="primary" 
@@ -186,7 +186,6 @@ const BusinessOverview = () => {
           </Grid>
         </Grid>
       </Paper>
-
       {/* Report Content */}
       {loading ? (
         <Box display="flex" justifyContent="center" py={8}>

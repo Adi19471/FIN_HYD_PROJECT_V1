@@ -90,20 +90,26 @@ const DailyBook = () => {
         onRefresh={fetchDailyBook}
         loading={loading}
       />
-
       <Paper className="enterprise-card" elevation={0} sx={{ p: 2 }}>
         <Grid container spacing={2} alignItems="center">
-          <Grid item xs={12} md={4}>
+          <Grid
+            size={{
+              xs: 12,
+              md: 4
+            }}>
             <AppDatePicker label="Transaction Date" value={transactionDate} onChange={setTransactionDate} />
           </Grid>
-          <Grid item xs={12} md={4}>
+          <Grid
+            size={{
+              xs: 12,
+              md: 4
+            }}>
             <Button fullWidth variant="contained" onClick={fetchDailyBook} disabled={loading || !transactionDate || !isAuthenticated}>
               Generate
             </Button>
           </Grid>
         </Grid>
       </Paper>
-
       <Grid container spacing={2}>
         {[
           ["Opening Balance", openingBalance, "success"],
@@ -111,7 +117,13 @@ const DailyBook = () => {
           ["Total Debits", debits, "error"],
           ["Closing Balance", closingBalance, "secondary"],
         ].map(([label, value, color]) => (
-          <Grid item xs={12} sm={6} lg={3} key={label}>
+          <Grid
+            key={label}
+            size={{
+              xs: 12,
+              sm: 6,
+              lg: 3
+            }}>
             <Paper className="enterprise-card" elevation={0} sx={{ p: 2 }}>
               <Typography variant="body2" color="text.secondary">{label}</Typography>
               <Typography variant="h6" color={`${color}.main`}>{formatINR(value)}</Typography>
@@ -119,7 +131,6 @@ const DailyBook = () => {
           </Grid>
         ))}
       </Grid>
-
       <DataTable
         rows={rows}
         columns={columns}

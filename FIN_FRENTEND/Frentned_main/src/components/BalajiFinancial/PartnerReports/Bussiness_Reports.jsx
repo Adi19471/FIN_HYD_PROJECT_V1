@@ -176,7 +176,6 @@ const Bussiness_Reports = () => {
         onRefresh={generateReport}
         loading={loading}
       />
-
       <ReportToolbar
         onGenerate={generateReport}
         onRefresh={generateReport}
@@ -186,12 +185,15 @@ const Bussiness_Reports = () => {
         fileName="Business-Report"
         zoom={zoom}
       />
-
       <Paper sx={{ p: 3, mt: 2 }}>
         <ReportCompanyHeader title="Business Report" />
 
         <Grid container spacing={2} mb={3}>
-          <Grid item xs={12} md={3}>
+          <Grid
+            size={{
+              xs: 12,
+              md: 3
+            }}>
             <AppDatePicker
               label="From Date"
               value={fromDate}
@@ -199,7 +201,11 @@ const Bussiness_Reports = () => {
             />
           </Grid>
 
-          <Grid item xs={12} md={3}>
+          <Grid
+            size={{
+              xs: 12,
+              md: 3
+            }}>
             <AppDatePicker
               label="To Date"
               value={toDate}
@@ -207,7 +213,11 @@ const Bussiness_Reports = () => {
             />
           </Grid>
 
-          <Grid item xs={12} md={2}>
+          <Grid
+            size={{
+              xs: 12,
+              md: 2
+            }}>
             <TextField
               fullWidth
               label="Percentage"
@@ -218,7 +228,11 @@ const Bussiness_Reports = () => {
             />
           </Grid>
 
-          <Grid item xs={12} md={2}>
+          <Grid
+            size={{
+              xs: 12,
+              md: 2
+            }}>
             <Button
               fullWidth
               variant="contained"

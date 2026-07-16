@@ -68,15 +68,17 @@ export default function Loans() {
 
   return (
     <Stack spacing={2.5}>
-    
-     
-    
-
       <Grid container spacing={4}>
         {modules.map((module) => {
           const Icon = module.icon;
           return (
-            <Grid item xs={12} md={6} lg={3} key={module.path}>
+            <Grid
+              key={module.path}
+              size={{
+                xs: 12,
+                md: 6,
+                lg: 3
+              }}>
               <Paper className="enterprise-card dashboard-module" elevation={0}>
                 <Stack spacing={1.5}>
                   <Stack direction="row" spacing={1.25} alignItems="center">
@@ -91,8 +93,6 @@ export default function Loans() {
           );
         })}
       </Grid>
-
-   
     </Stack>
   );
 }

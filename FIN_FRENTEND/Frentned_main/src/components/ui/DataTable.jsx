@@ -242,6 +242,7 @@ const DataTable = ({
     [pageSize]
   );
   const [paginationModel, setPaginationModel] = React.useState({ page: 0, pageSize });
+  const isAutoHeight = Boolean(otherProps.autoHeight);
 
   React.useEffect(() => {
     setPaginationModel((model) => ({ ...model, page: 0, pageSize }));
@@ -252,10 +253,10 @@ const DataTable = ({
       className="enterprise-card"
       elevation={0}
       sx={{
-        height,
-        minHeight: 420,
+        ...(isAutoHeight
+          ? { minHeight: 420 }
+          : { height, minHeight: 420, overflow: "hidden" }),
         width: "100%",
-        overflow: "hidden",
         display: "flex",
         flexDirection: "column",
       }}
@@ -311,6 +312,8 @@ const DataTable = ({
           rows={rows}
           columns={columns}
           getRowId={getRowId}
+          autosizeOnMount
+          autosizeOptions={{ includeHeaders: true, includeOutliers: true, expand: true }}
           showToolbar
           slots={{ toolbar: CustomGridToolbar }}
           slotProps={{
@@ -327,6 +330,7 @@ const DataTable = ({
             border: "none",
             flex: 1,
             backgroundColor: "transparent",
+            "& .MuiDataGrid-virtualScroller": { overflowAnchor: "none" },
             "& .MuiDataGrid-toolbarContainer": {
               px: 2,
               py: 1.25,

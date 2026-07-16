@@ -3,6 +3,7 @@ export { default as PageHeader } from "./PageHeader";
 export { default as DataTable } from "./DataTable";
 export { TableExportMenu } from "./DataTable";
 export { default as AppDatePicker } from "./AppDatePicker";
+export { default as ProfilePhotoBox } from "./ProfilePhoto";
 export { default as ReportCompanyHeader } from "./ReportCompanyHeader";
 export { default as CompanyInfo } from "./CompanyInfo";
 // ReportHeader is an alias of the company banner for screens that prefer that name.

@@ -117,7 +117,6 @@ const Installment_Dues = () => {
         onRefresh={generateReport}
         loading={loading}
       />
-
       <ReportToolbar
         onGenerate={generateReport}
         onRefresh={generateReport}
@@ -127,17 +126,24 @@ const Installment_Dues = () => {
         fileName="Installment-Dues"
         zoom={zoom}
       />
-
       <Paper className="enterprise-card" elevation={0} sx={{ p: 2 }}>
         <Grid container spacing={2} alignItems="center">
-          <Grid item xs={12} md={3}>
+          <Grid
+            size={{
+              xs: 12,
+              md: 3
+            }}>
             <TextField select label="Report Type" size="small" fullWidth value={reportType} onChange={(event) => setReportType(event.target.value)}>
               <MenuItem value="all">All Partners</MenuItem>
               <MenuItem value="individual">Individual Partner</MenuItem>
             </TextField>
           </Grid>
 
-          <Grid item xs={12} md={3}>
+          <Grid
+            size={{
+              xs: 12,
+              md: 3
+            }}>
             <Autocomplete
               openOnFocus
               filterOptions={(x) => x}
@@ -155,19 +161,26 @@ const Installment_Dues = () => {
             />
           </Grid>
 
-          <Grid item xs={12} md={3}>
+          <Grid
+            size={{
+              xs: 12,
+              md: 3
+            }}>
             <FormControlLabel control={<Checkbox checked={activeLoans} onChange={(event) => setActiveLoans(event.target.checked)} />} label="Active Loans" />
             <FormControlLabel control={<Checkbox checked={lateFee} onChange={(event) => setLateFee(event.target.checked)} />} label="Late Fee" />
           </Grid>
 
-          <Grid item xs={12} md={2}>
+          <Grid
+            size={{
+              xs: 12,
+              md: 2
+            }}>
             <Button fullWidth variant="contained" onClick={generateReport} disabled={loading}>
               Generate
             </Button>
           </Grid>
         </Grid>
       </Paper>
-
       <Box ref={zoom.targetRef} sx={{ display: "flex", flexDirection: "column", gap: 2.5 }}>
         <Paper className="enterprise-card" elevation={0} sx={{ p: 2 }}>
           <ReportCompanyHeader title="Installment Dues Report" />

@@ -338,7 +338,12 @@ const Cashbook = () => {
 
         <Box component="form" onSubmit={handleSubmit} sx={{ p: { xs: 2, md: 3 } }}>
           <Grid container spacing={2} >
-            <Grid item xs={12} sm={6} md={3}>
+            <Grid
+              size={{
+                xs: 12,
+                sm: 6,
+                md: 3
+              }}>
               <AppDatePicker
                 label="Transaction Date"
                 value={transactionDate}
@@ -346,7 +351,12 @@ const Cashbook = () => {
                 sx={{ width: "100%", ...fieldSx }}
               />
             </Grid>
-            <Grid item xs={12} sm={6} md={3}>
+            <Grid
+              size={{
+                xs: 12,
+                sm: 6,
+                md: 3
+              }}>
               <FormControl fullWidth sx={fieldSx} disabled={loadingMaster}>
                 <InputLabel>Account Group</InputLabel>
                 <Select
@@ -363,7 +373,12 @@ const Cashbook = () => {
                 </Select>
               </FormControl>
             </Grid>
-            <Grid item xs={12} sm={6} md={3}>
+            <Grid
+              size={{
+                xs: 12,
+                sm: 6,
+                md: 3
+              }}>
               <FormControl fullWidth sx={fieldSx} disabled={!masterCode || loadingCodes}>
                 <InputLabel>Account Code</InputLabel>
                 <Select
@@ -380,7 +395,12 @@ const Cashbook = () => {
                 </Select>
               </FormControl>
             </Grid>
-            <Grid item xs={12} sm={6} md={3}>
+            <Grid
+              size={{
+                xs: 12,
+                sm: 6,
+                md: 3
+              }}>
               <Autocomplete
                 fullWidth
                 openOnFocus
@@ -425,7 +445,12 @@ const Cashbook = () => {
                 )}
               />
             </Grid>
-            <Grid item xs={12} sm={6} md={3}>
+            <Grid
+              size={{
+                xs: 12,
+                sm: 6,
+                md: 3
+              }}>
               <TextField
                 fullWidth
                 label="Particulars"
@@ -434,7 +459,12 @@ const Cashbook = () => {
                 sx={fieldSx}
               />
             </Grid>
-            <Grid item xs={12} sm={6} md={3}>
+            <Grid
+              size={{
+                xs: 12,
+                sm: 6,
+                md: 3
+              }}>
               <TextField
                 fullWidth
                 label="Amount"
@@ -446,7 +476,12 @@ const Cashbook = () => {
                 }}
               />
             </Grid>
-            <Grid item xs={12} sm={6} md={3}>
+            <Grid
+              size={{
+                xs: 12,
+                sm: 6,
+                md: 3
+              }}>
               <FormControl fullWidth sx={fieldSx} disabled={!code || loadingTypes}>
                 <InputLabel>Transaction Type</InputLabel>
                 <Select
@@ -463,7 +498,13 @@ const Cashbook = () => {
                 </Select>
               </FormControl>
             </Grid>
-            <Grid item xs={12} sm={6} md={3} sx={{ display: "flex", alignItems: "stretch" }}>
+            <Grid
+              sx={{ display: "flex", alignItems: "stretch" }}
+              size={{
+                xs: 12,
+                sm: 6,
+                md: 3
+              }}>
               <Button
                 type="submit"
                 variant="contained"

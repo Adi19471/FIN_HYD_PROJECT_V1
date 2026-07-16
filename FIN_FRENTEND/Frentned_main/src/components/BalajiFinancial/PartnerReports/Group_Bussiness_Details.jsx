@@ -127,7 +127,6 @@ const GroupBusinessDetails = () => {
         onRefresh={fetchReport}
         loading={loading}
       />
-
       <ReportToolbar
         onGenerate={fetchReport}
         onRefresh={fetchReport}
@@ -137,10 +136,13 @@ const GroupBusinessDetails = () => {
         fileName="Group-Business-Details"
         zoom={zoom}
       />
-
       <Paper className="enterprise-card" elevation={0} sx={{ p: 2 }}>
         <Grid container spacing={2} alignItems="center">
-          <Grid item xs={12} md={3}>
+          <Grid
+            size={{
+              xs: 12,
+              md: 3
+            }}>
             <TextField select fullWidth size="small" label="Partner Group" value={managerId} onChange={(event) => setManagerId(event.target.value)}>
               {managerOptions.map((option) => (
                 <MenuItem key={option.value} value={option.value}>
@@ -150,30 +152,49 @@ const GroupBusinessDetails = () => {
             </TextField>
           </Grid>
 
-          <Grid item xs={12} md={2}>
+          <Grid
+            size={{
+              xs: 12,
+              md: 2
+            }}>
             <FormControlLabel control={<Checkbox checked={dateFilter} onChange={(event) => setDateFilter(event.target.checked)} />} label="Date Range" />
           </Grid>
 
-          <Grid item xs={12} md={2}>
+          <Grid
+            size={{
+              xs: 12,
+              md: 2
+            }}>
             <TextField fullWidth size="small" type="date" label="From" InputLabelProps={{ shrink: true }} disabled={!dateFilter} value={fromDate} onChange={(event) => setFromDate(event.target.value)} />
           </Grid>
 
-          <Grid item xs={12} md={2}>
+          <Grid
+            size={{
+              xs: 12,
+              md: 2
+            }}>
             <TextField fullWidth size="small" type="date" label="To" InputLabelProps={{ shrink: true }} disabled={!dateFilter} value={toDate} onChange={(event) => setToDate(event.target.value)} />
           </Grid>
 
-          <Grid item xs={12} md={2}>
+          <Grid
+            size={{
+              xs: 12,
+              md: 2
+            }}>
             <FormControlLabel control={<Checkbox checked={balancesOnly} onChange={(event) => setBalancesOnly(event.target.checked)} />} label="Balances only" />
           </Grid>
 
-          <Grid item xs={12} md={1}>
+          <Grid
+            size={{
+              xs: 12,
+              md: 1
+            }}>
             <Button fullWidth variant="contained" onClick={fetchReport} disabled={loading}>
               Generate
             </Button>
           </Grid>
         </Grid>
       </Paper>
-
       <Box ref={zoom.targetRef} sx={{ display: "flex", flexDirection: "column", gap: 2.5 }}>
         <Paper className="enterprise-card" elevation={0} sx={{ p: 2 }}>
           <ReportCompanyHeader title={`${selectedManager?.label || "Group"} - Group Business Details`} />

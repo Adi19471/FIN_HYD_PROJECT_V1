@@ -130,7 +130,7 @@ public class PersonalInfo {
 
 	@Lob
 	@Basic(fetch = FetchType.LAZY)
-	@Column(name = "PROFILE_PIC")
+	@Column(name = "PROFILE_PIC", columnDefinition = "LONGBLOB")
 	private byte[] profilePic;
 
 	public String getPersonalInfoId() {

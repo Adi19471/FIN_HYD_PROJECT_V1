@@ -128,11 +128,14 @@ const CustomerTransactions = () => {
       <Typography variant="h5" gutterBottom>
         Customer Transactions / Ledger
       </Typography>
-
       {/* Search Panel - Matching Screenshot Style */}
       <Paper sx={{ p: 3, mb: 4 }}>
         <Grid container spacing={2} alignItems="center">
-          <Grid item xs={12} sm={4}>
+          <Grid
+            size={{
+              xs: 12,
+              sm: 4
+            }}>
             <Autocomplete
               openOnFocus
               options={masterCodes}
@@ -143,7 +146,11 @@ const CustomerTransactions = () => {
             />
           </Grid>
 
-          <Grid item xs={12} sm={5}>
+          <Grid
+            size={{
+              xs: 12,
+              sm: 5
+            }}>
             <Autocomplete  sx={{width:"220px"}}
               openOnFocus
               filterOptions={(x) => x}
@@ -169,7 +176,11 @@ const CustomerTransactions = () => {
             />
           </Grid>
 
-          <Grid item xs={12} sm={3}>
+          <Grid
+            size={{
+              xs: 12,
+              sm: 3
+            }}>
             <FormControlLabel
               control={<input type="radio" checked />}
               label="All"
@@ -180,7 +191,11 @@ const CustomerTransactions = () => {
             />
           </Grid>
 
-          <Grid item xs={12} sm={3}>
+          <Grid
+            size={{
+              xs: 12,
+              sm: 3
+            }}>
             <AppDatePicker
               label="From"
               value={fromDate}
@@ -188,7 +203,11 @@ const CustomerTransactions = () => {
             />
           </Grid>
 
-          <Grid item xs={12} sm={3}>
+          <Grid
+            size={{
+              xs: 12,
+              sm: 3
+            }}>
             <AppDatePicker
               label="To"
               value={toDate}
@@ -196,7 +215,11 @@ const CustomerTransactions = () => {
             />
           </Grid>
 
-          <Grid item xs={12} sm={3}>
+          <Grid
+            size={{
+              xs: 12,
+              sm: 3
+            }}>
             <Button
               variant="contained"
               color="primary"
@@ -210,13 +233,16 @@ const CustomerTransactions = () => {
           </Grid>
 
           {transactions.length > 0 && (
-            <Grid item xs={12} sm={3}>
+            <Grid
+              size={{
+                xs: 12,
+                sm: 3
+              }}>
               <TableExportMenu rows={transactions} columns={exportColumns} fileName="Customer_Transactions" />
             </Grid>
           )}
         </Grid>
       </Paper>
-
       {/* Printable Ledger Area */}
       {transactions.length > 0 && (
         <Paper ref={printRef} sx={{ p: 4, backgroundColor: "white" }}>
@@ -296,7 +322,6 @@ const CustomerTransactions = () => {
           </Typography>
         </Paper>
       )}
-
       {transactions.length === 0 && !loading && selectedCustomer && (
         <Paper sx={{ p: 4, textAlign: "center" }}>
           <Typography>No transactions found for the selected criteria.</Typography>

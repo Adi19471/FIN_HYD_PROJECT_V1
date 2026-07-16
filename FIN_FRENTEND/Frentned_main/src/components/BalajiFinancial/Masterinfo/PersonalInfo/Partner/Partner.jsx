@@ -30,6 +30,7 @@ import { FiUserPlus, FiSearch, FiCopy, FiSave, FiEdit, FiXCircle, FiEye, FiUser,
 import { successToast, errorToast } from "toastify";
 import { API_BASE } from "lib/config";
 import LoadingSpinner from "src/LoadingSpinner";
+import { ProfilePhotoBox } from "src/components/ui";
 
 /* ─── Constants ─────────────────────────────────────────────── */
 const TYPE_LABELS = {
@@ -484,7 +485,6 @@ const Partner = ({ personType = "CUSTOMER" }) => {
 
   return (
     <Box sx={{ mt: 2 }}>
-
       {/* ── Header bar ── */}
       <Paper
         elevation={0}
@@ -535,7 +535,6 @@ const Partner = ({ personType = "CUSTOMER" }) => {
           </Button>
         </Box>
       </Paper>
-
       {/* ── Data Grid ── */}
       {loading && rows.length === 0 ? (
         <Box>
@@ -550,6 +549,8 @@ const Partner = ({ personType = "CUSTOMER" }) => {
             columns={columns}
             getRowId={(r) => r.id}
             loading={loading}
+            autosizeOnMount
+            autosizeOptions={{ includeHeaders: true, includeOutliers: true, expand: true }}
             rowHeight={52}
             pagination
             paginationModel={paginationModel}
@@ -558,6 +559,7 @@ const Partner = ({ personType = "CUSTOMER" }) => {
             slots={{ toolbar: GridToolbar }}
             sx={{
               border: "none",
+              "& .MuiDataGrid-virtualScroller": { overflowAnchor: "none" },
               "& .MuiDataGrid-columnHeaders": { bgcolor: "grey.50", fontWeight: 700 },
               "& .MuiDataGrid-row:hover": { bgcolor: "primary.50" },
               "& .MuiDataGrid-cell:focus": { outline: "none" },
@@ -566,7 +568,6 @@ const Partner = ({ personType = "CUSTOMER" }) => {
           />
         </Paper>
       )}
-
       {/* ── ADD / EDIT MODAL ── */}
       <Dialog
         open={modalOpen}
@@ -580,7 +581,7 @@ const Partner = ({ personType = "CUSTOMER" }) => {
           <Typography variant="h6" fontWeight={700}>
             {isEdit ? `Edit ${label}` : `Add New ${label}`}
           </Typography>
-          {isEdit && (
+          {form.id && (
             <Typography variant="body2" color="text.secondary">
               ID: {form.id}
             </Typography>
@@ -589,32 +590,51 @@ const Partner = ({ personType = "CUSTOMER" }) => {
 
         <DialogContent dividers sx={{ px: 3, py: 2.5 }}>
 
-          {/* ID row (edit only) */}
-          {isEdit && (
+          {/* ID row + photo */}
+          {form.id && (
             <Paper variant="outlined" sx={{ p: 1.5, mb: 3, borderRadius: 1.5, bgcolor: "grey.50" }}>
-              <TextField
-                fullWidth size="small" label="Record ID"
-                value={form.id} disabled
-                InputProps={{
-                  endAdornment: (
-                    <InputAdornment position="end">
-                      <Tooltip title="Copy ID">
-                        <IconButton size="small" onClick={copyId}>
-                          <FiCopy size={14} />
-                        </IconButton>
-                      </Tooltip>
-                    </InputAdornment>
-                  ),
-                }}
-              />
+              <Box sx={{ display: "flex", gap: 2, alignItems: "center" }}>
+                <ProfilePhotoBox
+                  personalInfoId={form.id}
+                  editable
+                  width={72}
+                  height={80}
+                  disabledHint="Photo unavailable"
+                />
+                <TextField
+                  fullWidth size="small" label="Record ID"
+                  value={form.id} disabled
+                  InputProps={{
+                    endAdornment: (
+                      <InputAdornment position="end">
+                        <Tooltip title="Copy ID">
+                          <IconButton size="small" onClick={copyId}>
+                            <FiCopy size={14} />
+                          </IconButton>
+                        </Tooltip>
+                      </InputAdornment>
+                    ),
+                  }}
+                />
+              </Box>
             </Paper>
+          )}
+          {!isEdit && (
+            <Typography variant="caption" color="text.secondary" sx={{ display: "block", mb: 2 }}>
+              Photo upload is available after saving — save this record, then Edit it to add a photo.
+            </Typography>
           )}
 
           {/* ── Section: Personal ── */}
           <SectionTitle icon={FiUser} label="Personal Information" />
           <Grid container spacing={2} sx={{ mb: 3 }}>
 
-            <Grid item xs={12} sm={6} md={4}>
+            <Grid
+              size={{
+                xs: 12,
+                sm: 6,
+                md: 4
+              }}>
               <TextField
                 fullWidth required size="small" label="First Name"
                 value={form.firstname}
@@ -623,7 +643,12 @@ const Partner = ({ personType = "CUSTOMER" }) => {
               />
             </Grid>
 
-            <Grid item xs={12} sm={6} md={4}>
+            <Grid
+              size={{
+                xs: 12,
+                sm: 6,
+                md: 4
+              }}>
               <TextField
                 fullWidth size="small" label="Last Name"
                 value={form.lastname}
@@ -631,7 +656,12 @@ const Partner = ({ personType = "CUSTOMER" }) => {
               />
             </Grid>
 
-            <Grid item xs={12} sm={6} md={4}>
+            <Grid
+              size={{
+                xs: 12,
+                sm: 6,
+                md: 4
+              }}>
               <TextField
                 fullWidth size="small" label="Father's Name"
                 value={form.fathername}
@@ -639,7 +669,12 @@ const Partner = ({ personType = "CUSTOMER" }) => {
               />
             </Grid>
 
-            <Grid item xs={12} sm={6} md={4}>
+            <Grid
+              size={{
+                xs: 12,
+                sm: 6,
+                md: 4
+              }}>
               <TextField
                 fullWidth size="small" label="Spouse Name"
                 value={form.spouse}
@@ -647,7 +682,12 @@ const Partner = ({ personType = "CUSTOMER" }) => {
               />
             </Grid>
 
-            <Grid item xs={12} sm={6} md={4}>
+            <Grid
+              size={{
+                xs: 12,
+                sm: 6,
+                md: 4
+              }}>
               <TextField
                 select fullWidth size="small" label="Gender"
                 value={form.gender}
@@ -657,7 +697,12 @@ const Partner = ({ personType = "CUSTOMER" }) => {
               </TextField>
             </Grid>
 
-            <Grid item xs={12} sm={6} md={4}>
+            <Grid
+              size={{
+                xs: 12,
+                sm: 6,
+                md: 4
+              }}>
               <TextField
                 fullWidth size="small" label="Age" type="number"
                 value={form.age}
@@ -666,7 +711,12 @@ const Partner = ({ personType = "CUSTOMER" }) => {
               />
             </Grid>
 
-            <Grid item xs={12} sm={6} md={4}>
+            <Grid
+              size={{
+                xs: 12,
+                sm: 6,
+                md: 4
+              }}>
               <TextField
                 fullWidth size="small" label="Occupation"
                 value={form.occupation}
@@ -679,7 +729,7 @@ const Partner = ({ personType = "CUSTOMER" }) => {
           {/* ── Section: Manager ── */}
           <SectionTitle icon={FiUsers} label="Manager Assignment" />
           <Grid container spacing={2} sx={{ mb: 3 }}>
-            <Grid item xs={12}>
+            <Grid size={12}>
               <Autocomplete
                 openOnFocus
                 options={managerOptions}
@@ -751,7 +801,7 @@ const Partner = ({ personType = "CUSTOMER" }) => {
 
             {/* Show selected manager chip */}
             {managerValue && (
-              <Grid item xs={12}>
+              <Grid size={12}>
                 <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
                   <Typography variant="caption" color="text.secondary">Selected:</Typography>
                   <Chip
@@ -775,7 +825,11 @@ const Partner = ({ personType = "CUSTOMER" }) => {
           <SectionTitle icon={FiShield} label="Identification" />
           <Grid container spacing={2} sx={{ mb: 3 }}>
 
-            <Grid item xs={12} sm={6}>
+            <Grid
+              size={{
+                xs: 12,
+                sm: 6
+              }}>
               <TextField
                 select fullWidth size="small" label="ID Proof Type"
                 value={form.idprooftype}
@@ -786,7 +840,11 @@ const Partner = ({ personType = "CUSTOMER" }) => {
               </TextField>
             </Grid>
 
-            <Grid item xs={12} sm={6}>
+            <Grid
+              size={{
+                xs: 12,
+                sm: 6
+              }}>
               <TextField
                 fullWidth size="small" label="ID Number"
                 value={form.idproof}
@@ -800,7 +858,12 @@ const Partner = ({ personType = "CUSTOMER" }) => {
           <SectionTitle icon={FiPhone} label="Contact Information" />
           <Grid container spacing={2} sx={{ mb: 3 }}>
 
-            <Grid item xs={12} sm={6} md={4}>
+            <Grid
+              size={{
+                xs: 12,
+                sm: 6,
+                md: 4
+              }}>
               <TextField
                 fullWidth size="small" label="Mobile No" required
                 value={form.mobile}
@@ -810,7 +873,12 @@ const Partner = ({ personType = "CUSTOMER" }) => {
               />
             </Grid>
 
-            <Grid item xs={12} sm={6} md={4}>
+            <Grid
+              size={{
+                xs: 12,
+                sm: 6,
+                md: 4
+              }}>
               <TextField
                 fullWidth size="small" label="Mobile No 2"
                 value={form.mobile2}
@@ -819,7 +887,12 @@ const Partner = ({ personType = "CUSTOMER" }) => {
               />
             </Grid>
 
-            <Grid item xs={12} sm={6} md={4}>
+            <Grid
+              size={{
+                xs: 12,
+                sm: 6,
+                md: 4
+              }}>
               <TextField
                 fullWidth size="small" label="Office Phone"
                 value={form.phone}
@@ -828,7 +901,11 @@ const Partner = ({ personType = "CUSTOMER" }) => {
               />
             </Grid>
 
-            <Grid item xs={12} sm={6}>
+            <Grid
+              size={{
+                xs: 12,
+                sm: 6
+              }}>
               <TextField
                 fullWidth multiline rows={2} size="small" label="Residential Address"
                 value={form.address}
@@ -836,7 +913,11 @@ const Partner = ({ personType = "CUSTOMER" }) => {
               />
             </Grid>
 
-            <Grid item xs={12} sm={6}>
+            <Grid
+              size={{
+                xs: 12,
+                sm: 6
+              }}>
               <TextField
                 fullWidth multiline rows={2} size="small" label="Office Address"
                 value={form.address2}
@@ -849,7 +930,11 @@ const Partner = ({ personType = "CUSTOMER" }) => {
           {/* ── Section: Other ── */}
           <SectionTitle icon={FiMapPin} label="Other Details" />
           <Grid container spacing={2}>
-            <Grid item xs={12} sm={6}>
+            <Grid
+              size={{
+                xs: 12,
+                sm: 6
+              }}>
               <TextField
                 fullWidth size="small" label="Reference"
                 value={form.reference}
@@ -881,7 +966,6 @@ const Partner = ({ personType = "CUSTOMER" }) => {
           </Button>
         </DialogActions>
       </Dialog>
-
       {/* ── VIEW MODAL ── */}
       <Dialog
         open={viewModalOpen}
@@ -894,15 +978,12 @@ const Partner = ({ personType = "CUSTOMER" }) => {
           <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
             <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
               {selectedRecord && (
-                <Avatar
-                  sx={{
-                    width: 48, height: 48,
-                    bgcolor: avatarColor(selectedRecord.id),
-                    fontSize: "1rem", fontWeight: 700,
-                  }}
-                >
-                  {getInitials(selectedRecord)}
-                </Avatar>
+                <ProfilePhotoBox
+                  personalInfoId={selectedRecord.id}
+                  editable={false}
+                  width={56}
+                  height={56}
+                />
               )}
               <Box>
                 <Typography variant="h6" fontWeight={700}>
@@ -927,32 +1008,72 @@ const Partner = ({ personType = "CUSTOMER" }) => {
             <Grid container spacing={3}>
 
               {/* Personal */}
-              <Grid item xs={12}>
+              <Grid size={12}>
                 <SectionTitle icon={FiUser} label="Personal Information" />
               </Grid>
-              <Grid item xs={6} sm={4}><ViewField label="Father's Name" value={selectedRecord.fathername} /></Grid>
-              <Grid item xs={6} sm={4}><ViewField label="Spouse Name" value={selectedRecord.spouse} /></Grid>
-              <Grid item xs={6} sm={4}><ViewField label="Gender" value={selectedRecord.gender} /></Grid>
-              <Grid item xs={6} sm={4}><ViewField label="Age" value={selectedRecord.age} /></Grid>
-              <Grid item xs={6} sm={4}><ViewField label="Occupation" value={selectedRecord.occupation} /></Grid>
+              <Grid
+                size={{
+                  xs: 6,
+                  sm: 4
+                }}><ViewField label="Father's Name" value={selectedRecord.fathername} /></Grid>
+              <Grid
+                size={{
+                  xs: 6,
+                  sm: 4
+                }}><ViewField label="Spouse Name" value={selectedRecord.spouse} /></Grid>
+              <Grid
+                size={{
+                  xs: 6,
+                  sm: 4
+                }}><ViewField label="Gender" value={selectedRecord.gender} /></Grid>
+              <Grid
+                size={{
+                  xs: 6,
+                  sm: 4
+                }}><ViewField label="Age" value={selectedRecord.age} /></Grid>
+              <Grid
+                size={{
+                  xs: 6,
+                  sm: 4
+                }}><ViewField label="Occupation" value={selectedRecord.occupation} /></Grid>
 
               {/* Identification */}
-              <Grid item xs={12}><Divider /><Box sx={{ mt: 2 }}><SectionTitle icon={FiShield} label="Identification" /></Box></Grid>
-              <Grid item xs={6}><ViewField label="ID Proof Type" value={selectedRecord.idprooftype} /></Grid>
-              <Grid item xs={6}><ViewField label="ID Number" value={selectedRecord.idproof} /></Grid>
+              <Grid size={12}><Divider /><Box sx={{ mt: 2 }}><SectionTitle icon={FiShield} label="Identification" /></Box></Grid>
+              <Grid size={6}><ViewField label="ID Proof Type" value={selectedRecord.idprooftype} /></Grid>
+              <Grid size={6}><ViewField label="ID Number" value={selectedRecord.idproof} /></Grid>
 
               {/* Contact */}
-              <Grid item xs={12}><Divider /><Box sx={{ mt: 2 }}><SectionTitle icon={FiPhone} label="Contact Information" /></Box></Grid>
-              <Grid item xs={6} sm={4}><ViewField label="Mobile No" value={selectedRecord.mobile} /></Grid>
-              <Grid item xs={6} sm={4}><ViewField label="Mobile No 2" value={selectedRecord.mobile2} /></Grid>
-              <Grid item xs={6} sm={4}><ViewField label="Office Phone" value={selectedRecord.phone} /></Grid>
-              <Grid item xs={12} sm={6}><ViewField label="Residential Address" value={selectedRecord.address} /></Grid>
-              <Grid item xs={12} sm={6}><ViewField label="Office Address" value={selectedRecord.address2} /></Grid>
+              <Grid size={12}><Divider /><Box sx={{ mt: 2 }}><SectionTitle icon={FiPhone} label="Contact Information" /></Box></Grid>
+              <Grid
+                size={{
+                  xs: 6,
+                  sm: 4
+                }}><ViewField label="Mobile No" value={selectedRecord.mobile} /></Grid>
+              <Grid
+                size={{
+                  xs: 6,
+                  sm: 4
+                }}><ViewField label="Mobile No 2" value={selectedRecord.mobile2} /></Grid>
+              <Grid
+                size={{
+                  xs: 6,
+                  sm: 4
+                }}><ViewField label="Office Phone" value={selectedRecord.phone} /></Grid>
+              <Grid
+                size={{
+                  xs: 12,
+                  sm: 6
+                }}><ViewField label="Residential Address" value={selectedRecord.address} /></Grid>
+              <Grid
+                size={{
+                  xs: 12,
+                  sm: 6
+                }}><ViewField label="Office Address" value={selectedRecord.address2} /></Grid>
 
               {/* Other */}
-              <Grid item xs={12}><Divider /><Box sx={{ mt: 2 }}><SectionTitle icon={FiMapPin} label="Other Details" /></Box></Grid>
-              <Grid item xs={6}><ViewField label="Reference" value={selectedRecord.reference} /></Grid>
-              <Grid item xs={6}>
+              <Grid size={12}><Divider /><Box sx={{ mt: 2 }}><SectionTitle icon={FiMapPin} label="Other Details" /></Box></Grid>
+              <Grid size={6}><ViewField label="Reference" value={selectedRecord.reference} /></Grid>
+              <Grid size={6}>
                 <Typography sx={STYLES.fieldLabel}>Manager</Typography>
                 {selectedRecord.personalInfoManagerId ? (
                   <Chip

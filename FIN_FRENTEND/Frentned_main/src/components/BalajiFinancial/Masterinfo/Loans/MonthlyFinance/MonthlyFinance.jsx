@@ -32,7 +32,8 @@ import {
   RestartAltRounded,
 } from "@mui/icons-material";
 import dayjs from "dayjs";
-import { AppDatePicker, TableExportMenu } from "src/components/ui";
+import { AppDatePicker, TableExportMenu, ProfilePhotoBox } from "src/components/ui";
+import LoanDetailsDialog from "../LoanDetailsDialog";
 
 
 const FIXED_DURATION_MONTHS = 10;
@@ -48,6 +49,15 @@ const MonthlyFinance = () => {
   const [paginationModel, setPaginationModel] = useState({ page: 0, pageSize: 10 });
   const [globalSearch, setGlobalSearch] = useState("");
   const [showColumnFilters, setShowColumnFilters] = useState(false);
+  const [viewOpen, setViewOpen] = useState(false);
+  const [viewAccountNo, setViewAccountNo] = useState(null);
+  const [viewCustomerId, setViewCustomerId] = useState(null);
+
+  const handleViewLoan = (row) => {
+    setViewAccountNo(row.id);
+    setViewCustomerId(row.customerId);
+    setViewOpen(true);
+  };
 
 
   const [filters, setFilters] = useState({
@@ -207,6 +217,7 @@ const MonthlyFinance = () => {
 
       const enriched = loans.map((loan) => ({
         id: loan.id || "N/A",
+        customerId: loan.customerId ?? null,
         customerName: memberMap[loan.customerId] || `ID: ${loan.customerId || "N/A"}`,
         amount: loan.amount || 0,
         interestRate: loan.interestRate || 0,
@@ -564,6 +575,20 @@ const MonthlyFinance = () => {
       field: "id",
       width: 170,
       renderHeader: () => getHeader("Acc No", "id"),
+      renderCell: (params) => (
+        <Box
+          component="span"
+          onClick={() => handleViewLoan(params.row)}
+          sx={{
+            color: "primary.main",
+            fontWeight: 700,
+            cursor: "pointer",
+            textDecoration: "underline",
+          }}
+        >
+          {params.value}
+        </Box>
+      ),
     },
     {
       field: "customerName",
@@ -703,6 +728,8 @@ const MonthlyFinance = () => {
               columns={columns}
               loading={loading}
               getRowId={(r) => r.id}
+              autosizeOnMount
+              autosizeOptions={{ includeHeaders: true, includeOutliers: true, expand: true }}
               pageSizeOptions={[10, 25, 50, 100]}
               paginationModel={paginationModel}
               onPaginationModelChange={setPaginationModel}
@@ -731,7 +758,6 @@ const MonthlyFinance = () => {
           </Box>
         )}
       </Box>
-
       {/* MODAL DIALOG */}
       <Dialog
         open={open}
@@ -762,7 +788,26 @@ const MonthlyFinance = () => {
 
           {/* Customer & Dates */}
           <Grid container spacing={3} sx={{ mt: 1 }}>
-            <Grid item xs={12} md={6} sm={4}>
+            <Grid
+              sx={{ display: "flex", justifyContent: { xs: "flex-start", sm: "center" } }}
+              size={{
+                xs: 12,
+                sm: 2
+              }}>
+              <ProfilePhotoBox
+                personalInfoId={formData.customerId?.id}
+                editable
+                width={90}
+                height={100}
+              />
+            </Grid>
+
+            <Grid
+              size={{
+                xs: 12,
+                md: 6,
+                sm: 4
+              }}>
               <Autocomplete
                 sx={{ width: "100%", minWidth: { md: 320 } }}
                 openOnFocus
@@ -787,7 +832,11 @@ const MonthlyFinance = () => {
               />
             </Grid>
 
-            <Grid item xs={12} md={6}>
+            <Grid
+              size={{
+                xs: 12,
+                md: 6
+              }}>
               <AppDatePicker
                 label="Loan Date *"
                 value={formData.startDate}
@@ -796,7 +845,11 @@ const MonthlyFinance = () => {
               />
             </Grid>
 
-            <Grid item xs={12} md={6}>
+            <Grid
+              size={{
+                xs: 12,
+                md: 6
+              }}>
               <AppDatePicker
                 label="Maturity Date"
                 value={formData.endDate}
@@ -818,7 +871,11 @@ const MonthlyFinance = () => {
           <Grid container spacing={3} sx={{ mt: 1 }}>
 
 
-            <Grid item xs={12} sm={6}>
+            <Grid
+              size={{
+                xs: 12,
+                sm: 6
+              }}>
               <TextField
                 fullWidth
                 label="Loan Amount *"
@@ -843,7 +900,11 @@ const MonthlyFinance = () => {
             </Grid>
 
 
-            <Grid item xs={12} sm={6}>
+            <Grid
+              size={{
+                xs: 12,
+                sm: 6
+              }}>
               <TextField
                 fullWidth
                 label="Interest %"
@@ -859,7 +920,11 @@ const MonthlyFinance = () => {
                 }
               />
             </Grid>
-            <Grid item xs={12} sm={6}>
+            <Grid
+              size={{
+                xs: 12,
+                sm: 6
+              }}>
               <TextField
                 fullWidth
                 label="Interest Amount"
@@ -877,7 +942,11 @@ const MonthlyFinance = () => {
                 }}
               />
             </Grid>
-            <Grid item xs={12} sm={6}>
+            <Grid
+              size={{
+                xs: 12,
+                sm: 6
+              }}>
               <TextField
                 fullWidth
                 label="Monthly EMI"
@@ -890,7 +959,11 @@ const MonthlyFinance = () => {
                 variant="outlined"
               />
             </Grid>
-            <Grid item xs={12} sm={6}>
+            <Grid
+              size={{
+                xs: 12,
+                sm: 6
+              }}>
               <TextField
                 fullWidth
                 label="Duration"
@@ -902,7 +975,11 @@ const MonthlyFinance = () => {
                 }
               />
             </Grid>
-            <Grid item xs={12} sm={6}>
+            <Grid
+              size={{
+                xs: 12,
+                sm: 6
+              }}>
               <TextField
                 fullWidth
                 label="Processing Fee"
@@ -927,7 +1004,11 @@ const MonthlyFinance = () => {
               />
             </Grid>
 
-            <Grid item xs={12} sm={6}>
+            <Grid
+              size={{
+                xs: 12,
+                sm: 6
+              }}>
               <TextField
                 fullWidth
                 label="Security / Remarks"
@@ -950,9 +1031,13 @@ const MonthlyFinance = () => {
 
           <Grid container spacing={3} sx={{ mt: 1 }}>
             {["guarantor1", "guarantor2", "guarantor3"].map((field, i) => (
-              <Grid item xs={12} key={field}>
+              <Grid key={field} size={12}>
                 <Grid container>
-                  <Grid item xs={12} sm={6}>
+                  <Grid
+                    size={{
+                      xs: 12,
+                      sm: 6
+                    }}>
                     <Autocomplete
                       fullWidth
                       sx={{ width: "100%", minWidth: { sm: 320 } }}
@@ -983,7 +1068,11 @@ const MonthlyFinance = () => {
 
           {/* PARTNER */}
           <Grid container spacing={2} sx={{ mt: 1 }}>
-            <Grid item xs={12} md={6}>
+            <Grid
+              size={{
+                xs: 12,
+                md: 6
+              }}>
               <Autocomplete
                 fullWidth
                 sx={{ width: "100%", minWidth: { md: 320 } }}
@@ -1026,6 +1115,13 @@ const MonthlyFinance = () => {
           </Button>
         </DialogActions>
       </Dialog>
+      <LoanDetailsDialog
+        open={viewOpen}
+        onClose={() => setViewOpen(false)}
+        accountNo={viewAccountNo}
+        personalInfoId={viewCustomerId}
+        loadEndpoint="loadMFLoanInformation"
+      />
     </>
   );
 };
