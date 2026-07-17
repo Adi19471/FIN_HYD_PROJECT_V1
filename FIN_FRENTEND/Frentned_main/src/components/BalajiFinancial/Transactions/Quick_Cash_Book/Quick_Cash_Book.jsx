@@ -48,6 +48,14 @@ const formatNumber = (value) => {
 
 const parseNumber = (value) => String(value || "").replace(/,/g, "");
 
+// Default account prefix for a brand-new row, e.g. "MF2026-" (current year).
+// Fully editable - typing over it (e.g. "MF2025-") works since it's just a starting value.
+const defaultAccountPrefix = () => `MF${dayjs().format("YYYY")}-`;
+
+// A row whose account field still holds only the untouched default prefix (no digits
+// typed after it) isn't a real entry yet - keep it out of records/save counts.
+const isBareAccountPrefix = (value) => /^[A-Za-z]+\d{4}-$/.test((value || "").trim());
+
 // Show alert messages as toastify toasts based on severity
 const notify = ({ text, severity = "info" }) => {
   const toastBySeverity = {
@@ -61,7 +69,7 @@ const notify = ({ text, severity = "info" }) => {
 
 const QuickCashBook = () => {
   const [transactionDate, setTransactionDate] = useState(dayjs());
-  const [rows, setRows] = useState([blankRow()]);
+  const [rows, setRows] = useState([blankRow(defaultAccountPrefix())]);
   const [accountSuggestions, setAccountSuggestions] = useState([]);
   const [loading, setLoading] = useState(false);
   const [fetchingAccount, setFetchingAccount] = useState(null);
@@ -76,16 +84,28 @@ const QuickCashBook = () => {
   };
 
   const focusField = (rowId, field) => {
-    inputRefs.current[rowId]?.[field]?.focus();
+    const element = inputRefs.current[rowId]?.[field];
+    if (!element) return;
+    element.focus();
+    if (typeof element.setSelectionRange === "function") {
+      const length = element.value?.length ?? 0;
+      element.setSelectionRange(length, length);
+    }
   };
 
-  const filledRows = useMemo(() => rows.filter((row) => row.accountNo?.trim()), [rows]);
+  const filledRows = useMemo(
+    () => rows.filter((row) => {
+      const value = row.accountNo?.trim();
+      return value && !isBareAccountPrefix(value);
+    }),
+    [rows]
+  );
   const usedAccounts = useMemo(() => new Set(filledRows.map((row) => row.accountNo.trim())), [filledRows]);
   const totalCollected = useMemo(() => rows.reduce((sum, row) => sum + Number(row.paidAmount || 0), 0), [rows]);
   const totalLateFeeCollected = useMemo(() => rows.reduce((sum, row) => sum + Number(row.paidLateFee || 0), 0), [rows]);
 
   useEffect(() => {
-    if (rows.length === 0) setRows([blankRow()]);
+    if (rows.length === 0) setRows([blankRow(defaultAccountPrefix())]);
   }, [rows.length]);
 
   const addNewRowWithPrefix = (basePrefix = "") => {
@@ -104,7 +124,7 @@ const QuickCashBook = () => {
   };
 
   const deleteRow = (rowId) => {
-    setRows((prev) => (prev.length === 1 ? [blankRow()] : prev.filter((row) => row.id !== rowId)));
+    setRows((prev) => (prev.length === 1 ? [blankRow(defaultAccountPrefix())] : prev.filter((row) => row.id !== rowId)));
   };
 
   const fetchSuggestions = useCallback(
@@ -174,7 +194,7 @@ const QuickCashBook = () => {
 
   const handleAccountCommit = (rowId, value) => {
     const finalValue = value?.trim();
-    if (!finalValue) return;
+    if (!finalValue || isBareAccountPrefix(finalValue)) return;
     updateRow(rowId, "accountNo", finalValue);
     return fetchAccountRecord(finalValue, rowId);
   };
@@ -212,7 +232,7 @@ const QuickCashBook = () => {
 
       successToast("Saved successfully");
       notify({ text: `${payableRows.length} quick cash rows saved successfully.`, severity: "success" });
-      setRows([blankRow()]);
+      setRows([blankRow(defaultAccountPrefix())]);
     } catch (error) {
       const responseData = error.response?.data;
       const message =
@@ -510,7 +530,7 @@ const QuickCashBook = () => {
 
         {/* Footer */}
         <Stack direction="row" spacing={2} alignItems="center" flexWrap="wrap" useFlexGap>
-          <Button variant="outlined" startIcon={<Add />} onClick={() => addNewRowWithPrefix("")}>
+          <Button variant="outlined" startIcon={<Add />} onClick={() => addNewRowWithPrefix(defaultAccountPrefix())}>
             Add New Row
           </Button>
           <Typography fontWeight={900}>

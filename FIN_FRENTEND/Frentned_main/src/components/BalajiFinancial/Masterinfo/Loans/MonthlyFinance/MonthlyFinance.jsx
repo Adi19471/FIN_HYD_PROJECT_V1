@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useCallback } from "react";
+import React, { useEffect, useState, useCallback, useRef } from "react";
 import { DataGrid } from '@mui/x-data-grid';
 import axios from "axios";
 import { successToast, errorToast } from "toastify";
@@ -294,7 +294,7 @@ const MonthlyFinance = () => {
       processingFee
     }));
 
-  }, [formData.amount, formData.interestRate]);
+  }, [formData.amount, formData.interestRate, formData.duration]);
 
 
 
@@ -362,6 +362,17 @@ const MonthlyFinance = () => {
     },
     [headers]
   );
+
+  // Debounce search-as-you-type so every keystroke doesn't fire a backend call.
+  const searchDebounceRef = useRef(null);
+  const debouncedSearchMembers = (query) => {
+    clearTimeout(searchDebounceRef.current);
+    searchDebounceRef.current = setTimeout(() => searchMembers(query), 350);
+  };
+  const debouncedSearchPartners = (query) => {
+    clearTimeout(searchDebounceRef.current);
+    searchDebounceRef.current = setTimeout(() => searchPartners(query), 350);
+  };
 
 
 
@@ -819,7 +830,7 @@ const MonthlyFinance = () => {
                 onChange={(e, v) =>
                   setFormData((p) => ({ ...p, customerId: v }))
                 }
-                onInputChange={(e, v) => searchMembers(v || "")}
+                onInputChange={(e, v) => debouncedSearchMembers(v || "")}
                 getOptionLabel={(o) => o?.label || ""}
                 renderInput={(params) => (
                   <TextField
@@ -1050,7 +1061,7 @@ const MonthlyFinance = () => {
                       onChange={(e, v) =>
                         setFormData((p) => ({ ...p, [field]: v }))
                       }
-                      onInputChange={(e, v) => searchMembers(v || "")}
+                      onInputChange={(e, v) => debouncedSearchMembers(v || "")}
                       getOptionLabel={(o) => o?.label || ""}
                       renderInput={(params) => (
                         <TextField
@@ -1082,7 +1093,7 @@ const MonthlyFinance = () => {
                 loading={loadingSearch}
                 value={formData.partnerId}
                 onOpen={() => searchPartners("")}
-                onInputChange={(e, v) => searchPartners(v)}
+                onInputChange={(e, v) => debouncedSearchPartners(v)}
                 onChange={(e, v) =>
                   setFormData((p) => ({ ...p, partnerId: v }))
                 }

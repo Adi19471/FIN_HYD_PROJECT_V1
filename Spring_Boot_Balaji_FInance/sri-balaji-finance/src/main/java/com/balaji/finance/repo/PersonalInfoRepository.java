@@ -20,7 +20,7 @@ public interface PersonalInfoRepository extends JpaRepository<PersonalInfo, Stri
 	@Query("SELECT u FROM PersonalInfo u WHERE u.personalInfoId IN :personalInfoIds order by u.sequence")
 	public List<PersonalInfo> findByIds(@Param("personalInfoIds") List<String> personalInfoIds);
 
-	@Query("SELECT u FROM PersonalInfo u WHERE u.disable =:status order by u.sequence")
+	@Query("SELECT u FROM PersonalInfo u LEFT JOIN FETCH u.personalInfoManager WHERE u.disable =:status order by u.sequence")
 	public List<PersonalInfo> findAllActiveRecords(@Param("status") boolean status);
 
 	@Query("""

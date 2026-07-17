@@ -32,10 +32,33 @@ const getDebitAmount = (row) => Number(row.debit || row.debitAmount || 0);
 const getCustomerName = (row) =>
   row.customerName || row.name || row.accountName || row.firstname || row.accountNumber || "Customer";
 
+// accountMastercode on each cash book row tells us exactly what kind of entry it is -
+// use it to label Daily/Monthly Finance payments clearly instead of a generic "paid".
+const PAYMENT_LABELS = {
+  "DF LOAN INSTALLMENT": "Daily Finance installment",
+  "DF LATE FEE": "Daily Finance late fee",
+  "MF LOAN INSTALLMENT": "Monthly Finance installment",
+  "MF INTEREST": "Monthly Finance interest",
+  "MF LATE FEE": "Monthly Finance late fee",
+};
+const getPaymentLabel = (row) => {
+  const code = (row.accountMastercode || row.accountMasterCode || "").toUpperCase();
+  return PAYMENT_LABELS[code] || null;
+};
+
 const timeLabel = (date) => {
   if (!date) return "Today";
   const parsed = dayjs(date);
   return parsed.isValid() ? parsed.format("DD-MMM hh:mm A") : "Today";
+};
+
+// AuthContext already tracks lastActivity (mouse/keyboard/scroll/touch) for its
+// inactivity-logout timer - reuse it so polling pauses when the user has genuinely
+// stepped away, not just when the tab is backgrounded.
+const IDLE_THRESHOLD_MS = 5 * 60 * 1000;
+const isUserIdle = () => {
+  const lastActivity = parseInt(getSession("lastActivity") || "0", 10);
+  return Date.now() - lastActivity > IDLE_THRESHOLD_MS;
 };
 
 export default function DropdownNotifications() {
@@ -71,22 +94,32 @@ export default function DropdownNotifications() {
         : [];
       const loanRows = loansRes.status === "fulfilled" && Array.isArray(loansRes.value.data) ? loansRes.value.data : [];
 
-      const paymentNotifications = dailyRows
-        .filter((row) => getPaidAmount(row) > 0 || getDebitAmount(row) > 0)
-        .slice(0, 6)
-        .map((row, index) => {
-          const paidAmount = getPaidAmount(row);
-          const debitAmount = getDebitAmount(row);
-          const amount = paidAmount || debitAmount;
+      const relevantDailyRows = dailyRows.filter((row) => getPaidAmount(row) > 0 || getDebitAmount(row) > 0);
 
-          return {
-            id: `payment-${row.transactionId || index}`,
-            icon: MonetizationOnIcon,
-            color: paidAmount ? "success" : "warning",
-            primary: `${getCustomerName(row)} ${paidAmount ? "paid" : "debited"} ${formatINR(amount)}`,
-            secondary: `${row.transactionType || row.accountMastercode || "Daily Book"} • ${timeLabel(row.transactionDate || row.date)}`,
-          };
-        });
+      // Daily/Monthly Finance loan payments first (what this notification is mainly for),
+      // then any other cash book activity (capital, expenses, etc.) after.
+      const loanPaymentRows = relevantDailyRows.filter((row) => getPaymentLabel(row));
+      const otherCashBookRows = relevantDailyRows.filter((row) => !getPaymentLabel(row));
+
+      const buildPaymentNotification = (row, index) => {
+        const paidAmount = getPaidAmount(row);
+        const debitAmount = getDebitAmount(row);
+        const amount = paidAmount || debitAmount;
+        const label = getPaymentLabel(row);
+
+        return {
+          id: `payment-${row.transactionId || index}`,
+          icon: MonetizationOnIcon,
+          color: paidAmount ? "success" : "warning",
+          primary: `${getCustomerName(row)} ${paidAmount ? "paid" : "debited"} ${formatINR(amount)}`,
+          secondary: `${label || row.transactionType || row.accountMastercode || "Daily Book"} • ${timeLabel(row.transactionDate || row.date)}`,
+        };
+      };
+
+      const paymentNotifications = [
+        ...loanPaymentRows.slice(0, 8).map(buildPaymentNotification),
+        ...otherCashBookRows.slice(0, 4).map(buildPaymentNotification),
+      ];
 
       const loanNotifications = loanRows.slice(0, 6).map((row, index) => ({
         id: `loan-${row.loanId || index}`,
@@ -96,7 +129,7 @@ export default function DropdownNotifications() {
         secondary: `${row.loanId || "New loan"} • ${timeLabel(row.startDate || row.createdDate)}`,
       }));
 
-      setNotifications([...loanNotifications, ...paymentNotifications].slice(0, 10));
+      setNotifications([...paymentNotifications, ...loanNotifications].slice(0, 12));
     } catch {
       setNotifications([]);
     } finally {
@@ -106,8 +139,19 @@ export default function DropdownNotifications() {
 
   useEffect(() => {
     fetchNotifications();
-    const refreshTimer = window.setInterval(fetchNotifications, 30000);
-    return () => window.clearInterval(refreshTimer);
+    // Skip polling while this tab is backgrounded or the user has been idle for a
+    // while - avoids piling up backend calls from tabs left open and untouched.
+    const refreshTimer = window.setInterval(() => {
+      if (document.visibilityState === "visible" && !isUserIdle()) fetchNotifications();
+    }, 30000);
+    const handleVisibility = () => {
+      if (document.visibilityState === "visible") fetchNotifications();
+    };
+    document.addEventListener("visibilitychange", handleVisibility);
+    return () => {
+      window.clearInterval(refreshTimer);
+      document.removeEventListener("visibilitychange", handleVisibility);
+    };
   }, [fetchNotifications]);
 
   const handleClick = (event) => {

@@ -25,6 +25,20 @@ import { AppDatePicker, DataTable } from "src/components/ui";
 const money = (value) => Number(value || 0).toLocaleString("en-IN");
 const numericInput = (value) => String(value || "").replace(/[^0-9]/g, "");
 
+// Visually muted so read-only fields are clearly not editable, unlike Amount Paid / Late Fee / Payment Date.
+const ReadOnlyField = ({ label, value }) => (
+  <TextField
+    label={label}
+    value={value}
+    fullWidth
+    InputProps={{ readOnly: true }}
+    sx={{
+      "& .MuiOutlinedInput-root": { bgcolor: "action.hover" },
+      "& .MuiInputBase-input": { fontWeight: 700, color: "text.secondary" },
+    }}
+  />
+);
+
 const defaultForm = () => ({
   accountNo: "",
   partnerName: "",
@@ -252,8 +266,7 @@ export default function BusinessFinancePayment({
               openOnFocus
               filterOptions={(x) => x}
               fullWidth
-
-          options={accountList}
+              options={accountList}
               getOptionLabel={(option) => (typeof option === "string" ? option : option.displayString || option.loanId || "")}
               inputValue={searchInput}
               onInputChange={(_, value) => setSearchInput(value)}
@@ -290,7 +303,7 @@ export default function BusinessFinancePayment({
               sm: 4,
               md: 2.2
             }}>
-            <TextField label="Account No" value={form.accountNo} fullWidth InputProps={{ readOnly: true }} />
+            <ReadOnlyField label="Account No" value={form.accountNo || "-"} />
           </Grid>
           <Grid
             size={{
@@ -298,7 +311,7 @@ export default function BusinessFinancePayment({
               sm: 4,
               md: 2.4
             }}>
-            <TextField label="Partner Name" value={form.partnerName} fullWidth InputProps={{ readOnly: true }} />
+            <ReadOnlyField label="Partner Name" value={form.partnerName || "-"} />
           </Grid>
           <Grid
             size={{
@@ -306,7 +319,7 @@ export default function BusinessFinancePayment({
               sm: 4,
               md: 2.4
             }}>
-            <TextField label="Guarantor" value={form.guarantorName} fullWidth InputProps={{ readOnly: true }} />
+            <ReadOnlyField label="Guarantor" value={form.guarantorName || "-"} />
           </Grid>
         </Grid>
 
@@ -323,28 +336,28 @@ export default function BusinessFinancePayment({
               xs: 6,
               sm: 3
             }}>
-            <TextField label="Loan Amount" value={money(form.loanAmount)} fullWidth InputProps={{ readOnly: true }} />
+            <ReadOnlyField label="Loan Amount" value={selectedLoanId ? `Rs ${money(form.loanAmount)}` : "-"} />
           </Grid>
           <Grid
             size={{
               xs: 6,
               sm: 3
             }}>
-            <TextField label="Installment" value={money(form.installmentAmount)} fullWidth InputProps={{ readOnly: true }} />
+            <ReadOnlyField label="Installment" value={selectedLoanId ? `Rs ${money(form.installmentAmount)}` : "-"} />
           </Grid>
           <Grid
             size={{
               xs: 6,
               sm: 3
             }}>
-            <TextField label="Period From" value={form.periodFrom || "-"} fullWidth InputProps={{ readOnly: true }} />
+            <ReadOnlyField label="Period From" value={form.periodFrom || "-"} />
           </Grid>
           <Grid
             size={{
               xs: 6,
               sm: 3
             }}>
-            <TextField label="Period To" value={form.periodTo || "-"} fullWidth InputProps={{ readOnly: true }} />
+            <ReadOnlyField label="Period To" value={form.periodTo || "-"} />
           </Grid>
         </Grid>
 
@@ -370,7 +383,7 @@ export default function BusinessFinancePayment({
               sm: 6,
               md: 2.4
             }}>
-            <TextField label="Paid So Far" value={money(form.paid)} fullWidth InputProps={{ readOnly: true }} />
+            <ReadOnlyField label="Paid So Far" value={selectedLoanId ? `Rs ${money(form.paid)}` : "-"} />
           </Grid>
           <Grid
             size={{
@@ -378,7 +391,7 @@ export default function BusinessFinancePayment({
               sm: 6,
               md: 2.4
             }}>
-            <TextField label="Balance" value={money(form.balance)} fullWidth InputProps={{ readOnly: true }} />
+            <ReadOnlyField label="Balance" value={selectedLoanId ? `Rs ${money(form.balance)}` : "-"} />
           </Grid>
           <Grid
             size={{
@@ -388,8 +401,10 @@ export default function BusinessFinancePayment({
             }}>
             <TextField
               label="Amount Paid"
+              placeholder="0"
               value={form.amountPaid ? money(form.amountPaid) : ""}
               onChange={(event) => setForm((prev) => ({ ...prev, amountPaid: numericInput(event.target.value) }))}
+              disabled={!selectedLoanId}
               fullWidth
             />
           </Grid>
@@ -401,20 +416,27 @@ export default function BusinessFinancePayment({
             }}>
             <TextField
               label="Late Fee"
+              placeholder="0"
               value={form.lateFeePaid ? money(form.lateFeePaid) : ""}
               onChange={(event) => setForm((prev) => ({ ...prev, lateFeePaid: numericInput(event.target.value) }))}
+              disabled={!selectedLoanId}
               fullWidth
             />
           </Grid>
         </Grid>
-        <Stack direction={{ xs: "column", sm: "row" }} spacing={2} alignItems={{ xs: "stretch", sm: "center" }} justifyContent="flex-end" sx={{ mt: 2.5 }}>
-          <FormControlLabel
-            control={<Checkbox checked={printReceipt} onChange={(event) => setPrintReceipt(event.target.checked)} />}
-            label="Print receipt after save"
-          />
-          <Button variant="contained" onClick={handlePay} disabled={loading || !selectedLoanId}>
-            {loading ? "Processing..." : "Record Payment"}
-          </Button>
+        <Stack direction={{ xs: "column", sm: "row" }} spacing={2} alignItems={{ xs: "stretch", sm: "center" }} justifyContent="space-between" sx={{ mt: 2.5 }}>
+          <Typography variant="caption" color="text.secondary">
+            {!selectedLoanId && "Search and select a customer above to record a payment."}
+          </Typography>
+          <Stack direction={{ xs: "column", sm: "row" }} spacing={2} alignItems={{ xs: "stretch", sm: "center" }}>
+            <FormControlLabel
+              control={<Checkbox checked={printReceipt} onChange={(event) => setPrintReceipt(event.target.checked)} />}
+              label="Print receipt after save"
+            />
+            <Button variant="contained" onClick={handlePay} disabled={loading || !selectedLoanId}>
+              {loading ? "Processing..." : "Record Payment"}
+            </Button>
+          </Stack>
         </Stack>
       </Paper>
       <DataTable

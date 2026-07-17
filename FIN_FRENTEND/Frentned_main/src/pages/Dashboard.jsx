@@ -45,6 +45,15 @@ import { getSession } from "src/utils/session";
 const formatINR = (value) =>
   `Rs ${Number(value || 0).toLocaleString("en-IN", { maximumFractionDigits: 0 })}`;
 
+// AuthContext already tracks lastActivity (mouse/keyboard/scroll/touch) for its
+// inactivity-logout timer - reuse it so polling pauses when the user has genuinely
+// stepped away, not just when the tab is backgrounded.
+const IDLE_THRESHOLD_MS = 5 * 60 * 1000;
+const isUserIdle = () => {
+  const lastActivity = parseInt(getSession("lastActivity") || "0", 10);
+  return Date.now() - lastActivity > IDLE_THRESHOLD_MS;
+};
+
 const modules = [
   { title: "Customer Master", path: "/customer", icon: ContactsRounded },
   { title: "Daily Finance", path: "/Daily-Finace", icon: PaymentsRounded },
@@ -80,7 +89,10 @@ function Panel({ title, subtitle, action, children }) {
 
 export default function Dashboard() {
   const navigate = useNavigate();
-  const openInNewTab = (path) => window.open(path, "_blank", "noopener,noreferrer");
+  // No "noopener" here on purpose: this is same-origin, trusted navigation, and dropping
+  // the opener reference would break sessionStorage inheritance into the new tab, forcing
+  // an unwanted re-login there.
+  const openInNewTab = (path) => window.open(path, "_blank");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [lastUpdated, setLastUpdated] = useState(null);
@@ -172,8 +184,19 @@ export default function Dashboard() {
 
   useEffect(() => {
     fetchDashboard();
-    const refreshTimer = window.setInterval(fetchDashboard, 30000);
-    return () => window.clearInterval(refreshTimer);
+    // Skip polling while this tab is backgrounded or the user has been idle for a
+    // while - avoids piling up backend calls from tabs left open and untouched.
+    const refreshTimer = window.setInterval(() => {
+      if (document.visibilityState === "visible" && !isUserIdle()) fetchDashboard();
+    }, 30000);
+    const handleVisibility = () => {
+      if (document.visibilityState === "visible") fetchDashboard();
+    };
+    document.addEventListener("visibilitychange", handleVisibility);
+    return () => {
+      window.clearInterval(refreshTimer);
+      document.removeEventListener("visibilitychange", handleVisibility);
+    };
   }, [fetchDashboard]);
 
   const completionRate = useMemo(() => {

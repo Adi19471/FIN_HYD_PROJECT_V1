@@ -8,6 +8,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.balaji.finance.pojo.CashBookLedgerPojo;
@@ -20,24 +21,18 @@ public class DisbursedController {
 	@Autowired
 	private LoanReportService loanReportService;
 
-	@GetMapping("/disbursedList/{fromDate}/{toDate}")
-	public ResponseEntity<List<LoanReportDTO>> getAlldisbursedList(@PathVariable String fromDate,
-			@PathVariable String toDate) {
+	
+	@GetMapping("/disbursedList")
+	public ResponseEntity<List<LoanReportDTO>> getAlldisbursedListByQueryParams(
+			@RequestParam(required = false) String fromDate,
+			@RequestParam(required = false) String toDate) {
 
 		DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
 
-		LocalDate fromLocalDate = LocalDate.parse(fromDate, formatter);
-		LocalDate toLocalDate = LocalDate.parse(toDate, formatter);
+		LocalDate fromLocalDate = fromDate != null ? LocalDate.parse(fromDate, formatter) : null;
+		LocalDate toLocalDate = toDate != null ? LocalDate.parse(toDate, formatter) : null;
 
 		List<LoanReportDTO> resturnList = loanReportService.getLoanReport(fromLocalDate, toLocalDate);
-
-		return ResponseEntity.ok().body(resturnList);
-	}
-
-	@GetMapping("/disbursedList")
-	public ResponseEntity<List<LoanReportDTO>> getAlldisbursedList() {
-
-		List<LoanReportDTO> resturnList = loanReportService.getLoanReport(null, null);
 
 		return ResponseEntity.ok().body(resturnList);
 	}
