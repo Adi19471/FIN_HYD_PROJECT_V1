@@ -4,6 +4,7 @@ import {
   createTheme,
 } from "@mui/material/styles";
 import CssBaseline from "@mui/material/CssBaseline";
+import { BREAKPOINTS } from "./breakpoints";
 
 const ThemeContext = createContext({
   currentTheme: "light",
@@ -196,6 +197,7 @@ export default function ThemeProvider({ children }) {
   const muiTheme = useMemo(
     () =>
       createTheme({
+        breakpoints: { values: BREAKPOINTS },
         palette: {
           mode: theme,
           primary: { main: palette.primary },
@@ -295,6 +297,17 @@ export default function ThemeProvider({ children }) {
               size: settings.density === "compact" ? "small" : "medium",
             },
           },
+          MuiSelect: {
+            defaultProps: {
+              size: settings.density === "compact" ? "small" : "medium",
+            },
+          },
+          MuiAutocomplete: {
+            defaultProps: {
+              size: settings.density === "compact" ? "small" : "medium",
+              fullWidth: true,
+            },
+          },
           MuiOutlinedInput: {
             styleOverrides: {
               root: {
@@ -322,6 +335,8 @@ export default function ThemeProvider({ children }) {
               root: {
                 minHeight: settings.density === "compact" ? 34 : settings.density === "spacious" ? 46 : 40,
                 fontSize: `${0.9 * fontScale}rem`,
+                whiteSpace: "normal",
+                wordBreak: "break-word",
               },
             },
           },

@@ -15,6 +15,7 @@ import {
   Select,
   Checkbox,
   Chip,
+  Grid,
   InputLabel,
   FormControl,
   Switch,
@@ -27,6 +28,7 @@ import {
   TableRow,
   TablePagination,
 } from "@mui/material";
+import { DROPDOWN_MENU_PROPS } from "src/components/ui";
 
 import {
   Add as AddIcon,
@@ -202,7 +204,7 @@ const AccountMasterSetup = () => {
               />
             </Box>
 
-            <TableContainer sx={{ maxHeight: 500 }}>
+            <TableContainer sx={{ maxHeight: { xs: 360, sm: 420, md: 500 }, overflow: "auto" }}>
               <Table stickyHeader>
                 <TableHead>
                   <TableRow>
@@ -317,95 +319,106 @@ const AccountMasterSetup = () => {
         <Divider />
 
         <DialogContent sx={{ mt: 2 }}>
-          <Box display="flex" flexDirection="column" alignItems="center" gap={2}>
-            <TextField
-              label="Type"
-              value={form.type}
-              onChange={(e) => setForm({ ...form, type: e.target.value })}
-              sx={{ width: 400 }}
-            />
+          <Grid container spacing={2}>
+            <Grid size={{ xs: 12 }}>
+              <TextField
+                label="Type"
+                value={form.type}
+                onChange={(e) => setForm({ ...form, type: e.target.value })}
+                fullWidth
+              />
+            </Grid>
 
-            <Box display="flex" gap={2}>
+            <Grid size={{ xs: 12, sm: 6 }}>
               <TextField
                 label="Master Code"
                 value={form.masterCode}
                 onChange={(e) =>
                   setForm({ ...form, masterCode: e.target.value })
                 }
-                sx={{ width: 190 }}
+                fullWidth
               />
+            </Grid>
+            <Grid size={{ xs: 12, sm: 6 }}>
               <TextField
                 label="Code"
                 value={form.code}
                 onChange={(e) =>
                   setForm({ ...form, code: e.target.value })
                 }
-                sx={{ width: 190 }}
+                fullWidth
               />
-            </Box>
+            </Grid>
 
-            <FormControl sx={{ width: 400 }}>
-              <InputLabel>Person Type</InputLabel>
-              <Select
-                multiple
-                value={form.personType || []}
-                label="Person Type"
-                onChange={(e) => {
-                  const value = e.target.value;
-                  setForm({
-                    ...form,
-                    personType: typeof value === "string" ? value.split(",") : value,
-                  });
+            <Grid size={{ xs: 12 }}>
+              <FormControl fullWidth>
+                <InputLabel>Person Type</InputLabel>
+                <Select
+                  multiple
+                  value={form.personType || []}
+                  label="Person Type"
+                  MenuProps={DROPDOWN_MENU_PROPS}
+                  onChange={(e) => {
+                    const value = e.target.value;
+                    setForm({
+                      ...form,
+                      personType: typeof value === "string" ? value.split(",") : value,
+                    });
+                  }}
+                  renderValue={(selected) => selected.join(", ")}
+                >
+                  {PERSON_TYPES.map((type) => (
+                    <MenuItem key={type} value={type}>
+                      <Checkbox checked={(form.personType || []).includes(type)} />
+                      {type}
+                    </MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
+            </Grid>
+
+            <Grid size={{ xs: 12 }}>
+              <FormControl fullWidth>
+                <InputLabel>Transaction Type</InputLabel>
+                <Select
+                  multiple
+                  value={form.transType}
+                  label="Transaction Type"
+                  MenuProps={DROPDOWN_MENU_PROPS}
+                  onChange={(e) =>
+                    setForm({ ...form, transType: e.target.value })
+                  }
+                  renderValue={(selected) => selected.join(", ")}
+                >
+                  {TRANS_TYPES.map((type) => (
+                    <MenuItem key={type} value={type}>
+                      <Checkbox checked={form.transType.includes(type)} />
+                      {type}
+                    </MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
+            </Grid>
+
+            <Grid size={{ xs: 12 }}>
+              <Box
+                sx={{
+                  display: "flex",
+                  justifyContent: "space-between",
                 }}
-                renderValue={(selected) => selected.join(", ")}
               >
-                {PERSON_TYPES.map((type) => (
-                  <MenuItem key={type} value={type}>
-                    <Checkbox checked={(form.personType || []).includes(type)} />
-                    {type}
-                  </MenuItem>
-                ))}
-              </Select>
-            </FormControl>
-
-            <FormControl sx={{ width: 400 }}>
-              <InputLabel>Transaction Type</InputLabel>
-              <Select
-                multiple
-                value={form.transType}
-                label="Transaction Type"
-                onChange={(e) =>
-                  setForm({ ...form, transType: e.target.value })
-                }
-                renderValue={(selected) => selected.join(", ")}
-              >
-                {TRANS_TYPES.map((type) => (
-                  <MenuItem key={type} value={type}>
-                    <Checkbox checked={form.transType.includes(type)} />
-                    {type}
-                  </MenuItem>
-                ))}
-              </Select>
-            </FormControl>
-
-            <Box
-              sx={{
-                width: 400,
-                display: "flex",
-                justifyContent: "space-between",
-              }}
-            >
-              <Typography>
-                {form.visibility ? "Visible" : "Hidden"}
-              </Typography>
-              <Switch
-                checked={form.visibility}
-                onChange={(e) =>
-                  setForm({ ...form, visibility: e.target.checked })
-                }
-              />
-            </Box>
-          </Box>
+                <Typography>
+                  {form.visibility ? "Visible" : "Hidden"}
+                </Typography>
+                <Switch
+                  checked={form.visibility}
+                  onChange={(e) =>
+                    setForm({ ...form, visibility: e.target.checked })
+                  }
+                />
+              </Box>
+            </Grid>
+          </Grid>
         </DialogContent>
 
         <DialogActions sx={{ justifyContent: "center" }}>

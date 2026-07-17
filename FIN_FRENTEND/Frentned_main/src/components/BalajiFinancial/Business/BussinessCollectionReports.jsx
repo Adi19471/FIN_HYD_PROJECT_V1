@@ -20,7 +20,7 @@ import dayjs from "dayjs";
 import { API_BASE } from "lib/config";
 import { getSession } from "src/utils/session";
 import { COMPANY_ADDRESS, COMPANY_NAME } from "src/lib/company";
-import { AppDatePicker, DataTable } from "src/components/ui";
+import { AppDatePicker, DataTable, useDateRange } from "src/components/ui";
 
 const money = (value) => Number(value || 0).toLocaleString("en-IN");
 
@@ -31,8 +31,10 @@ const emptyStatus = {
 };
 
 const BussinessCollectionReports = () => {
-  const [fromDate, setFromDate] = useState(dayjs().startOf("month").format("YYYY-MM-DD"));
-  const [toDate, setToDate] = useState(dayjs().endOf("month").format("YYYY-MM-DD"));
+  const { fromDate, toDate, setFromDate, setToDate, toDateMin, toDateMax } = useDateRange(
+    dayjs().startOf("month").format("YYYY-MM-DD"),
+    dayjs().endOf("month").format("YYYY-MM-DD")
+  );
   const [loading, setLoading] = useState(false);
   const [reportData, setReportData] = useState([]);
   const [lastUpdated, setLastUpdated] = useState(null);
@@ -187,14 +189,14 @@ const BussinessCollectionReports = () => {
               size="small"
               value={fromDate}
               onChange={setFromDate}
-              sx={{ width: 170 }}
             />
             <AppDatePicker
               label="To Date"
               size="small"
               value={toDate}
               onChange={setToDate}
-              sx={{ width: 170 }}
+              minDate={toDateMin}
+              maxDate={toDateMax}
             />
             <Button variant="contained" startIcon={loading ? <CircularProgress size={18} color="inherit" /> : <RefreshRounded />} onClick={fetchReport} disabled={loading}>
               {loading ? "Loading" : "Generate"}

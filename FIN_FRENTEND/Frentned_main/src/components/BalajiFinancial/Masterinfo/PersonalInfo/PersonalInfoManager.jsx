@@ -263,7 +263,6 @@ const PersonalInfoManager = ({ personType = "CUSTOMER" }) => {
                 />
                 <TextField
                   fullWidth
-                  size="small"
                   label="ID"
                   value={form.id}
                   disabled
@@ -293,7 +292,7 @@ const PersonalInfoManager = ({ personType = "CUSTOMER" }) => {
                 sm: 6,
                 md: 4
               }}>
-              <TextField fullWidth required size="small" label="First Name" value={form.firstname} onChange={(e) => handleChange("firstname", e.target.value)} error={!!errors.firstname} helperText={errors.firstname} />
+              <TextField fullWidth required label="First Name" value={form.firstname} onChange={(e) => handleChange("firstname", e.target.value)} error={!!errors.firstname} helperText={errors.firstname} />
             </Grid>
             <Grid
               size={{
@@ -301,7 +300,7 @@ const PersonalInfoManager = ({ personType = "CUSTOMER" }) => {
                 sm: 6,
                 md: 4
               }}>
-              <TextField fullWidth size="small" label="Last Name" value={form.lastname} onChange={(e) => handleChange("lastname", e.target.value)} />
+              <TextField fullWidth label="Last Name" value={form.lastname} onChange={(e) => handleChange("lastname", e.target.value)} />
             </Grid>
             <Grid
               size={{
@@ -309,7 +308,7 @@ const PersonalInfoManager = ({ personType = "CUSTOMER" }) => {
                 sm: 6,
                 md: 4
               }}>
-              <TextField fullWidth size="small" label="Father Name" value={form.fathername} onChange={(e) => handleChange("fathername", e.target.value)} />
+              <TextField fullWidth label="Father Name" value={form.fathername} onChange={(e) => handleChange("fathername", e.target.value)} />
             </Grid>
             <Grid
               size={{
@@ -317,7 +316,7 @@ const PersonalInfoManager = ({ personType = "CUSTOMER" }) => {
                 sm: 6,
                 md: 4
               }}>
-              <TextField fullWidth size="small" label="Spouse Name" value={form.spouse} onChange={(e) => handleChange("spouse", e.target.value)} />
+              <TextField fullWidth label="Spouse Name" value={form.spouse} onChange={(e) => handleChange("spouse", e.target.value)} />
             </Grid>
             <Grid
               size={{
@@ -325,7 +324,7 @@ const PersonalInfoManager = ({ personType = "CUSTOMER" }) => {
                 sm: 6,
                 md: 4
               }}>
-              <TextField select fullWidth size="small" label="Gender" value={form.gender} onChange={(e) => handleChange("gender", e.target.value)}>
+              <TextField select fullWidth label="Gender" value={form.gender} onChange={(e) => handleChange("gender", e.target.value)}>
                 <MenuItem value="Male">Male</MenuItem>
                 <MenuItem value="Female">Female</MenuItem>
                 <MenuItem value="Other">Other</MenuItem>
@@ -337,7 +336,7 @@ const PersonalInfoManager = ({ personType = "CUSTOMER" }) => {
                 sm: 6,
                 md: 4
               }}>
-              <TextField fullWidth size="small" label="Age" type="number" value={form.age} onChange={(e) => handleChange("age", e.target.value)} />
+              <TextField fullWidth label="Age" type="number" value={form.age} onChange={(e) => handleChange("age", e.target.value)} />
             </Grid>
             <Grid
               size={{
@@ -345,7 +344,7 @@ const PersonalInfoManager = ({ personType = "CUSTOMER" }) => {
                 sm: 6,
                 md: 4
               }}>
-              <TextField fullWidth size="small" label="Occupation" value={form.occupation} onChange={(e) => handleChange("occupation", e.target.value)} />
+              <TextField fullWidth label="Occupation" value={form.occupation} onChange={(e) => handleChange("occupation", e.target.value)} />
             </Grid>
             <Grid
               size={{
@@ -353,7 +352,7 @@ const PersonalInfoManager = ({ personType = "CUSTOMER" }) => {
                 sm: 6,
                 md: 4
               }}>
-              <TextField select fullWidth size="small" label="ID Proof Type" value={form.idprooftype} onChange={(e) => handleChange("idprooftype", e.target.value)}>
+              <TextField select fullWidth label="ID Proof Type" value={form.idprooftype} onChange={(e) => handleChange("idprooftype", e.target.value)}>
                 <MenuItem value="Aadhaar Card">Aadhaar Card</MenuItem>
                 <MenuItem value="PAN Card">PAN Card</MenuItem>
                 <MenuItem value="Voter ID">Voter ID</MenuItem>
@@ -367,21 +366,21 @@ const PersonalInfoManager = ({ personType = "CUSTOMER" }) => {
                 sm: 6,
                 md: 4
               }}>
-              <TextField fullWidth size="small" label="ID Number" value={form.idproof} onChange={(e) => handleChange("idproof", e.target.value)} />
+              <TextField fullWidth label="ID Number" value={form.idproof} onChange={(e) => handleChange("idproof", e.target.value)} />
             </Grid>
             <Grid
               size={{
                 xs: 12,
                 md: 6
               }}>
-              <TextField fullWidth multiline rows={2} size="small" label="Residential Address" value={form.address} onChange={(e) => handleChange("address", e.target.value)} />
+              <TextField fullWidth multiline rows={2} label="Residential Address" value={form.address} onChange={(e) => handleChange("address", e.target.value)} />
             </Grid>
             <Grid
               size={{
                 xs: 12,
                 md: 6
               }}>
-              <TextField fullWidth multiline rows={2} size="small" label="Office Address" value={form.address2} onChange={(e) => handleChange("address2", e.target.value)} />
+              <TextField fullWidth multiline rows={2} label="Office Address" value={form.address2} onChange={(e) => handleChange("address2", e.target.value)} />
             </Grid>
             <Grid
               size={{
@@ -389,7 +388,7 @@ const PersonalInfoManager = ({ personType = "CUSTOMER" }) => {
                 sm: 6,
                 md: 4
               }}>
-              <TextField fullWidth required size="small" label="Mobile No" value={form.mobile} onChange={(e) => handleChange("mobile", e.target.value)} />
+              <TextField fullWidth required label="Mobile No" value={form.mobile} onChange={(e) => handleChange("mobile", e.target.value)} />
             </Grid>
             <Grid
               size={{
@@ -397,7 +396,7 @@ const PersonalInfoManager = ({ personType = "CUSTOMER" }) => {
                 sm: 6,
                 md: 4
               }}>
-              <TextField fullWidth size="small" label="Mobile No 2" value={form.mobile2} onChange={(e) => handleChange("mobile2", e.target.value)} />
+              <TextField fullWidth label="Mobile No 2" value={form.mobile2} onChange={(e) => handleChange("mobile2", e.target.value)} />
             </Grid>
             <Grid
               size={{
@@ -405,7 +404,7 @@ const PersonalInfoManager = ({ personType = "CUSTOMER" }) => {
                 sm: 6,
                 md: 4
               }}>
-              <TextField fullWidth size="small" label="Office Phone" value={form.phone} onChange={(e) => handleChange("phone", e.target.value)} />
+              <TextField fullWidth label="Office Phone" value={form.phone} onChange={(e) => handleChange("phone", e.target.value)} />
             </Grid>
             <Grid
               size={{
@@ -413,7 +412,7 @@ const PersonalInfoManager = ({ personType = "CUSTOMER" }) => {
                 sm: 6,
                 md: 4
               }}>
-              <TextField fullWidth size="small" label="Reference" value={form.reference} onChange={(e) => handleChange("reference", e.target.value)} />
+              <TextField fullWidth label="Reference" value={form.reference} onChange={(e) => handleChange("reference", e.target.value)} />
             </Grid>
           </Grid>
         </DialogContent>

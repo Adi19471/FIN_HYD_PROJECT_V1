@@ -68,7 +68,7 @@ function Header({ sidebarOpen, setSidebarOpen }) {
           <IconButton
             onClick={() => setSidebarOpen(!sidebarOpen)}
             className="enterprise-header-icon"
-            sx={{ display: { lg: "none" } }}
+            sx={{ display: { md: "none" } }}
             aria-label="Open navigation"
           >
             <MenuRounded />

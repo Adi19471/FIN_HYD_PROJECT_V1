@@ -25,15 +25,54 @@ const money = (value) => Number(value || 0).toLocaleString("en-IN");
 const fmtDate = (value) => (value ? String(value).slice(0, 10) : "-");
 
 const columns = [
-  { field: "installmentNumber", headerName: "Inst No", width: 90 },
-  { field: "principleAmount", headerName: "Principal", width: 120, valueFormatter: (value) => money(value) },
-  { field: "interestAmount", headerName: "Interest", width: 110, valueFormatter: (value) => money(value) },
-  { field: "totalAmount", headerName: "EMI", width: 110, valueFormatter: (value) => money(value) },
-  { field: "paidAmount", headerName: "Paid", width: 110, valueFormatter: (value) => money(value) },
-  { field: "dueDate", headerName: "Due Date", width: 130, valueFormatter: (value) => fmtDate(value) },
-  { field: "lateFeeDate", headerName: "Late From", width: 130, valueFormatter: (value) => fmtDate(value) },
-  { field: "installmentAmount", headerName: "Pending", width: 110, valueFormatter: (value) => money(value) },
-  { field: "lateFee", headerName: "Late Fee", width: 110, valueFormatter: (value) => money(value) },
+  {
+    field: "installmentNumber",
+    headerName: "Inst No",
+    width: 90,
+  },
+
+  {
+    field: "emiAmount",
+    headerName: "Total Amount",
+    width: 140,
+    valueFormatter: (value) => money(value),
+  },
+
+  {
+    field: "paidAmount",
+    headerName: "Paid",
+    width: 120,
+    valueFormatter: (value) => money(value),
+  },
+
+  {
+    field: "dueDate",
+    headerName: "Due Date",
+    width: 130,
+    valueFormatter: (value) => fmtDate(value),
+  },
+
+  {
+    field: "lateFeeDate",
+    headerName: "Late From",
+    width: 130,
+    valueFormatter: (value) => fmtDate(value),
+  },
+
+  {
+    field: "installmentAmount",
+    headerName: "Pending",
+    width: 120,
+    valueFormatter: (value) => money(value),
+  },
+
+  {
+    field: "lateFee",
+    headerName: "Late Fee",
+    width: 120,
+    valueFormatter: (value) => money(value),
+  },
+
   {
     field: "status",
     headerName: "Status",
@@ -48,6 +87,7 @@ const columns = [
     ),
   },
 ];
+
 
 const ReadOnlyField = ({ label, value, sm = 3 }) => (
   <Grid
@@ -88,11 +128,15 @@ export default function LoanDetailsDialog({ open, onClose, accountNo, loadEndpoi
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open, accountNo, loadEndpoint]);
 
-  const rows = (data?.installmentDetailsList || []).map((row, index) => ({
-    id: row.emiId ?? `${row.installmentNumber || index}-${row.dueDate || index}`,
-    ...row,
-  }));
+const rows = (data?.installmentDetailsList || []).map((row, index) => ({
+  id: row.emiId ?? `${row.installmentNumber || index}-${row.dueDate || index}`,
+  ...row,
 
+  // EMI = Principal + Interest
+  emiAmount:
+    Number(row.principleAmount || 0) +
+    Number(row.interestAmount || 0),
+}));
   const handlePrint = () => {
     if (!data) return;
     const printWindow = window.open("", "", "width=900,height=800");
@@ -103,9 +147,7 @@ export default function LoanDetailsDialog({ open, onClose, accountNo, loadEndpoi
         (row) => `
           <tr>
             <td>${row.installmentNumber ?? "-"}</td>
-            <td>${money(row.principleAmount)}</td>
-            <td>${money(row.interestAmount)}</td>
-            <td>${money(row.totalAmount)}</td>
+            <td>${money(row.emiAmount)}</td>
             <td>${money(row.paidAmount)}</td>
             <td>${fmtDate(row.dueDate)}</td>
             <td>${money(row.lateFee)}</td>
@@ -152,7 +194,7 @@ export default function LoanDetailsDialog({ open, onClose, accountNo, loadEndpoi
       <h2>Installment Schedule</h2>
       <table>
         <thead><tr>
-          <th>Inst No</th><th>Principal</th><th>Interest</th><th>EMI</th>
+          <th>Inst No</th><th>Total Amount</th>
           <th>Paid</th><th>Due Date</th><th>Late Fee</th><th>Status</th>
         </tr></thead>
         <tbody>${installmentRows}</tbody>

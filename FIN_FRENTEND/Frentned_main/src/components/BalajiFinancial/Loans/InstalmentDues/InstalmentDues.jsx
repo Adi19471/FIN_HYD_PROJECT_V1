@@ -4,15 +4,14 @@ import axios from "axios";
 import { API_BASE } from "lib/config";
 import { getSession } from "src/utils/session";
 import { errorToast, successToast } from "toastify";
-import { AppDatePicker, DataTable, PageHeader } from "src/components/ui";
+import { AppDatePicker, DataTable, PageHeader, useDateRange } from "src/components/ui";
 
 const formatINR = (value) => `₹ ${Number(value || 0).toLocaleString("en-IN")}`;
 
 const InstalmentDues = () => {
   const [data, setData] = useState([]);
   const [loanType, setLoanType] = useState("");
-  const [fromDate, setFromDate] = useState("");
-  const [toDate, setToDate] = useState("");
+  const { fromDate, toDate, setFromDate, setToDate, toDateMin, toDateMax } = useDateRange("", "");
   const [loading, setLoading] = useState(false);
 
   const headers = useMemo(
@@ -101,7 +100,7 @@ const InstalmentDues = () => {
               xs: 12,
               md: 3
             }}>
-            <TextField select label="Loan Type" sx={{width:"220px"}} fullWidth size="small" value={loanType} onChange={(event) => setLoanType(event.target.value)}>
+            <TextField select label="Loan Type" fullWidth size="small" value={loanType} onChange={(event) => setLoanType(event.target.value)}>
               {loanTypes.map((type) => (
                 <MenuItem key={type.value} value={type.value}>{type.label}</MenuItem>
               ))}
@@ -119,7 +118,7 @@ const InstalmentDues = () => {
               xs: 12,
               md: 3
             }}>
-            <AppDatePicker label="To Date" value={toDate} onChange={setToDate} />
+            <AppDatePicker label="To Date" value={toDate} onChange={setToDate} minDate={toDateMin} maxDate={toDateMax} />
           </Grid>
           <Grid
             size={{

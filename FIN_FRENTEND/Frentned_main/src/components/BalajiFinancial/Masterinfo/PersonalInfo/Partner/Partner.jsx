@@ -30,7 +30,7 @@ import { FiUserPlus, FiSearch, FiCopy, FiSave, FiEdit, FiXCircle, FiEye, FiUser,
 import { successToast, errorToast } from "toastify";
 import { API_BASE } from "lib/config";
 import LoadingSpinner from "src/LoadingSpinner";
-import { ProfilePhotoBox } from "src/components/ui";
+import { ProfilePhotoBox, DEFAULT_TABLE_HEIGHT } from "src/components/ui";
 
 /* ─── Constants ─────────────────────────────────────────────── */
 const TYPE_LABELS = {
@@ -510,7 +510,6 @@ const Partner = ({ personType = "CUSTOMER" }) => {
 
         <Box sx={{ display: "flex", gap: 1.5, alignItems: "center", flexWrap: "wrap" }}>
           <TextField
-            size="small"
             placeholder={`Search ${label.toLowerCase()}s…`}
             value={search}
             onChange={(e) => setSearch(e.target.value)}
@@ -543,7 +542,7 @@ const Partner = ({ personType = "CUSTOMER" }) => {
           ))}
         </Box>
       ) : (
-        <Paper sx={{ height: 660, borderRadius: 2, border: "1px solid", borderColor: "divider" }}>
+        <Paper sx={{ height: DEFAULT_TABLE_HEIGHT, borderRadius: 2, border: "1px solid", borderColor: "divider" }}>
           <DataGrid
             rows={filteredRows}
             columns={columns}
@@ -602,7 +601,7 @@ const Partner = ({ personType = "CUSTOMER" }) => {
                   disabledHint="Photo unavailable"
                 />
                 <TextField
-                  fullWidth size="small" label="Record ID"
+                  fullWidth label="Record ID"
                   value={form.id} disabled
                   InputProps={{
                     endAdornment: (
@@ -636,7 +635,7 @@ const Partner = ({ personType = "CUSTOMER" }) => {
                 md: 4
               }}>
               <TextField
-                fullWidth required size="small" label="First Name"
+                fullWidth required label="First Name"
                 value={form.firstname}
                 onChange={(e) => handleChange("firstname", e.target.value)}
                 error={!!errors.firstname} helperText={errors.firstname}
@@ -650,7 +649,7 @@ const Partner = ({ personType = "CUSTOMER" }) => {
                 md: 4
               }}>
               <TextField
-                fullWidth size="small" label="Last Name"
+                fullWidth label="Last Name"
                 value={form.lastname}
                 onChange={(e) => handleChange("lastname", e.target.value)}
               />
@@ -663,7 +662,7 @@ const Partner = ({ personType = "CUSTOMER" }) => {
                 md: 4
               }}>
               <TextField
-                fullWidth size="small" label="Father's Name"
+                fullWidth label="Father's Name"
                 value={form.fathername}
                 onChange={(e) => handleChange("fathername", e.target.value)}
               />
@@ -676,7 +675,7 @@ const Partner = ({ personType = "CUSTOMER" }) => {
                 md: 4
               }}>
               <TextField
-                fullWidth size="small" label="Spouse Name"
+                fullWidth label="Spouse Name"
                 value={form.spouse}
                 onChange={(e) => handleChange("spouse", e.target.value)}
               />
@@ -689,7 +688,7 @@ const Partner = ({ personType = "CUSTOMER" }) => {
                 md: 4
               }}>
               <TextField
-                select fullWidth size="small" label="Gender"
+                select fullWidth label="Gender"
                 value={form.gender}
                 onChange={(e) => handleChange("gender", e.target.value)}
               >
@@ -704,7 +703,7 @@ const Partner = ({ personType = "CUSTOMER" }) => {
                 md: 4
               }}>
               <TextField
-                fullWidth size="small" label="Age" type="number"
+                fullWidth label="Age" type="number"
                 value={form.age}
                 onChange={(e) => handleChange("age", e.target.value)}
                 inputProps={{ min: 0, max: 120 }}
@@ -718,7 +717,7 @@ const Partner = ({ personType = "CUSTOMER" }) => {
                 md: 4
               }}>
               <TextField
-                fullWidth size="small" label="Occupation"
+                fullWidth label="Occupation"
                 value={form.occupation}
                 onChange={(e) => handleChange("occupation", e.target.value)}
               />
@@ -762,7 +761,6 @@ const Partner = ({ personType = "CUSTOMER" }) => {
                 renderInput={(params) => (
                   <TextField
                     {...params}
-                    size="small"
                     label="Assign Manager"
                     placeholder="Type to search partners…"
                     helperText={
@@ -831,7 +829,7 @@ const Partner = ({ personType = "CUSTOMER" }) => {
                 sm: 6
               }}>
               <TextField
-                select fullWidth size="small" label="ID Proof Type"
+                select fullWidth label="ID Proof Type"
                 value={form.idprooftype}
                 onChange={(e) => handleChange("idprooftype", e.target.value)}
               >
@@ -846,7 +844,7 @@ const Partner = ({ personType = "CUSTOMER" }) => {
                 sm: 6
               }}>
               <TextField
-                fullWidth size="small" label="ID Number"
+                fullWidth label="ID Number"
                 value={form.idproof}
                 onChange={(e) => handleChange("idproof", e.target.value)}
               />
@@ -865,7 +863,7 @@ const Partner = ({ personType = "CUSTOMER" }) => {
                 md: 4
               }}>
               <TextField
-                fullWidth size="small" label="Mobile No" required
+                fullWidth label="Mobile No" required
                 value={form.mobile}
                 onChange={(e) => handleChange("mobile", e.target.value)}
                 error={!!errors.mobile} helperText={errors.mobile || "10 digits"}
@@ -880,7 +878,7 @@ const Partner = ({ personType = "CUSTOMER" }) => {
                 md: 4
               }}>
               <TextField
-                fullWidth size="small" label="Mobile No 2"
+                fullWidth label="Mobile No 2"
                 value={form.mobile2}
                 onChange={(e) => handleChange("mobile2", e.target.value)}
                 inputProps={{ maxLength: 10 }}
@@ -894,7 +892,7 @@ const Partner = ({ personType = "CUSTOMER" }) => {
                 md: 4
               }}>
               <TextField
-                fullWidth size="small" label="Office Phone"
+                fullWidth label="Office Phone"
                 value={form.phone}
                 onChange={(e) => handleChange("phone", e.target.value)}
                 inputProps={{ maxLength: 10 }}
@@ -907,7 +905,7 @@ const Partner = ({ personType = "CUSTOMER" }) => {
                 sm: 6
               }}>
               <TextField
-                fullWidth multiline rows={2} size="small" label="Residential Address"
+                fullWidth multiline rows={2} label="Residential Address"
                 value={form.address}
                 onChange={(e) => handleChange("address", e.target.value)}
               />
@@ -919,7 +917,7 @@ const Partner = ({ personType = "CUSTOMER" }) => {
                 sm: 6
               }}>
               <TextField
-                fullWidth multiline rows={2} size="small" label="Office Address"
+                fullWidth multiline rows={2} label="Office Address"
                 value={form.address2}
                 onChange={(e) => handleChange("address2", e.target.value)}
               />
@@ -936,7 +934,7 @@ const Partner = ({ personType = "CUSTOMER" }) => {
                 sm: 6
               }}>
               <TextField
-                fullWidth size="small" label="Reference"
+                fullWidth label="Reference"
                 value={form.reference}
                 onChange={(e) => handleChange("reference", e.target.value)}
               />

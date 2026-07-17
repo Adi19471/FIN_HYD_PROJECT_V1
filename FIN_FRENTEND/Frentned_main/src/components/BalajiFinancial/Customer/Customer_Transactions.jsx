@@ -22,7 +22,7 @@ import dayjs from "dayjs";
 import axios from "axios";
 import { API_BASE } from "lib/config";
 import { getSession } from "src/utils/session";
-import { AppDatePicker, ReportCompanyHeader, TableExportMenu } from "src/components/ui";
+import { AppDatePicker, ReportCompanyHeader, TableExportMenu, useDateRange } from "src/components/ui";
 
 const token = getSession()?.token || getSession("token") || "";
 
@@ -31,8 +31,7 @@ const CustomerTransactions = () => {
   const [customers, setCustomers] = useState([]);
   const [selectedCustomer, setSelectedCustomer] = useState(null);
   const [selectedAccountCode, setSelectedAccountCode] = useState(null);
-  const [fromDate, setFromDate] = useState("");
-  const [toDate, setToDate] = useState("");
+  const { fromDate, toDate, setFromDate, setToDate, toDateMin, toDateMax } = useDateRange("", "");
   const [transactions, setTransactions] = useState([]);
   const [loading, setLoading] = useState(false);
   const [searchLoading, setSearchLoading] = useState(false);
@@ -139,7 +138,6 @@ const CustomerTransactions = () => {
             <Autocomplete
               openOnFocus
               options={masterCodes}
-              sx={{width:"220px"}}
               value={selectedAccountCode}
               onChange={(e, val) => setSelectedAccountCode(val)}
               renderInput={(params) => <TextField {...params} label="Account Name" size="small" fullWidth />}
@@ -151,7 +149,7 @@ const CustomerTransactions = () => {
               xs: 12,
               sm: 5
             }}>
-            <Autocomplete  sx={{width:"220px"}}
+            <Autocomplete
               openOnFocus
               filterOptions={(x) => x}
               options={customers}
@@ -212,6 +210,8 @@ const CustomerTransactions = () => {
               label="To"
               value={toDate}
               onChange={setToDate}
+              minDate={toDateMin}
+              maxDate={toDateMax}
             />
           </Grid>
 
@@ -254,8 +254,20 @@ const CustomerTransactions = () => {
             date={reportDate}
           />
 
-          <TableContainer>
-            <Table sx={{ borderCollapse: "collapse" }}>
+          <TableContainer
+            sx={{
+              overflow: "auto",
+              maxHeight: { xs: "min(70vh, 460px)", sm: "min(66vh, 520px)", md: "min(62vh, 560px)", lg: "calc(100vh - 320px)" },
+            }}
+          >
+            <Table
+              stickyHeader
+              sx={{
+                borderCollapse: "collapse",
+                minWidth: 900,
+                "& .MuiTableCell-stickyHeader": { backgroundColor: "#1976d2" },
+              }}
+            >
               <TableHead>
                 <TableRow sx={{ backgroundColor: "#1976d2" }}>
                   <TableCell sx={{ color: "white", border: "1px solid #aaa", fontWeight: "bold" }}>S.No</TableCell>

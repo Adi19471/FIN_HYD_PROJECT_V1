@@ -15,7 +15,7 @@ import axios from "axios";
 import { API_BASE } from "lib/config";
 import { getSession } from "src/utils/session";
 import { successToast, errorToast } from "toastify";
-import { AppDatePicker, DataTable, PageHeader } from "src/components/ui";
+import { AppDatePicker, DataTable, PageHeader, useDateRange } from "src/components/ui";
 
 const formatINR = (value) => `₹ ${Number(value || 0).toLocaleString("en-IN")}`;
 
@@ -23,8 +23,7 @@ const AccountMasterLedger = () => {
   const [masterCodes, setMasterCodes] = useState([]);
   const [masterName, setMasterName] = useState("");
   const [dateMode, setDateMode] = useState("all");
-  const [fromDate, setFromDate] = useState("");
-  const [toDate, setToDate] = useState("");
+  const { fromDate, toDate, setFromDate, setToDate, toDateMin, toDateMax } = useDateRange("", "");
   const [rows, setRows] = useState([]);
   const [loading, setLoading] = useState(false);
 
@@ -130,7 +129,7 @@ const AccountMasterLedger = () => {
             <AppDatePicker label="From Date" value={fromDate} onChange={setFromDate} disabled={dateMode === "all"} />
           </Box>
           <Box sx={{ width: { xs: "100%", lg: 210 } }}>
-            <AppDatePicker label="To Date" value={toDate} onChange={setToDate} disabled={dateMode === "all"} />
+            <AppDatePicker label="To Date" value={toDate} onChange={setToDate} disabled={dateMode === "all"} minDate={toDateMin} maxDate={toDateMax} />
           </Box>
 
           <Button variant="contained" onClick={fetchLedger} disabled={loading}>

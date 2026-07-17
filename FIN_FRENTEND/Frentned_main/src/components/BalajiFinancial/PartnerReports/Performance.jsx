@@ -15,11 +15,13 @@ import { API_BASE } from "lib/config";
 import { getSession } from "src/utils/session";
 import { errorToast } from "toastify";
 import {
+  AppDatePicker,
   DataTable,
   PageHeader,
   ReportCompanyHeader,
   ReportToolbar,
   useReportZoom,
+  useDateRange,
 } from "src/components/ui";
 
 const formatAmount = (amount) => Number(amount || 0).toLocaleString("en-IN");
@@ -32,8 +34,10 @@ const Performance = () => {
   const [loading, setLoading] = useState(false);
   const [rows, setRows] = useState([]);
   const [dateFilter, setDateFilter] = useState(false);
-  const [fromDate, setFromDate] = useState(dayjs().startOf("year").format("YYYY-MM-DD"));
-  const [toDate, setToDate] = useState(dayjs().format("YYYY-MM-DD"));
+  const { fromDate, toDate, setFromDate, setToDate, toDateMin, toDateMax } = useDateRange(
+    dayjs().startOf("year").format("YYYY-MM-DD"),
+    dayjs().format("YYYY-MM-DD")
+  );
 
   const fetchPerformance = async () => {
     try {
@@ -138,7 +142,7 @@ const Performance = () => {
               xs: 12,
               md: 3
             }}>
-            <TextField fullWidth size="small" type="date" label="From Date" InputLabelProps={{ shrink: true }} value={fromDate} disabled={!dateFilter} onChange={(event) => setFromDate(event.target.value)} />
+            <AppDatePicker label="From Date" value={fromDate} disabled={!dateFilter} onChange={setFromDate} />
           </Grid>
 
           <Grid
@@ -146,7 +150,7 @@ const Performance = () => {
               xs: 12,
               md: 3
             }}>
-            <TextField fullWidth size="small" type="date" label="To Date" InputLabelProps={{ shrink: true }} value={toDate} disabled={!dateFilter} onChange={(event) => setToDate(event.target.value)} />
+            <AppDatePicker label="To Date" value={toDate} disabled={!dateFilter} onChange={setToDate} minDate={toDateMin} maxDate={toDateMax} />
           </Grid>
 
           <Grid

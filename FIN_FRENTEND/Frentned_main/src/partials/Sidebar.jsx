@@ -11,8 +11,11 @@ import ThemeToggle from "../components/ThemeToggle";
 import { COMPANY_ADDRESS, COMPANY_APP_NAME, COMPANY_LOGO } from "src/lib/company";
 import { useAuth } from "src/utils/authStore";
 import { hasPermissionAccess, PATH_PERMISSION_CODES } from "src/utils/permissions";
+import { BREAKPOINTS } from "src/utils/breakpoints";
 import { sidebarGroups } from "./SidebarConfig";
 import "./Sidebar.css";
+
+const tabletQuery = () => `(min-width: ${BREAKPOINTS.md}px) and (max-width: ${BREAKPOINTS.lg - 0.02}px)`;
 
 function Sidebar({ sidebarOpen, setSidebarOpen }) {
   const { pathname } = useLocation();
@@ -21,9 +24,16 @@ function Sidebar({ sidebarOpen, setSidebarOpen }) {
   const sidebar = useRef(null);
 
   const storedSidebarExpanded = localStorage.getItem("sidebar-expanded");
-  const [sidebarExpanded, setSidebarExpanded] = useState(
-    storedSidebarExpanded === null ? true : storedSidebarExpanded === "true"
+  const hasStoredPreference = storedSidebarExpanded !== null;
+  const [sidebarExpanded, setSidebarExpanded] = useState(() =>
+    hasStoredPreference
+      ? storedSidebarExpanded === "true"
+      : typeof window === "undefined" || !window.matchMedia(tabletQuery()).matches
   );
+  // Tracks whether the current value came from an explicit user click, so
+  // viewport-driven auto-collapse (tablets) never gets mistaken for - or
+  // permanently overwrites - a real preference in localStorage.
+  const userOverrideRef = useRef(hasStoredPreference);
   const [openGroup, setOpenGroup] = useState(null);
 
   const pathnameLower = pathname.toLowerCase();
@@ -75,14 +85,32 @@ function Sidebar({ sidebarOpen, setSidebarOpen }) {
   }, [sidebarOpen, setSidebarOpen]);
 
   useEffect(() => {
-    localStorage.setItem("sidebar-expanded", sidebarExpanded);
     document.body.classList.toggle("sidebar-expanded", sidebarExpanded);
   }, [sidebarExpanded]);
+
+  // Persist ONLY explicit user choices - never a viewport-driven auto-collapse.
+  useEffect(() => {
+    if (!userOverrideRef.current) return;
+    localStorage.setItem("sidebar-expanded", sidebarExpanded);
+  }, [sidebarExpanded]);
+
+  // Live tablet-viewport default (collapsed) while the user hasn't overridden it yet.
+  useEffect(() => {
+    if (userOverrideRef.current) return;
+    const mql = window.matchMedia(tabletQuery());
+    const applyDefault = () => setSidebarExpanded(!mql.matches);
+    applyDefault();
+    mql.addEventListener("change", applyDefault);
+    return () => mql.removeEventListener("change", applyDefault);
+  }, []);
 
   const handleGroupToggle = useCallback(
     (groupName) => {
       setOpenGroup((prev) => (prev === groupName ? null : groupName));
-      if (!sidebarExpanded) setSidebarExpanded(true);
+      if (!sidebarExpanded) {
+        userOverrideRef.current = true;
+        setSidebarExpanded(true);
+      }
     },
     [sidebarExpanded]
   );
@@ -92,6 +120,7 @@ function Sidebar({ sidebarOpen, setSidebarOpen }) {
   }, [sidebarOpen, setSidebarOpen]);
 
   const handleSidebarExpand = useCallback(() => {
+    userOverrideRef.current = true;
     setSidebarExpanded(!sidebarExpanded);
   }, [sidebarExpanded]);
 

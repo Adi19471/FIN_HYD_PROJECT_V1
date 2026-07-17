@@ -352,7 +352,7 @@ const Registration_creation = () => {
         </DialogTitle>
         <Divider />
         <DialogContent sx={{ pt: 3 }}>
-          <Grid container spacing={2.5}>
+          <Grid container spacing={2}>
             <Grid size={12}>
               <TextField
                 fullWidth
@@ -445,7 +445,7 @@ const Registration_creation = () => {
             <Chip size="small" label={`${form.permissionIds.length} assigned`} color="primary" />
           </Stack>
 
-          <TableContainer component={Paper} variant="outlined" sx={{ maxHeight: 470 }}>
+          <TableContainer component={Paper} variant="outlined" sx={{ maxHeight: { xs: 300, sm: 380, md: 470 }, overflow: "auto" }}>
             <Table stickyHeader size="small">
               <TableHead>
                 <TableRow>

@@ -23,14 +23,17 @@ import {
   ReportCompanyHeader,
   ReportToolbar,
   useReportZoom,
+  useDateRange,
 } from "src/components/ui";
 
 const Bussiness_Reports = () => {
   const [rows, setRows] = useState([]);
   const [loading, setLoading] = useState(false);
 
-  const [fromDate, setFromDate] = useState(dayjs().startOf("month"));
-  const [toDate, setToDate] = useState(dayjs());
+  const { fromDate, toDate, setFromDate, setToDate, toDateMin, toDateMax } = useDateRange(
+    dayjs().startOf("month"),
+    dayjs()
+  );
   const [percentage, setPercentage] = useState(10);
 
   const zoom = useReportZoom();
@@ -210,6 +213,8 @@ const Bussiness_Reports = () => {
               label="To Date"
               value={toDate}
               onChange={setToDate}
+              minDate={toDateMin}
+              maxDate={toDateMax}
             />
           </Grid>
 

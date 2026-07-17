@@ -4,12 +4,11 @@ import axios from "axios";
 import { API_BASE } from "lib/config";
 import { getSession } from "src/utils/session";
 import { infoToast, successToast, warningToast, errorToast } from "toastify";
-import { AppDatePicker, DataTable, PageHeader } from "src/components/ui";
+import { AppDatePicker, DataTable, PageHeader, useDateRange } from "src/components/ui";
 
 const AccountLedger = () => {
   const [filterType, setFilterType] = useState("ALL");
-  const [fromDate, setFromDate] = useState("");
-  const [toDate, setToDate] = useState("");
+  const { fromDate, toDate, setFromDate, setToDate, toDateMin, toDateMax } = useDateRange("", "");
   const [rows, setRows] = useState([]);
   const [loading, setLoading] = useState(false);
 
@@ -76,7 +75,7 @@ const AccountLedger = () => {
             <AppDatePicker label="From Date" value={fromDate} onChange={setFromDate} disabled={filterType === "ALL"} />
           </Box>
           <Box sx={{ width: { xs: "100%", md: 220 } }}>
-            <AppDatePicker label="To Date" value={toDate} onChange={setToDate} disabled={filterType === "ALL"} />
+            <AppDatePicker label="To Date" value={toDate} onChange={setToDate} disabled={filterType === "ALL"} minDate={toDateMin} maxDate={toDateMax} />
           </Box>
           <Button variant="contained" onClick={handleGenerate} disabled={loading}>
             Generate

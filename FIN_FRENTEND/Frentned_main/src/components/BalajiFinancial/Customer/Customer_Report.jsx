@@ -198,11 +198,12 @@ const Customer_Report = () => {
             </Typography>
           )}
 
-          <TableContainer 
-            component={Paper} 
-            sx={{ 
+          <TableContainer
+            component={Paper}
+            sx={{
               border: "1px solid #ddd",
-              minHeight: "450px",           // ← Prevents jumping/shaking
+              minHeight: { xs: 300, sm: 360, md: 450 },   // ← Prevents jumping/shaking
+              maxHeight: { xs: 480, sm: 560, md: 640, lg: 720 },
               overflow: "auto"
             }}
           >

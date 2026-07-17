@@ -4,11 +4,10 @@ import axios from "axios";
 import { API_BASE } from "lib/config";
 import { getSession } from "src/utils/session";
 import { errorToast, successToast } from "toastify";
-import { AppDatePicker, DataTable, PageHeader } from "src/components/ui";
+import { AppDatePicker, DataTable, PageHeader, useDateRange } from "src/components/ui";
 
 const Cbledger = () => {
-  const [fromDate, setFromDate] = useState("");
-  const [toDate, setToDate] = useState("");
+  const { fromDate, toDate, setFromDate, setToDate, toDateMin, toDateMax } = useDateRange("", "");
   const [collectionOnly, setCollectionOnly] = useState(false);
   const [ledgerData, setLedgerData] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -101,7 +100,7 @@ const Cbledger = () => {
               xs: 12,
               md: 3
             }}>
-            <AppDatePicker label="To Date" value={toDate} onChange={setToDate} />
+            <AppDatePicker label="To Date" value={toDate} onChange={setToDate} minDate={toDateMin} maxDate={toDateMax} />
           </Grid>
           <Grid
             size={{

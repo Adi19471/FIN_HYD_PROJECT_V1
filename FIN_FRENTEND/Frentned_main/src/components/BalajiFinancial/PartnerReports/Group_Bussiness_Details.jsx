@@ -15,11 +15,13 @@ import dayjs from "dayjs";
 import { API_BASE } from "lib/config";
 import { getSession } from "src/utils/session";
 import {
+  AppDatePicker,
   DataTable,
   PageHeader,
   ReportCompanyHeader,
   ReportToolbar,
   useReportZoom,
+  useDateRange,
 } from "src/components/ui";
 
 const managerOptions = [
@@ -42,8 +44,10 @@ const GroupBusinessDetails = () => {
   const [dateFilter, setDateFilter] = useState(false);
   const [balancesOnly, setBalancesOnly] = useState(false);
   const [managerId, setManagerId] = useState("P3");
-  const [fromDate, setFromDate] = useState(dayjs().startOf("year").format("YYYY-MM-DD"));
-  const [toDate, setToDate] = useState(dayjs().format("YYYY-MM-DD"));
+  const { fromDate, toDate, setFromDate, setToDate, toDateMin, toDateMax } = useDateRange(
+    dayjs().startOf("year").format("YYYY-MM-DD"),
+    dayjs().format("YYYY-MM-DD")
+  );
 
   const selectedManager = managerOptions.find((item) => item.value === managerId);
 
@@ -165,7 +169,7 @@ const GroupBusinessDetails = () => {
               xs: 12,
               md: 2
             }}>
-            <TextField fullWidth size="small" type="date" label="From" InputLabelProps={{ shrink: true }} disabled={!dateFilter} value={fromDate} onChange={(event) => setFromDate(event.target.value)} />
+            <AppDatePicker label="From" value={fromDate} disabled={!dateFilter} onChange={setFromDate} />
           </Grid>
 
           <Grid
@@ -173,7 +177,7 @@ const GroupBusinessDetails = () => {
               xs: 12,
               md: 2
             }}>
-            <TextField fullWidth size="small" type="date" label="To" InputLabelProps={{ shrink: true }} disabled={!dateFilter} value={toDate} onChange={(event) => setToDate(event.target.value)} />
+            <AppDatePicker label="To" value={toDate} disabled={!dateFilter} onChange={setToDate} minDate={toDateMin} maxDate={toDateMax} />
           </Grid>
 
           <Grid

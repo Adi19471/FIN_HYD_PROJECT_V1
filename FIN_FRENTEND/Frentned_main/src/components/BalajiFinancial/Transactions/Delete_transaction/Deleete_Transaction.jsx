@@ -213,7 +213,7 @@ const DeleteTransactions = () => {
           {error && <Alert severity="error" sx={{ mt: 1.5 }}>{error}</Alert>}
         </Box>
 
-        <TableContainer sx={{ maxHeight: 700 }}>
+        <TableContainer sx={{ maxHeight: { xs: 420, sm: 520, md: 620, lg: 700 }, overflow: "auto" }}>
           <Table
             stickyHeader
             size="small"

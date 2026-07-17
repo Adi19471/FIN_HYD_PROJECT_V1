@@ -34,6 +34,17 @@ import autoTable from "jspdf-autotable";
 import { COMPANY_ADDRESS, COMPANY_NAME } from "src/lib/company";
 import { useThemeProvider } from "src/utils/ThemeContext";
 
+// Default responsive height for a DataTable that doesn't pass its own `height`.
+// Exported so outlier screens (e.g. Partner.jsx, which wraps a raw DataGrid
+// instead of this component) can reuse the exact same breakpoint scale.
+export const DEFAULT_TABLE_HEIGHT = {
+  xs: "min(70vh, 460px)",
+  sm: "min(66vh, 520px)",
+  md: "min(62vh, 560px)",
+  lg: "calc(100vh - 260px)",
+  xl: "calc(100vh - 280px)",
+};
+
 const reportDateLabel = () => new Date().toLocaleDateString("en-GB", {
   day: "2-digit",
   month: "short",
@@ -213,7 +224,7 @@ function CustomGridToolbar({ rows, columns, fileName, showExport }) {
  * @param {Array} columns - Column definitions
  * @param {boolean} loading - Loading state
  * @param {function} getRowId - Function to get row ID
- * @param {number} height - Table height (default: 600)
+ * @param {number|object} height - Table height (default: responsive DEFAULT_TABLE_HEIGHT)
  * @param {object} otherProps - Additional DataGrid props
  */
 const DataTable = ({
@@ -221,7 +232,7 @@ const DataTable = ({
   columns = [],
   loading = false,
   getRowId = (row) => row.id,
-  height = 600,
+  height = DEFAULT_TABLE_HEIGHT,
   title,
   subtitle,
   pageSize = 25,

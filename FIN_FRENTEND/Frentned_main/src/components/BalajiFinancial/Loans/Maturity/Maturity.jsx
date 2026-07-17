@@ -16,28 +16,18 @@ import axios from "axios";
 import dayjs from "dayjs";
 import { API_BASE } from "lib/config";
 import { getSession } from "src/utils/session";
-import { AppDatePicker, DataTable } from "src/components/ui";
+import { AppDatePicker, DataTable, useDateRange, DROPDOWN_MENU_PROPS } from "src/components/ui";
 
 const loanTypes = [
   { label: "Daily Finance", value: "DAILY_FINANCE" },
   { label: "Monthly Finance", value: "MONTHLY_FINANCE" },
 ];
 
-const menuProps = {
-  PaperProps: {
-    sx: {
-      maxHeight: 280,
-      minWidth: 220,
-    },
-  },
-};
-
 const money = (value) => Number(value || 0).toLocaleString("en-IN");
 
 const Maturity = () => {
   const [loanType, setLoanType] = useState("MONTHLY_FINANCE");
-  const [fromDate, setFromDate] = useState("");
-  const [toDate, setToDate] = useState("");
+  const { fromDate, toDate, setFromDate, setToDate, toDateMin, toDateMax } = useDateRange("", "");
   const [data, setData] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -143,8 +133,8 @@ const Maturity = () => {
               size="small"
               value={loanType}
               onChange={(event) => setLoanType(event.target.value)}
-              SelectProps={{ MenuProps: menuProps }}
-              sx={{ width: 220 }}
+              SelectProps={{ MenuProps: DROPDOWN_MENU_PROPS }}
+              sx={{ minWidth: 220 }}
             >
               {loanTypes.map((type) => (
                 <MenuItem key={type.value} value={type.value}>
@@ -152,8 +142,8 @@ const Maturity = () => {
                 </MenuItem>
               ))}
             </TextField>
-            <AppDatePicker label="From Date" value={fromDate} onChange={setFromDate} sx={{ width: 180 }} />
-            <AppDatePicker label="To Date" value={toDate} onChange={setToDate} sx={{ width: 180 }} />
+            <AppDatePicker label="From Date" value={fromDate} onChange={setFromDate} />
+            <AppDatePicker label="To Date" value={toDate} onChange={setToDate} minDate={toDateMin} maxDate={toDateMax} />
             <Button
               variant="contained"
               startIcon={loading ? <CircularProgress size={18} color="inherit" /> : <RefreshRounded />}

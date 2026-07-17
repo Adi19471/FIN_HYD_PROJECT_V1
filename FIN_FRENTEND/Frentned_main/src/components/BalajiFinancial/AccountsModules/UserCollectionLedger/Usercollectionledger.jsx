@@ -16,14 +16,13 @@ import axios from "axios";
 import { API_BASE } from "lib/config";
 import { getSession } from "src/utils/session";
 import { successToast, errorToast } from "toastify";
-import { AppDatePicker, DataTable, PageHeader } from "src/components/ui";
+import { AppDatePicker, DataTable, PageHeader, useDateRange } from "src/components/ui";
 
 const Usercollectionledger = () => {
   const [users, setUsers] = useState([]);
   const [userName, setUserName] = useState("");
   const [dateMode, setDateMode] = useState("range");
-  const [fromDate, setFromDate] = useState("");
-  const [toDate, setToDate] = useState("");
+  const { fromDate, toDate, setFromDate, setToDate, toDateMin, toDateMax } = useDateRange("", "");
   const [rows, setRows] = useState([]);
   const [loading, setLoading] = useState(false);
 
@@ -110,7 +109,7 @@ const Usercollectionledger = () => {
               xs: 12,
               md: 3
             }}>
-            <TextField select label="User" sx={{width:"220px"}} value={userName} onChange={(event) => setUserName(event.target.value)} fullWidth size="small">
+            <TextField select label="User" value={userName} onChange={(event) => setUserName(event.target.value)} fullWidth size="small">
               {users.map((user, index) => (
                 <MenuItem key={index} value={user}>{user}</MenuItem>
               ))}
@@ -138,7 +137,7 @@ const Usercollectionledger = () => {
               xs: 12,
               md: 2
             }}>
-            <AppDatePicker label="To Date" value={toDate} onChange={setToDate} disabled={dateMode === "all"} />
+            <AppDatePicker label="To Date" value={toDate} onChange={setToDate} disabled={dateMode === "all"} minDate={toDateMin} maxDate={toDateMax} />
           </Grid>
           <Grid
             size={{

@@ -127,7 +127,6 @@ const CustomerOutstanding = () => {
             label="Date"
             value={selectedDate}
             onChange={(value) => setSelectedDate(dayjs(value))}
-            sx={{ width: 180 }}
           />
 
           <FormControlLabel
@@ -159,7 +158,14 @@ const CustomerOutstanding = () => {
           <LoadingSpinner />
         ) : (
           <>
-            <TableContainer sx={{ border: "1px solid #ccc", borderRadius: 1, overflow: "auto" }}>
+            <TableContainer
+              sx={{
+                border: "1px solid #ccc",
+                borderRadius: 1,
+                overflow: "auto",
+                height: { xs: "min(70vh, 460px)", sm: "min(66vh, 520px)", md: "min(62vh, 560px)", lg: "calc(100vh - 320px)" },
+              }}
+            >
               <Table size="small" sx={{ minWidth: 900 }}>
                 <TableHead>
                   <TableRow sx={{ backgroundColor: "#1976d2" }}>

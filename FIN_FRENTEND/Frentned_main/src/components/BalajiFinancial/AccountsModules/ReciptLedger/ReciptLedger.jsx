@@ -4,11 +4,10 @@ import axios from "axios";
 import { API_BASE } from "lib/config";
 import { getSession } from "src/utils/session";
 import { successToast, errorToast } from "toastify";
-import { AppDatePicker, DataTable, PageHeader } from "src/components/ui";
+import { AppDatePicker, DataTable, PageHeader, useDateRange } from "src/components/ui";
 
 const ReceiptLedger = () => {
-  const [fromDate, setFromDate] = useState("");
-  const [toDate, setToDate] = useState("");
+  const { fromDate, toDate, setFromDate, setToDate, toDateMin, toDateMax } = useDateRange("", "");
   const [ledgerData, setLedgerData] = useState([]);
   const [loading, setLoading] = useState(false);
 
@@ -78,7 +77,7 @@ const ReceiptLedger = () => {
               xs: 12,
               md: 4
             }}>
-            <AppDatePicker label="To Date" value={toDate} onChange={setToDate} />
+            <AppDatePicker label="To Date" value={toDate} onChange={setToDate} minDate={toDateMin} maxDate={toDateMax} />
           </Grid>
           <Grid
             size={{

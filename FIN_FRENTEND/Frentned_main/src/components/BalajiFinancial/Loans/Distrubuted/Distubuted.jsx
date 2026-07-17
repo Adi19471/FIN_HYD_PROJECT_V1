@@ -4,14 +4,13 @@ import axios from "axios";
 import { API_BASE } from "lib/config";
 import { getSession } from "src/utils/session";
 import { errorToast, successToast } from "toastify";
-import { AppDatePicker, DataTable, PageHeader } from "src/components/ui";
+import { AppDatePicker, DataTable, PageHeader, useDateRange } from "src/components/ui";
 
 const formatINR = (value) => `₹ ${Number(value || 0).toLocaleString("en-IN")}`;
 
 const Distubuted = () => {
   const [data, setData] = useState([]);
-  const [fromDate, setFromDate] = useState("");
-  const [toDate, setToDate] = useState("");
+  const { fromDate, toDate, setFromDate, setToDate, toDateMin, toDateMax } = useDateRange("", "");
   const [loading, setLoading] = useState(false);
 
   const headers = useMemo(
@@ -96,7 +95,7 @@ const Distubuted = () => {
               xs: 12,
               md: 4
             }}>
-            <AppDatePicker label="To Date" value={toDate} onChange={setToDate} />
+            <AppDatePicker label="To Date" value={toDate} onChange={setToDate} minDate={toDateMin} maxDate={toDateMax} />
           </Grid>
           <Grid
             size={{

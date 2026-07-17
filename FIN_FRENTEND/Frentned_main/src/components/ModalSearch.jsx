@@ -1,12 +1,8 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import {
-  AccountBalanceRounded,
-  AddCardRounded,
   AssessmentRounded,
   CloseRounded,
-  GroupsRounded,
-  ReceiptLongRounded,
   SearchRounded,
 } from "@mui/icons-material";
 import {
@@ -25,24 +21,46 @@ import {
   TextField,
   Typography,
 } from "@mui/material";
+import { useAuth } from "src/utils/authStore";
+import { hasPermissionAccess, PATH_PERMISSION_CODES } from "src/utils/permissions";
+import { sidebarGroups } from "src/partials/SidebarConfig";
 
-const quickPages = [
-  { name: "Dashboard", link: "/", group: "Home", keywords: "overview counts realtime", icon: AssessmentRounded },
-  { name: "Quick Cash Book", link: "/Transactions/Quick_Cash_Book", group: "Transactions", keywords: "quick entry cash collection", icon: AddCardRounded },
-  { name: "Business Cash Book", link: "/BussinessCashBook_Main", group: "Transactions", keywords: "daily monthly finance payment", icon: ReceiptLongRounded },
-  { name: "Daily Book", link: "/AccountsModules/DailyBook", group: "Accounts", keywords: "day close cash movement", icon: ReceiptLongRounded },
-  { name: "Loans", link: "/Loan", group: "Loans", keywords: "daily monthly finance account number ac no", icon: AccountBalanceRounded },
-  { name: "Distributed Loans", link: "/Loans/Distubuted", group: "Loans", keywords: "disbursed loan distributed user report", icon: AssessmentRounded },
-  { name: "Account Master Ledger", link: "/AccountsModules/AccountMasterLedger", group: "Accounts", keywords: "capital names particulars ledger", icon: ReceiptLongRounded },
-  { name: "Business Collections Report", link: "/Bussiness/BussinessCollectionReportsimport", group: "Reports", keywords: "collections report df mf", icon: AssessmentRounded },
-  { name: "Customer Profiles", link: "/customer", group: "Master", keywords: "customer kyc profile", icon: GroupsRounded },
-  { name: "Daily Finance", link: "/Daily-Finace", group: "Loans", keywords: "daily loan register account ac no", icon: AccountBalanceRounded },
-  { name: "Monthly Finance", link: "/Monthly-Finance", group: "Loans", keywords: "monthly loan register account ac no", icon: AccountBalanceRounded },
-];
+// Every searchable screen, derived from the sidebar's own nav config (the
+// same sidebarGroups data that renders Sidebar.jsx) plus Dashboard, which
+// the sidebar renders separately outside sidebarGroups. Deriving from here
+// - instead of a hand-maintained list - means a screen added to the sidebar
+// is automatically searchable with no second list to keep in sync, and
+// permission-gated the same way the sidebar itself is.
+const buildSearchIndex = (user) => {
+  const pages = [];
+
+  if (hasPermissionAccess(user, PATH_PERMISSION_CODES["/"])) {
+    pages.push({ name: "Dashboard", link: "/", group: "Home", icon: AssessmentRounded });
+  }
+
+  sidebarGroups
+    .filter((group) => group.key !== "auth")
+    .forEach((group) => {
+      group.items
+        .filter((item) => hasPermissionAccess(user, PATH_PERMISSION_CODES[item.path]))
+        .forEach((item) => {
+          pages.push({ name: item.label, link: item.path, group: group.label, icon: item.icon });
+        });
+    });
+
+  return pages;
+};
 
 function ModalSearch({ id, searchId, modalOpen, setModalOpen }) {
+  const { user } = useAuth();
   const searchInput = useRef(null);
   const [query, setQuery] = useState("");
+
+  const quickPages = useMemo(() => buildSearchIndex(user), [user]);
+  const categories = useMemo(
+    () => Array.from(new Set(quickPages.map((item) => item.group))),
+    [quickPages]
+  );
 
   useEffect(() => {
     if (modalOpen) {
@@ -55,9 +73,9 @@ function ModalSearch({ id, searchId, modalOpen, setModalOpen }) {
     const term = query.trim().toLowerCase();
     if (!term) return quickPages;
     return quickPages.filter((item) =>
-      `${item.name} ${item.group} ${item.keywords}`.toLowerCase().includes(term)
+      `${item.name} ${item.group} ${item.link}`.toLowerCase().includes(term)
     );
-  }, [query]);
+  }, [query, quickPages]);
 
   return (
     <Dialog
@@ -104,7 +122,7 @@ function ModalSearch({ id, searchId, modalOpen, setModalOpen }) {
 
       <DialogContent sx={{ p: 2, bgcolor: "rgba(248,250,252,0.72)" }}>
         <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap sx={{ mb: 1.5 }}>
-          {["Transactions", "Reports", "Accounts", "Loans", "Master"].map((item) => (
+          {categories.map((item) => (
             <Chip key={item} size="small" label={item} variant="outlined" />
           ))}
         </Stack>
@@ -128,7 +146,7 @@ function ModalSearch({ id, searchId, modalOpen, setModalOpen }) {
                   </ListItemIcon>
                   <ListItemText
                     primary={item.name}
-                    secondary={`${item.group} / ${item.keywords}`}
+                    secondary={item.group}
                     primaryTypographyProps={{ fontWeight: 900 }}
                   />
                   <Chip size="small" label="Open" color="primary" variant="outlined" />
@@ -139,7 +157,7 @@ function ModalSearch({ id, searchId, modalOpen, setModalOpen }) {
               <Box sx={{ p: 4, textAlign: "center" }}>
                 <Typography fontWeight={900}>No matching screen</Typography>
                 <Typography variant="body2" color="text.secondary">
-                  Try searching for cashbook, report, customer, ledger, daily, or monthly.
+                  Try searching by screen name, section, or path.
                 </Typography>
               </Box>
             )}

@@ -1,4 +1,4 @@
 .MuiAutocomplete-root {
-  width: 220px !important;
+  width: min(220px, 100%) !important;
   /* margin: 16px !important; */
 }

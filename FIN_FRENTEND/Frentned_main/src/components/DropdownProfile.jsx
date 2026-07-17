@@ -97,14 +97,14 @@ function DropdownProfile({ align }) {
           <ListItemIcon>
             <SettingsRounded fontSize="small" />
           </ListItemIcon>
-          <ListItemText primary="Settings" secondary="Preferences and access" />
+          <ListItemText primary="Settings"  />
         </MenuItem>
 
         <MenuItem onClick={() => { closeMenu(); navigate("/AccountMasterSetup/Registraion_creation"); }}>
           <ListItemIcon>
             <ManageAccountsRounded fontSize="small" />
           </ListItemIcon>
-          <ListItemText primary="User Management" secondary="Roles and users" />
+          <ListItemText primary="User Management" />
         </MenuItem>
 
         <Divider />

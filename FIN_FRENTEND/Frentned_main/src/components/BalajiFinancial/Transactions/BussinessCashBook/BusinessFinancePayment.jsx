@@ -301,7 +301,7 @@ export default function BusinessFinancePayment({
             size={{
               xs: 12,
               sm: 4,
-              md: 2.2
+              md: 2.1
             }}>
             <ReadOnlyField label="Account No" value={form.accountNo || "-"} />
           </Grid>

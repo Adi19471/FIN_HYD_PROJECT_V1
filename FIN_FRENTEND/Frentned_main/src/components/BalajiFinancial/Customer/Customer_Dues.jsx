@@ -220,7 +220,14 @@ const Customer_Dues = () => {
         </Typography>
       ) : (
         <>
-          <TableContainer component={Paper} sx={{ border: "1px solid #ddd" }}>
+          <TableContainer
+            component={Paper}
+            sx={{
+              border: "1px solid #ddd",
+              overflow: "auto",
+              height: { xs: "min(70vh, 460px)", sm: "min(66vh, 520px)", md: "min(62vh, 560px)", lg: "calc(100vh - 320px)" },
+            }}
+          >
             <Table sx={{ minWidth: 950, borderCollapse: "collapse" }}>
               <TableHead>
                 <TableRow sx={{ backgroundColor: "#f0f0f0" }}>

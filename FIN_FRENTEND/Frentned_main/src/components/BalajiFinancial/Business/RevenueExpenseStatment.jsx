@@ -16,12 +16,11 @@ import axios from "axios";
 import { API_BASE } from "lib/config";
 import { getSession } from "src/utils/session";
 import LoadingSpinner from "src/LoadingSpinner";
-import { AppDatePicker } from "src/components/ui";
+import { AppDatePicker, useDateRange } from "src/components/ui";
 
 
 const RevenueExpenseStatement = () => {
-  const [fromDate, setFromDate] = useState(null);
-  const [toDate, setToDate] = useState(null);
+  const { fromDate, toDate, setFromDate, setToDate, toDateMin, toDateMax } = useDateRange(null, null);
   const [data, setData] = useState([]);
   const [loading, setLoading] = useState(false);
 
@@ -112,7 +111,7 @@ const RevenueExpenseStatement = () => {
               xs: 12,
               md: 3
             }}>
-            <AppDatePicker label="To Date" value={toDate} onChange={setToDate} />
+            <AppDatePicker label="To Date" value={toDate} onChange={setToDate} minDate={toDateMin} maxDate={toDateMax} />
           </Grid>
 
           <Grid
@@ -190,7 +189,14 @@ const RevenueExpenseStatement = () => {
           </Typography>
         </Paper>
       ) : (
-        <TableContainer component={Paper} sx={{ borderRadius: 2 }}>
+        <TableContainer
+          component={Paper}
+          sx={{
+            borderRadius: 2,
+            overflow: "auto",
+            maxHeight: { xs: 420, sm: 520, md: 620, lg: 720 },
+          }}
+        >
           <Table>
             <TableBody>
 

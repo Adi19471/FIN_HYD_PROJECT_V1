@@ -26,7 +26,7 @@ import axios from "axios";
 import { API_BASE } from "lib/config";
 import { getSession } from "src/utils/session";
 import dayjs from "dayjs";
-import { AppDatePicker, ReportCompanyHeader, TableExportMenu } from "src/components/ui";
+import { AppDatePicker, ReportCompanyHeader, TableExportMenu, useDateRange as useDateRangeHook } from "src/components/ui";
 
 const token = getSession()?.token || getSession("token") || "";
 
@@ -38,8 +38,10 @@ const BusinessOverview = () => {
 
   // Controls State
   const [useDateRange, setUseDateRange] = useState(true);        // true = Date Range, false = All
-  const [fromDate, setFromDate] = useState(dayjs().startOf("month").format("YYYY-MM-DD"));
-  const [toDate, setToDate] = useState(dayjs().format("YYYY-MM-DD"));
+  const { fromDate, toDate, setFromDate, setToDate, toDateMin, toDateMax } = useDateRangeHook(
+    dayjs().startOf("month").format("YYYY-MM-DD"),
+    dayjs().format("YYYY-MM-DD")
+  );
   const [excludeDividends, setExcludeDividends] = useState(true);
   const [accruedRevenues, setAccruedRevenues] = useState(true);
 
@@ -138,7 +140,6 @@ const BusinessOverview = () => {
               value={fromDate}
               onChange={setFromDate}
               disabled={!useDateRange}
-              sx={{ width: 180 }}
             />
           </Grid>
 
@@ -148,7 +149,8 @@ const BusinessOverview = () => {
               value={toDate}
               onChange={setToDate}
               disabled={!useDateRange}
-              sx={{ width: 180 }}
+              minDate={toDateMin}
+              maxDate={toDateMax}
             />
           </Grid>
 
@@ -206,8 +208,8 @@ const BusinessOverview = () => {
             Loans Disbursed Information :
           </Typography>
 
-          <TableContainer component={Paper} variant="outlined" sx={{ mb: 5 }}>
-            <Table>
+          <TableContainer component={Paper} variant="outlined" sx={{ mb: 5, overflow: "auto" }}>
+            <Table sx={{ minWidth: 720 }}>
               <TableHead>
                 <TableRow sx={{ backgroundColor: "#e3f2fd" }}>
                   <TableCell><strong>Loan Type</strong></TableCell>

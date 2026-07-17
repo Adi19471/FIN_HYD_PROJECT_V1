@@ -276,13 +276,13 @@
 .auth-secure-note svg { font-size: 16px; margin-top: 1px; color: var(--brand-primary); flex-shrink: 0; }
 
 /* ---------------- Responsive ---------------- */
-@media (max-width: 1024px) {
+@media (max-width: 991px) {
   .auth-root { grid-template-columns: 1fr; }
   .auth-visual { min-height: 46vh; }
   .auth-form-side { min-height: auto; padding: 28px 16px 44px; }
   .auth-features { grid-template-columns: repeat(3, 1fr); }
 }
-@media (max-width: 560px) {
+@media (max-width: 575px) {
   .auth-features { grid-template-columns: 1fr; }
   .auth-stats { gap: 22px; }
 }

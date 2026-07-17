@@ -27,16 +27,7 @@ import { successToast, errorToast } from "toastify";
 import { API_BASE } from "lib/config";
 import { getSession } from "src/utils/session";
 import LoadingSpinner from "src/LoadingSpinner";
-import { AppDatePicker } from "src/components/ui";
-
-const compactMenuProps = {
-  PaperProps: {
-    sx: {
-      maxHeight: 320,
-      minWidth: 260,
-    },
-  },
-};
+import { AppDatePicker, DROPDOWN_MENU_PROPS } from "src/components/ui";
 
 const fieldSx = {
   "& .MuiOutlinedInput-root": {
@@ -362,7 +353,7 @@ const Cashbook = () => {
                 <Select
                   value={masterCode}
                   label="Account Group"
-                  MenuProps={compactMenuProps}
+                  MenuProps={DROPDOWN_MENU_PROPS}
                   onChange={(e) => setMasterCode(e.target.value)}
                 >
                   {masterCodes.map((g) => (
@@ -383,8 +374,8 @@ const Cashbook = () => {
                 <InputLabel>Account Code</InputLabel>
                 <Select
                   value={code}
-                  label="Account Code" sx={{width:220}}
-                  MenuProps={compactMenuProps}
+                  label="Account Code"
+                  MenuProps={DROPDOWN_MENU_PROPS}
                   onChange={(e) => setCode(e.target.value)}
                 >
                   {codes.map((c) => (
@@ -485,9 +476,9 @@ const Cashbook = () => {
               <FormControl fullWidth sx={fieldSx} disabled={!code || loadingTypes}>
                 <InputLabel>Transaction Type</InputLabel>
                 <Select
-                  value={transactionType} sx={{width:220}}
+                  value={transactionType}
                   label="Transaction Type"
-                  MenuProps={compactMenuProps}
+                  MenuProps={DROPDOWN_MENU_PROPS}
                   onChange={(e) => setTransactionType(e.target.value)}
                 >
                   {transactionTypes.map((type) => (

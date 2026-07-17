@@ -624,21 +624,21 @@ const DailyFinance = () => {
       width: 200,
       renderHeader: () => getHeader("Guarantor 1", "g1Name"),
     },
-    {
-      field: "g2Name",
-      width: 200,
-      renderHeader: () => getHeader("Guarantor 2", "g2Name"),
-    },
-    {
-      field: "g3Name",
-      width: 200,
-      renderHeader: () => getHeader("Guarantor 3", "g3Name"),
-    },
-    {
-      field: "partnerId",
-      width: 180,
-      renderHeader: () => getHeader("Partner", "partnerId"),
-    },
+    // {
+    //   field: "g2Name",
+    //   width: 200,
+    //   renderHeader: () => getHeader("Guarantor 2", "g2Name"),
+    // },
+    // {
+    //   field: "g3Name",
+    //   width: 200,
+    //   renderHeader: () => getHeader("Guarantor 3", "g3Name"),
+    // },
+    // {
+    //   field: "partnerId",
+    //   width: 180,
+    //   renderHeader: () => getHeader("Partner", "partnerId"),
+    // },
   ];
 
   const exportColumns = [
@@ -784,7 +784,7 @@ const DailyFinance = () => {
           </Typography>
 
           {/* BASIC INFO */}
-          <Grid container spacing={3} sx={{ mt: 1 }}>
+          <Grid container spacing={2} sx={{ mt: 1 }}>
             <Grid
               sx={{ display: "flex", justifyContent: { xs: "flex-start", sm: "center" } }}
               size={{
@@ -861,7 +861,7 @@ const DailyFinance = () => {
             />
           </Box>
 
-          <Grid container spacing={3} sx={{ mt: 1 }}>
+          <Grid container spacing={2} sx={{ mt: 1 }}>
             <Grid
               size={{
                 xs: 12,
@@ -1015,7 +1015,7 @@ const DailyFinance = () => {
               sx={{ bgcolor: "#8b5cf6", color: "white", fontWeight: 600 }}
             />
           </Box>
-          <Grid container spacing={3} sx={{ mt: 1 }}>
+          <Grid container spacing={2} sx={{ mt: 1 }}>
             {["guarantor1", "guarantor2", "guarantor3"].map((field, idx) => (
               <Grid
                 key={field}

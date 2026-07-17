@@ -403,10 +403,11 @@ const QuickCashBook = () => {
         <Divider sx={{ my: 2 }} />
 
         {/* Table */}
-        <TableContainer>
+        <TableContainer sx={{ overflow: "auto" }}>
           <Table
             size="small"
             sx={{
+              minWidth: 960,
               "& .MuiTableCell-root": {
                 border: "1px solid",
                 borderColor: "divider",
