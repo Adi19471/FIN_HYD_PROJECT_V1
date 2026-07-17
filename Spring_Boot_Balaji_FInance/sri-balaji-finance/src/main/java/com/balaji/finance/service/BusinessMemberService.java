@@ -6,6 +6,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
@@ -23,7 +24,6 @@ import com.balaji.finance.entity.BusinessMember;
 import com.balaji.finance.entity.CashBook;
 import com.balaji.finance.entity.EMI;
 import com.balaji.finance.entity.LoanStatus;
-import com.balaji.finance.entity.PaymentAllocation;
 import com.balaji.finance.entity.PersonalInfo;
 import com.balaji.finance.exception.ApiException;
 import com.balaji.finance.pojo.BusinessMemberAutoCompletePojo;
@@ -596,7 +596,17 @@ public class BusinessMemberService {
 
 		businessMemberRepository.save(businessMember);
 
-		if (updateEMIs) {
+	
+		
+		Long hasCashEntries = cashBookRepo.findCollectionsCountOnAccount(businessMember.getBusinessMemberId());
+
+		System.err.println(hasCashEntries + " ::hasCashEntries");
+
+		if (hasCashEntries > 0) {
+			
+			updateEmisOnceAfterCollectionsPaid(businessMember);
+		
+		} else if (updateEMIs) {
 
 			paymentAllocationRepo.deleteByEmi_BusinessMember(businessMember);
 			emiRepo.deleteByBusinessMember_BusinessMemberId(businessMember.getBusinessMemberId());
@@ -608,15 +618,6 @@ public class BusinessMemberService {
 				generateEMIScheduleForDays(businessMember);
 			}
 
-		}
-
-
-		Long hasCashEntries = cashBookRepo.findCollectionsCountOnAccount(businessMember.getBusinessMemberId());
-		
-		System.err.println(hasCashEntries +" ::hasCashEntries");
-
-		if (hasCashEntries > 0) {
-			updateEmisOnceAfterCollectionsPaid(businessMember);
 		}
 
 		return "Loan updated successfully!";
@@ -892,71 +893,154 @@ public class BusinessMemberService {
 		}
 	}
 
+	@Transactional
 	public void updateEmisOnceAfterCollectionsPaid(BusinessMember member) {
 
-		List<EMI> allEMIs = emiRepo.findByBusinessMember(member);
-		
-		List<PaidInstallmentProjection> collectionsPaidForDailyLoan = null;
+	    List<EMI> allEMIs = emiRepo.findByBusinessMemberOrderByInstallmentNumberAsc(member);
 
-		switch (member.getLoanType()) {
-		case "DAILY_FINANCE":
-			collectionsPaidForDailyLoan = cashBookRepo.getCollectionsPaidForDailyLoan(member.getBusinessMemberId());
-			break;
+	    PaidInstallmentProjection projection;
 
-		case "MONTHLY_FINANCE":
-			collectionsPaidForDailyLoan = cashBookRepo.getCollectionsPaidForMonthlyLoan(member.getBusinessMemberId());
-			break;
+	    switch (member.getLoanType()) {
 
-		default:
-			throw new IllegalArgumentException("Unknown type: " + member.getLoanType());
-		}
-        
+	    case "DAILY_FINANCE":
+	        projection = cashBookRepo.getCollectionsPaidForDailyLoan(member.getBusinessMemberId());
+	        break;
 
-		for (PaidInstallmentProjection pmp : collectionsPaidForDailyLoan) {
+	    case "MONTHLY_FINANCE":
+	        projection = cashBookRepo.getCollectionsPaidForMonthlyLoan(member.getBusinessMemberId());
+	        break;
 
-			BigDecimal remainingPayment = pmp.getInstallmentPaidAtTime();
-			String paymentRefId = pmp.getPaymentRefId();
-			LocalDateTime transactionDate = pmp.getTransactionDate();
+	    default:
+	        throw new IllegalArgumentException("Unknown loan type: " + member.getLoanType());
+	    }
 
-			List<EMI> pendingEMIs = allEMIs.stream().filter(emi -> !emi.getStatus().equalsIgnoreCase("PAID"))
-					.collect(Collectors.toList());
+	    
+	    
+	    BigDecimal paidPrincipal = projection != null && projection.getLoanInstallmentsPaid() != null
+	            ? projection.getLoanInstallmentsPaid()
+	            : BigDecimal.ZERO;
 
-			for (EMI emi : pendingEMIs) {
+	    BigDecimal paidInterest = projection != null && projection.getLoanInterestPaid() != null
+	            ? projection.getLoanInterestPaid()
+	            : BigDecimal.ZERO;
 
-				if (remainingPayment.compareTo(BigDecimal.ZERO) <= 0) {
-					break;
-				}
+	    BigDecimal remainingPrincipal = member.getAmount().subtract(paidPrincipal);
+	    BigDecimal remainingInterest = member.getInterest().subtract(paidInterest);
 
-				BigDecimal emiRemaining = emi.getRemainingAmount();
+	    if (remainingPrincipal.compareTo(BigDecimal.ZERO) < 0) {
+	        remainingPrincipal = BigDecimal.ZERO;
+	    }
 
-				// 🔹 Calculate allocation
-				BigDecimal allocation = remainingPayment.min(emiRemaining);
+	    if (remainingInterest.compareTo(BigDecimal.ZERO) < 0) {
+	        remainingInterest = BigDecimal.ZERO;
+	    }
 
-				PaymentAllocation pa = new PaymentAllocation();
-				pa.setPaymentRefId(paymentRefId); // from your UUID
-				pa.setEmi(emi);
-				pa.setAllocatedAmount(allocation);
+	    List<EMI> paidEMIs = allEMIs.stream()
+	            .filter(e -> "PAID".equalsIgnoreCase(e.getStatus()))
+	            .toList();
 
-				paymentAllocationRepo.save(pa);
+	    List<EMI> unpaidEMIs = allEMIs.stream()
+	            .filter(e -> !"PAID".equalsIgnoreCase(e.getStatus()))
+	            .sorted(Comparator.comparing(EMI::getInstallmentNumber))
+	            .collect(Collectors.toList());
 
-				emi.setPaidAmount(emi.getPaidAmount().add(allocation));
-				emi.setPaymentDate(transactionDate);
+	    int targetUnpaidCount = member.getDuration() - paidEMIs.size();
 
-				if (emi.getPaidAmount().compareTo(emi.getTotalAmount()) >= 0) {
-					emi.setStatus("PAID");
-				} else if (emi.getPaidAmount().compareTo(BigDecimal.ZERO) > 0) {
-					emi.setStatus("PARTIAL");
-				} else {
-					emi.setStatus("PENDING");
-				}
+	    if (targetUnpaidCount <= 0) {
+	        emiRepo.deleteAll(unpaidEMIs);
+	        return;
+	    }
 
-				emiRepo.save(emi);
+	    /*
+	     * Duration Reduced
+	     */
+	    if (unpaidEMIs.size() > targetUnpaidCount) {
 
-				remainingPayment = remainingPayment.subtract(allocation);
-			}
+	        List<EMI> toDelete = unpaidEMIs.subList(targetUnpaidCount, unpaidEMIs.size());
 
-		}
+	        emiRepo.deleteAll(toDelete);
 
+	        unpaidEMIs = new ArrayList<>(unpaidEMIs.subList(0, targetUnpaidCount));
+	    }
+
+	    /*
+	     * Duration Increased
+	     */
+	    while (unpaidEMIs.size() < targetUnpaidCount) {
+
+	        EMI emi = new EMI();
+
+	        emi.setBusinessMember(member);
+
+	        unpaidEMIs.add(emi);
+	    }
+
+	    BigDecimal principalPerEMI = remainingPrincipal.divide(
+	            BigDecimal.valueOf(targetUnpaidCount),
+	            2,
+	            RoundingMode.HALF_UP);
+
+	    BigDecimal interestPerEMI = remainingInterest.divide(
+	            BigDecimal.valueOf(targetUnpaidCount),
+	            2,
+	            RoundingMode.HALF_UP);
+
+	    BigDecimal assignedPrincipal = BigDecimal.ZERO;
+	    BigDecimal assignedInterest = BigDecimal.ZERO;
+
+	    int nextInstallmentNo = paidEMIs.size();
+
+	    for (int i = 0; i < unpaidEMIs.size(); i++) {
+
+	        EMI emi = unpaidEMIs.get(i);
+
+	        BigDecimal principalAmount;
+	        BigDecimal interestAmount;
+
+	        boolean isLast = i == unpaidEMIs.size() - 1;
+
+	        if (isLast) {
+
+	            principalAmount = remainingPrincipal.subtract(assignedPrincipal);
+	            interestAmount = remainingInterest.subtract(assignedInterest);
+
+	        } else {
+
+	            principalAmount = principalPerEMI;
+	            interestAmount = interestPerEMI;
+
+	            assignedPrincipal = assignedPrincipal.add(principalAmount);
+	            assignedInterest = assignedInterest.add(interestAmount);
+	        }
+
+	        emi.setBusinessMember(member);
+	        emi.setInstallmentNumber(++nextInstallmentNo);
+
+	        emi.setPrincipalAmount(principalAmount);
+	        emi.setInterestAmount(interestAmount);
+	        emi.setTotalAmount(principalAmount.add(interestAmount));
+
+	        if (emi.getPaidAmount() == null) {
+	            emi.setPaidAmount(BigDecimal.ZERO);
+	        }
+
+	        /*
+	         * Preserve PARTIAL payment
+	         */
+	        if (emi.getPaidAmount().compareTo(BigDecimal.ZERO) > 0) {
+	            emi.setStatus("PARTIAL");
+	        } else {
+	            emi.setStatus("PENDING");
+	        }
+
+	        if ("MONTHLY_FINANCE".equals(member.getLoanType())) {
+	            emi.setDueDate(member.getStartDate().plusMonths(emi.getInstallmentNumber()));
+	        } else {
+	            emi.setDueDate(member.getStartDate().plusDays(emi.getInstallmentNumber()));
+	        }
+	    }
+
+	    emiRepo.saveAll(unpaidEMIs);
 	}
 
 }
