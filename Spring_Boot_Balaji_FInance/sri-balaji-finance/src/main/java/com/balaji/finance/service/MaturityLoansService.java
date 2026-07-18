@@ -58,7 +58,7 @@ public class MaturityLoansService {
 				break;
 			}
 
-			loansList = businessMemberRepository.findAllByLoanTypeAndEndDateRange(starWithString, from, to);
+			loansList = businessMemberRepository.findAllByLoanTypeAndEndDateRange(starWithString, from, to,"ACTIVE");
 
 			int i = 0;
 			for (BusinessMember bm : loansList) {

@@ -16,9 +16,9 @@ public class InstallmentDuesPojo {
 	private BigDecimal installmentAmount;
 
 	private BigDecimal amountPaid;
-	private int noOfInstallmentsPaid;
+	private Long noOfInstallmentsPaid;
 	private BigDecimal installmentDue;
-	private int noOfInstallmentsPending;
+	private Long noOfInstallmentsPending;
 
 	private BigDecimal lateFee;
 	private String remarks;
@@ -127,19 +127,19 @@ public class InstallmentDuesPojo {
 		this.installmentAmount = installmentAmount;
 	}
 
-	public int getNoOfInstallmentsPaid() {
+	public Long getNoOfInstallmentsPaid() {
 		return noOfInstallmentsPaid;
 	}
 
-	public void setNoOfInstallmentsPaid(int noOfInstallmentsPaid) {
+	public void setNoOfInstallmentsPaid(Long noOfInstallmentsPaid) {
 		this.noOfInstallmentsPaid = noOfInstallmentsPaid;
 	}
 
-	public int getNoOfInstallmentsPending() {
+	public Long getNoOfInstallmentsPending() {
 		return noOfInstallmentsPending;
 	}
 
-	public void setNoOfInstallmentsPending(int noOfInstallmentsPending) {
+	public void setNoOfInstallmentsPending(Long noOfInstallmentsPending) {
 		this.noOfInstallmentsPending = noOfInstallmentsPending;
 	}
 

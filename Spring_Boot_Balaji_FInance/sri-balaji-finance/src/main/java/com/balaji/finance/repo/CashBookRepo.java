@@ -111,10 +111,10 @@ public interface CashBookRepo extends JpaRepository<CashBook, Long> {
 			SELECT
 			    DATE(TRANS_DATE) AS txnDate,
 			    SUM(CASE WHEN ACCOUNT_MASTER_CODE IN
-			        ('DF LOAN INSTALLMENT','DF LATE FEE','DF DOC CHARGES','DF INTEREST')
+			        ('DF LOAN INSTALLMENT','DF LATE FEE','DF INTEREST')
 			        THEN CREDIT ELSE 0 END) AS dailyTotal,
 			    SUM(CASE WHEN ACCOUNT_MASTER_CODE IN
-			        ('MF LOAN INSTALLMENT','MF INTEREST','MF LATE FEE','MF DOC CHARGES')
+			        ('MF LOAN INSTALLMENT','MF INTEREST','MF LATE FEE')
 			        THEN CREDIT ELSE 0 END) AS monthlyTotal
 			FROM cash_book
 			WHERE TRANS_DATE BETWEEN :fromDate AND :toDate
@@ -416,75 +416,69 @@ public interface CashBookRepo extends JpaRepository<CashBook, Long> {
 	List<CashBookProjection> getCreditSummary(@Param("accountMasterCode") List<String> accountMasterCode,
 			@Param("fromDate") LocalDateTime from, @Param("toDate") LocalDateTime to,
 			@Param("loanStatus") String loanStatus);
-	
-	
 
 	@Query("""
-		    SELECT
-		        COALESCE(SUM(cb.credit), 0)
-		    FROM CashBook cb
-		         JOIN cb.personalInfo personalInfo
-		    WHERE cb.accountMasterCode IN :accountMasterCode
-		      AND cb.transDate BETWEEN :fromDate AND :toDate
-		      AND personalInfo.personalInfoId IN :personalInfoId
-		""")
-		BigDecimal getCreditOfAccountCodeDateRange(
-		        @Param("accountMasterCode") List<String> accountMasterCode,
-		        @Param("personalInfoId") List<String> personalInfoId,
-		        @Param("fromDate") LocalDateTime from,
-		        @Param("toDate") LocalDateTime to);
+			    SELECT
+			        COALESCE(SUM(cb.credit), 0)
+			    FROM CashBook cb
+			         JOIN cb.personalInfo personalInfo
+			    WHERE cb.accountMasterCode IN :accountMasterCode
+			      AND cb.transDate BETWEEN :fromDate AND :toDate
+			      AND personalInfo.personalInfoId IN :personalInfoId
+			""")
+	BigDecimal getCreditOfAccountCodeDateRange(@Param("accountMasterCode") List<String> accountMasterCode,
+			@Param("personalInfoId") List<String> personalInfoId, @Param("fromDate") LocalDateTime from,
+			@Param("toDate") LocalDateTime to);
 
 	@Query("""
-		    SELECT
-		        COALESCE(SUM(cb.credit), 0)
-		    FROM CashBook cb
-		         JOIN cb.personalInfo personalInfo
-		    WHERE cb.accountMasterCode IN :accountMasterCode
-		      AND personalInfo.personalInfoId IN :personalInfoId
-		""")
-		BigDecimal getCreditOfAccountCode(
-		        @Param("accountMasterCode") List<String> accountMasterCode,
-		        @Param("personalInfoId") List<String> personalInfoId);
-	
-	
+			    SELECT
+			        COALESCE(SUM(cb.credit), 0)
+			    FROM CashBook cb
+			         JOIN cb.personalInfo personalInfo
+			    WHERE cb.accountMasterCode IN :accountMasterCode
+			      AND personalInfo.personalInfoId IN :personalInfoId
+			""")
+	BigDecimal getCreditOfAccountCode(@Param("accountMasterCode") List<String> accountMasterCode,
+			@Param("personalInfoId") List<String> personalInfoId);
+
 	@Query("""
-	        SELECT
-	            personalInfo.personalInfoId AS personalInfoId,
+			      SELECT
+			          personalInfo.personalInfoId AS personalInfoId,
 
-	            COALESCE(SUM(cb.credit), 0) AS totalCredit
+			          COALESCE(SUM(cb.credit), 0) AS totalCredit
 
-	        FROM CashBook cb
-	             JOIN cb.personalInfo personalInfo
+			      FROM CashBook cb
+			           JOIN cb.personalInfo personalInfo
 
-	        WHERE cb.accountMasterCode IN :accountMasterCodes
-	          AND cb.transDate BETWEEN :fromDate AND :toDate
-	          AND personalInfo.personalInfoId IN :personalInfoIds
+			      WHERE cb.accountMasterCode IN :accountMasterCodes
+			        AND cb.transDate BETWEEN :fromDate AND :toDate
+			        AND personalInfo.personalInfoId IN :personalInfoIds
 
-	        GROUP BY personalInfo.personalInfoId
+			      GROUP BY personalInfo.personalInfoId
 			""")
 	List<PartnerCreditSummaryProjection> getCreditOfAccountCodeForEveryPartnerDaterange(
 			@Param("accountMasterCodes") List<String> accountMasterCodes,
 			@Param("personalInfoIds") List<String> personalInfoIds, @Param("fromDate") LocalDateTime from,
 			@Param("toDate") LocalDateTime to);
-	
+
 	@Query("""
-	        SELECT
-	            personalInfo.personalInfoId AS personalInfoId,
+			SELECT
+			    personalInfo.personalInfoId AS personalInfoId,
 
-	            COALESCE(SUM(cb.credit), 0) AS totalCredit
+			    COALESCE(SUM(cb.credit), 0) AS totalCredit
 
-	        FROM CashBook cb
-	             JOIN cb.personalInfo personalInfo
+			FROM CashBook cb
+			     JOIN cb.personalInfo personalInfo
 
-	        WHERE cb.accountMasterCode IN :accountMasterCodes
-	          AND personalInfo.personalInfoId IN :personalInfoIds
+			WHERE cb.accountMasterCode IN :accountMasterCodes
+			  AND personalInfo.personalInfoId IN :personalInfoIds
 
-	        GROUP BY personalInfo.personalInfoId
-	        """)
+			GROUP BY personalInfo.personalInfoId
+			""")
 	List<PartnerCreditSummaryProjection> getCreditOfAccountCodeForEveryPartner(
-	        @Param("accountMasterCodes") List<String> accountMasterCodes,
-	        @Param("personalInfoIds") List<String> personalInfoIds);
-	
+			@Param("accountMasterCodes") List<String> accountMasterCodes,
+			@Param("personalInfoIds") List<String> personalInfoIds);
+
 	@Query(value = """
 			SELECT
 			    partner.PERSONAL_INFO_ID AS id,
@@ -579,9 +573,7 @@ public interface CashBookRepo extends JpaRepository<CashBook, Long> {
 			    partner.LAST_NAME
 			""", nativeQuery = true)
 	List<PartnerPerformanceReport> getLoanSummaryOfPartners();
-	
-	
-	
+
 	@Query(value = """
 			SELECT
 			    COALESCE(SUM(CASE
@@ -619,4 +611,25 @@ public interface CashBookRepo extends JpaRepository<CashBook, Long> {
 			AND BUSINESS_MEMBER_ID = :businessMemberId
 			""", nativeQuery = true)
 	PaidInstallmentProjection getCollectionsPaidForMonthlyLoan(@Param("businessMemberId") String businessMemberId);
+	
+	
+	@Query("""
+			FROM CashBook c
+			WHERE c.businessMember.businessMemberId = :memberId
+			AND c.accountMasterCode IN ('MF LOAN INSTALLMENT','MF INTEREST')
+			ORDER BY c.transDate asc
+			""")
+	List<CashBook> getAllMonthlyCollectionsByBusniesMember(@Param("memberId") String memberId);
+	
+	
+	@Query("""
+			FROM CashBook c
+			WHERE c.businessMember.businessMemberId = :memberId
+			AND c.accountMasterCode IN ('DF LOAN INSTALLMENT','DF INTEREST')
+			ORDER BY c.transDate asc
+			""")
+	List<CashBook> getAllDailyCollectionsByBusniesMember(@Param("memberId") String memberId);
+	
+	
+	
 }

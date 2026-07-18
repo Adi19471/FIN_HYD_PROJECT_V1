@@ -15,6 +15,7 @@ public class InstallmentDetails {
 	private String lateFeeDate;
 	private BigDecimal lateFee;
 	private String status;
+	private String transactionDate;
 	// Getters and Setters
 
 	public long getInstallmentNumber() {
@@ -105,4 +106,13 @@ public class InstallmentDetails {
 		this.status = status;
 	}
 
+	public String getTransactionDate() {
+		return transactionDate;
+	}
+
+	public void setTransactionDate(String transactionDate) {
+		this.transactionDate = transactionDate;
+	}
+
+	
 }

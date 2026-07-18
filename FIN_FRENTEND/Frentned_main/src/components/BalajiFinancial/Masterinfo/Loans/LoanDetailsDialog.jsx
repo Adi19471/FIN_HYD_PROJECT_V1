@@ -26,66 +26,57 @@ const fmtDate = (value) => (value ? String(value).slice(0, 10) : "-");
 
 const columns = [
   {
-    field: "installmentNumber",
-    headerName: "Inst No",
+    field: "sno",
+    headerName: "S.No",
     width: 90,
   },
-
   {
-    field: "emiAmount",
-    headerName: "Total Amount",
-    width: 140,
+    field: "id",
+    headerName: "ID",
+    width: 90,
     valueFormatter: (value) => money(value),
   },
-
   {
-    field: "paidAmount",
-    headerName: "Paid",
-    width: 120,
-    valueFormatter: (value) => money(value),
+    field: "date",
+    headerName: "Date",
+    width: 130,
+    valueFormatter: (value) => fmtDate(value),
   },
-
   {
     field: "dueDate",
     headerName: "Due Date",
     width: 130,
     valueFormatter: (value) => fmtDate(value),
   },
-
   {
-    field: "lateFeeDate",
-    headerName: "Late From",
-    width: 130,
-    valueFormatter: (value) => fmtDate(value),
-  },
-
-  {
-    field: "installmentAmount",
-    headerName: "Pending",
+    field: "paid",
+    headerName: "Paid",
     width: 120,
     valueFormatter: (value) => money(value),
   },
-
+  {
+    field: "totalPaid",
+    headerName: "Total Paid",
+    width: 120,
+    valueFormatter: (value) => money(value),
+  },
+  {
+    field: "balance",
+    headerName: "Balance",
+    width: 120,
+    valueFormatter: (value) => money(value),
+  },
   {
     field: "lateFee",
     headerName: "Late Fee",
     width: 120,
     valueFormatter: (value) => money(value),
   },
-
   {
-    field: "status",
-    headerName: "Status",
-    width: 110,
-    renderCell: ({ value }) => (
-      <Chip
-        size="small"
-        label={value || "PENDING"}
-        color={value === "PAID" ? "success" : "warning"}
-        variant="outlined"
-      />
-    ),
-  },
+    field: "cashier",
+    headerName: "Cashier",
+    width: 90,
+  }
 ];
 
 
@@ -128,15 +119,8 @@ export default function LoanDetailsDialog({ open, onClose, accountNo, loadEndpoi
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open, accountNo, loadEndpoint]);
 
-const rows = (data?.installmentDetailsList || []).map((row, index) => ({
-  id: row.emiId ?? `${row.installmentNumber || index}-${row.dueDate || index}`,
-  ...row,
+  const rows = (data?.emiPaymentHistoryList || []);
 
-  // EMI = Principal + Interest
-  emiAmount:
-    Number(row.principleAmount || 0) +
-    Number(row.interestAmount || 0),
-}));
   const handlePrint = () => {
     if (!data) return;
     const printWindow = window.open("", "", "width=900,height=800");
@@ -146,12 +130,15 @@ const rows = (data?.installmentDetailsList || []).map((row, index) => ({
       .map(
         (row) => `
           <tr>
-            <td>${row.installmentNumber ?? "-"}</td>
-            <td>${money(row.emiAmount)}</td>
-            <td>${money(row.paidAmount)}</td>
+            <td>${row.sno ?? "-"}</td>
+            <td>${row.id ?? "-"}</td>
+            <td>${fmtDate(row.date)}</td>
             <td>${fmtDate(row.dueDate)}</td>
+            <td>${money(row.paid)}</td>
+            <td>${money(row.totalPaid)}</td>
+            <td>${fmtDate(row.balance)}</td>
             <td>${money(row.lateFee)}</td>
-            <td>${row.status || "PENDING"}</td>
+            <td>${row.cashier}</td>
           </tr>`
       )
       .join("");
@@ -264,17 +251,22 @@ const rows = (data?.installmentDetailsList || []).map((row, index) => ({
             <Grid container spacing={2} sx={{ mb: 2 }}>
               <ReadOnlyField label="Loan Amount" value={money(data.loanAmount)} />
               <ReadOnlyField label="Installment" value={money(data.installmentAmount)} />
+              <ReadOnlyField label="Interest(%)" value={data.interestRate} />
+              <ReadOnlyField label="Processing Fee" value={money(data.processingFee)} />
+
+              <ReadOnlyField label="Duration" value={data.duration} />
+
+              <ReadOnlyField label="Late Fee" value={money(data.lateFee)} />
+
               <ReadOnlyField label="Period From" value={fmtDate(data.periodFrom)} />
               <ReadOnlyField label="Period To" value={fmtDate(data.periodTo)} />
 
               <ReadOnlyField label="Paid" value={money(data.paid)} />
+              <ReadOnlyField label="Paid Installments" value={money(data.completedInstallments)} />
               <ReadOnlyField label="Balance" value={money(data.balance)} />
+              <ReadOnlyField label="Pending Installments" value={money(data.pendingInstallments)} />
               <ReadOnlyField label="Due Amount" value={money(data.dueAmount)} />
-              <ReadOnlyField label="Late Fee" value={money(data.lateFee)} />
 
-              <ReadOnlyField label="Pending Late Fee" value={money(data.pendingLateFee)} />
-              <ReadOnlyField label="Amount Paid" value={money(data.amountPaid)} />
-              <ReadOnlyField label="As Of Date" value={fmtDate(data.date)} />
             </Grid>
 
             <Box sx={{ mb: 1 }}>

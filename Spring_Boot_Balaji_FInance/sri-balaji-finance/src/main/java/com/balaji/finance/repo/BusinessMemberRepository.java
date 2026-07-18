@@ -66,6 +66,8 @@ public interface BusinessMemberRepository extends JpaRepository<BusinessMember, 
 	List<BusinessMember> findByDateRange(@Param("fromDate") LocalDateTime fromDate,
 			@Param("toDate") LocalDateTime toDate);
 
+	
+	
 	@Query("""
 			SELECT u FROM BusinessMember u
 			          WHERE
@@ -74,15 +76,24 @@ public interface BusinessMemberRepository extends JpaRepository<BusinessMember, 
 			  """)
 	List<BusinessMember> findAllByLoanTypeAndDateRange(@Param("starWithString") String starWithString,
 			@Param("fromDate") LocalDateTime fromDate, @Param("toDate") LocalDateTime toDate);
+	
+	
+	
+	
+	
+	
+	
+	
 
 	@Query("""
 			SELECT u FROM BusinessMember u
 			          WHERE
 			              u.businessMemberId LIKE CONCAT(:starWithString, '%')
 			              and u.endDate BETWEEN :fromDate AND :toDate
+			              and u.loanStatus=:loanStatus
 			  """)
 	List<BusinessMember> findAllByLoanTypeAndEndDateRange(@Param("starWithString") String starWithString,
-			@Param("fromDate") LocalDateTime fromDate, @Param("toDate") LocalDateTime toDate);
+			@Param("fromDate") LocalDateTime fromDate, @Param("toDate") LocalDateTime toDate,@Param("loanStatus")String loanStatus);
 
 	@Query("""
 			  SELECT
@@ -90,7 +101,7 @@ public interface BusinessMemberRepository extends JpaRepository<BusinessMember, 
 			    SUM(amount) AS loansDisbursed,
 			    SUM(interest) AS interestReceivable
 			FROM BusinessMember
-			WHERE sysDate BETWEEN :fromDate AND :toDate
+			WHERE startDate BETWEEN :fromDate AND :toDate
 			GROUP BY loanType
 						  """)
 	List<LoanSummaryProjection> findAllLoansDisbursedByDateRange(@Param("fromDate") LocalDateTime fromDate,

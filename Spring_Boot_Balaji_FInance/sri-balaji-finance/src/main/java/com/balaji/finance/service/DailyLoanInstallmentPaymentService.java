@@ -3,11 +3,18 @@ package com.balaji.finance.service;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.Map.Entry;
 import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -20,6 +27,7 @@ import com.balaji.finance.entity.CashBook;
 import com.balaji.finance.entity.EMI;
 import com.balaji.finance.entity.LoanStatus;
 import com.balaji.finance.entity.PaymentAllocation;
+import com.balaji.finance.pojo.EmiPaymentHistoryDto;
 import com.balaji.finance.pojo.InstallmentDetails;
 import com.balaji.finance.pojo.LoanInformation;
 import com.balaji.finance.pojo.QuickCashBookRow;
@@ -69,34 +77,106 @@ public class DailyLoanInstallmentPaymentService {
 
 		LoanInformation info = new LoanInformation();
 
-		// ---------------- ACCOUNT DETAILS ----------------
-
+		// ACCOUNT DETAILS
 		String accountNo = bm.getBusinessMemberId() + "-" + bm.getCustomerId().getFirstName() + "-"
 				+ (bm.getCustomerId().getPersonalInfoId() != null ? bm.getCustomerId().getPersonalInfoId() : "");
-
 		info.setAccountNo(accountNo);
 
-		info.setPartnerName(bm.getPartnerId() != null
-				? bm.getPartnerId().getFirstName() + "-" + bm.getPartnerId().getPersonalInfoId()
-				: "");
+		String partnerName = (bm.getPartnerId() != null)
+				? (bm.getPartnerId().getFirstName() != null ? bm.getPartnerId().getFirstName() : "") + "-"
+						+ (bm.getPartnerId().getPersonalInfoId() != null ? bm.getPartnerId().getPersonalInfoId() : "")
+				: "";
+		info.setPartnerName(partnerName);
 
-		info.setGuarantorName(bm.getGuarantor1() != null
-				? bm.getGuarantor1().getFirstName() + "-" + bm.getGuarantor1().getPersonalInfoId()
-				: "");
+		String guarantorName = (bm.getGuarantor1() != null)
+				? (bm.getGuarantor1().getFirstName() != null ? bm.getGuarantor1().getFirstName() : "") + "-"
+						+ (bm.getGuarantor1().getPersonalInfoId() != null ? bm.getGuarantor1().getPersonalInfoId() : "")
+				: "";
+		info.setGuarantorName(guarantorName);
 
-		info.setPeriodFrom(bm.getStartDate().format(DATE_FORMAT));
-		info.setPeriodTo(bm.getEndDate().format(DATE_FORMAT));
-		info.setDate(LocalDateTime.now().format(DATE_FORMAT));
+		info.setPeriodFrom(bm.getStartDate().toLocalDate());
+		info.setPeriodTo(bm.getEndDate().toLocalDate());
+
 		info.setLoanAmount(bm.getAmount());
 		BigDecimal installmentAmount = bm.getInstallment();
 		info.setInstallmentAmount(installmentAmount);
-		
-		
-		List<EMI> listOfEMI = emiRepo.findByBusinessMember(bm);
 
+		info.setDuration(bm.getDuration());
+		info.setProcessingFee(bm.getProcessingFee());
+		info.setInterestRate(bm.getInterestRate());
+
+		List<CashBook> collectionsList = cashBookRepo.getAllDailyCollectionsByBusniesMember(bm.getBusinessMemberId());
+		Map<String, List<CashBook>> paymentref_cashbookList = collectionsList.stream()
+				.filter(p->p.getPaymentRefId() != null)
+		        .sorted(Comparator.comparing(CashBook::getTransDate))
+		        .collect(Collectors.groupingBy(
+		                CashBook::getPaymentRefId,
+		                LinkedHashMap::new,
+		                Collectors.toList()
+		        ));
+		
+		
+		int count = 0;
+		List<EmiPaymentHistoryDto> emiPaymentHistoryList = new ArrayList<EmiPaymentHistoryDto>();
+
+		BigDecimal totalLoanAmount = bm.getAmount().add(bm.getInterest());
+		BigDecimal totalAmountPaid = BigDecimal.ZERO;
+		LocalDateTime lastPaidDate = bm.getStartDate();
+
+		List<PaymentAllocation> allocations = paymentAllocationRepo
+				.findByPaymentRefIdIn(paymentref_cashbookList.keySet());
+		Map<String, List<PaymentAllocation>> paymentRefAllocations = allocations.stream()
+				.collect(Collectors.groupingBy(PaymentAllocation::getPaymentRefId));
+
+		
+		
+		for (CashBook transaction : collectionsList) {
+
+			totalAmountPaid = totalAmountPaid.add(transaction.getCredit());
+			
+			
+			List<PaymentAllocation> allocationList = transaction.getPaymentRefId() != null
+					? paymentRefAllocations.getOrDefault(transaction.getPaymentRefId(), Collections.emptyList())
+					: Collections.emptyList();
+
+			LocalDateTime dueDate = allocationList.stream().map(pa -> pa.getEmi().getDueDate())
+					.filter(Objects::nonNull).min(LocalDateTime::compareTo).orElse(null);
+
+			
+			
+			EmiPaymentHistoryDto inst = new EmiPaymentHistoryDto();
+			inst.setSno(++count);
+			inst.setId(transaction.getCashBookId());
+			inst.setDate(transaction.getTransDate().toLocalDate());
+			inst.setDueDate(dueDate != null ? dueDate.toLocalDate() : null);
+			inst.setPaid(transaction.getCredit());
+			inst.setTotalPaid(totalAmountPaid);
+			inst.setBalance(totalLoanAmount.subtract(totalAmountPaid));
+
+			inst.setLateFee(BigDecimal.ZERO);
+
+			inst.setCashier(transaction.getUser());
+
+			emiPaymentHistoryList.add(inst);
+
+			if (transaction.getTransDate() != null && transaction.getTransDate().isAfter(lastPaidDate)) {
+				lastPaidDate = transaction.getTransDate();
+			}
+		}
+
+		Long pendingInstallmentsCount = emiRepo.getPendingInstallmentsCount(bm.getBusinessMemberId());
+		Long completedInstallmentCount = bm.getDuration() - pendingInstallmentsCount;
+
+		info.setPaid(totalAmountPaid);
+		info.setBalance(totalLoanAmount.subtract(totalAmountPaid));
+		info.setEmiPaymentHistoryList(emiPaymentHistoryList);
+		info.setPendingInstallments(pendingInstallmentsCount);
+		info.setCompletedInstallments(completedInstallmentCount);
+
+		List<EMI> allEMIs = emiRepo.findByBusinessMember(bm);
 		List<InstallmentDetails> allInstallmentDetails = new ArrayList<>();
 
-		for (EMI emi : listOfEMI) {
+		for (EMI emi : allEMIs) {
 
 			InstallmentDetails inst = new InstallmentDetails();
 			inst.setEmiId(emi.getEmiId());
@@ -122,36 +202,11 @@ public class DailyLoanInstallmentPaymentService {
 			allInstallmentDetails.add(inst);
 
 		}
-
+		
+		
 		info.setInstallmentDetailsList(allInstallmentDetails);
-		
-		
-		BigDecimal totalLoanAmount = installmentAmount.multiply(new BigDecimal(bm.getDuration()));
-		BigDecimal totalAmountPaid = BigDecimal.ZERO;
 
-		LocalDateTime lastPaidDate = bm.getStartDate();
-		List<CashBook> paidList = cashBookRepo.findByBusinessMember(bm);
-		if (paidList == null) {
-			paidList = new ArrayList<>();
-		}
-		
-		for (CashBook cb : paidList) {
-
-			if (cb.getAccountMasterCode().equalsIgnoreCase("DF LOAN INSTALLMENT")
-					|| cb.getAccountMasterCode().equalsIgnoreCase("DF INTEREST")) {
-
-				totalAmountPaid = totalAmountPaid.add(cb.getCredit() != null ? cb.getCredit() : BigDecimal.ZERO);
-
-			}
-
-			if (cb.getTransDate() != null && cb.getTransDate().isAfter(lastPaidDate)) {
-				lastPaidDate = cb.getTransDate();
-			}
-		}
-		
-		info.setPaid(totalAmountPaid);
-		info.setBalance(totalLoanAmount.subtract(totalAmountPaid));
-		
+	
 		
 		return info;
 	}
@@ -165,7 +220,9 @@ public class DailyLoanInstallmentPaymentService {
 			return;
 
 		BusinessMember bm = opt.get();
-		LocalDateTime transDate = LocalDateTime.parse(info.getDate(), DATE_FORMAT);
+		LocalDateTime transDate = info.getDate().atTime(LocalTime.now());
+		
+		
 		String currentUser = SecurityContextHolder.getContext().getAuthentication().getName();
 
 		BigDecimal paidAmount = info.getAmountPaid() != null ? info.getAmountPaid() : BigDecimal.ZERO;

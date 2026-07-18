@@ -89,6 +89,17 @@ const BusinessOverview = () => {
   const totalRevenues = revenues
     .filter((r) => r.type === "REVENUES")
     .reduce((sum, r) => sum + (r.amount || 0), 0);
+
+  const revenueList = revenues.filter((r) => r.type === "REVENUES");
+
+  const expenseList = revenues.filter((r) => r.type === "EXPENSES");
+
+  const totalExpenses = expenseList.reduce(
+    (sum, r) => sum + Math.abs(r.amount || 0),
+    0
+  );
+
+
   const exportRows = [
     ...loanData.map((loan) => ({
       section: "Loans Disbursed",
@@ -176,10 +187,10 @@ const BusinessOverview = () => {
           </Grid>
 
           <Grid>
-            <Button 
-              variant="contained" 
-              color="primary" 
-              onClick={fetchReport} 
+            <Button
+              variant="contained"
+              color="primary"
+              onClick={fetchReport}
               sx={{ mr: 1 }}
             >
               Generate
@@ -233,8 +244,8 @@ const BusinessOverview = () => {
                     <TableCell align="right">{Number(loan.loansPaid || 0).toLocaleString()}</TableCell>
                     <TableCell align="right">{Number(loan.interestPaid || 0).toLocaleString()}</TableCell>
                     <TableCell align="right">
-                      {loan.sumOfloansPaidAndInterestPaid 
-                        ? Number(loan.sumOfloansPaidAndInterestPaid).toLocaleString() 
+                      {loan.sumOfloansPaidAndInterestPaid
+                        ? Number(loan.sumOfloansPaidAndInterestPaid).toLocaleString()
                         : "0"}
                     </TableCell>
                   </TableRow>
@@ -265,16 +276,46 @@ const BusinessOverview = () => {
             <TableContainer component={Paper} variant="outlined">
               <Table size="small">
                 <TableBody>
-                  {revenues.filter(r => r.type === "REVENUES").map((rev, index) => (
+                  {revenueList.map((rev, index) => (
                     <TableRow key={index}>
-                      <TableCell>1</TableCell>
+                      <TableCell>{index + 1}</TableCell>
                       <TableCell>{rev.code}</TableCell>
-                      <TableCell align="right">₹{Number(rev.amount || 0).toLocaleString()}</TableCell>
+                      <TableCell align="right">
+                        ₹{Number(rev.amount || 0).toLocaleString()}
+                      </TableCell>
                     </TableRow>
                   ))}
                 </TableBody>
               </Table>
             </TableContainer>
+
+            <Box sx={{ mt: 4 }}>
+              <Grid container justifyContent="space-between" sx={{ mb: 1 }}>
+                <Typography variant="subtitle1" fontWeight="bold">
+                  EXPENSES
+                </Typography>
+
+                <Typography variant="subtitle1" fontWeight="bold">
+                  Total: ₹{totalExpenses.toLocaleString()}
+                </Typography>
+              </Grid>
+
+              <TableContainer component={Paper} variant="outlined">
+                <Table size="small">
+                  <TableBody>
+                    {expenseList.map((exp, index) => (
+                      <TableRow key={index}>
+                        <TableCell>{index + 1}</TableCell>
+                        <TableCell>{exp.code}</TableCell>
+                        <TableCell align="right">
+                          ₹{Math.abs(exp.amount || 0).toLocaleString()}
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </TableContainer>
+            </Box>
           </Box>
 
           <Typography align="center" sx={{ mt: 5, color: "#666" }}>

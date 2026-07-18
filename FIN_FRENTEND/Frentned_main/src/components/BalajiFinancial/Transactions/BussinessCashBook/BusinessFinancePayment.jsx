@@ -52,7 +52,7 @@ const defaultForm = () => ({
   paid: 0,
   amountPaid: "",
   lateFeePaid: "",
-  installmentDetailsList: [],
+  emiPaymentHistoryList: []
 });
 
 export default function BusinessFinancePayment({
@@ -73,14 +73,9 @@ export default function BusinessFinancePayment({
   const [loading, setLoading] = useState(false);
   const [form, setForm] = useState(defaultForm);
 
-  const rows = useMemo(
-    () =>
-      (form.installmentDetailsList || []).map((row, index) => ({
-        id: `${row.installmentNumber || index}-${row.dueDate || index}`,
-        ...row,
-      })),
-    [form.installmentDetailsList]
-  );
+
+
+  const rows = (form?.emiPaymentHistoryList || []);
 
   const fetchAccounts = useCallback(
     async (query = "") => {
@@ -128,7 +123,12 @@ export default function BusinessFinancePayment({
         periodTo: data.periodTo || "",
         balance: Number(data.balance || 0),
         paid: Number(data.paid || 0),
-        installmentDetailsList: Array.isArray(data.installmentDetailsList) ? data.installmentDetailsList : [],
+        interestRate: Number(data.interestRate || 0),
+        processingFee: Number(data.processingFee || 0),
+        duration: Number(data.duration || 0),
+        completedInstallments: Number(data.completedInstallments || 0),
+        pendingInstallments: Number(data.pendingInstallments || 0),
+        emiPaymentHistoryList: Array.isArray(data.emiPaymentHistoryList) ? data.emiPaymentHistoryList : [],
       });
       successToast("Loan details loaded");
     } catch (err) {
@@ -187,24 +187,13 @@ export default function BusinessFinancePayment({
         installmentAmount: form.installmentAmount,
         periodFrom: form.periodFrom,
         periodTo: form.periodTo,
-        date: form.date.format("YYYY-MM-DD"),
+        date: form.date.format("DD-MM-YYYY"),
         balance: form.balance,
         paid: form.paid,
         amountPaid: principal,
         lateFee,
         dueAmount: 0,
-        installmentDetailsList: rows.map((inst) => ({
-          installmentNumber: inst.installmentNumber,
-          principleAmount: inst.principleAmount,
-          interestAmount: inst.interestAmount,
-          paidAmount: inst.paidAmount,
-          totalAmount: inst.totalAmount,
-          installmentAmount: inst.installmentAmount,
-          dueDate: inst.dueDate,
-          lateFeeDate: inst.lateFeeDate,
-          lateFee: inst.lateFee,
-          status: inst.status,
-        })),
+        emiPaymentHistoryList: [],
       };
 
       await axios.post(`${API_BASE}/${saveEndpoint}/${selectedLoanId}`, payload, { headers });
@@ -218,31 +207,66 @@ export default function BusinessFinancePayment({
       setLoading(false);
     }
   };
+  const money = (value) => Number(value || 0).toLocaleString("en-IN");
+
+  const fmtDate = (value) => (value ? String(value).slice(0, 10) : "-");
 
   const columns = [
-    { field: "installmentNumber", headerName: "Inst No", width: 100 },
-    { field: "principleAmount", headerName: "Principal", width: 130, valueFormatter: (value) => money(value) },
-    { field: "interestAmount", headerName: "Interest", width: 130, valueFormatter: (value) => money(value) },
-    { field: "totalAmount", headerName: "EMI", width: 130, valueFormatter: (value) => money(value) },
-    { field: "paidAmount", headerName: "Paid", width: 130, valueFormatter: (value) => money(value) },
-    { field: "dueDate", headerName: "Due Date", width: 140 },
-    { field: "lateFeeDate", headerName: "Late From", width: 140 },
-    { field: "installmentAmount", headerName: "Pending", width: 130, valueFormatter: (value) => money(value) },
-    { field: "lateFee", headerName: "Late Fee", width: 120, valueFormatter: (value) => money(value) },
     {
-      field: "status",
-      headerName: "Status",
-      width: 120,
-      renderCell: ({ value }) => (
-        <Chip
-          size="small"
-          label={value || "PENDING"}
-          color={value === "PAID" ? "success" : "warning"}
-          variant="outlined"
-        />
-      ),
+      field: "sno",
+      headerName: "S.No",
+      width: 100,
     },
+    {
+      field: "id",
+      headerName: "ID",
+      width: 150,
+      valueFormatter: (value) => money(value),
+    },
+    {
+      field: "date",
+      headerName: "Date",
+      width: 200,
+      valueFormatter: (value) => fmtDate(value),
+    },
+    {
+      field: "dueDate",
+      headerName: "Due Date",
+      width: 200,
+      valueFormatter: (value) => fmtDate(value),
+    },
+    {
+      field: "paid",
+      headerName: "Paid",
+      width: 200,
+      valueFormatter: (value) => money(value),
+    },
+    {
+      field: "totalPaid",
+      headerName: "Total Paid",
+      width: 200,
+      valueFormatter: (value) => money(value),
+    },
+    {
+      field: "balance",
+      headerName: "Balance",
+      width: 200,
+      valueFormatter: (value) => money(value),
+    },
+    {
+      field: "lateFee",
+      headerName: "Late Fee",
+      width: 200,
+      valueFormatter: (value) => money(value),
+    },
+    {
+      field: "cashier",
+      headerName: "Cashier",
+      width: 200,
+    }
   ];
+
+
 
   return (
     <Stack spacing={2}>
@@ -359,6 +383,34 @@ export default function BusinessFinancePayment({
             }}>
             <ReadOnlyField label="Period To" value={form.periodTo || "-"} />
           </Grid>
+
+          <Grid
+            size={{
+              xs: 6,
+              sm: 3
+            }}>
+            <ReadOnlyField label="Interest (%)" value={form.interestRate || "-"} />
+          </Grid>
+
+          <Grid
+            size={{
+              xs: 6,
+              sm: 3
+            }}>
+            <ReadOnlyField label="Processing Fee" value={`Rs ${money(form.processingFee)}` || "-"} />
+          </Grid>
+
+          <Grid
+            size={{
+              xs: 6,
+              sm: 3
+            }}>
+            <ReadOnlyField label="Duration" value={form.duration || "-"} />
+          </Grid>
+
+
+
+
         </Grid>
 
         <Divider sx={{ my: 2.5 }} />
@@ -385,6 +437,18 @@ export default function BusinessFinancePayment({
             }}>
             <ReadOnlyField label="Paid So Far" value={selectedLoanId ? `Rs ${money(form.paid)}` : "-"} />
           </Grid>
+
+          <Grid
+            size={{
+              xs: 6,
+              sm: 6,
+              md: 2.4
+            }}>
+            <ReadOnlyField label="Paid Installments" value={form.completedInstallments || "-"} />
+          </Grid>
+
+
+
           <Grid
             size={{
               xs: 6,
@@ -393,21 +457,17 @@ export default function BusinessFinancePayment({
             }}>
             <ReadOnlyField label="Balance" value={selectedLoanId ? `Rs ${money(form.balance)}` : "-"} />
           </Grid>
+
           <Grid
             size={{
               xs: 6,
               sm: 6,
               md: 2.4
             }}>
-            <TextField
-              label="Amount Paid"
-              placeholder="0"
-              value={form.amountPaid ? money(form.amountPaid) : ""}
-              onChange={(event) => setForm((prev) => ({ ...prev, amountPaid: numericInput(event.target.value) }))}
-              disabled={!selectedLoanId}
-              fullWidth
-            />
+            <ReadOnlyField label="Pending Installments" value={form.pendingInstallments || "-"} />
           </Grid>
+
+
           <Grid
             size={{
               xs: 6,
@@ -423,6 +483,25 @@ export default function BusinessFinancePayment({
               fullWidth
             />
           </Grid>
+
+
+          <Grid
+            size={{
+              xs: 6,
+              sm: 6,
+              md: 2.4
+            }}>
+            <TextField
+              label="To Be Paid Amount "
+              placeholder="0"
+              value={form.amountPaid ? money(form.amountPaid) : ""}
+              onChange={(event) => setForm((prev) => ({ ...prev, amountPaid: numericInput(event.target.value) }))}
+              disabled={!selectedLoanId}
+              fullWidth
+            />
+          </Grid>
+
+
         </Grid>
         <Stack direction={{ xs: "column", sm: "row" }} spacing={2} alignItems={{ xs: "stretch", sm: "center" }} justifyContent="space-between" sx={{ mt: 2.5 }}>
           <Typography variant="caption" color="text.secondary">

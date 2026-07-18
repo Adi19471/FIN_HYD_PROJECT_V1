@@ -1,8 +1,11 @@
 package com.balaji.finance.pojo;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
+
+import com.fasterxml.jackson.annotation.JsonFormat;
 
 public class LoanInformation {
 
@@ -13,10 +16,17 @@ public class LoanInformation {
 	private BigDecimal loanAmount;
 	private BigDecimal installmentAmount;
 
-	private String periodFrom;
-	private String periodTo;
+	private BigDecimal processingFee;
+	private BigDecimal interestRate;
 
-	private String date;
+	@JsonFormat(pattern = "dd-MM-yyyy")
+	private LocalDate periodFrom;
+
+	@JsonFormat(pattern = "dd-MM-yyyy")
+	private LocalDate periodTo;
+
+	@JsonFormat(pattern = "dd-MM-yyyy")
+	private LocalDate date;
 	private BigDecimal paid;
 	private BigDecimal balance;
 	private BigDecimal amountPaid;
@@ -24,8 +34,13 @@ public class LoanInformation {
 
 	private BigDecimal pendingLateFee;
 	private BigDecimal dueAmount;
+	private Integer duration;
+
+	private Long pendingInstallments;
+	private Long completedInstallments;
 
 	private List<InstallmentDetails> installmentDetailsList = new ArrayList<InstallmentDetails>();
+	private List<EmiPaymentHistoryDto> emiPaymentHistoryList = new ArrayList<EmiPaymentHistoryDto>();
 
 	// Getters and Setters
 
@@ -69,27 +84,27 @@ public class LoanInformation {
 		this.installmentAmount = installmentAmount;
 	}
 
-	public String getPeriodFrom() {
+	public LocalDate getPeriodFrom() {
 		return periodFrom;
 	}
 
-	public void setPeriodFrom(String periodFrom) {
+	public void setPeriodFrom(LocalDate periodFrom) {
 		this.periodFrom = periodFrom;
 	}
 
-	public String getPeriodTo() {
+	public LocalDate getPeriodTo() {
 		return periodTo;
 	}
 
-	public void setPeriodTo(String periodTo) {
+	public void setPeriodTo(LocalDate periodTo) {
 		this.periodTo = periodTo;
 	}
 
-	public String getDate() {
+	public LocalDate getDate() {
 		return date;
 	}
 
-	public void setDate(String date) {
+	public void setDate(LocalDate date) {
 		this.date = date;
 	}
 
@@ -147,6 +162,54 @@ public class LoanInformation {
 
 	public void setInstallmentDetailsList(List<InstallmentDetails> installmentDetailsList) {
 		this.installmentDetailsList = installmentDetailsList;
+	}
+
+	public Integer getDuration() {
+		return duration;
+	}
+
+	public void setDuration(Integer duration) {
+		this.duration = duration;
+	}
+
+	public List<EmiPaymentHistoryDto> getEmiPaymentHistoryList() {
+		return emiPaymentHistoryList;
+	}
+
+	public void setEmiPaymentHistoryList(List<EmiPaymentHistoryDto> emiPaymentHistoryList) {
+		this.emiPaymentHistoryList = emiPaymentHistoryList;
+	}
+
+	public BigDecimal getProcessingFee() {
+		return processingFee;
+	}
+
+	public void setProcessingFee(BigDecimal processingFee) {
+		this.processingFee = processingFee;
+	}
+
+	public BigDecimal getInterestRate() {
+		return interestRate;
+	}
+
+	public void setInterestRate(BigDecimal interestRate) {
+		this.interestRate = interestRate;
+	}
+
+	public Long getPendingInstallments() {
+		return pendingInstallments;
+	}
+
+	public void setPendingInstallments(Long pendingInstallments) {
+		this.pendingInstallments = pendingInstallments;
+	}
+
+	public Long getCompletedInstallments() {
+		return completedInstallments;
+	}
+
+	public void setCompletedInstallments(Long completedInstallments) {
+		this.completedInstallments = completedInstallments;
 	}
 
 }

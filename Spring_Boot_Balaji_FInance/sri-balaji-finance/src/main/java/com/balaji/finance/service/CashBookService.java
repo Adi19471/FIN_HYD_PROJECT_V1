@@ -8,6 +8,7 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -267,7 +268,11 @@ public class CashBookService {
 		BigDecimal sumOfCredits = BigDecimal.ZERO;
 		BigDecimal sumOfDebits = BigDecimal.ZERO;
 
-		for (CashBook cashBook : byTransDate) {
+		Map<Boolean, List<CashBook>> partionMap = byTransDate.stream()
+				.collect(Collectors.partitioningBy(p -> p.getPaymentRefId() == null));
+
+		List<CashBook> otherTransactions = partionMap.get(true);
+		for (CashBook cashBook : otherTransactions) {
 
 			CashBookSumaryViewPojo cashBookViewPojo = new CashBookSumaryViewPojo();
 			cashBookViewPojo.setTransactionId(cashBook.getCashBookId());
@@ -291,6 +296,66 @@ public class CashBookService {
 
 			if (cashBook.getDebit() != null) {
 				sumOfDebits = sumOfDebits.add(cashBook.getDebit());
+			}
+
+		}
+
+		List<CashBook> loanTransactions = partionMap.get(false);
+		Map<String, List<CashBook>> paymentref_cashbookList = loanTransactions.stream()
+				.collect(Collectors.groupingBy(p -> p.getPaymentRefId()));
+
+		for (Entry<String, List<CashBook>> entrySet : paymentref_cashbookList.entrySet()) {
+
+			List<CashBook> cashBookList = entrySet.getValue();
+
+			if (!cashBookList.isEmpty()) {
+
+				CashBook sampleRecord = cashBookList.get(0);
+
+				CashBookSumaryViewPojo cashBookViewPojo = new CashBookSumaryViewPojo();
+				cashBookViewPojo.setTransactionId(sampleRecord.getCashBookId());
+				cashBookViewPojo.setAccountNumber(sampleRecord.getBusinessMember() != null
+						? sampleRecord.getBusinessMember().getBusinessMemberId()
+						: "");
+				cashBookViewPojo.setName(
+						sampleRecord.getPersonalInfo() != null ? sampleRecord.getPersonalInfo().getPersonalInfoId()
+								+ " - " + sampleRecord.getPersonalInfo().getFirstName() + " - "
+								+ (sampleRecord.getPersonalInfo().getMobile() != null
+										? sampleRecord.getPersonalInfo().getMobile()
+										: "")
+								: "");
+				cashBookViewPojo.setParticulars(sampleRecord.getBmRemarks());
+				cashBookViewPojo.setTransactionType(sampleRecord.getAccountMasterMasterCode());
+
+				cashBookViewPojo.setUser(sampleRecord.getUser());
+				cashBookViewPojo.setAccountMastercode(sampleRecord.getAccountMasterCode());
+				
+				BigDecimal sumOfSingleReferenceCredit = BigDecimal.ZERO;
+				BigDecimal sumOfSingleReferenceDebit = BigDecimal.ZERO;
+
+				for (CashBook cashBook : cashBookList) {
+
+					sumOfSingleReferenceCredit = sumOfSingleReferenceCredit.add(cashBook.getCredit());
+					sumOfSingleReferenceDebit = sumOfSingleReferenceDebit.add(cashBook.getDebit());
+
+				}
+				
+				
+				
+				cashBookViewPojo.setCredit(sumOfSingleReferenceCredit);
+				cashBookViewPojo.setDebit(sumOfSingleReferenceDebit);
+				
+				cashBookViewPojoList.add(cashBookViewPojo);
+
+
+				if (sumOfSingleReferenceCredit != null) {
+					sumOfCredits = sumOfCredits.add(sumOfSingleReferenceCredit);
+				}
+
+				if (sumOfSingleReferenceDebit != null) {
+					sumOfDebits = sumOfDebits.add(sumOfSingleReferenceDebit);
+				}
+
 			}
 
 		}
