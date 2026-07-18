@@ -17,6 +17,9 @@ public interface EmiRepo extends JpaRepository<EMI, Integer> {
 	
 	List<EMI> findByBusinessMember(BusinessMember businessMember);
 	
+	List<EMI> findByBusinessMemberOrderByInstallmentNumberAsc(BusinessMember businessMember);
+	
+	
     boolean existsByBusinessMember_BusinessMemberIdAndPaidAmountGreaterThan(
             String businessMemberId,
             BigDecimal amount
