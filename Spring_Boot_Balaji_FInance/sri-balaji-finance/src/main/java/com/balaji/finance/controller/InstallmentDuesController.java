@@ -23,9 +23,7 @@ public class InstallmentDuesController {
 	public ResponseEntity<List<InstallmentDuesPojo>> getInstallmentDues(
 			@RequestBody InstallmentsDuesRequestPojo installmentsDuesRequestPojo) {
 
-		List<InstallmentDuesPojo> resturnList = installmentDuesService.getInstallmentDues(
-				installmentsDuesRequestPojo.getFromDate(), installmentsDuesRequestPojo.getToDate(),
-				installmentsDuesRequestPojo.getLoanType());
+		List<InstallmentDuesPojo> resturnList = installmentDuesService.getInstallmentDues(installmentsDuesRequestPojo);
 
 		return ResponseEntity.ok().body(resturnList);
 	}

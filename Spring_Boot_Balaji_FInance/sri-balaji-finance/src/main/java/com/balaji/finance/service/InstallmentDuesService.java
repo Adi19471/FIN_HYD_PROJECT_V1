@@ -3,7 +3,9 @@ package com.balaji.finance.service;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -11,6 +13,7 @@ import org.springframework.stereotype.Service;
 
 import com.balaji.finance.dto.InstallmentDueProjection;
 import com.balaji.finance.pojo.InstallmentDuesPojo;
+import com.balaji.finance.pojo.InstallmentsDuesRequestPojo;
 import com.balaji.finance.repo.EmiRepo;
 
 @Service
@@ -21,18 +24,18 @@ public class InstallmentDuesService {
 
 	private static final DateTimeFormatter fmt = DateTimeFormatter.ofPattern("dd-MM-yyyy");
 
-	public List<InstallmentDuesPojo> getInstallmentDues(LocalDate fromDate, LocalDate toDate, String loanType) {
+	public List<InstallmentDuesPojo> getInstallmentDues(InstallmentsDuesRequestPojo installmentsDuesRequestPojo) {
 
 		List<InstallmentDuesPojo> returnList = new ArrayList<>();
 
 		List<InstallmentDueProjection> loansList = null;
-		if (fromDate != null && toDate != null) {
+		if (installmentsDuesRequestPojo.getFromDate() != null && installmentsDuesRequestPojo.getToDate() != null) {
 
-			LocalDateTime from = fromDate.atStartOfDay();
-			LocalDateTime to = toDate.atTime(23, 59, 59);
+			LocalDateTime from = installmentsDuesRequestPojo.getFromDate().atStartOfDay();
+			LocalDateTime to = installmentsDuesRequestPojo.getToDate().atTime(23, 59, 59);
 
 			String starWithString = null;
-			switch (loanType) {
+			switch (installmentsDuesRequestPojo.getLoanType()) {
 			case "DAILY_FINANCE":
 				starWithString = "DF";
 				break;
@@ -47,6 +50,52 @@ public class InstallmentDuesService {
 			}
 
 			loansList = emiRepo.getInstallmentDues(starWithString, to);
+			
+			switch (installmentsDuesRequestPojo.getOrderBy()) {
+
+		    case LOAN_START_DATE:
+		    	loansList.sort(
+		            Comparator.comparing(InstallmentDueProjection::getStartDate)
+		        );
+		        break;
+
+		    case PARTNER:
+		    	loansList.sort(
+		            Comparator.comparing(
+		                InstallmentDueProjection::getCustomerName,
+		                String.CASE_INSENSITIVE_ORDER
+		            )
+		        );
+		        break;
+
+		    case INSTALLMENT_BALANCE:
+		    	loansList.sort(
+		            Comparator.comparing(
+		                InstallmentDueProjection::getDueAmount
+		            ).reversed()
+		        );
+		        break;
+
+		    case INSTALLMENT_DATE:
+		        loansList.sort(
+		            Comparator.comparing(InstallmentDueProjection::getDueDate)
+		        );
+		        break;
+
+		    case DELAYED_DAYS:
+		        loansList.sort(
+		            Comparator.comparingLong(
+		                (InstallmentDueProjection dto) ->
+		                    ChronoUnit.DAYS.between(
+		                        dto.getEndDate(),
+		                        LocalDateTime.now()
+		                    )
+		            ).reversed()
+		        );
+		        break;
+		}
+			
+			
 
 			int i = 0;
 			for (InstallmentDueProjection bm : loansList) {

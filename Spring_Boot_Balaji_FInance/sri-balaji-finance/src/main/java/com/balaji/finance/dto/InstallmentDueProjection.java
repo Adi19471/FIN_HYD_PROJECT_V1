@@ -5,21 +5,25 @@ import java.time.LocalDateTime;
 
 public interface InstallmentDueProjection {
 
-    String getLoanId();
+	String getLoanId();
 
-    String getCustomerName();
+	String getCustomerName();
 
-    LocalDateTime getStartDate();
+	String getPartnerName();
 
-    LocalDateTime getEndDate();
+	LocalDateTime getStartDate();
 
-    BigDecimal getLoanAmount();
+	LocalDateTime getEndDate();
 
-    BigDecimal getInstallmentAmount();
+	BigDecimal getLoanAmount();
 
-    BigDecimal getPaidAmount();
+	BigDecimal getInstallmentAmount();
 
-    BigDecimal getDueAmount();
+	LocalDateTime getDueDate();
 
-    Long getPendingCount();
+	BigDecimal getPaidAmount();
+
+	BigDecimal getDueAmount();
+
+	Long getPendingCount();
 }

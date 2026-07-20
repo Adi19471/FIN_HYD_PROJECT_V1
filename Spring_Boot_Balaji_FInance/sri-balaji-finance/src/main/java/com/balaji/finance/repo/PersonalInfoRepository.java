@@ -1,5 +1,6 @@
 package com.balaji.finance.repo;
 
+import java.math.BigDecimal;
 import java.util.List;
 import java.util.Optional;
 
@@ -118,5 +119,13 @@ public interface PersonalInfoRepository extends JpaRepository<PersonalInfo, Stri
 			""")
 	public List<PersonalInfo> findAllGroupManagers(@Param("keyword") String keyWord);
 
+	
+	@Query("""
+			SELECT COALESCE(SUM(p.shares), 0)
+			FROM PersonalInfo p
+			WHERE p.category =  'PARTNER'
+			  AND p.bussinessExemption = false
+			""")
+	BigDecimal findTotalShares();
 
 }

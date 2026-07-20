@@ -31,6 +31,7 @@ import { successToast, errorToast } from "toastify";
 import { API_BASE } from "lib/config";
 import LoadingSpinner from "src/LoadingSpinner";
 import { ProfilePhotoBox, DEFAULT_TABLE_HEIGHT } from "src/components/ui";
+import { FormControlLabel, Checkbox } from "@mui/material";
 
 /* ─── Constants ─────────────────────────────────────────────── */
 const TYPE_LABELS = {
@@ -61,6 +62,9 @@ const EMPTY_FORM = (personType) => ({
   idprooftype: "",
   category: personType,
   personalInfoManagerId: "",
+  shares: "",
+  loanlimit: "",
+  bussinessexemption: false,
 });
 
 /* ─── Styles ─────────────────────────────────────────────────── */
@@ -298,6 +302,9 @@ const Partner = ({ personType = "CUSTOMER" }) => {
         category: personType,
         age: form.age ? parseInt(form.age) : null,
         personalInfoManagerId: form.personalInfoManagerId || null,
+        shares: form.shares ? Number(form.shares) : null,
+        loanlimit: form.loanlimit ? Number(form.loanlimit) : null,
+        bussinessexemption: !!form.bussinessexemption,
       };
       await axios.post(
         `${API_BASE}/PersonalInfo/updatePersonalInfo/${personType}`,
@@ -426,10 +433,10 @@ const Partner = ({ personType = "CUSTOMER" }) => {
       width: 100,
       renderCell: (p) => p.row.gender
         ? <Chip
-            label={p.row.gender}
-            size="small"
-            sx={STYLES.chip(p.row.gender === "Male" ? "blue" : p.row.gender === "Female" ? "pink" : "purple")}
-          />
+          label={p.row.gender}
+          size="small"
+          sx={STYLES.chip(p.row.gender === "Male" ? "blue" : p.row.gender === "Female" ? "pink" : "purple")}
+        />
         : "—",
     },
     {
@@ -438,14 +445,44 @@ const Partner = ({ personType = "CUSTOMER" }) => {
       width: 160,
       renderCell: (p) => p.row.personalInfoManagerId
         ? <Chip
-            icon={<FiUsers size={11} />}
-            label={p.row.personalInfoManagerId}
-            size="small"
-            sx={STYLES.chip("green")}
-          />
+          icon={<FiUsers size={11} />}
+          label={p.row.personalInfoManagerId}
+          size="small"
+          sx={STYLES.chip("green")}
+        />
         : <Typography color="text.disabled" fontSize="0.8rem">No Manager</Typography>,
     },
     { field: "address", headerName: "Address", flex: 1 },
+
+    {
+      field: "shares",
+      headerName: "Shares",
+      width: 120,
+      renderCell: (p) => p.row.shares ?? "—",
+    },
+    {
+      field: "loanlimit",
+      headerName: "Loan Limit",
+      width: 150,
+      renderCell: (p) =>
+        p.row.loanlimit != null
+          ? Number(p.row.loanlimit).toLocaleString()
+          : "—",
+    },
+
+    {
+      field: "bussinessexemption",
+      headerName: "Exempted",
+      width: 120,
+      renderCell: (p) => (
+        <Chip
+          label={p.row.bussinessexemption ? "Yes" : "No"}
+          color={p.row.bussinessexemption ? "success" : "default"}
+          size="small"
+        />
+      ),
+    },
+
     {
       field: "actions",
       headerName: "Actions",
@@ -931,14 +968,46 @@ const Partner = ({ personType = "CUSTOMER" }) => {
             <Grid
               size={{
                 xs: 12,
-                sm: 6
-              }}>
+                sm: 6,
+              }}
+            >
               <TextField
-                fullWidth label="Reference"
-                value={form.reference}
-                onChange={(e) => handleChange("reference", e.target.value)}
+                fullWidth
+                label="Shares"
+                type="number"
+                value={form.shares || ""}
+                onChange={(e) => handleChange("shares", e.target.value)}
               />
             </Grid>
+
+            <Grid
+              size={{
+                xs: 12,
+                sm: 6,
+              }}
+            >
+              <TextField
+                fullWidth
+                label="Loan Limit"
+                type="number"
+                value={form.loanlimit || ""}
+                onChange={(e) => handleChange("loanlimit", e.target.value)}
+              />
+            </Grid>
+          </Grid>
+
+          <Grid size={12}>
+            <FormControlLabel
+              control={
+                <Checkbox
+                  checked={form.bussinessexemption || false}
+                  onChange={(e) =>
+                    handleChange("bussinessexemption", e.target.checked)
+                  }
+                />
+              }
+              label="Business Exemption"
+            />
           </Grid>
 
         </DialogContent>
@@ -1083,6 +1152,30 @@ const Partner = ({ personType = "CUSTOMER" }) => {
                 ) : (
                   <Typography sx={STYLES.viewValue}>—</Typography>
                 )}
+              </Grid>
+
+              <Grid size={6}>
+                <ViewField
+                  label="Shares"
+                  value={selectedRecord.shares}
+                />
+              </Grid>
+
+              <Grid size={6}>
+                <ViewField
+                  label="Loan Limit"
+                  value={
+                    selectedRecord.loanlimit != null
+                      ? Number(selectedRecord.loanlimit).toLocaleString()
+                      : "—"
+                  }
+                />
+              </Grid>
+              <Grid size={6}>
+                <ViewField
+                  label="Business Exemption"
+                  value={selectedRecord.bussinessexemption ? "Yes" : "No"}
+                />
               </Grid>
 
             </Grid>

@@ -44,6 +44,10 @@ const BusinessOverview = () => {
   );
   const [excludeDividends, setExcludeDividends] = useState(true);
   const [accruedRevenues, setAccruedRevenues] = useState(true);
+  const [openingBalance, setOpeningBalance] = useState(0);
+  const [closingBalance, setClosingBalance] = useState(0);
+  const [totalShares, setTotalShares] = useState(0);
+
 
   const fetchReport = async () => {
     try {
@@ -68,6 +72,12 @@ const BusinessOverview = () => {
 
       setLoanData(response.data.loanDisbursedInformation || []);
       setRevenues(response.data.businessOverviewProjections || []);
+
+      setOpeningBalance(response.data.openingBalance || 0);
+      setClosingBalance(response.data.closingBalance || 0);
+      setTotalShares(response.data.totalShares || 0);
+
+
     } catch (err) {
       setError("Failed to load Business Overview Report. Please try again.");
     } finally {
@@ -86,6 +96,9 @@ const BusinessOverview = () => {
   const totalLoansPaid = loanData.reduce((sum, item) => sum + (item.loansPaid || 0), 0);
   const totalInterestPaid = loanData.reduce((sum, item) => sum + (item.interestPaid || 0), 0);
 
+
+
+
   const totalRevenues = revenues
     .filter((r) => r.type === "REVENUES")
     .reduce((sum, r) => sum + (r.amount || 0), 0);
@@ -98,6 +111,17 @@ const BusinessOverview = () => {
     (sum, r) => sum + Math.abs(r.amount || 0),
     0
   );
+
+
+
+  // Profit = Revenues - Expenses
+  const totalProfit = totalRevenues - totalExpenses;
+
+  // Net Profit Per Share
+  const netProfit = totalShares > 0
+    ? totalProfit / totalShares
+    : 0;
+
 
 
   const exportRows = [
@@ -317,7 +341,50 @@ const BusinessOverview = () => {
               </TableContainer>
             </Box>
           </Box>
+          {/* Summary Section */}
+          <Box sx={{ mt: 4 }}>
+            <Grid container spacing={2}>
 
+              {/* Left Side */}
+              <Grid size={{ xs: 12, md: 6 }}>
+                <Typography variant="body1" fontWeight="bold">
+                  Opening Balance :
+                  ₹{Number(openingBalance).toLocaleString()}
+                </Typography>
+
+                <Typography variant="body1" fontWeight="bold" sx={{ mt: 1 }}>
+                  Closing Balance :
+                  ₹{Number(closingBalance).toLocaleString()}
+                </Typography>
+              </Grid>
+
+              {/* Right Side */}
+              <Grid size={{ xs: 12, md: 6 }} textAlign="right">
+
+
+                <Typography variant="body1" fontWeight="bold" sx={{ mt: 1 }}>
+                  Total Profit :
+                  ₹{Number(totalProfit).toLocaleString()}
+                </Typography>
+
+                <Typography variant="body1" fontWeight="bold">
+                  Total Shares :
+                  {Number(totalShares).toLocaleString()}
+                </Typography>
+
+                <Typography
+                  variant="h6"
+                  fontWeight="bold"
+                  color={netProfit >= 0 ? "success.main" : "error.main"}
+                  sx={{ mt: 1 }}
+                >
+                  Net Profit :
+                  ₹{Number(netProfit).toLocaleString()}
+                </Typography>
+              </Grid>
+
+            </Grid>
+          </Box>
           <Typography align="center" sx={{ mt: 5, color: "#666" }}>
             Page 1 of 1
           </Typography>

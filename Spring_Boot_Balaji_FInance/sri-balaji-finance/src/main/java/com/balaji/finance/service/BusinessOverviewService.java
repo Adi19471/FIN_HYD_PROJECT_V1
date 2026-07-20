@@ -20,6 +20,7 @@ import com.balaji.finance.pojo.BusinessOverviewResponsePojo;
 import com.balaji.finance.pojo.BusinessSharePojo;
 import com.balaji.finance.repo.BusinessMemberRepository;
 import com.balaji.finance.repo.CashBookRepo;
+import com.balaji.finance.repo.PersonalInfoRepository;
 
 @Service
 public class BusinessOverviewService {
@@ -27,6 +28,10 @@ public class BusinessOverviewService {
 	@Autowired
 	private BusinessMemberRepository businessMemberRepository;
 
+	@Autowired
+	private PersonalInfoRepository personalInfoRepository;
+
+	
 	@Autowired
 	private CashBookRepo cashBookRepo;
 
@@ -38,7 +43,12 @@ public class BusinessOverviewService {
 		BusinessOverviewResponsePojo businessOverviewResponsePojo = new BusinessOverviewResponsePojo();
 		businessOverviewResponsePojo.setLoanDisbursedInformation(loanDisbursedInformation);
 		businessOverviewResponsePojo.setBusinessOverviewProjections(businessOverviewTrasncDate);
-
+		businessOverviewResponsePojo.setTotalShares(personalInfoRepository.findTotalShares());	
+		
+		
+		businessOverviewResponsePojo.setOpeningBalance(BigDecimal.ZERO);
+		businessOverviewResponsePojo.setClosingBalance(BigDecimal.ZERO);
+		
 		return businessOverviewResponsePojo;
 	}
 

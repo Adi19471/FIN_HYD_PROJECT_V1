@@ -95,58 +95,64 @@ public interface EmiRepo extends JpaRepository<EMI, Integer> {
 	BigDecimal getTotalPaidOfLoan(@Param("businessMemberId") String businessMemberId);
 
 	@Query("""
-			SELECT
-			    bm.businessMemberId AS loanId,
-			    bm.customerId.firstName AS customerName,
-			    bm.startDate AS startDate,
-			    bm.endDate AS endDate,
-			    bm.amount AS loanAmount,
-			    bm.installment AS installmentAmount,
+		    SELECT
+		        bm.businessMemberId AS loanId,
+		        bm.customerId.firstName AS customerName,
+		        bm.partnerId.firstName AS partnerName,
+		        bm.startDate AS startDate,
+		        bm.endDate AS endDate,
+		        bm.amount AS loanAmount,
+		        bm.installment AS installmentAmount,
 
-			    COALESCE(SUM(e.paidAmount), 0) AS paidAmount,
+		        MIN(e.dueDate) AS dueDate,
 
-			    COALESCE(
-			        SUM(
-			            CASE
-			                WHEN e.status IN ('PENDING','PARTIAL')
-			                THEN (e.totalAmount - e.paidAmount)
-			                ELSE 0
-			            END
-			        ),
-			        0
-			    ) AS dueAmount,
+		        COALESCE(SUM(e.paidAmount), 0) AS paidAmount,
 
-			    COALESCE(
-			        SUM(
-			            CASE
-			                WHEN e.status IN ('PENDING','PARTIAL')
-			                THEN 1
-			                ELSE 0
-			            END
-			        ),
-			        0
-			    ) AS pendingCount
+		        COALESCE(
+		            SUM(
+		                CASE
+		                    WHEN e.status IN ('PENDING','PARTIAL')
+		                    THEN (e.totalAmount - e.paidAmount)
+		                    ELSE 0
+		                END
+		            ),
+		            0
+		        ) AS dueAmount,
 
+		        COALESCE(
+		            SUM(
+		                CASE
+		                    WHEN e.status IN ('PENDING','PARTIAL')
+		                    THEN 1
+		                    ELSE 0
+		                END
+		            ),
+		            0
+		        ) AS pendingCount
 
-			FROM EMI e
-			JOIN e.businessMember bm
+		    FROM EMI e
+		    JOIN e.businessMember bm
 
-			WHERE bm.businessMemberId LIKE CONCAT(:startsWithString, '%')
-			  AND e.dueDate <= :toDate
+		    WHERE bm.businessMemberId LIKE CONCAT(:startsWithString, '%')
+		      AND e.dueDate <= :toDate
 
+		    GROUP BY
+		        bm.businessMemberId,
+		        bm.customerId.firstName,
+		        bm.partnerId.firstName,
+		        bm.startDate,
+		        bm.endDate,
+		        bm.amount,
+		        bm.installment
 
-			GROUP BY
-			    bm.businessMemberId,
-			    bm.customerId.firstName,
-			    bm.startDate,
-			    bm.endDate,
-			    bm.amount,
-			    bm.installment
+		    ORDER BY bm.businessMemberId
+		    """)
+		List<InstallmentDueProjection> getInstallmentDues(
+		        @Param("startsWithString") String startsWithString,
+		        @Param("toDate") LocalDateTime toDate);
 
-			ORDER BY bm.businessMemberId
-			""")
-	List<InstallmentDueProjection> getInstallmentDues(@Param("startsWithString") String startsWithString,
-			@Param("toDate") LocalDateTime toDate);
+	
+	
 
 	@Query("""
 			SELECT COUNT(e)
@@ -155,5 +161,4 @@ public interface EmiRepo extends JpaRepository<EMI, Integer> {
 			AND e.status <> 'PAID'
 			""")
 	Long getPendingInstallmentsCount(@Param("businessMemberId") String string);
-
 }

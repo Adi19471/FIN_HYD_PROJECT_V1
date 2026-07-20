@@ -13,6 +13,16 @@ const InstalmentDues = () => {
   const [loanType, setLoanType] = useState("");
   const { fromDate, toDate, setFromDate, setToDate, toDateMin, toDateMax } = useDateRange("", "");
   const [loading, setLoading] = useState(false);
+  const [orderBy, setOrderBy] = useState("INSTALLMENT_DATE");
+
+  const orderByOptions = [
+    { label: "Installment Date", value: "INSTALLMENT_DATE" },
+    { label: "Loan Start Date", value: "LOAN_START_DATE" },
+    { label: "Partner", value: "PARTNER" },
+    { label: "Delayed Days", value: "DELAYED_DAYS" },
+    { label: "Installment Balance", value: "INSTALLMENT_BALANCE" },
+  ];
+
 
   const headers = useMemo(
     () => ({
@@ -37,7 +47,7 @@ const InstalmentDues = () => {
       setLoading(true);
       const res = await axios.post(
         `${API_BASE}/installmentDuesList`,
-        { loanType, fromDate, toDate },
+        { loanType, fromDate, toDate, orderBy, },
         { headers }
       );
       setData((res.data || []).map((row, index) => ({ id: row.loanId || row.sno || index + 1, sno: row.sno || index + 1, ...row })));
@@ -106,6 +116,28 @@ const InstalmentDues = () => {
               ))}
             </TextField>
           </Grid>
+          <Grid
+            size={{
+              xs: 12,
+              md: 2.4,
+            }}
+          >
+            <TextField
+              select
+              label="Order By"
+              fullWidth
+              size="small"
+              value={orderBy}
+              onChange={(e) => setOrderBy(e.target.value)}
+            >
+              {orderByOptions.map((option) => (
+                <MenuItem key={option.value} value={option.value}>
+                  {option.label}
+                </MenuItem>
+              ))}
+            </TextField>
+          </Grid>
+
           <Grid
             size={{
               xs: 12,

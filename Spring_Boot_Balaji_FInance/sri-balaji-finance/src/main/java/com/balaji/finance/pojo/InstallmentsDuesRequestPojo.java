@@ -13,6 +13,9 @@ public class InstallmentsDuesRequestPojo {
 
 	@JsonFormat(pattern = "yyyy-MM-dd")
 	private LocalDate toDate;
+	
+	private InstallmentDueOrderBy orderBy;
+	
 
 	public String getLoanType() {
 		return loanType;
@@ -37,5 +40,14 @@ public class InstallmentsDuesRequestPojo {
 	public void setToDate(LocalDate toDate) {
 		this.toDate = toDate;
 	}
+
+	public InstallmentDueOrderBy getOrderBy() {
+		return orderBy;
+	}
+
+	public void setOrderBy(InstallmentDueOrderBy orderBy) {
+		this.orderBy = orderBy;
+	}
+	
 
 }

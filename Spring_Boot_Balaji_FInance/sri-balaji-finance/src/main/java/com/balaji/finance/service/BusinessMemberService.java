@@ -7,23 +7,27 @@ import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
 import com.balaji.finance.dto.BusinessMemberDto;
-import com.balaji.finance.dto.PaidInstallmentProjection;
 import com.balaji.finance.entity.AccountMaster;
 import com.balaji.finance.entity.BusinessMember;
 import com.balaji.finance.entity.CashBook;
 import com.balaji.finance.entity.EMI;
 import com.balaji.finance.entity.LoanStatus;
+import com.balaji.finance.entity.PaymentAllocation;
 import com.balaji.finance.entity.PersonalInfo;
 import com.balaji.finance.exception.ApiException;
 import com.balaji.finance.pojo.BusinessMemberAutoCompletePojo;
@@ -64,6 +68,9 @@ public class BusinessMemberService {
 
 	@Autowired
 	private DfNumberService dfNumberService;
+	
+	private static final Logger log =
+            LoggerFactory.getLogger(BusinessMemberService.class);
 
 	public String generateId(String type, int year) {
 
@@ -357,15 +364,31 @@ public class BusinessMemberService {
 	public String updateBusinessMember(BusinessMemberDto businessMemberDto, BusinessMember businessMember,
 			String type) {
 		
-		BigDecimal totalPaidOfLoan = emiRepo.getTotalPaidOfLoan(businessMember.getBusinessMemberId());
+		List<CashBook> collectionsList = cashBookRepo.findCollectionsOnAccount(businessMember.getBusinessMemberId());
 
-		BigDecimal loanAmount = businessMemberDto.getAmount();
+		BigDecimal totalPaidOfLoan = collectionsList.stream()
+		        .map(CashBook::getCredit)
+		        .filter(Objects::nonNull)
+		        .reduce(BigDecimal.ZERO, BigDecimal::add);
+		
 
-		if (loanAmount.compareTo(totalPaidOfLoan) < 0) {
-			throw new ApiException(
-					String.format("Loan amount (%s) cannot be less than the total amount already paid (%s).",
-							loanAmount, totalPaidOfLoan),
-					HttpStatus.BAD_REQUEST);
+		BigDecimal newTotalReceivable =
+		        businessMemberDto.getAmount()
+		        .add(
+		            businessMemberDto.getInterest() == null
+		                ? BigDecimal.ZERO
+		                : businessMemberDto.getInterest()
+		        );
+
+		if (newTotalReceivable.compareTo(totalPaidOfLoan) < 0) {
+		    throw new ApiException(
+		        String.format(
+		            "Total receivable (%s) cannot be less than already collected amount (%s)",
+		            newTotalReceivable,
+		            totalPaidOfLoan
+		        ),
+		        HttpStatus.BAD_REQUEST
+		    );
 		}
 
 		String currentUser = SecurityContextHolder.getContext().getAuthentication().getName();
@@ -596,28 +619,9 @@ public class BusinessMemberService {
 
 		businessMemberRepository.save(businessMember);
 
-	
-		
-		Long hasCashEntries = cashBookRepo.findCollectionsCountOnAccount(businessMember.getBusinessMemberId());
+		if (updateEMIs) {
 
-		System.err.println(hasCashEntries + " ::hasCashEntries");
-
-		if (hasCashEntries > 0) {
-			
-			updateEmisOnceAfterCollectionsPaid(businessMember);
-		
-		} else if (updateEMIs) {
-
-			paymentAllocationRepo.deleteByEmi_BusinessMember(businessMember);
-			emiRepo.deleteByBusinessMember_BusinessMemberId(businessMember.getBusinessMemberId());
-
-			// regenerate EMI
-			if ("MONTHLY_FINANCE".equals(type)) {
-				generateEMIScheduleForMonth(businessMember);
-			} else {
-				generateEMIScheduleForDays(businessMember);
-			}
-
+			rebuildLoan(businessMember, collectionsList);
 		}
 
 		return "Loan updated successfully!";
@@ -871,176 +875,182 @@ public class BusinessMemberService {
 
 	public void generateEMIScheduleForDays(BusinessMember member) {
 
-		int days = member.getDuration(); // Loan duration in months
+	    int days = member.getDuration();
 
-		BigDecimal principalPerEMI = member.getAmount().divide(BigDecimal.valueOf(days), 2, RoundingMode.HALF_UP);
+	    BigDecimal principal = member.getAmount();
 
-		// Step 5: Generate EMI schedule
-		for (int i = 1; i <= days; i++) {
-			EMI emi = new EMI();
-			emi.setBusinessMember(member);
-			emi.setInstallmentNumber(i);
-			emi.setPrincipalAmount(principalPerEMI);
-			emi.setInterestAmount(BigDecimal.ZERO);
-
-			emi.setTotalAmount(principalPerEMI);
-			emi.setPaidAmount(BigDecimal.ZERO);
-			emi.setDueDate(member.getStartDate().plusDays(i));
-			emi.setStatus("PENDING");
-
-			emiRepo.save(emi);
-
-		}
-	}
-
-	@Transactional
-	public void updateEmisOnceAfterCollectionsPaid(BusinessMember member) {
-
-	    List<EMI> allEMIs = emiRepo.findByBusinessMemberOrderByInstallmentNumberAsc(member);
-
-	    PaidInstallmentProjection projection;
-
-	    switch (member.getLoanType()) {
-
-	    case "DAILY_FINANCE":
-	        projection = cashBookRepo.getCollectionsPaidForDailyLoan(member.getBusinessMemberId());
-	        break;
-
-	    case "MONTHLY_FINANCE":
-	        projection = cashBookRepo.getCollectionsPaidForMonthlyLoan(member.getBusinessMemberId());
-	        break;
-
-	    default:
-	        throw new IllegalArgumentException("Unknown loan type: " + member.getLoanType());
-	    }
-
-	    
-	    
-	    BigDecimal paidPrincipal = projection != null && projection.getLoanInstallmentsPaid() != null
-	            ? projection.getLoanInstallmentsPaid()
-	            : BigDecimal.ZERO;
-
-	    BigDecimal paidInterest = projection != null && projection.getLoanInterestPaid() != null
-	            ? projection.getLoanInterestPaid()
-	            : BigDecimal.ZERO;
-
-	    BigDecimal remainingPrincipal = member.getAmount().subtract(paidPrincipal);
-	    BigDecimal remainingInterest = member.getInterest().subtract(paidInterest);
-
-	    if (remainingPrincipal.compareTo(BigDecimal.ZERO) < 0) {
-	        remainingPrincipal = BigDecimal.ZERO;
-	    }
-
-	    if (remainingInterest.compareTo(BigDecimal.ZERO) < 0) {
-	        remainingInterest = BigDecimal.ZERO;
-	    }
-
-	    List<EMI> paidEMIs = allEMIs.stream()
-	            .filter(e -> "PAID".equalsIgnoreCase(e.getStatus()))
-	            .toList();
-
-	    List<EMI> unpaidEMIs = allEMIs.stream()
-	            .filter(e -> !"PAID".equalsIgnoreCase(e.getStatus()))
-	            .sorted(Comparator.comparing(EMI::getInstallmentNumber))
-	            .collect(Collectors.toList());
-
-	    int targetUnpaidCount = member.getDuration() - paidEMIs.size();
-
-	    if (targetUnpaidCount <= 0) {
-	        emiRepo.deleteAll(unpaidEMIs);
-	        return;
-	    }
-
-	    /*
-	     * Duration Reduced
-	     */
-	    if (unpaidEMIs.size() > targetUnpaidCount) {
-
-	        List<EMI> toDelete = unpaidEMIs.subList(targetUnpaidCount, unpaidEMIs.size());
-
-	        emiRepo.deleteAll(toDelete);
-
-	        unpaidEMIs = new ArrayList<>(unpaidEMIs.subList(0, targetUnpaidCount));
-	    }
-
-	    /*
-	     * Duration Increased
-	     */
-	    while (unpaidEMIs.size() < targetUnpaidCount) {
-
-	        EMI emi = new EMI();
-
-	        emi.setBusinessMember(member);
-
-	        unpaidEMIs.add(emi);
-	    }
-
-	    BigDecimal principalPerEMI = remainingPrincipal.divide(
-	            BigDecimal.valueOf(targetUnpaidCount),
-	            2,
-	            RoundingMode.HALF_UP);
-
-	    BigDecimal interestPerEMI = remainingInterest.divide(
-	            BigDecimal.valueOf(targetUnpaidCount),
+	    BigDecimal principalPerEMI = principal.divide(
+	            BigDecimal.valueOf(days),
 	            2,
 	            RoundingMode.HALF_UP);
 
 	    BigDecimal assignedPrincipal = BigDecimal.ZERO;
-	    BigDecimal assignedInterest = BigDecimal.ZERO;
 
-	    int nextInstallmentNo = paidEMIs.size();
+	    List<EMI> emiList = new ArrayList<>();
 
-	    for (int i = 0; i < unpaidEMIs.size(); i++) {
+	    for (int i = 1; i <= days; i++) {
 
-	        EMI emi = unpaidEMIs.get(i);
-
-	        BigDecimal principalAmount;
-	        BigDecimal interestAmount;
-
-	        boolean isLast = i == unpaidEMIs.size() - 1;
-
-	        if (isLast) {
-
-	            principalAmount = remainingPrincipal.subtract(assignedPrincipal);
-	            interestAmount = remainingInterest.subtract(assignedInterest);
-
-	        } else {
-
-	            principalAmount = principalPerEMI;
-	            interestAmount = interestPerEMI;
-
-	            assignedPrincipal = assignedPrincipal.add(principalAmount);
-	            assignedInterest = assignedInterest.add(interestAmount);
-	        }
+	        EMI emi = new EMI();
 
 	        emi.setBusinessMember(member);
-	        emi.setInstallmentNumber(++nextInstallmentNo);
+	        emi.setInstallmentNumber(i);
 
-	        emi.setPrincipalAmount(principalAmount);
-	        emi.setInterestAmount(interestAmount);
-	        emi.setTotalAmount(principalAmount.add(interestAmount));
+	        if (i == days) {
 
-	        if (emi.getPaidAmount() == null) {
-	            emi.setPaidAmount(BigDecimal.ZERO);
-	        }
+	            emi.setPrincipalAmount(
+	                    principal.subtract(assignedPrincipal));
 
-	        /*
-	         * Preserve PARTIAL payment
-	         */
-	        if (emi.getPaidAmount().compareTo(BigDecimal.ZERO) > 0) {
-	            emi.setStatus("PARTIAL");
 	        } else {
-	            emi.setStatus("PENDING");
+
+	            emi.setPrincipalAmount(principalPerEMI);
+
+	            assignedPrincipal =
+	                    assignedPrincipal.add(principalPerEMI);
 	        }
 
-	        if ("MONTHLY_FINANCE".equals(member.getLoanType())) {
-	            emi.setDueDate(member.getStartDate().plusMonths(emi.getInstallmentNumber()));
-	        } else {
-	            emi.setDueDate(member.getStartDate().plusDays(emi.getInstallmentNumber()));
-	        }
+	        emi.setInterestAmount(BigDecimal.ZERO);
+	        emi.setTotalAmount(emi.getPrincipalAmount());
+
+	        emi.setPaidAmount(BigDecimal.ZERO);
+	        emi.setDueDate(member.getStartDate().plusDays(i));
+	        emi.setStatus("PENDING");
+
+	        emiList.add(emi);
 	    }
 
-	    emiRepo.saveAll(unpaidEMIs);
+	    emiRepo.saveAll(emiList);
 	}
 
+	
+	
+	
+	
+	
+	
+	
+	@Transactional
+	private void rebuildLoan(BusinessMember member,List<CashBook> collectionsList) {
+
+		// 1. Remove old allocations
+		paymentAllocationRepo.deleteByEmi_BusinessMember(member);
+		emiRepo.deleteByBusinessMember_BusinessMemberId(member.getBusinessMemberId());
+
+
+	
+		// 3. Generate fresh EMI schedule
+		if ("MONTHLY_FINANCE".equals(member.getLoanType())) {
+			generateEMIScheduleForMonth(member);
+		} else if ("DAILY_FINANCE".equals(member.getLoanType())) {
+			generateEMIScheduleForDays(member);
+		}
+
+		// 4. Fetch newly generated EMIs
+		List<EMI> allEMIs = emiRepo.findByBusinessMember(member);
+
+	
+
+		Map<String, List<CashBook>> paymentRefCashBookMap = collectionsList.stream()
+				.sorted(Comparator.comparing(CashBook::getTransDate))
+				.collect(Collectors.groupingBy(CashBook::getPaymentRefId, LinkedHashMap::new, Collectors.toList()));
+
+		// 5. Replay every payment
+		for (List<CashBook> paymentEntries : paymentRefCashBookMap.values()) {
+
+			processPayment(member, paymentEntries, allEMIs);
+		}
+
+		// 6. Check loan completion
+		boolean allPaid = allEMIs.stream().allMatch(emi -> emi.getRemainingAmount().compareTo(BigDecimal.ZERO) <= 0);
+
+		if (allPaid) {
+			member.setLoanStatus(LoanStatus.COMPLETED.toString());
+		} else {
+			member.setLoanStatus(LoanStatus.ACTIVE.toString());
+		}
+
+		businessMemberRepository.save(member);
+	}
+
+	
+	
+
+	
+	private void processPayment(BusinessMember bm, List<CashBook> cashBookListPaidAtOneIntance, List<EMI> allEMIs) {
+
+		String paymentRefId = cashBookListPaidAtOneIntance.get(0).getPaymentRefId();
+		LocalDateTime transactionDate = cashBookListPaidAtOneIntance.get(0).getTransDate();
+		
+		BigDecimal paidAmount = cashBookListPaidAtOneIntance.stream()
+		        .map(CashBook::getCredit)
+		        .filter(Objects::nonNull)
+		        .reduce(BigDecimal.ZERO, BigDecimal::add);
+		
+		
+		List<EMI> pendingEMIs = allEMIs.stream().filter(emi -> !"PAID".equalsIgnoreCase(emi.getStatus()))
+				.sorted(Comparator.comparing(EMI::getDueDate)).collect(Collectors.toList());
+
+		BigDecimal remainingPayment = paidAmount;
+		
+		List<PaymentAllocation> allocations = new ArrayList<>();
+		List<EMI> modifiedEmis = new ArrayList<>();
+		
+		
+		for (EMI emi : pendingEMIs) {
+
+			if (remainingPayment.compareTo(BigDecimal.ZERO) <= 0) {
+				break;
+			}
+
+			BigDecimal emiRemaining = emi.getRemainingAmount();
+
+			// 🔹 Calculate allocation
+			BigDecimal allocation = remainingPayment.min(emiRemaining);
+
+
+			if (allocation.signum() <= 0) {
+			    continue;
+			}
+			
+			PaymentAllocation pa = new PaymentAllocation();
+			pa.setPaymentRefId(paymentRefId); // from your UUID
+			pa.setEmi(emi);
+			pa.setAllocatedAmount(allocation);
+
+			allocations.add(pa);
+
+			emi.setPaidAmount(emi.getPaidAmount().add(allocation));
+
+			if (emi.getPaidAmount().compareTo(emi.getTotalAmount()) >= 0) {
+
+				emi.setStatus("PAID");
+				if (emi.getPaymentDate() == null) {
+					emi.setPaymentDate(transactionDate);
+				}
+
+			} else if (emi.getPaidAmount().compareTo(BigDecimal.ZERO) > 0) {
+
+				emi.setStatus("PARTIAL");
+
+			} else {
+
+				emi.setStatus("PENDING");
+			}
+
+			modifiedEmis.add(emi);
+
+			remainingPayment = remainingPayment.subtract(allocation);
+		}
+
+		
+		paymentAllocationRepo.saveAll(allocations);
+		emiRepo.saveAll(modifiedEmis);
+		
+		
+		if (remainingPayment.compareTo(BigDecimal.ZERO) > 0) {
+		    log.warn("Unallocated payment amount {} for member {}",
+		             remainingPayment,
+		             bm.getBusinessMemberId());
+		}
+	}
+	
 }
