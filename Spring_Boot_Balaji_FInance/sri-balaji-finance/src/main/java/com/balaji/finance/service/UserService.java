@@ -15,6 +15,7 @@ import com.balaji.finance.entity.UserPermission;
 import com.balaji.finance.entity.Users;
 import com.balaji.finance.pojo.UserSaveReq;
 import com.balaji.finance.repo.PermissionRepository;
+import com.balaji.finance.repo.RefreshTokenRepo;
 import com.balaji.finance.repo.UserPermissionRepository;
 import com.balaji.finance.repo.UserRepo;
 
@@ -34,6 +35,9 @@ public class UserService {
 
 	@Autowired
 	private PermissionRepository permissionRepository;
+
+	@Autowired
+	private RefreshTokenRepo refreshTokenRepo;
 
 	public void saveUser(UserSaveReq userSaveReq) {
 
@@ -110,6 +114,7 @@ public class UserService {
 		}
 	}
 
+	@Transactional
 	public void deleteUser(Integer id) {
 
 		if (id == null) {
@@ -119,6 +124,8 @@ public class UserService {
 		Users user = userRepo.findById(id)
 				.orElseThrow(() -> new IllegalArgumentException("User not found with ID: " + id));
 
+		userPermissionRepo.deleteByUser(user);
+		refreshTokenRepo.deleteByUser(user);
 		userRepo.delete(user);
 	}
 

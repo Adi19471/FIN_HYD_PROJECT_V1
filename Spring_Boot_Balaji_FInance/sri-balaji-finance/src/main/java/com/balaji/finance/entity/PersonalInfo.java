@@ -15,13 +15,15 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.EntityListeners;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.Id;
+import jakarta.persistence.Index;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.Lob;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 
 @Entity
-@Table(name = "PERSONAL_INFO")
+@Table(name = "PERSONAL_INFO", indexes = {
+		@Index(name = "idx_pi_category_disable", columnList = "CATEGORY, DISABLE") })
 @EntityListeners(AuditingEntityListener.class)
 public class PersonalInfo {
 

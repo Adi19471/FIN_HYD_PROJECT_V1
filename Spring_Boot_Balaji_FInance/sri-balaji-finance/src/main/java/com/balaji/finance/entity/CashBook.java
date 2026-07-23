@@ -17,12 +17,19 @@ import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.Index;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 
 @Entity
-@Table(name = "CASH_BOOK")
+@Table(name = "CASH_BOOK", indexes = {
+		@Index(name = "idx_cb_member_code", columnList = "BUSINESS_MEMBER_ID, ACCOUNT_MASTER_CODE"),
+		@Index(name = "idx_cb_code_date", columnList = "ACCOUNT_MASTER_CODE, TRANS_DATE"),
+		@Index(name = "idx_cb_date_type", columnList = "TRANS_DATE, ACCOUNT_MASTER_TYPE"),
+		@Index(name = "idx_cb_person_code", columnList = "PERSONAL_INFO_ID, ACCOUNT_MASTER_CODE"),
+		@Index(name = "idx_cb_user_date", columnList = "ENTRY_USER, TRANS_DATE"),
+		@Index(name = "idx_cb_payment_ref", columnList = "PAYMENT_REF_ID") })
 @EntityListeners(AuditingEntityListener.class)
 public class CashBook {
 

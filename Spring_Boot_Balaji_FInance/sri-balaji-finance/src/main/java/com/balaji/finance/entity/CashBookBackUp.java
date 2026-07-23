@@ -18,13 +18,15 @@ import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.Index;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 
 @Immutable
 @Entity
-@Table(name = "CASH_BOOK_BACKUP")
+@Table(name = "CASH_BOOK_BACKUP", indexes = {
+		@Index(name = "idx_cbb_trans_date", columnList = "TRANS_DATE") })
 @EntityListeners(AuditingEntityListener.class)
 public class CashBookBackUp {
 

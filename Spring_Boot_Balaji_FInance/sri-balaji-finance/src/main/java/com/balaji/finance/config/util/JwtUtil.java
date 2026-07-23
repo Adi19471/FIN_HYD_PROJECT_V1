@@ -4,27 +4,26 @@ import java.security.Key;
 import java.util.Date;
 import java.util.List;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
-import io.jsonwebtoken.SignatureAlgorithm;
-import io.jsonwebtoken.io.Encoders;
+import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
 
 @Component
 public class JwtUtil {
 
 	private final Key key;
-	private final long expiration = 3600000; // 1 hour (optional constant)
 
-	public JwtUtil() {
-		// Automatically generate a secure 256-bit HS256 key
-		this.key = Keys.secretKeyFor(SignatureAlgorithm.HS256);
+	@Value("${app.jwt.access-token-expiration-ms}")
+	private long expiration;
 
-		// Optional: print key (for debugging)
-		String base64Key = Encoders.BASE64.encode(key.getEncoded());
-		System.out.println("Generated JWT Signing Key: " + base64Key);
+	public JwtUtil(@Value("${app.jwt.secret}") String secret) {
+		// Signing key is persisted via config rather than regenerated per boot,
+		// so a restart/redeploy doesn't invalidate every outstanding access token at once.
+		this.key = Keys.hmacShaKeyFor(Decoders.BASE64.decode(secret));
 	}
 
 	public String generateToken(String username, List<String> roles) {

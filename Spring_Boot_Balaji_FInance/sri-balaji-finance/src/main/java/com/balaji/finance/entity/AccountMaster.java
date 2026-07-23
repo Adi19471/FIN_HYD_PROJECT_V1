@@ -11,7 +11,9 @@ import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 import jakarta.persistence.*;
 
 @Entity
-@Table(name = "accountmaster")
+@Table(name = "accountmaster", indexes = {
+		@Index(name = "idx_am_mastercode_code", columnList = "MASTER_CODE, code"),
+		@Index(name = "idx_am_visibility", columnList = "VISIBILITY") })
 @EntityListeners(AuditingEntityListener.class)
 public class AccountMaster {
 

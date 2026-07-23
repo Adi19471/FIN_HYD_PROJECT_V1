@@ -6,15 +6,17 @@ public class LoginResponse {
 
 	private String message;
 	private String token;
+	private String refreshToken;
 	private String username;
 	private List<String> roles;
 
 	public LoginResponse() {
 	}
 
-	public LoginResponse(String message, String token, String username, List<String> roles) {
+	public LoginResponse(String message, String token, String refreshToken, String username, List<String> roles) {
 		this.message = message;
 		this.token = token;
+		this.refreshToken = refreshToken;
 		this.username = username;
 		this.roles = roles;
 	}
@@ -33,6 +35,14 @@ public class LoginResponse {
 
 	public void setToken(String token) {
 		this.token = token;
+	}
+
+	public String getRefreshToken() {
+		return refreshToken;
+	}
+
+	public void setRefreshToken(String refreshToken) {
+		this.refreshToken = refreshToken;
 	}
 
 	public String getUsername() {

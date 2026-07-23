@@ -152,7 +152,6 @@ function Sidebar({ sidebarOpen, setSidebarOpen }) {
           {canViewDashboard && (
             <NavLink
               to="/"
-              target="_blank"
               className={({ isActive }) => `admin-sidebar-link ${isActive ? "is-active" : ""}`}
               title="Dashboard"
             >
@@ -187,7 +186,6 @@ function Sidebar({ sidebarOpen, setSidebarOpen }) {
                         <NavLink
                           key={item.path}
                           to={item.path}
-                          target="_blank"
                           title={item.label}
                           className={({ isActive }) =>
                             `admin-sidebar-sublink ${isActive ? "is-active" : ""} ${item.danger ? "is-danger" : ""}`

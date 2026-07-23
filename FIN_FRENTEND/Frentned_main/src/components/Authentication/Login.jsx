@@ -31,7 +31,7 @@ import { AnimatePresence, motion } from "framer-motion";
 import { successToast, errorToast } from "toastify";
 import { API_BASE } from "lib/config";
 import { setSession } from "src/utils/session";
-import { setAuthToken } from "src/utils/authToken";
+import { setAuthToken, setRefreshToken } from "src/utils/authToken";
 import { getDefaultAuthorizedPath, normalizePermissionCodes, normalizeRoles } from "src/utils/permissions";
 import ThemeToggle from "../ThemeToggle";
 import { COMPANY_ADDRESS, COMPANY_APP_NAME } from "src/lib/company";
@@ -106,6 +106,7 @@ const Login = () => {
 
       if (resp.ok && data.token) {
         const token = setAuthToken(data.token);
+        setRefreshToken(data.refreshToken);
         const name = data.name || data.username || formData.username;
         const user = {
           name,

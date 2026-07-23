@@ -2,6 +2,8 @@ import { useState, useEffect, useCallback } from "react";
 import { setSession, getSession, removeSession } from "./session";
 import { AuthContext } from "src/utils/authStore";
 import { normalizePermissionCodes, normalizeRoles } from "src/utils/permissions";
+import { getRefreshToken } from "src/utils/authToken";
+import { API_BASE } from "lib/config";
 
 const INACTIVITY_TIMEOUT = 60 * 60 * 1000; // 60 minutes
 
@@ -27,8 +29,21 @@ export function AuthProvider({ children }) {
   const logout = useCallback(() => {
     setUser(null);
     try {
+      const refreshToken = getRefreshToken();
+      if (refreshToken) {
+        // Best-effort: revoke the refresh token server-side. Doesn't block
+        // clearing local state or the redirect below either way.
+        fetch(`${API_BASE}/auth/logout`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ refreshToken }),
+        }).catch(() => {});
+      }
+    } catch {}
+    try {
       removeSession("user");
       removeSession("token");
+      removeSession("refreshToken");
       setSession("isAuthenticated", "false");
       removeSession("lastActivity");
     } catch {}
@@ -52,6 +67,7 @@ export function AuthProvider({ children }) {
         removeSession("user");
         setSession("isAuthenticated", "false");
         removeSession("token");
+        removeSession("refreshToken");
         removeSession("lastActivity");
       }
     } catch (e) {
