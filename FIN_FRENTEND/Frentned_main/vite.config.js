@@ -7,7 +7,7 @@ import os from "os";
 const viteCacheDir = path.join(os.tmpdir(), "vite-cache");
 
 export default defineConfig({
-  base: "./",
+  base: "/",
 
   define: {
     "process.env.NODE_ENV": JSON.stringify(process.env.NODE_ENV),

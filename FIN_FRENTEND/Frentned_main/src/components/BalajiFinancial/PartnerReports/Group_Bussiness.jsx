@@ -27,13 +27,7 @@ const formatAmount = (amount) => Number(amount || 0).toLocaleString("en-IN");
 const formatDecimal = (amount) => Number(amount || 0).toFixed(1);
 
 const Group_Bussiness = () => {
-  const session = getSession();
-  const token =
-    session?.token ||
-    session?.accessToken ||
-    session?.jwtToken ||
-    localStorage.getItem("token") ||
-    "";
+  const token = getSession("token") || "";
 
   const headers = useMemo(
     () => ({
