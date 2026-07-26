@@ -117,7 +117,9 @@ export default function Dashboard() {
   const token = getSession("token") || "";
   const headers = useMemo(() => ({ Authorization: `Bearer ${token}` }), [token]);
 
-  const fetchDashboard = useCallback(async () => {
+  // Collections + daily summary are the genuinely "live" numbers on this screen,
+  // so they're fast (no full-table scans) and safe to poll every 30s.
+  const fetchLiveMetrics = useCallback(async () => {
     setLoading(true);
     setError("");
     const today = dayjs().format("YYYY-MM-DD");
@@ -125,16 +127,14 @@ export default function Dashboard() {
     const monthEnd = dayjs().endOf("month").format("YYYY-MM-DD");
 
     try {
-      const [collectionsRes, dailySummaryRes, membersRes] = await Promise.allSettled([
+      const [collectionsRes, dailySummaryRes] = await Promise.allSettled([
         axios.get(`${API_BASE}/businessCollectionsReport/${monthStart}/${monthEnd}`, { headers }),
         axios.get(`${API_BASE}/loadAllDayWiseTransactionsSummary/${today}`, { headers }),
-        axios.get(`${API_BASE}/PersonalInfo/findAll`, { headers }),
       ]);
 
       const collectionRows = collectionsRes.status === "fulfilled" && Array.isArray(collectionsRes.value.data) ? collectionsRes.value.data : [];
       const dailySummary = dailySummaryRes.status === "fulfilled" ? dailySummaryRes.value.data || {} : {};
       const dailyRows = Array.isArray(dailySummary.cashBookSumaryViewPojoList) ? dailySummary.cashBookSumaryViewPojoList : [];
-      const memberRows = membersRes.status === "fulfilled" && Array.isArray(membersRes.value.data) ? membersRes.value.data : [];
 
       const target = collectionRows.reduce((sum, item) => sum + Number(item.targetCollections || 0), 0);
       const received = collectionRows.reduce((sum, item) => sum + Number(item.receivedCollections || 0), 0);
@@ -157,15 +157,14 @@ export default function Dashboard() {
         };
       });
 
-      setMetrics({
+      setMetrics((prev) => ({
+        ...prev,
         portfolioValue: target,
         todayCollection: todayCollection || received,
         pendingDues: balance,
-        activeMembers: memberRows.length,
         dueCases: collectionRows.filter((item) => Number(item.balanceCollections || 0) > 0).length,
         transactionRows,
         collectionRows,
-        memberRows,
         dailySummaryRows: dailyRows,
         dailyTotals: {
           openingBalance: Number(dailySummary.openingBalance || 0),
@@ -173,7 +172,7 @@ export default function Dashboard() {
           debits: Number(dailySummary.debits || 0),
           closingBalance: Number(dailySummary.closingBalance || 0),
         },
-      });
+      }));
       setLastUpdated(dayjs());
     } catch (err) {
       setError("Dashboard live data could not be refreshed. Please check API connection or login session.");
@@ -182,22 +181,36 @@ export default function Dashboard() {
     }
   }, [headers]);
 
+  // Active-member count barely changes minute to minute, and PersonalInfo/findAll
+  // scans the full customer/employee/partner/vendor table - fetch it once on open
+  // instead of on every 30s live-metrics poll.
+  const fetchMemberCount = useCallback(async () => {
+    try {
+      const res = await axios.get(`${API_BASE}/PersonalInfo/findAll`, { headers });
+      const memberRows = Array.isArray(res.data) ? res.data : [];
+      setMetrics((prev) => ({ ...prev, activeMembers: memberRows.length, memberRows }));
+    } catch {
+      // Non-critical metric tile; leave the last known count in place.
+    }
+  }, [headers]);
+
   useEffect(() => {
-    fetchDashboard();
+    fetchLiveMetrics();
+    fetchMemberCount();
     // Skip polling while this tab is backgrounded or the user has been idle for a
     // while - avoids piling up backend calls from tabs left open and untouched.
     const refreshTimer = window.setInterval(() => {
-      if (document.visibilityState === "visible" && !isUserIdle()) fetchDashboard();
+      if (document.visibilityState === "visible" && !isUserIdle()) fetchLiveMetrics();
     }, 30000);
     const handleVisibility = () => {
-      if (document.visibilityState === "visible") fetchDashboard();
+      if (document.visibilityState === "visible") fetchLiveMetrics();
     };
     document.addEventListener("visibilitychange", handleVisibility);
     return () => {
       window.clearInterval(refreshTimer);
       document.removeEventListener("visibilitychange", handleVisibility);
     };
-  }, [fetchDashboard]);
+  }, [fetchLiveMetrics, fetchMemberCount]);
 
   const completionRate = useMemo(() => {
     const target = Number(metrics.portfolioValue || 0);
@@ -253,7 +266,15 @@ export default function Dashboard() {
             </Stack>
             <Typography variant="h3" sx={{ mt: 2 }}>{COMPANY_NAME}</Typography>
             <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap sx={{ mt: 2.5 }}>
-              <Button startIcon={<RefreshRounded />} variant="contained" onClick={fetchDashboard} disabled={loading}>
+              <Button
+                startIcon={<RefreshRounded />}
+                variant="contained"
+                onClick={() => {
+                  fetchLiveMetrics();
+                  fetchMemberCount();
+                }}
+                disabled={loading}
+              >
                 Refresh Counts
               </Button>
               <Button startIcon={<PointOfSaleRounded />} variant="outlined" onClick={() => navigate("/Transactions/Quick_Cash_Book")}>

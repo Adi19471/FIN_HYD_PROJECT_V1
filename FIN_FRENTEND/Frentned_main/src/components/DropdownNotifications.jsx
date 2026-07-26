@@ -52,15 +52,6 @@ const timeLabel = (date) => {
   return parsed.isValid() ? parsed.format("DD-MMM hh:mm A") : "Today";
 };
 
-// AuthContext already tracks lastActivity (mouse/keyboard/scroll/touch) for its
-// inactivity-logout timer - reuse it so polling pauses when the user has genuinely
-// stepped away, not just when the tab is backgrounded.
-const IDLE_THRESHOLD_MS = 5 * 60 * 1000;
-const isUserIdle = () => {
-  const lastActivity = parseInt(getSession("lastActivity") || "0", 10);
-  return Date.now() - lastActivity > IDLE_THRESHOLD_MS;
-};
-
 export default function DropdownNotifications() {
   const [anchorEl, setAnchorEl] = useState(null);
   const [loading, setLoading] = useState(false);
@@ -137,21 +128,10 @@ export default function DropdownNotifications() {
     }
   }, [headers, token]);
 
+  // One fetch on mount for the badge count, plus a refetch on click (below) for
+  // fresh data when opened - no background polling for a dropdown that's closed.
   useEffect(() => {
     fetchNotifications();
-    // Skip polling while this tab is backgrounded or the user has been idle for a
-    // while - avoids piling up backend calls from tabs left open and untouched.
-    const refreshTimer = window.setInterval(() => {
-      if (document.visibilityState === "visible" && !isUserIdle()) fetchNotifications();
-    }, 30000);
-    const handleVisibility = () => {
-      if (document.visibilityState === "visible") fetchNotifications();
-    };
-    document.addEventListener("visibilitychange", handleVisibility);
-    return () => {
-      window.clearInterval(refreshTimer);
-      document.removeEventListener("visibilitychange", handleVisibility);
-    };
   }, [fetchNotifications]);
 
   const handleClick = (event) => {
