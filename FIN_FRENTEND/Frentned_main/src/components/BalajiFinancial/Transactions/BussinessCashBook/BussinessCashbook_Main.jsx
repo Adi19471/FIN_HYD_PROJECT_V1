@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { alpha, Box, CircularProgress, Fade, Paper, Stack, Tab, Tabs, Typography, useTheme } from "@mui/material";
+import { alpha, Box, Paper, Stack, Tab, Tabs, Typography, useTheme } from "@mui/material";
 import { CalendarMonthRounded, PointOfSaleRounded, TodayRounded } from "@mui/icons-material";
 
 import BussinessDailyFinance from "./Bussiness_DailyFinance/BussinessDailyFinance";
@@ -13,12 +13,9 @@ const tabs = [
 const BussinessCashbook_Main = () => {
   const theme = useTheme();
   const [value, setValue] = useState(0);
-  const [loading, setLoading] = useState(false);
 
   const handleChange = (event, newValue) => {
-    setLoading(true);
     setValue(newValue);
-    setTimeout(() => setLoading(false), 250);
   };
 
   return (
@@ -84,25 +81,7 @@ const BussinessCashbook_Main = () => {
         </Tabs>
       </Paper>
 
-      <Box sx={{  minHeight: 400, position: "relative" }}>
-        <Fade in={loading}>
-          <Box
-            sx={{
-              position: "absolute",
-              inset: 0,
-              borderRadius: 2,
-              backdropFilter: "blur(6px)",
-              backgroundColor: "rgba(255,255,255,0.62)",
-              display: "flex",
-              justifyContent: "center",
-              alignItems: "center",
-              zIndex: 10,
-            }}
-          >
-            <CircularProgress size={46} thickness={4} />
-          </Box>
-        </Fade>
-
+      <Box sx={{ minHeight: 400, position: "relative" }}>
         {value === 0 && <BussinessDailyFinance />}
         {value === 1 && <BussinessMonthlyFinance />}
       </Box>

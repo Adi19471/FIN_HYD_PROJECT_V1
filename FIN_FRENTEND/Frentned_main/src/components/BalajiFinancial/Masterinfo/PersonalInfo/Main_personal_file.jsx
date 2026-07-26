@@ -26,12 +26,9 @@ const MainPersonalFile = () => {
   const { user } = useAuth();
 
   const [value, setValue] = useState(0);
-  const [loading, setLoading] = useState(false);
 
   const handleChange = (event, newValue) => {
     setValue(newValue);
-    setLoading(true);
-    setTimeout(() => setLoading(false), 500);
   };
 
   const colors = useMemo(
@@ -126,12 +123,16 @@ const MainPersonalFile = () => {
             minHeight: "55vh",
           }}
         >
-          {loading ? (
-            <Box sx={{ display: "flex", justifyContent: "center", py: 1 }}>
-              <LoadingSpinner />
-            </Box>
-          ) : (
-            tabs[value] && <SelectedComponent personType={tabs[value].type} />
+          {tabs[value] && (
+            <Suspense
+              fallback={
+                <Box sx={{ display: "flex", justifyContent: "center", py: 1 }}>
+                  <LoadingSpinner />
+                </Box>
+              }
+            >
+              <SelectedComponent personType={tabs[value].type} />
+            </Suspense>
           )}
         
         </Box>

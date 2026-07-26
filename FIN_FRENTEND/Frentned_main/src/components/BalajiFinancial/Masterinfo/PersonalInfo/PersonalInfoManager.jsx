@@ -28,6 +28,7 @@ import axios from "axios";
 import { API_BASE } from "lib/config";
 import { errorToast, successToast } from "toastify";
 import { getSession } from "src/utils/session";
+import { fetchAllPersonalInfo } from "src/utils/personalInfoCache";
 import { DataTable, ProfilePhotoBox } from "src/components/ui";
 
 const TYPE_LABELS = {
@@ -88,13 +89,11 @@ const PersonalInfoManager = ({ personType = "CUSTOMER" }) => {
     return token ? { Authorization: `Bearer ${token}` } : {};
   };
 
-  const fetchData = async () => {
+  const fetchData = async (force = false) => {
     setLoading(true);
     try {
-      const res = await axios.get(`${API_BASE}/PersonalInfo/findAll`, {
-        headers: getAuthHeaders(),
-      });
-      const data = (Array.isArray(res.data) ? res.data : []).filter((p) => p.category === personType);
+      const all = await fetchAllPersonalInfo(getAuthHeaders(), { force });
+      const data = all.filter((p) => p.category === personType);
       setRows(data.map((item, i) => ({ ...item, id: item.id || `BALAJI-${i}-${Date.now()}` })));
     } catch {
       errorToast("Failed to load data");
@@ -114,36 +113,36 @@ const PersonalInfoManager = ({ personType = "CUSTOMER" }) => {
     setModalOpen(true);
   };
 
-  const openEditForm = async (id) => {
-    setLoading(true);
-    try {
-      const res = await axios.get(`${API_BASE}/PersonalInfo/findPersonalInfoById/${id}`, {
-        headers: getAuthHeaders(),
+  // The row's full data just came from this same fetchData() call moments ago via
+  // findAll - open instantly from that instead of waiting on another round trip for
+  // findPersonalInfoById, then quietly reconcile in the background in case the list
+  // projection is missing a field findPersonalInfoById would include.
+  const openEditForm = (id) => {
+    const cached = rows.find((row) => row.id === id);
+    setForm({ ...blankForm(personType), ...(cached || {}) });
+    setErrors({});
+    setIsEdit(true);
+    setModalOpen(true);
+
+    axios
+      .get(`${API_BASE}/PersonalInfo/findPersonalInfoById/${id}`, { headers: getAuthHeaders() })
+      .then((res) => setForm({ ...blankForm(personType), ...res.data }))
+      .catch(() => {
+        if (!cached) errorToast("Failed to load record");
       });
-      setForm({ ...blankForm(personType), ...res.data });
-      setErrors({});
-      setIsEdit(true);
-      setModalOpen(true);
-    } catch {
-      errorToast("Failed to load record");
-    } finally {
-      setLoading(false);
-    }
   };
 
-  const openViewModal = async (id) => {
-    setLoading(true);
-    try {
-      const res = await axios.get(`${API_BASE}/PersonalInfo/findPersonalInfoById/${id}`, {
-        headers: getAuthHeaders(),
+  const openViewModal = (id) => {
+    const cached = rows.find((row) => row.id === id);
+    setSelectedRecord(cached || null);
+    setViewModalOpen(true);
+
+    axios
+      .get(`${API_BASE}/PersonalInfo/findPersonalInfoById/${id}`, { headers: getAuthHeaders() })
+      .then((res) => setSelectedRecord(res.data))
+      .catch(() => {
+        if (!cached) errorToast("Failed to load record");
       });
-      setSelectedRecord(res.data);
-      setViewModalOpen(true);
-    } catch {
-      errorToast("Failed to load record");
-    } finally {
-      setLoading(false);
-    }
   };
 
   const handleChange = (field, value) => {
@@ -177,7 +176,7 @@ const PersonalInfoManager = ({ personType = "CUSTOMER" }) => {
       });
       successToast(isEdit ? "Updated!" : "Added!");
       setModalOpen(false);
-      fetchData();
+      fetchData(true);
     } catch (err) {
       errorToast(err.response?.data?.message || "Save failed");
     } finally {
@@ -231,7 +230,7 @@ const PersonalInfoManager = ({ personType = "CUSTOMER" }) => {
               size="small"
               variant="outlined"
               startIcon={<RefreshRounded />}
-              onClick={fetchData}
+              onClick={() => fetchData(true)}
               disabled={loading}
             >
               Refresh

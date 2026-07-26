@@ -26,6 +26,7 @@ import {
 import { DataGrid, GridToolbar } from "@mui/x-data-grid";
 import axios from "axios";
 import { getSession } from "src/utils/session";
+import { fetchAllPersonalInfo } from "src/utils/personalInfoCache";
 import { FiUserPlus, FiSearch, FiCopy, FiSave, FiEdit, FiXCircle, FiEye, FiUser, FiPhone, FiMapPin, FiShield, FiUsers } from "react-icons/fi";
 import { successToast, errorToast } from "toastify";
 import { API_BASE } from "lib/config";
@@ -163,14 +164,14 @@ const Partner = ({ personType = "CUSTOMER" }) => {
     return token ? { Authorization: `Bearer ${token}` } : {};
   }, []);
 
-  /* ── Fetch all records ── */
-  const fetchData = useCallback(async () => {
+  /* ── Fetch all records (shared cache - Customer/Employee/Vendor read the same
+     findAll endpoint, so switching between those screens and this one doesn't
+     re-fetch the full table every time) ── */
+  const fetchData = useCallback(async (force = false) => {
     setLoading(true);
     try {
-      const res = await axios.get(`${API_BASE}/PersonalInfo/findAll`, { headers });
-      const data = (Array.isArray(res.data) ? res.data : []).filter(
-        (p) => p.category === personType
-      );
+      const all = await fetchAllPersonalInfo(headers, { force });
+      const data = all.filter((p) => p.category === personType);
       setRows(data.map((item, i) => ({
         ...item,
         id: item.id || `tmp-${i}-${Date.now()}`,
@@ -313,7 +314,7 @@ const Partner = ({ personType = "CUSTOMER" }) => {
       );
       successToast(isEdit ? "Record updated!" : "Record added!");
       setModalOpen(false);
-      fetchData();
+      fetchData(true);
     } catch (err) {
       console.error(err);
       errorToast(err.response?.data?.message || "Save failed");
@@ -321,49 +322,57 @@ const Partner = ({ personType = "CUSTOMER" }) => {
     setSaving(false);
   };
 
-  /* ── Open Edit form ── */
-  const openEditForm = useCallback(async (id) => {
-    setLoading(true);
-    try {
-      const res = await axios.get(
-        `${API_BASE}/PersonalInfo/findPersonalInfoById/${id}`,
-        { headers }
-      );
-      setForm({ ...res.data });
+  /* ── Open Edit form ──
+     The row's core fields already came from the findAll list a moment ago -
+     open the modal instantly with that, then reconcile in the background
+     (this also drives the manager-dropdown rehydration, unchanged). */
+  const openEditForm = useCallback((id) => {
+    const cached = rows.find((row) => row.id === id);
+    if (cached) setForm({ ...cached });
+    setManagerOptions([]);
+    setErrors({});
+    setIsEdit(true);
+    setModalOpen(true);
+    if (!cached) setLoading(true);
 
-      // Rehydrate manager dropdown if manager was previously set
-      if (res.data.personalInfoManagerId) {
-        try {
-          const mRes = await axios.get(
-            `${API_BASE}/PersonalInfo/findPersonalInfoById/${res.data.personalInfoManagerId}`,
-            { headers }
-          );
-          const mgr = mRes.data;
-          setManagerValue({
-            id: mgr.id,
-            label: `${mgr.firstname || ""} ${mgr.lastname || ""}`.trim(),
-            sub: `${mgr.id} · ${mgr.mobile || "No Mobile"}`,
-          });
-          setManagerInputValue(`${mgr.firstname || ""} ${mgr.lastname || ""}`.trim());
-        } catch {
+    (async () => {
+      try {
+        const res = await axios.get(
+          `${API_BASE}/PersonalInfo/findPersonalInfoById/${id}`,
+          { headers }
+        );
+        setForm({ ...res.data });
+
+        // Rehydrate manager dropdown if manager was previously set
+        if (res.data.personalInfoManagerId) {
+          try {
+            const mRes = await axios.get(
+              `${API_BASE}/PersonalInfo/findPersonalInfoById/${res.data.personalInfoManagerId}`,
+              { headers }
+            );
+            const mgr = mRes.data;
+            setManagerValue({
+              id: mgr.id,
+              label: `${mgr.firstname || ""} ${mgr.lastname || ""}`.trim(),
+              sub: `${mgr.id} · ${mgr.mobile || "No Mobile"}`,
+            });
+            setManagerInputValue(`${mgr.firstname || ""} ${mgr.lastname || ""}`.trim());
+          } catch {
+            setManagerValue(null);
+            setManagerInputValue("");
+          }
+        } else {
           setManagerValue(null);
           setManagerInputValue("");
         }
-      } else {
-        setManagerValue(null);
-        setManagerInputValue("");
+      } catch (err) {
+        console.error(err);
+        if (!cached) errorToast("Failed to load record");
+      } finally {
+        setLoading(false);
       }
-
-      setManagerOptions([]);
-      setErrors({});
-      setIsEdit(true);
-      setModalOpen(true);
-    } catch (err) {
-      console.error(err);
-      errorToast("Failed to load record");
-    }
-    setLoading(false);
-  }, [headers]);
+    })();
+  }, [headers, rows]);
 
   /* ── Copy ID ── */
   const copyId = () => {
@@ -372,21 +381,21 @@ const Partner = ({ personType = "CUSTOMER" }) => {
   };
 
   /* ── Open View modal ── */
-  const openViewModal = useCallback(async (id) => {
-    setLoading(true);
-    try {
-      const res = await axios.get(
-        `${API_BASE}/PersonalInfo/findPersonalInfoById/${id}`,
-        { headers }
-      );
-      setSelectedRecord(res.data);
-      setViewModalOpen(true);
-    } catch (err) {
-      console.error(err);
-      errorToast("Failed to load record");
-    }
-    setLoading(false);
-  }, [headers]);
+  const openViewModal = useCallback((id) => {
+    const cached = rows.find((row) => row.id === id);
+    setSelectedRecord(cached || null);
+    setViewModalOpen(true);
+    if (!cached) setLoading(true);
+
+    axios
+      .get(`${API_BASE}/PersonalInfo/findPersonalInfoById/${id}`, { headers })
+      .then((res) => setSelectedRecord(res.data))
+      .catch((err) => {
+        console.error(err);
+        if (!cached) errorToast("Failed to load record");
+      })
+      .finally(() => setLoading(false));
+  }, [headers, rows]);
 
   /* ── Columns ── */
   const columns = useMemo(() => [

@@ -25,11 +25,14 @@ function App() {
   }, [location.pathname]);
 
   /* =========================
-     Static Browser Title
+     Browser Title (per route)
   ========================== */
   useEffect(() => {
-    document.title = COMPANY_APP_NAME;
-  }, []);
+    const currentRoute = routes.find((route) => route.path === location.pathname);
+    document.title = currentRoute?.title
+      ? `${currentRoute.title} - ${COMPANY_APP_NAME}`
+      : COMPANY_APP_NAME;
+  }, [location.pathname]);
 
   /* =========================
      Route Conditions
