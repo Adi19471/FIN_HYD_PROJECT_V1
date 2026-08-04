@@ -41,7 +41,7 @@ public class CustomerTransactionsService {
 
 		int sno = 0;
 		for (CustomerTransactionsProjection customerTransactionsProjection : customerTransactionsOnAccountMasterCode) {
-
+			
 			CustomerTransactionsResponse customerTransactionsResponse = new CustomerTransactionsResponse();
 			customerTransactionsResponse.setSno(++sno);
 			customerTransactionsResponse.setTransactionId(customerTransactionsProjection.getCashBookId());
@@ -53,7 +53,9 @@ public class CustomerTransactionsService {
 			customerTransactionsResponse.setTransactionName(customerTransactionsProjection.getAccountMasterCode());
 			customerTransactionsResponse.setParticulars(customerTransactionsProjection.getBmRemarks());
 			customerTransactionsResponse.setCredit(customerTransactionsProjection.getCredit());
-			customerTransactionsResponse.setDebit(customerTransactionsResponse.getDebit());
+			customerTransactionsResponse.setDebit(customerTransactionsProjection.getDebit());
+
+			
 
 			returnList.add(customerTransactionsResponse);
 		}
