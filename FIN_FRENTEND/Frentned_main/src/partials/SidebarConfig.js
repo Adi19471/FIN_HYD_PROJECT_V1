@@ -55,7 +55,7 @@ export const sidebarGroups = [
     key: "transactions",
     label: "Transactions",
     icon: SwapHoriz,
-    match: ["/bussinesscashbook_main", "/transactions"],
+    match: ["/bussinesscashbook_main", "/transactions/"],
     items: [
       { label: "Business Cash Book", path: "/BussinessCashBook_Main", icon: AccountBalanceWallet },
       { label: "Quick Cash Book", path: "/Transactions/Quick_Cash_Book", icon: PointOfSale },
@@ -67,7 +67,7 @@ export const sidebarGroups = [
     key: "accounts",
     label: "Accounts",
     icon: AccountBalance,
-    match: ["/accountsmodules", "/loans/"],
+    match: ["/accountsmodules/"],
     items: [
       { label: "Loans Main", path: "/AccountsModules/LoansMainpage", icon: RequestQuote },
       { label: "Daily Book", path: "/AccountsModules/DailyBook", icon: CalendarMonth },
@@ -76,6 +76,14 @@ export const sidebarGroups = [
       { label: "Account Master Ledger", path: "/AccountsModules/AccountMasterLedger", icon: FolderSpecial },
       { label: "User Collection Ledger", path: "/AccountsModules/Usercollectionledger", icon: People },
       { label: "Receipt Ledger", path: "/AccountsModules/ReciptLedger", icon: Paid },
+    ],
+  },
+  {
+    key: "loan",
+    label: "Loans",
+    icon: RequestQuote,
+    match: ["/loans/"],
+    items: [
       { label: "Distributed Loans", path: "/Loans/Distubuted", icon: TrendingUp },
       { label: "Instalment Dues", path: "/Loans/InstalmentDues", icon: Payment },
       { label: "Maturity", path: "/Loans/Maturity", icon: CheckCircle },
@@ -85,7 +93,7 @@ export const sidebarGroups = [
     key: "accountMaster",
     label: "Account Master",
     icon: SettingsApplications,
-    match: ["/accountmastersetup"],
+    match: ["/accountmastersetup/"],
     items: [
       { label: "Account Setup", path: "/AccountMasterSetup/Account_Master_Setup", icon: ManageAccounts },
       { label: "User Registration", path: "/AccountMasterSetup/Registraion_creation", icon: AssignmentInd },

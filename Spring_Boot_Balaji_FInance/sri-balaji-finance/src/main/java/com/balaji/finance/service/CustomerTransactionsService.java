@@ -26,7 +26,7 @@ public class CustomerTransactionsService {
 		if (customerTransactionsRequest.getFromDate() != null && customerTransactionsRequest.getToDate() != null) {
 
 			LocalDateTime from = customerTransactionsRequest.getFromDate().atStartOfDay();
-			LocalDateTime to = customerTransactionsRequest.getFromDate().atTime(23, 59, 59);
+			LocalDateTime to = customerTransactionsRequest.getToDate().atTime(23, 59, 59);
 			customerTransactionsOnAccountMasterCode = cashBookRepo
 					.getCustomerTransactionsOnAccountMasterCodeAndDateRange(
 							customerTransactionsRequest.getAccountCode(), customerTransactionsRequest.getCustomerId(),

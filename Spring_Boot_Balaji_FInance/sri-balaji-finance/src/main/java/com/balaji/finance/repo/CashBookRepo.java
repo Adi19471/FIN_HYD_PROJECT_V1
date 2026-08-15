@@ -212,7 +212,10 @@ public interface CashBookRepo extends JpaRepository<CashBook, Long> {
 			SELECT
 			    cb.ACCOUNT_MASTER_TYPE AS type,
 			    cb.ACCOUNT_MASTER_CODE AS code,
-			    COALESCE(SUM(cb.CREDIT),0) - COALESCE(SUM(cb.DEBIT),0) AS amount
+			     ABS(
+			             COALESCE(SUM(cb.CREDIT), 0) -
+			             COALESCE(SUM(cb.DEBIT), 0)
+			         ) AS amount
 			FROM cash_book cb
 			WHERE cb.TRANS_DATE BETWEEN :fromDate AND :toDate
 			  AND cb.ACCOUNT_MASTER_TYPE IN :accountType
@@ -226,7 +229,10 @@ public interface CashBookRepo extends JpaRepository<CashBook, Long> {
 			SELECT
 			    cb.ACCOUNT_MASTER_TYPE AS type,
 			    cb.ACCOUNT_MASTER_CODE AS code,
-			    COALESCE(SUM(cb.CREDIT),0) - COALESCE(SUM(cb.DEBIT),0) AS amount
+			     ABS(
+			             COALESCE(SUM(cb.CREDIT), 0) -
+			             COALESCE(SUM(cb.DEBIT), 0)
+			         ) AS amount
 			FROM cash_book cb
 			  Where cb.ACCOUNT_MASTER_TYPE IN :accountType
 			GROUP BY cb.ACCOUNT_MASTER_TYPE, cb.ACCOUNT_MASTER_CODE
@@ -364,7 +370,7 @@ public interface CashBookRepo extends JpaRepository<CashBook, Long> {
 			    LEFT JOIN cb.businessMember businessMember
 			    WHERE cb.accountMasterCode = :accountMasterCode
 			      and customer.personalInfoId= :customerId
-			    ORDER BY cb.cashBookId
+			    ORDER BY cb.cashBookId desc
 			""")
 	List<CustomerTransactionsProjection> getCustomerTransactionsOnAccountMasterCode(
 			@Param("accountMasterCode") String accountMasterCode, @Param("customerId") String customerId);
@@ -384,7 +390,7 @@ public interface CashBookRepo extends JpaRepository<CashBook, Long> {
 			    WHERE cb.accountMasterCode = :accountMasterCode
 			      and customer.personalInfoId= :customerId
 			      and cb.transDate BETWEEN :fromDate AND :toDate
-			    ORDER BY cb.cashBookId
+			    ORDER BY cb.cashBookId desc
 			""")
 	List<CustomerTransactionsProjection> getCustomerTransactionsOnAccountMasterCodeAndDateRange(
 			@Param("accountMasterCode") String accountMasterCode, @Param("customerId") String customerId,

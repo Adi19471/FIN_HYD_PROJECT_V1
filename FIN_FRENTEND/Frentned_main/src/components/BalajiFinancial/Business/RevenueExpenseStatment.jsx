@@ -8,6 +8,7 @@ import {
   TableBody,
   TableCell,
   TableContainer,
+  TableHead,
   TableRow,
   Grid,
 } from "@mui/material";
@@ -18,6 +19,29 @@ import { getSession } from "src/utils/session";
 import LoadingSpinner from "src/LoadingSpinner";
 import { AppDatePicker, useDateRange } from "src/components/ui";
 
+const REVENUE = "REVENUES";
+const EXPENSE = "EXPENSES";
+
+// API sends REVENUES / EXPENSES - normalise so casing or singular/plural doesn't break grouping
+const normalizeType = (type) => {
+  const value = String(type || "").trim().toUpperCase();
+  if (value.startsWith("REVENUE") || value.startsWith("INCOME")) return REVENUE;
+  if (value.startsWith("EXPENSE")) return EXPENSE;
+  return value || "OTHERS";
+};
+
+const TYPE_LABELS = { [REVENUE]: "Revenue", [EXPENSE]: "Expenses" };
+const labelFor = (type) => TYPE_LABELS[type] || type;
+
+// TOTAL PER GROUP
+const getTotal = (items) =>
+  items.reduce((sum, item) => sum + (Number(item.amount) || 0), 0);
+
+const fmt = (value) =>
+  `₹ ${Number(value || 0).toLocaleString("en-IN", {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  })}`;
 
 const RevenueExpenseStatement = () => {
   const { fromDate, toDate, setFromDate, setToDate, toDateMin, toDateMax } = useDateRange(null, null);
@@ -54,11 +78,11 @@ const RevenueExpenseStatement = () => {
         }
       );
 
-      setData(res.data || []);
+      setData(Array.isArray(res.data) ? res.data : []);
     } catch (err) {
       console.error("Error fetching revenue & expense statement:", err);
       alert(
-        err.response?.data?.message || 
+        err.response?.data?.message ||
         "Failed to fetch Revenue & Expense Statement. Please try again."
       );
     } finally {
@@ -66,27 +90,40 @@ const RevenueExpenseStatement = () => {
     }
   };
 
-  // GROUP DATA BY TYPE (Revenue / Expense)
+  // GROUP DATA BY TYPE (REVENUES / EXPENSES)
   const groupedData = useMemo(() => {
     const groups = {};
     data.forEach((item) => {
-      if (!groups[item.type]) {
-        groups[item.type] = [];
+      const type = normalizeType(item.type);
+      if (!groups[type]) {
+        groups[type] = [];
       }
-      groups[item.type].push(item);
+      groups[type].push(item);
     });
     return groups;
   }, [data]);
 
-  // TOTAL PER GROUP
-  const getTotal = (items) =>
-    items.reduce((sum, item) => sum + (item.amount || 0), 0);
+  // Revenue first, Expenses next, anything else after
+  const orderedTypes = useMemo(() => {
+    const keys = Object.keys(groupedData);
+    const preferred = [REVENUE, EXPENSE];
+    return [
+      ...preferred.filter((type) => keys.includes(type)),
+      ...keys.filter((type) => !preferred.includes(type)),
+    ];
+  }, [groupedData]);
 
-  // GRAND TOTAL
-  const grandTotal = useMemo(() => {
-    return data.reduce((sum, item) => sum + (item.amount || 0), 0);
-  }, [data]);
-
+  // TOTALS
+  const totalRevenue = useMemo(
+    () => getTotal(groupedData[REVENUE] || []),
+    [groupedData]
+  );
+  const totalExpense = useMemo(
+    () => getTotal(groupedData[EXPENSE] || []),
+    [groupedData]
+  );
+  const netProfit = totalRevenue - totalExpense;
+  const isLoss = netProfit < 0;
 
   return (
     <Box sx={{ p: 3 }}>
@@ -143,7 +180,7 @@ const RevenueExpenseStatement = () => {
             <Paper sx={{ p: 2, borderLeft: "5px solid green" }}>
               <Typography variant="subtitle2">Total Revenue</Typography>
               <Typography variant="h6" fontWeight={700}>
-                ₹ {getTotal(groupedData["Revenue"] || []).toLocaleString()}
+                {fmt(totalRevenue)}
               </Typography>
             </Paper>
           </Grid>
@@ -154,9 +191,9 @@ const RevenueExpenseStatement = () => {
               md: 4
             }}>
             <Paper sx={{ p: 2, borderLeft: "5px solid red" }}>
-              <Typography variant="subtitle2">Total Expense</Typography>
+              <Typography variant="subtitle2">Total Expenses</Typography>
               <Typography variant="h6" fontWeight={700}>
-                ₹ {getTotal(groupedData["Expense"] || []).toLocaleString()}
+                {fmt(totalExpense)}
               </Typography>
             </Paper>
           </Grid>
@@ -168,12 +205,12 @@ const RevenueExpenseStatement = () => {
             }}>
             <Paper sx={{ p: 2, borderLeft: "5px solid blue" }}>
               <Typography variant="subtitle2">Net Profit / Loss</Typography>
-              <Typography variant="h6" fontWeight={700}>
-                ₹{" "}
-                {(
-                  getTotal(groupedData["Revenue"] || []) -
-                  getTotal(groupedData["Expense"] || [])
-                ).toLocaleString()}
+              <Typography
+                variant="h6"
+                fontWeight={700}
+                color={isLoss ? "error.main" : "success.main"}
+              >
+                {fmt(netProfit)}
               </Typography>
             </Paper>
           </Grid>
@@ -197,43 +234,63 @@ const RevenueExpenseStatement = () => {
             maxHeight: { xs: 420, sm: 520, md: 620, lg: 720 },
           }}
         >
-          <Table>
+          <Table stickyHeader>
+            <TableHead>
+              <TableRow>
+                <TableCell width="60px">#</TableCell>
+                <TableCell>Particulars</TableCell>
+                <TableCell align="right">Amount</TableCell>
+              </TableRow>
+            </TableHead>
             <TableBody>
 
-              {Object.keys(groupedData).map((type) => {
+              {orderedTypes.map((type, groupIndex) => {
                 const items = groupedData[type];
                 const total = getTotal(items);
 
                 return (
                   <React.Fragment key={type}>
 
+                    {/* SPACER BETWEEN GROUPS */}
+                    {groupIndex > 0 && (
+                      <TableRow>
+                        <TableCell
+                          colSpan={3}
+                          sx={{ p: 0, height: 20, border: 0 }}
+                        />
+                      </TableRow>
+                    )}
+
                     {/* SECTION HEADER */}
                     <TableRow
                       sx={{
                         backgroundColor:
-                          type === "Revenue" ? "#e8f5e9" : "#ffebee",
+                          type === REVENUE
+                            ? "#e8f5e9"
+                            : type === EXPENSE
+                              ? "#ffebee"
+                              : "#f5f5f5",
                       }}
                     >
-                      <TableCell colSpan={3}>
+                      <TableCell colSpan={2}>
                         <Typography fontWeight={700}>
-                          {type}
+                          {labelFor(type)}
                         </Typography>
                       </TableCell>
                       <TableCell align="right">
                         <Typography fontWeight={700}>
-                          ₹ {total.toLocaleString()}
+                          {fmt(total)}
                         </Typography>
                       </TableCell>
                     </TableRow>
 
                     {/* ROWS */}
                     {items.map((row, index) => (
-                      <TableRow key={index} hover>
-                        <TableCell width="50px">{index + 1}</TableCell>
-                        <TableCell>{row.code}</TableCell>
-                        <TableCell>{row.description}</TableCell>
+                      <TableRow key={`${type}-${row.code}-${index}`} hover>
+                        <TableCell width="60px">{index + 1}</TableCell>
+                        <TableCell>{row.description || row.code}</TableCell>
                         <TableCell align="right">
-                          ₹ {row.amount?.toLocaleString()}
+                          {fmt(row.amount)}
                         </TableCell>
                       </TableRow>
                     ))}
@@ -242,14 +299,35 @@ const RevenueExpenseStatement = () => {
                 );
               })}
 
-              {/* GRAND TOTAL */}
-              <TableRow sx={{ backgroundColor: "#eeeeee" }}>
-                <TableCell colSpan={3}>
-                  <Typography fontWeight={700}>Grand Total</Typography>
+              {/* SPACER BEFORE SUMMARY */}
+              <TableRow>
+                <TableCell colSpan={3} sx={{
+                  p: 0,
+                  height: 24,
+                  border: 0,
+                  backgroundColor: "background.default",
+                }} />
+              </TableRow>
+
+              {/* NET PROFIT / LOSS - LAST ROW */}
+              <TableRow
+                sx={{
+                  backgroundColor: isLoss ? "#ffebee" : "#e8f5e9",
+                  borderTop: "2px solid",
+                  borderColor: "divider",
+                }}
+              >
+                <TableCell colSpan={2}>
+                  <Typography fontWeight={700}>
+                    Net {isLoss ? "Loss" : "Profit"}
+                  </Typography>
                 </TableCell>
                 <TableCell align="right">
-                  <Typography fontWeight={700}>
-                    ₹ {grandTotal.toLocaleString()}
+                  <Typography
+                    fontWeight={700}
+                    color={isLoss ? "error.main" : "success.main"}
+                  >
+                    {fmt(netProfit)}
                   </Typography>
                 </TableCell>
               </TableRow>

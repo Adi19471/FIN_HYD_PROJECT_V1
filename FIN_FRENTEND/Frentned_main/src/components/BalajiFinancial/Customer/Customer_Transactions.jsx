@@ -16,6 +16,8 @@ import {
   CircularProgress,
   Divider,
   FormControlLabel,
+  Radio,
+  RadioGroup,
   TablePagination,
 } from "@mui/material";
 import dayjs from "dayjs";
@@ -32,6 +34,7 @@ const CustomerTransactions = () => {
   const [selectedCustomer, setSelectedCustomer] = useState(null);
   const [selectedAccountCode, setSelectedAccountCode] = useState(null);
   const { fromDate, toDate, setFromDate, setToDate, toDateMin, toDateMax } = useDateRange("", "");
+  const [dateMode, setDateMode] = useState("all");
   const [transactions, setTransactions] = useState([]);
   const [loading, setLoading] = useState(false);
   const [searchLoading, setSearchLoading] = useState(false);
@@ -79,6 +82,11 @@ const CustomerTransactions = () => {
       return;
     }
 
+    if (dateMode === "range" && (!fromDate || !toDate)) {
+      alert("Please select both From and To dates");
+      return;
+    }
+
     setLoading(true);
     try {
       const res = await axios.post(
@@ -86,8 +94,8 @@ const CustomerTransactions = () => {
         {
           accountCode: selectedAccountCode,
           customerId: selectedCustomer.id,
-          fromDate: fromDate || "",
-          toDate: toDate || "",
+          fromDate: dateMode === "range" ? fromDate : null,
+          toDate: dateMode === "range" ? toDate : null,
         },
         {
           headers: {
@@ -114,8 +122,14 @@ const CustomerTransactions = () => {
   const totals = React.useMemo(() => {
     const credit = transactions.reduce((sum, t) => sum + (parseFloat(t.credit) || 0), 0);
     const debit = transactions.reduce((sum, t) => sum + (parseFloat(t.debit) || 0), 0);
-    return { credit, debit };
+    return { credit, debit, balance: credit - debit };
   }, [transactions]);
+
+  const formatAmount = (value, decimals = 0) =>
+    Number(value || 0).toLocaleString("en-IN", {
+      minimumFractionDigits: decimals,
+      maximumFractionDigits: decimals,
+    });
   const paginatedTransactions = React.useMemo(
     () => transactions.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage),
     [page, rowsPerPage, transactions]
@@ -179,14 +193,10 @@ const CustomerTransactions = () => {
               xs: 12,
               sm: 3
             }}>
-            <FormControlLabel
-              control={<input type="radio" checked />}
-              label="All"
-            />
-            <FormControlLabel
-              control={<input type="radio" />}
-              label="Date Range"
-            />
+            <RadioGroup row value={dateMode} onChange={(event) => setDateMode(event.target.value)}>
+              <FormControlLabel value="all" control={<Radio />} label="All" />
+              <FormControlLabel value="range" control={<Radio />} label="Date Range" />
+            </RadioGroup>
           </Grid>
 
           <Grid
@@ -198,6 +208,7 @@ const CustomerTransactions = () => {
               label="From"
               value={fromDate}
               onChange={setFromDate}
+              disabled={dateMode === "all"}
             />
           </Grid>
 
@@ -210,6 +221,7 @@ const CustomerTransactions = () => {
               label="To"
               value={toDate}
               onChange={setToDate}
+              disabled={dateMode === "all"}
               minDate={toDateMin}
               maxDate={toDateMax}
             />
@@ -250,7 +262,7 @@ const CustomerTransactions = () => {
             title={selectedCustomer
               ? `${selectedCustomer.id ? selectedCustomer.id + " - " : ""}${selectedCustomer.firstname} ${selectedCustomer.lastname} ${selectedCustomer.mobile ? "- " + selectedCustomer.mobile : ""} ${selectedAccountCode || ""} Ledger`
               : "Customer Ledger"}
-            subtitle={fromDate || toDate ? `From ${fromDate ? dayjs(fromDate).format("DD-MMM-YYYY") : "All"} To ${toDate ? dayjs(toDate).format("DD-MMM-YYYY") : "All"}` : "All Transactions"}
+            subtitle={dateMode === "range" && (fromDate || toDate) ? `From ${fromDate ? dayjs(fromDate).format("DD-MMM-YYYY") : "All"} To ${toDate ? dayjs(toDate).format("DD-MMM-YYYY") : "All"}` : "All Transactions"}
             date={reportDate}
           />
 
@@ -292,10 +304,10 @@ const CustomerTransactions = () => {
                     <TableCell sx={{ border: "1px solid #ddd" }}>{row.transactionName}</TableCell>
                     <TableCell sx={{ border: "1px solid #ddd" }}>{row.particulars || "-"}</TableCell>
                     <TableCell align="right" sx={{ border: "1px solid #ddd", color: "green" }}>
-                      {row.credit ? Number(row.credit).toFixed(0) : "-"}
+                      {formatAmount(row.credit)}
                     </TableCell>
                     <TableCell align="right" sx={{ border: "1px solid #ddd", color: "red" }}>
-                      {row.debit ? Number(row.debit).toFixed(0) : "-"}
+                      {formatAmount(row.debit)}
                     </TableCell>
                   </TableRow>
                 ))}
@@ -306,15 +318,40 @@ const CustomerTransactions = () => {
                     Total
                   </TableCell>
                   <TableCell align="right" sx={{ border: "1px solid #ddd", fontWeight: "bold", color: "green" }}>
-                    {totals.credit.toFixed(0)}
+                    {formatAmount(totals.credit)}
                   </TableCell>
                   <TableCell align="right" sx={{ border: "1px solid #ddd", fontWeight: "bold", color: "red" }}>
-                    {totals.debit.toFixed(0)}
+                    {formatAmount(totals.debit)}
                   </TableCell>
                 </TableRow>
               </TableBody>
             </Table>
           </TableContainer>
+
+          {/* Credits / Debits / Balance Summary */}
+          <Box sx={{ display: "flex", justifyContent: "flex-end", mt: 2 }}>
+            <Box sx={{ minWidth: 280 }}>
+              <Box sx={{ display: "flex", justifyContent: "space-between", py: 0.5 }}>
+                <Typography sx={{ fontWeight: "bold" }}>Credits :</Typography>
+                <Typography sx={{ fontWeight: "bold", color: "green" }}>
+                  {formatAmount(totals.credit, 2)}
+                </Typography>
+              </Box>
+              <Box sx={{ display: "flex", justifyContent: "space-between", py: 0.5 }}>
+                <Typography sx={{ fontWeight: "bold" }}>Debits :</Typography>
+                <Typography sx={{ fontWeight: "bold", color: "red" }}>
+                  {formatAmount(totals.debit, 2)}
+                </Typography>
+              </Box>
+              <Divider sx={{ my: 0.5 }} />
+              <Box sx={{ display: "flex", justifyContent: "space-between", py: 0.5 }}>
+                <Typography sx={{ fontWeight: "bold" }}>Balance :</Typography>
+                <Typography sx={{ fontWeight: "bold", color: totals.balance < 0 ? "red" : "green" }}>
+                  {formatAmount(totals.balance, 2)}
+                </Typography>
+              </Box>
+            </Box>
+          </Box>
 
           <TablePagination
             component="div"

@@ -33,7 +33,7 @@ const emptyStatus = {
 const BussinessCollectionReports = () => {
   const { fromDate, toDate, setFromDate, setToDate, toDateMin, toDateMax } = useDateRange(
     dayjs().startOf("month").format("YYYY-MM-DD"),
-    dayjs().endOf("month").format("YYYY-MM-DD")
+    dayjs().format("YYYY-MM-DD")
   );
   const [loading, setLoading] = useState(false);
   const [reportData, setReportData] = useState([]);

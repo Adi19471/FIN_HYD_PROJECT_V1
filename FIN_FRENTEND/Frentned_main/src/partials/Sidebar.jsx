@@ -17,6 +17,12 @@ import "./Sidebar.css";
 
 const tabletQuery = () => `(min-width: ${BREAKPOINTS.md}px) and (max-width: ${BREAKPOINTS.lg - 0.02}px)`;
 
+// A group's match entry ending in "/" is a section prefix ("/loans/" owns
+// /Loans/Maturity); one without is a standalone page ("/loan" owns only /Loan).
+// Without that distinction "/loan" would also swallow every /Loans/* route.
+const matchesGroupPath = (pathname, path) =>
+  path.endsWith("/") ? pathname.startsWith(path) : pathname === path;
+
 function Sidebar({ sidebarOpen, setSidebarOpen }) {
   const { pathname } = useLocation();
   const { user } = useAuth();
@@ -53,7 +59,7 @@ function Sidebar({ sidebarOpen, setSidebarOpen }) {
   const canViewDashboard = hasPermissionAccess(user, PATH_PERMISSION_CODES["/"]);
 
   const activeGroup = useMemo(
-    () => visibleGroups.find((group) => group.match.some((path) => pathnameLower.startsWith(path))),
+    () => visibleGroups.find((group) => group.match.some((path) => matchesGroupPath(pathnameLower, path))),
     [pathnameLower, visibleGroups]
   );
 

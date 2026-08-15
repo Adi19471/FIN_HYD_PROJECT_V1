@@ -138,9 +138,11 @@ const CustomerOutstanding = () => {
             label="DF"
           />
 
-          <Button variant="contained" onClick={fetchOutstanding} disabled={loading}>
+       <Box>
+           <Button variant="contained" onClick={fetchOutstanding} disabled={loading}>
             Generate
           </Button>
+       </Box>
 
           <TableExportMenu rows={data} columns={exportColumns} fileName="Customer_Outstanding" />
         </Box>
