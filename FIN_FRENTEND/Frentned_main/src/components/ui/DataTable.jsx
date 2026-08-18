@@ -25,14 +25,22 @@ import {
   ArticleRounded,
   DescriptionRounded,
   FileDownloadRounded,
+  GridOnRounded,
   PrintRounded,
   TableViewRounded,
 } from "@mui/icons-material";
-import * as XLSX from "xlsx";
-import jsPDF from "jspdf";
-import autoTable from "jspdf-autotable";
 import { COMPANY_ADDRESS, COMPANY_NAME } from "src/lib/company";
 import { useThemeProvider } from "src/utils/ThemeContext";
+import {
+  exportCsv,
+  exportExcel,
+  exportPdf,
+  exportWord,
+  isTotalRow,
+  printReport,
+  reportDateLabel,
+  summaryValue,
+} from "./reportExport";
 
 // Default responsive height for a DataTable that doesn't pass its own `height`.
 // Exported so outlier screens (e.g. Partner.jsx, which wraps a raw DataGrid
@@ -45,126 +53,38 @@ export const DEFAULT_TABLE_HEIGHT = {
   xl: "calc(100vh - 280px)",
 };
 
-const reportDateLabel = () => new Date().toLocaleDateString("en-GB", {
-  day: "2-digit",
-  month: "short",
-  year: "numeric",
-}).replace(/ /g, "-");
-
-const labelFor = (column) => {
-  if (typeof column === "string") return column.replace(/([A-Z])/g, " $1").replace(/_/g, " ");
-  return column.headerName || column.field?.replace(/([A-Z])/g, " $1").replace(/_/g, " ");
+/**
+ * Append a totals row for the given numeric fields. The row carries __isTotal so
+ * the exporters render it bold on a tinted band, and so the record count and the
+ * grid's own sorting can tell it apart from real data.
+ *
+ * @param {Array} rows        Data rows (without a totals row).
+ * @param {Array} totalFields Numeric field names to sum.
+ * @param {object} labelCell  Where the "TOTAL" caption goes, e.g. { customerName: "TOTAL" }.
+ */
+export const withTotalsRow = (rows = [], totalFields = [], labelCell = {}) => {
+  if (!rows.length || !totalFields.length) return rows;
+  const totals = totalFields.reduce((acc, field) => {
+    acc[field] = rows.reduce((sum, row) => sum + Number(row[field] || 0), 0);
+    return acc;
+  }, {});
+  return [...rows, { id: "total", __isTotal: true, ...labelCell, ...totals }];
 };
 
-const cellValue = (row, column) => {
-  const field = typeof column === "string" ? column : column.field;
-  const raw = row[field];
-  if (typeof column === "string") return raw ?? "";
-  if (column.valueGetter) {
-    try {
-      return column.valueGetter(raw, row, column) ?? "";
-    } catch {
-      return raw ?? "";
-    }
-  }
-  if (column.valueFormatter) {
-    try {
-      return column.valueFormatter(raw, row, column) ?? "";
-    } catch {
-      return raw ?? "";
-    }
-  }
-  return raw ?? "";
-};
-
-export function TableExportMenu({ rows, columns, fileName, buttonLabel = "Download" }) {
+export function TableExportMenu({
+  rows,
+  columns,
+  fileName,
+  buttonLabel = "Download",
+  reportOptions = {},
+}) {
   const [anchorEl, setAnchorEl] = React.useState(null);
-  const printableColumns = columns.filter((column) => (typeof column === "string" ? column : column.field && !column.disableExport));
   const hasData = rows.length > 0;
-
   const closeMenu = () => setAnchorEl(null);
-  const reportRows = () => rows.map((row) => printableColumns.map((column) => String(cellValue(row, column))));
 
-  const handleExcel = () => {
+  const run = (exporter) => () => {
     closeMenu();
-    if (!hasData) return;
-    const exportRows = rows.map((row) =>
-      printableColumns.reduce((acc, column) => {
-        acc[labelFor(column)] = cellValue(row, column);
-        return acc;
-      }, {})
-    );
-    const worksheet = XLSX.utils.json_to_sheet(exportRows);
-    const workbook = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(workbook, worksheet, "Report");
-    XLSX.writeFile(workbook, `${fileName}.xlsx`);
-  };
-
-  const handlePdf = () => {
-    closeMenu();
-    if (!hasData) return;
-    const doc = new jsPDF({ orientation: "landscape", unit: "mm", format: "a4" });
-    const currentDate = reportDateLabel();
-    doc.setFontSize(18);
-    doc.text(COMPANY_NAME, 14, 14);
-    doc.setFontSize(10);
-    doc.text(COMPANY_ADDRESS, 14, 20);
-    doc.text(`Date: ${currentDate}`, 14, 26);
-    doc.setFontSize(13);
-    doc.text(fileName, 14, 34);
-    autoTable(doc, {
-      startY: 40,
-      head: [printableColumns.map(labelFor)],
-      body: reportRows(),
-      styles: { fontSize: 8, cellPadding: 3, overflow: "linebreak" },
-      headStyles: { fillColor: [15, 98, 254], textColor: 255, fontStyle: "bold" },
-      alternateRowStyles: { fillColor: [245, 247, 251] },
-    });
-    doc.save(`${fileName}.pdf`);
-  };
-
-  const handleWord = () => {
-    closeMenu();
-    if (!hasData) return;
-    const currentDate = reportDateLabel();
-    const htmlRows = rows
-      .map((row) => `<tr>${printableColumns.map((column) => `<td>${cellValue(row, column)}</td>`).join("")}</tr>`)
-      .join("");
-    const html = `
-      <html><head><meta charset="utf-8"><style>
-      body{font-family:Arial;padding:20px;color:#111827} h1{font-size:22px;margin:0;text-align:center} p{text-align:center;margin:4px 0;color:#475569} h2{text-align:center;margin:18px 0 14px}
-      table{width:100%;border-collapse:collapse} th,td{border:1px solid #cbd5e1;padding:8px;font-size:12px;text-align:left}
-      th{background:#0f62fe;color:#fff} tr:nth-child(even){background:#f8fafc}
-      </style></head><body><h1>${COMPANY_NAME}</h1><p>${COMPANY_ADDRESS}</p><p><strong>Date:</strong> ${currentDate}</p><h2>${fileName}</h2>
-      <table><thead><tr>${printableColumns.map((column) => `<th>${labelFor(column)}</th>`).join("")}</tr></thead><tbody>${htmlRows}</tbody></table>
-      </body></html>`;
-    const blob = new Blob(["\ufeff", html], { type: "application/msword" });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement("a");
-    link.href = url;
-    link.download = `${fileName}.doc`;
-    link.click();
-    URL.revokeObjectURL(url);
-  };
-
-  const handlePrint = () => {
-    closeMenu();
-    if (!hasData) return;
-    const currentDate = reportDateLabel();
-    const tableHtml = `<table><thead><tr>${printableColumns
-      .map((column) => `<th>${labelFor(column)}</th>`)
-      .join("")}</tr></thead><tbody>${rows
-      .map((row) => `<tr>${printableColumns.map((column) => `<td>${cellValue(row, column)}</td>`).join("")}</tr>`)
-      .join("")}</tbody></table>`;
-    const printWindow = window.open("", "", "width=1200,height=760");
-    printWindow.document.write(`<html><head><title>${fileName}</title><style>
-      body{font-family:Arial;padding:20px;color:#111827} h1{text-align:center;margin:0} p{text-align:center;color:#475569;margin:4px 0} h2{text-align:center;margin:18px 0 14px}
-      table{width:100%;border-collapse:collapse} th,td{border:1px solid #cbd5e1;padding:8px;font-size:12px;text-align:left}
-      th{background:#0f62fe;color:white} tr:nth-child(even){background:#f8fafc}
-    </style></head><body><h1>${COMPANY_NAME}</h1><p>${COMPANY_ADDRESS}</p><p><strong>Date:</strong> ${currentDate}</p><h2>${fileName}</h2>${tableHtml}</body></html>`);
-    printWindow.document.close();
-    printWindow.focus();
-    printWindow.print();
+    if (hasData) exporter(rows, columns, fileName, reportOptions);
   };
 
   return (
@@ -179,19 +99,23 @@ export function TableExportMenu({ rows, columns, fileName, buttonLabel = "Downlo
         {buttonLabel}
       </Button>
       <Menu anchorEl={anchorEl} open={Boolean(anchorEl)} onClose={closeMenu}>
-        <MenuItem onClick={handleExcel}>
+        <MenuItem onClick={run(exportExcel)}>
           <ListItemIcon><TableViewRounded fontSize="small" color="success" /></ListItemIcon>
           <ListItemText primary="Download Excel" secondary=".xlsx" />
         </MenuItem>
-        <MenuItem onClick={handlePdf}>
+        <MenuItem onClick={run(exportPdf)}>
           <ListItemIcon><DescriptionRounded fontSize="small" color="error" /></ListItemIcon>
           <ListItemText primary="Download PDF" secondary=".pdf" />
         </MenuItem>
-        <MenuItem onClick={handleWord}>
+        <MenuItem onClick={run(exportWord)}>
           <ListItemIcon><ArticleRounded fontSize="small" color="primary" /></ListItemIcon>
           <ListItemText primary="Download Word" secondary=".doc" />
         </MenuItem>
-        <MenuItem onClick={handlePrint}>
+        <MenuItem onClick={run(exportCsv)}>
+          <ListItemIcon><GridOnRounded fontSize="small" color="action" /></ListItemIcon>
+          <ListItemText primary="Download CSV" secondary=".csv" />
+        </MenuItem>
+        <MenuItem onClick={run(printReport)}>
           <ListItemIcon><PrintRounded fontSize="small" /></ListItemIcon>
           <ListItemText primary="Print" />
         </MenuItem>
@@ -205,7 +129,7 @@ export function TableExportMenu({ rows, columns, fileName, buttonLabel = "Downlo
  * density, a quick search box, and ONE export menu (Excel / PDF / Word / Print).
  * This is the only download entry point per table - no duplicate export buttons.
  */
-function CustomGridToolbar({ rows, columns, fileName, showExport }) {
+function CustomGridToolbar({ rows, columns, fileName, showExport, reportOptions }) {
   return (
     <GridToolbarContainer>
       <GridToolbarColumnsButton />
@@ -213,7 +137,14 @@ function CustomGridToolbar({ rows, columns, fileName, showExport }) {
       <GridToolbarDensitySelector />
       <Box sx={{ flex: 1 }} />
       <GridToolbarQuickFilter debounceMs={350} placeholder="Search table..." />
-      {showExport && <TableExportMenu rows={rows} columns={columns} fileName={fileName} />}
+      {showExport && (
+        <TableExportMenu
+          rows={rows}
+          columns={columns}
+          fileName={fileName}
+          reportOptions={reportOptions}
+        />
+      )}
     </GridToolbarContainer>
   );
 }
@@ -225,6 +156,12 @@ function CustomGridToolbar({ rows, columns, fileName, showExport }) {
  * @param {boolean} loading - Loading state
  * @param {function} getRowId - Function to get row ID
  * @param {number|object} height - Table height (default: responsive DEFAULT_TABLE_HEIGHT)
+ * @param {object} period - { fromDate, toDate, label } printed on every export
+ * @param {Array} reportMeta - [{ label, value }] filter lines printed on every export
+ * @param {Array} totalFields - numeric fields to sum into a TOTAL row
+ * @param {object} totalLabelCell - where the TOTAL caption sits, e.g. { customerName: "TOTAL" }
+ * @param {Array} summary - [{ label, value }] shown under the grid and on every
+ *   export, e.g. creditDebitSummary(rows) for Credits / Debits / Balance
  * @param {object} otherProps - Additional DataGrid props
  */
 const DataTable = ({
@@ -240,10 +177,36 @@ const DataTable = ({
   showCompany = false,
   showExport = true,
   actions,
+  period,
+  reportMeta,
+  totalFields,
+  totalLabelCell,
+  summary,
   ...otherProps
 }) => {
   const { settings } = useThemeProvider();
   const tableTitle = title || "finance-export";
+
+  // A screen either hands us a totals row itself (the older screens do) or asks
+  // for one via totalFields. Either way it must reach the export, and it must
+  // not be counted as a record.
+  const tableRows = React.useMemo(
+    () =>
+      totalFields?.length && !rows.some(isTotalRow)
+        ? withTotalsRow(rows, totalFields, totalLabelCell)
+        : rows,
+    [rows, totalFields, totalLabelCell]
+  );
+  const recordCount = React.useMemo(() => tableRows.filter((row) => !isTotalRow(row)).length, [tableRows]);
+  const reportOptions = React.useMemo(
+    () => ({ period, meta: reportMeta, summary }),
+    [period, reportMeta, summary]
+  );
+
+  // Row highlight. These reports are wide enough that the eye loses the line
+  // when reading across, so hovering lights the whole row and clicking pins it
+  // - the row stays marked while you scroll sideways or read off a figure.
+  const [activeRowId, setActiveRowId] = React.useState(null);
   const rowHeight = settings.tableDensity === "compact" ? 40 : settings.tableDensity === "spacious" ? 54 : 46;
   const headerHeight = settings.tableDensity === "compact" ? 44 : settings.tableDensity === "spacious" ? 58 : 52;
   const fontScale = Number(settings.fontScale || 1);
@@ -295,7 +258,7 @@ const DataTable = ({
             {title && <Typography variant="subtitle1" sx={{ mt: showCompany ? 0.25 : 0 }}>{title}</Typography>}
           </Box>
           <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap alignItems="center">
-            <Chip size="small" label={`${rows.length} records`} color="primary" variant="outlined" />
+            <Chip size="small" label={`${recordCount} records`} color="primary" variant="outlined" />
             {actions}
           </Stack>
         </Stack>
@@ -320,19 +283,31 @@ const DataTable = ({
         </Box>
       ) : (
         <DataGrid
-          rows={rows}
+          rows={tableRows}
           columns={columns}
           getRowId={getRowId}
+          getRowClassName={(params) =>
+            [
+              isTotalRow(params.row) ? "datatable-total-row" : "",
+              params.id === activeRowId ? "datatable-active-row" : "",
+            ]
+              .filter(Boolean)
+              .join(" ")
+          }
+          onRowClick={(params) =>
+            setActiveRowId((current) => (current === params.id ? null : params.id))
+          }
           autosizeOnMount
           autosizeOptions={{ includeHeaders: true, includeOutliers: true, expand: true }}
           showToolbar
           slots={{ toolbar: CustomGridToolbar }}
           slotProps={{
             toolbar: {
-              rows,
+              rows: tableRows,
               columns,
               fileName: tableTitle,
               showExport,
+              reportOptions,
             },
           }}
           rowHeight={rowHeight}
@@ -364,6 +339,8 @@ const DataTable = ({
             "& .MuiDataGrid-columnHeaders, & .MuiDataGrid-columnHeader": {
               backgroundColor: "#f8fafc",
             },
+            // Grid lines live in the global enterprise layer (src/css/style.css),
+            // which sets them with !important - do not restyle borders here.
             "& .MuiDataGrid-columnHeader": {
               borderRight: "1px solid",
               borderColor: "divider",
@@ -387,18 +364,20 @@ const DataTable = ({
                 backgroundColor: "rgba(248,250,252,0.58)",
               },
             }),
-            ...(settings.tableStyle === "bordered" && {
-              "& .MuiDataGrid-cell": {
-                borderBottom: "1px solid",
-                borderRight: "1px solid",
-                borderColor: "divider",
-                display: "flex",
-                alignItems: "center",
-                fontSize: `${0.8125 * fontScale * tableScale}rem`,
-              },
-            }),
-            "& .MuiDataGrid-row:hover": {
-              backgroundColor: "color-mix(in srgb, var(--brand-primary) 9%, var(--surface-1))",
+            // The TOTAL row reads as a summary band, not another data row.
+            "& .MuiDataGrid-row.datatable-total-row": {
+              backgroundColor: "#e2e8f0",
+              borderTop: "2px solid var(--brand-primary)",
+            },
+            "& .MuiDataGrid-row.datatable-total-row .MuiDataGrid-cell": {
+              fontWeight: 800,
+            },
+            // Hovering lights the full width of the row so the line stays
+            // readable across every column. `&&` doubles the class to outrank
+            // the DataGrid's own row-hover rule, which is emitted after sx at
+            // equal specificity and would otherwise win.
+            "&& .MuiDataGrid-row:hover": {
+              backgroundColor: "color-mix(in srgb, var(--brand-primary) 13%, var(--surface-1))",
               cursor: "pointer",
             },
             "& .MuiDataGrid-row.Mui-selected": {
@@ -441,6 +420,17 @@ const DataTable = ({
             "& .MuiButtonBase-root": {
               borderRadius: 1.5,
             },
+            // A clicked row stays marked - inset shadow draws the left accent
+            // without shifting the cells. Declared last so it wins over
+            // striping and hover.
+            "&& .MuiDataGrid-row.datatable-active-row, && .MuiDataGrid-row.datatable-active-row:hover": {
+              backgroundColor: "color-mix(in srgb, var(--brand-primary) 22%, var(--surface-1))",
+              boxShadow: "inset 3px 0 0 0 var(--brand-primary)",
+            },
+            "& .MuiDataGrid-row.datatable-active-row .MuiDataGrid-cell": {
+              fontWeight: 700,
+              backgroundColor: "transparent",
+            },
           }}
           initialState={{
             density: settings.tableDensity === "spacious" ? "comfortable" : settings.tableDensity === "standard" ? "standard" : "compact",
@@ -461,6 +451,46 @@ const DataTable = ({
           }}
           {...otherProps}
         />
+      )}
+      {Boolean(summary?.length) && (
+        <Stack
+          direction="row"
+          justifyContent="flex-end"
+          sx={{
+            flex: "0 0 auto",
+            px: 2.5,
+            py: 1.5,
+            borderTop: 1,
+            borderColor: "divider",
+            backgroundColor: "#f8fafc",
+          }}
+        >
+          <Box sx={{ minWidth: 260 }}>
+            {summary.map((line, index) => (
+              <Stack
+                key={line.label}
+                direction="row"
+                justifyContent="space-between"
+                sx={{
+                  py: 0.35,
+                  ...(index === summary.length - 1 && {
+                    mt: 0.35,
+                    pt: 0.6,
+                    borderTop: "1px solid",
+                    borderColor: "text.secondary",
+                  }),
+                }}
+              >
+                <Typography variant="body2" sx={{ fontWeight: 800 }}>
+                  {line.label} :
+                </Typography>
+                <Typography variant="body2" sx={{ fontWeight: 800, fontVariantNumeric: "tabular-nums" }}>
+                  {summaryValue(line.value)}
+                </Typography>
+              </Stack>
+            ))}
+          </Box>
+        </Stack>
       )}
     </Paper>
   );

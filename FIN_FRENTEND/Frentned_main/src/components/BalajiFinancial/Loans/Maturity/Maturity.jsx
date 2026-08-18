@@ -31,6 +31,8 @@ const Maturity = () => {
   const [data, setData] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  // Filters that produced the rows on screen - printed on every export.
+  const [appliedFilters, setAppliedFilters] = useState(null);
 
   const token = getSession("token");
   const headers = useMemo(
@@ -56,6 +58,7 @@ const Maturity = () => {
         { headers }
       );
       setData(Array.isArray(res.data) ? res.data : []);
+      setAppliedFilters({ loanType, fromDate, toDate });
     } catch (err) {
       setData([]);
       setError(err.response?.data?.message || "Failed to fetch maturity loans.");
@@ -187,6 +190,22 @@ const Maturity = () => {
         title={`Maturity Ledger - ${selectedLoanLabel}`}
         subtitle="Search, row count, PDF, Excel, Word, and print are available here."
         pageSize={10}
+        period={
+          appliedFilters
+            ? {
+                label: "Maturity Dues From",
+                fromDate: appliedFilters.fromDate,
+                toDate: appliedFilters.toDate,
+              }
+            : undefined
+        }
+        reportMeta={
+          appliedFilters
+            ? [{ label: "Loan Type", value: loanTypes.find((type) => type.value === appliedFilters.loanType)?.label }]
+            : []
+        }
+        totalFields={["amount", "installmentAmount", "amountPaid", "installmentDue"]}
+        totalLabelCell={{ customerName: "TOTAL" }}
       />
     </Stack>
   );

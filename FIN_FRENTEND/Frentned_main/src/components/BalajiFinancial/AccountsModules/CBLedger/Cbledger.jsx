@@ -4,7 +4,7 @@ import axios from "axios";
 import { API_BASE } from "lib/config";
 import { getSession } from "src/utils/session";
 import { errorToast, successToast } from "toastify";
-import { AppDatePicker, DataTable, PageHeader, useDateRange } from "src/components/ui";
+import { AppDatePicker, creditDebitSummary, DataTable, PageHeader, useDateRange } from "src/components/ui";
 
 const Cbledger = () => {
   const { fromDate, toDate, setFromDate, setToDate, toDateMin, toDateMax } = useDateRange("", "");
@@ -131,6 +131,8 @@ const Cbledger = () => {
         title={collectionOnly ? "CB Collection Ledger" : "CB Ledger Details"}
         subtitle="Consistent table format with search, filters, Excel, PDF, Word, and print."
         height={560}
+        // Collection view has no credit/debit columns, so no ledger summary.
+        summary={collectionOnly ? undefined : creditDebitSummary(rows)}
       />
     </Stack>
   );

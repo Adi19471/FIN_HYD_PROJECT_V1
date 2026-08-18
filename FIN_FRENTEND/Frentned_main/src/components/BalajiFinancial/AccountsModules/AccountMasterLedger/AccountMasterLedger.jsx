@@ -15,7 +15,7 @@ import axios from "axios";
 import { API_BASE } from "lib/config";
 import { getSession } from "src/utils/session";
 import { successToast, errorToast } from "toastify";
-import { AppDatePicker, DataTable, PageHeader, useDateRange } from "src/components/ui";
+import { AppDatePicker, creditDebitSummary, DataTable, PageHeader, useDateRange } from "src/components/ui";
 
 const formatINR = (value) => `₹ ${Number(value || 0).toLocaleString("en-IN")}`;
 
@@ -138,7 +138,14 @@ const AccountMasterLedger = () => {
         </Stack>
       </Paper>
 
-      <DataTable rows={rows} columns={columns} loading={loading} title="Account Master Ledger Details" height={560} />
+      <DataTable
+        rows={rows}
+        columns={columns}
+        loading={loading}
+        title="Account Master Ledger Details"
+        height={560}
+        summary={creditDebitSummary(rows)}
+      />
     </Stack>
   );
 };

@@ -4,7 +4,7 @@ import axios from "axios";
 import { API_BASE } from "lib/config";
 import { getSession } from "src/utils/session";
 import { infoToast, successToast, warningToast, errorToast } from "toastify";
-import { AppDatePicker, DataTable, PageHeader, useDateRange } from "src/components/ui";
+import { AppDatePicker, creditDebitSummary, DataTable, PageHeader, useDateRange } from "src/components/ui";
 
 const AccountLedger = () => {
   const [filterType, setFilterType] = useState("ALL");
@@ -90,6 +90,7 @@ const AccountLedger = () => {
         title="Account Ledger Details"
         subtitle="Search, filter, export to Excel/PDF/Word, and print from one table."
         height={560}
+        summary={creditDebitSummary(rows)}
       />
     </Stack>
   );

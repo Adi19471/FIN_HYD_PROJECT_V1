@@ -12,6 +12,8 @@ const Distubuted = () => {
   const [data, setData] = useState([]);
   const { fromDate, toDate, setFromDate, setToDate, toDateMin, toDateMax } = useDateRange("", "");
   const [loading, setLoading] = useState(false);
+  // Range that produced the rows on screen - printed on every export.
+  const [appliedRange, setAppliedRange] = useState(null);
 
   const headers = useMemo(
     () => ({
@@ -33,6 +35,7 @@ const Distubuted = () => {
         params: { fromDate, toDate },
       });
       setData((res.data || []).map((row, index) => ({ id: row.loanId || row.sno || index + 1, sno: row.sno || index + 1, ...row })));
+      setAppliedRange({ fromDate, toDate });
       successToast("Disbursed loans loaded successfully");
     } catch (error) {
       console.error(error);
@@ -42,18 +45,13 @@ const Distubuted = () => {
     }
   };
 
-  const rows = useMemo(() => {
-    if (!data.length) return data;
-    const total = data.reduce(
-      (acc, row) => ({
-        amount: acc.amount + Number(row.amount || 0),
-        amountPaid: acc.amountPaid + Number(row.amountPaid || 0),
-        installmentDue: acc.installmentDue + Number(row.installmentDue || 0),
-      }),
-      { amount: 0, amountPaid: 0, installmentDue: 0 }
-    );
-    return [...data, { id: "total", customerName: "TOTAL", ...total }];
-  }, [data]);
+  const reportPeriod = useMemo(
+    () =>
+      appliedRange
+        ? { label: "Loans Distributed From", fromDate: appliedRange.fromDate, toDate: appliedRange.toDate }
+        : undefined,
+    [appliedRange]
+  );
 
   const columns = [
     { field: "sno", headerName: "S.No", width: 80 },
@@ -71,6 +69,8 @@ const Distubuted = () => {
       renderCell: (params) => params.value ? <Chip label={params.value} color={params.value === "ACTIVE" ? "success" : "error"} size="small" /> : null,
     },
   ];
+
+  const totalFields = ["amount", "amountPaid", "installmentDue"];
 
   return (
     <Stack spacing={2.5}>
@@ -109,12 +109,15 @@ const Distubuted = () => {
         </Grid>
       </Paper>
       <DataTable
-        rows={rows}
+        rows={data}
         columns={columns}
         loading={loading}
         title="Distributed Loan Details"
         height="calc(100vh - 300px)"
         pageSize={50}
+        period={reportPeriod}
+        totalFields={totalFields}
+        totalLabelCell={{ customerName: "TOTAL" }}
       />
     </Stack>
   );

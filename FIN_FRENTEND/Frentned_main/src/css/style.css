@@ -20,6 +20,11 @@
   --text-strong: #0f172a;
   --text-muted: #64748b;
   --border-soft: rgba(15, 23, 42, 0.1);
+  /* Report grids are read like a printed ledger, so their box lines are a
+     shade stronger than --border-soft, with a heavier frame and header rule.
+     Kept separate so ordinary panel borders stay light. */
+  --table-line: rgba(51, 65, 85, 0.32);
+  --table-line-strong: rgba(51, 65, 85, 0.62);
   --shadow-panel: 0 18px 45px rgba(15, 23, 42, 0.08);
   --brand-primary: #0f62fe;
   --brand-secondary: #0e7490;
@@ -69,6 +74,8 @@
   --text-strong: #f8fafc;
   --text-muted: #94a3b8;
   --border-soft: rgba(148, 163, 184, 0.18);
+  --table-line: rgba(148, 163, 184, 0.34);
+  --table-line-strong: rgba(148, 163, 184, 0.62);
   --shadow-panel: 0 22px 50px rgba(0, 0, 0, 0.32);
 }
 
@@ -680,7 +687,19 @@ body {
 
 .MuiDataGrid-columnHeader {
   background: var(--surface-2);
-  border-right: 1px solid var(--border-soft) !important;
+  border-right: 1px solid var(--table-line) !important;
+}
+
+/* Heavier rule under the headings and a frame around the data area, so the
+   grid reads as a boxed table like the printed report. */
+.MuiDataGrid-columnHeaders {
+  border-bottom: 2px solid var(--table-line-strong) !important;
+}
+
+.MuiDataGrid-main {
+  border: 1px solid var(--table-line-strong);
+  border-radius: 6px;
+  overflow: hidden;
 }
 
 .MuiDataGrid-columnHeaderTitle {
@@ -693,8 +712,8 @@ body {
 .MuiDataGrid-cell {
   font-size: calc(0.8125rem * var(--app-font-scale) * var(--app-table-scale));
   font-weight: 700;
-  border-right: 1px solid var(--border-soft) !important;
-  border-bottom: 1px solid var(--border-soft) !important;
+  border-right: 1px solid var(--table-line) !important;
+  border-bottom: 1px solid var(--table-line) !important;
 }
 
 .MuiDataGrid-footerContainer {
@@ -1202,9 +1221,18 @@ body {
   border-right: 0 !important;
 }
 
+/* "bordered" is the heavy-line variant: thicker box lines throughout. */
 :root[data-table-style="bordered"] .MuiDataGrid-cell,
 :root[data-table-style="bordered"] .MuiDataGrid-columnHeader {
-  border-right: 1px solid var(--border-soft) !important;
+  border-right: 2px solid var(--table-line-strong) !important;
+}
+
+:root[data-table-style="bordered"] .MuiDataGrid-cell {
+  border-bottom: 2px solid var(--table-line-strong) !important;
+}
+
+:root[data-table-style="bordered"] .MuiDataGrid-main {
+  border-width: 2px;
 }
 
 .Toastify__toast {

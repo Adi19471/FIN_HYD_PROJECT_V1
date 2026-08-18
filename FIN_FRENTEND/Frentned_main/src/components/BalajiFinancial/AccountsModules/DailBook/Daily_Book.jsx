@@ -138,6 +138,11 @@ const DailyBook = () => {
         title="Daily Book Transactions"
         subtitle="Date-only MUI calendar filter with fast table, search, Excel, PDF, Word, and print."
         height={580}
+        summary={[
+          { label: "Credits", value: totalCredit },
+          { label: "Debits", value: totalDebit },
+          { label: "Balance", value: totalCredit - totalDebit },
+        ]}
       />
     </Stack>
   );

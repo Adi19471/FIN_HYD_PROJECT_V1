@@ -8,21 +8,31 @@ import { AppDatePicker, DataTable, PageHeader, useDateRange } from "src/componen
 
 const formatINR = (value) => `₹ ${Number(value || 0).toLocaleString("en-IN")}`;
 
+const loanTypes = [
+  { label: "Daily Finance", value: "DAILY_FINANCE" },
+  { label: "Monthly Finance", value: "MONTHLY_FINANCE" },
+];
+
+const orderByOptions = [
+  { label: "Installment Date", value: "INSTALLMENT_DATE" },
+  { label: "Loan Start Date", value: "LOAN_START_DATE" },
+  { label: "Partner", value: "PARTNER" },
+  { label: "Delayed Days", value: "DELAYED_DAYS" },
+  { label: "Installment Balance", value: "INSTALLMENT_BALANCE" },
+];
+
+const labelOf = (options, value) => options.find((option) => option.value === value)?.label || value;
+
 const InstalmentDues = () => {
   const [data, setData] = useState([]);
   const [loanType, setLoanType] = useState("");
   const { fromDate, toDate, setFromDate, setToDate, toDateMin, toDateMax } = useDateRange("", "");
   const [loading, setLoading] = useState(false);
   const [orderBy, setOrderBy] = useState("INSTALLMENT_DATE");
-
-  const orderByOptions = [
-    { label: "Installment Date", value: "INSTALLMENT_DATE" },
-    { label: "Loan Start Date", value: "LOAN_START_DATE" },
-    { label: "Partner", value: "PARTNER" },
-    { label: "Delayed Days", value: "DELAYED_DAYS" },
-    { label: "Installment Balance", value: "INSTALLMENT_BALANCE" },
-  ];
-
+  // Snapshot of the filters that produced the rows on screen. Exports print
+  // this, not the live pickers, so a downloaded file always states the range it
+  // actually covers even if the user changes the pickers afterwards.
+  const [appliedFilters, setAppliedFilters] = useState(null);
 
   const headers = useMemo(
     () => ({
@@ -31,11 +41,6 @@ const InstalmentDues = () => {
     }),
     []
   );
-
-  const loanTypes = [
-    { label: "Daily Finance", value: "DAILY_FINANCE" },
-    { label: "Monthly Finance", value: "MONTHLY_FINANCE" },
-  ];
 
   const getInstallmentDues = async () => {
     if (!loanType || !fromDate || !toDate) {
@@ -51,6 +56,7 @@ const InstalmentDues = () => {
         { headers }
       );
       setData((res.data || []).map((row, index) => ({ id: row.loanId || row.sno || index + 1, sno: row.sno || index + 1, ...row })));
+      setAppliedFilters({ loanType, fromDate, toDate, orderBy });
       successToast("Installment dues loaded successfully");
     } catch (error) {
       console.error("API Error:", error);
@@ -60,19 +66,28 @@ const InstalmentDues = () => {
     }
   };
 
-  const rows = useMemo(() => {
-    if (!data.length) return data;
-    const total = data.reduce(
-      (acc, row) => ({
-        amount: acc.amount + Number(row.amount || 0),
-        installmentAmount: acc.installmentAmount + Number(row.installmentAmount || 0),
-        amountPaid: acc.amountPaid + Number(row.amountPaid || 0),
-        installmentDue: acc.installmentDue + Number(row.installmentDue || 0),
-      }),
-      { amount: 0, installmentAmount: 0, amountPaid: 0, installmentDue: 0 }
-    );
-    return [...data, { id: "total", customerName: "TOTAL", ...total }];
-  }, [data]);
+  const reportPeriod = useMemo(
+    () =>
+      appliedFilters
+        ? {
+            label: "Installments Dues From",
+            fromDate: appliedFilters.fromDate,
+            toDate: appliedFilters.toDate,
+          }
+        : undefined,
+    [appliedFilters]
+  );
+
+  const reportMeta = useMemo(
+    () =>
+      appliedFilters
+        ? [
+            { label: "Loan Type", value: labelOf(loanTypes, appliedFilters.loanType) },
+            { label: "Order By", value: labelOf(orderByOptions, appliedFilters.orderBy) },
+          ]
+        : [],
+    [appliedFilters]
+  );
 
   const columns = [
     { field: "sno", headerName: "S.No", width: 80 },
@@ -89,9 +104,21 @@ const InstalmentDues = () => {
       width: 140,
       align: "right",
       headerAlign: "right",
-      renderCell: (params) => params.value ? <Chip label={formatINR(params.value)} color="error" size="small" /> : "",
+      // renderCell draws the chip on screen; valueFormatter is what the export
+      // reads, so Due prints "₹ 13,000" like its neighbours instead of raw 13000.
+      valueFormatter: (value) => formatINR(value),
+      renderCell: (params) =>
+        params.value && !params.row.__isTotal ? (
+          <Chip label={formatINR(params.value)} color="error" size="small" />
+        ) : (
+          params.formattedValue
+        ),
     },
     { field: "noOfInstallmentsPending", headerName: "Pending", width: 120 },
+    // Deliberately blank (unless the API sends `remarks`) - it carries through to
+    // the Word / Excel / printed report as an empty column for the client to
+    // fill in by hand, the way the legacy report's Remarks column worked.
+    { field: "remarks", headerName: "Remarks", width: 200, sortable: false },
   ];
 
   return (
@@ -163,7 +190,17 @@ const InstalmentDues = () => {
           </Grid>
         </Grid>
       </Paper>
-      <DataTable rows={rows} columns={columns} loading={loading} title="Instalment Due Details" height={580} />
+      <DataTable
+        rows={data}
+        columns={columns}
+        loading={loading}
+        title="Instalment Due Details"
+        height={580}
+        period={reportPeriod}
+        reportMeta={reportMeta}
+        totalFields={["amount", "installmentAmount", "amountPaid", "installmentDue"]}
+        totalLabelCell={{ customerName: "TOTAL" }}
+      />
     </Stack>
   );
 };

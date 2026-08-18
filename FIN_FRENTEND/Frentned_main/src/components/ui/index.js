@@ -1,7 +1,7 @@
 // UI Components Index
 export { default as PageHeader } from "./PageHeader";
 export { default as DataTable } from "./DataTable";
-export { TableExportMenu, DEFAULT_TABLE_HEIGHT } from "./DataTable";
+export { TableExportMenu, DEFAULT_TABLE_HEIGHT, withTotalsRow } from "./DataTable";
 export { default as AppDatePicker } from "./AppDatePicker";
 export { default as useDateRange } from "./useDateRange";
 export { DROPDOWN_MENU_PROPS } from "./dropdownMenuProps";
@@ -29,4 +29,8 @@ export {
   exportWord,
   exportCsv,
   printReport,
+  formatReportDate,
+  isTotalRow,
+  creditDebitSummary,
+  summaryValue,
 } from "./reportExport";

@@ -172,7 +172,18 @@ const Customer_Report = () => {
               md: 3
             }}>
             <Box sx={{ display: "flex", gap: 1, justifyContent: "flex-end" }}>
-              <TableExportMenu rows={reportData} columns={exportColumns} fileName="Customer_Report" />
+              <TableExportMenu
+                rows={reportData}
+                columns={exportColumns}
+                fileName="Customer_Report"
+                reportOptions={{
+                  summary: [
+                    { label: "Credits", value: totals.totalCredits },
+                    { label: "Debits", value: totals.totalDebits },
+                    { label: "Balance", value: totals.totalBalance },
+                  ],
+                }}
+              />
             </Box>
           </Grid>
         </Grid>
