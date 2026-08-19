@@ -342,6 +342,70 @@ export const exportPdf = (rows = [], columns = [], fileName = "report", options 
   doc.save(`${fileName}.pdf`);
 };
 
+/**
+ * Normalise `options.details` into sections. A detail block is the facts a
+ * statement carries above its grid - account, partner, loan figures - which a
+ * plain list report does not have. A flat [{ label, value }] array is treated
+ * as one untitled section so a simple caller can skip the nesting.
+ *   details: [{ title, color, columns, fields: [{ label, value }] }]
+ */
+export const detailSections = ({ details } = {}) => {
+  if (!details || !details.length) return [];
+  const sections = Array.isArray(details[0]?.fields) ? details : [{ fields: details }];
+  return sections
+    .map((section) => ({
+      title: section.title || "",
+      // Only a plain colour literal reaches the inline style below.
+      color: /^#[0-9a-f]{3,8}$/i.test(section.color || "") ? section.color : "#4f46e5",
+      columns: section.columns || 4,
+      fields: (section.fields || []).filter((field) => field && field.label),
+    }))
+    .filter((section) => section.fields.length);
+};
+
+// Customer photo, printed beside the detail block. Only an inline image is
+// accepted - a remote URL would not have loaded by the time print fires.
+const photoSrc = (options = {}) =>
+  typeof options.photo === "string" && /^(data:image\/|blob:)/.test(options.photo)
+    ? options.photo
+    : "";
+
+// The detail block itself: a titled band per section over a fixed grid of
+// label/value cells, laid out with tables so Word renders it like the browser.
+const detailsHtml = (options = {}) => {
+  const sections = detailSections(options);
+  const photo = photoSrc(options);
+  if (!sections.length) return "";
+
+  const blocks = sections
+    .map((section) => {
+      const cells = section.fields.map((field) => {
+        const value = field.value === "" || field.value == null ? "-" : field.value;
+        return (
+          `<td><span class="dl">${escapeHtml(field.label)}</span>` +
+          `<span class="dv">${escapeHtml(value)}</span></td>`
+        );
+      });
+      // Pad the last row so every cell keeps the same width.
+      while (cells.length % section.columns) cells.push("<td></td>");
+      const rows = [];
+      for (let i = 0; i < cells.length; i += section.columns) {
+        rows.push(`<tr>${cells.slice(i, i + section.columns).join("")}</tr>`);
+      }
+      const title = section.title
+        ? `<p class="detail-title" style="background:${section.color}">${escapeHtml(section.title)}</p>`
+        : "";
+      return `${title}<table class="detail-table">${rows.join("")}</table>`;
+    })
+    .join("");
+
+  const inner = photo
+    ? `<table class="detail-wrap"><tr><td class="detail-main">${blocks}</td>` +
+      `<td class="detail-photo"><img src="${escapeHtml(photo)}" alt="" /></td></tr></table>`
+    : blocks;
+  return `<div class="report-details">${inner}</div>`;
+};
+
 const reportHtml = (rows, cols, fileName, options) => {
   const aligns = cols.map((column) => alignFor(column, rows));
   // Fixed layout + a colgroup keeps the printed columns in the same proportions
@@ -375,7 +439,8 @@ const reportHtml = (rows, cols, fileName, options) => {
       ${lines}
       <h2>${escapeHtml(fileName)}</h2>
     </div>
-    <table>${colGroup}<thead><tr>${head}</tr></thead><tbody>${body}</tbody></table>
+    ${detailsHtml(options)}
+    <table class="report-table">${colGroup}<thead><tr>${head}</tr></thead><tbody>${body}</tbody></table>
     ${summaryHtml(options)}`;
 };
 
@@ -416,11 +481,27 @@ const tableStyles = (orientation) => `
   table.report-summary td{text-align:right;min-width:110px;font-weight:700}
   table.report-summary tr.summary-final th,table.report-summary tr.summary-final td{
     border-top:1px solid #94a3b8;padding-top:4px}
+  /* Statement detail block - the titled bands of label/value cells above the
+     grid, plus the customer photo. Printed on the first page only. */
+  .report-details{margin:0 0 8px}
+  .report-details table{border:none;table-layout:auto}
+  .report-details table.detail-wrap{width:100%}
+  .report-details table.detail-wrap>tbody>tr>td{border:none;padding:0;vertical-align:top}
+  .report-details .detail-photo{width:26mm;padding-left:8px}
+  .report-details .detail-photo img{width:24mm;height:28mm;object-fit:cover;
+    border:1px solid #cbd5e1;border-radius:4px}
+  p.detail-title{display:inline-block;text-align:left;margin:6px 0 4px;padding:2px 12px;
+    border-radius:10px;background:#4f46e5;color:#fff;font-size:10px;font-weight:700;letter-spacing:.5px}
+  table.detail-table{width:100%;border:1px solid #cbd5e1;table-layout:fixed}
+  table.detail-table td{border:1px solid #e2e8f0;padding:4px 7px;vertical-align:top}
+  .detail-table .dl{display:block;font-size:9px;color:#64748b;letter-spacing:.3px;text-transform:uppercase}
+  .detail-table .dv{display:block;font-size:12px;font-weight:700;color:#111827}
   /* Repeat the column headings on every printed page and never split a row. */
   thead{display:table-header-group}
   tr{page-break-inside:avoid;break-inside:avoid}
   @media print{body{padding:0} tr.total-row td{background:#e2e8f0 !important;-webkit-print-color-adjust:exact;print-color-adjust:exact}
-    th{background:#4f46e5 !important;-webkit-print-color-adjust:exact;print-color-adjust:exact}}`;
+    th{background:#4f46e5 !important;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+    p.detail-title{-webkit-print-color-adjust:exact;print-color-adjust:exact}}`;
 
 export const exportWord = (rows = [], columns = [], fileName = "report", options = {}) => {
   const cols = exportableColumns(columns);
@@ -524,7 +605,8 @@ const viewerScript = `
   function boot(){
     var src=document.getElementById('report-source');
     var head=src.content.querySelector('.report-head');
-    var table=src.content.querySelector('table:not(.report-summary)');
+    var table=src.content.querySelector('table.report-table');
+    var details=src.content.querySelector('.report-details');
     var summary=src.content.querySelector('table.report-summary');
     var sheets=document.getElementById('sheets');
     var viewport=document.querySelector('.viewport');
@@ -550,18 +632,22 @@ const viewerScript = `
       probe.className='sheet';
       probe.style.position='absolute';probe.style.left='-10000px';probe.style.visibility='hidden';
       var headProbe=head.cloneNode(true), tableProbe=table.cloneNode(true);
-      probe.appendChild(headProbe);probe.appendChild(tableProbe);
+      var detailsProbe=details?details.cloneNode(true):null;
+      probe.appendChild(headProbe);
+      if(detailsProbe)probe.appendChild(detailsProbe);
+      probe.appendChild(tableProbe);
       document.body.appendChild(probe);
       var cs=getComputedStyle(probe);
       var usable=probe.clientHeight-parseFloat(cs.paddingTop)-parseFloat(cs.paddingBottom)-24;
       var headH=headProbe.getBoundingClientRect().height;
+      var detailsH=detailsProbe?detailsProbe.getBoundingClientRect().height:0;
       var theadH=tableProbe.querySelector('thead').getBoundingClientRect().height;
       var probeRows=tableProbe.querySelectorAll('tbody tr');
       var heights=[];
       for(var i=0;i<probeRows.length;i++){heights.push(probeRows[i].getBoundingClientRect().height);}
       document.body.removeChild(probe);
 
-      var pages=[],current=[],used=headH+theadH;
+      var pages=[],current=[],used=headH+detailsH+theadH;
       for(var j=0;j<heights.length;j++){
         if(current.length&&used+heights[j]>usable){pages.push(current);current=[];used=headH+theadH;}
         current.push(j);used+=heights[j];
@@ -572,6 +658,9 @@ const viewerScript = `
       pages.forEach(function(indexes,pageNo){
         var sheet=document.createElement('div');sheet.className='sheet';
         sheet.appendChild(head.cloneNode(true));
+        // A statement's detail block belongs to the first page only; the pages
+        // after it carry the company banner and the schedule's own headings.
+        if(details&&pageNo===0)sheet.appendChild(details.cloneNode(true));
         var t=table.cloneNode(true);
         var body=t.querySelector('tbody');body.innerHTML='';
         indexes.forEach(function(i){body.appendChild(srcRows[i].cloneNode(true));});
@@ -653,7 +742,9 @@ const viewerScript = `
 
 export const printReport = (rows = [], columns = [], fileName = "report", options = {}) => {
   const cols = exportableColumns(columns);
-  if (!rows.length) return;
+  // A statement stands on its detail block alone - a loan with no payments yet
+  // still prints - so an empty grid only blocks a report that has nothing else.
+  if (!rows.length && !detailSections(options).length) return;
   const orientation = resolveOrientation(options);
   const printWindow = window.open("", "", "width=1280,height=880");
   if (!printWindow) return;

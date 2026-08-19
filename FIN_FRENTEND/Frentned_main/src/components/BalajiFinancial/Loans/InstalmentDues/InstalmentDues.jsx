@@ -1,12 +1,80 @@
 import React, { useMemo, useState } from "react";
-import { Button, Chip, Grid, MenuItem, Paper, Stack, TextField } from "@mui/material";
+import { Box, Button, Grid, MenuItem, Paper, Stack, TextField, Typography } from "@mui/material";
 import axios from "axios";
 import { API_BASE } from "lib/config";
 import { getSession } from "src/utils/session";
 import { errorToast, successToast } from "toastify";
-import { AppDatePicker, DataTable, PageHeader, useDateRange } from "src/components/ui";
+import { AppDatePicker, DataTable, PageHeader, isTotalRow, useDateRange } from "src/components/ui";
 
-const formatINR = (value) => `₹ ${Number(value || 0).toLocaleString("en-IN")}`;
+// The report prints plain grouped figures, the way the legacy dues report did -
+// a rupee sign on every line of a two-line cell only crowds the column.
+const money = (value) => Number(value || 0).toLocaleString("en-IN");
+
+const dash = (value) => (value === 0 ? "0" : value ? String(value) : "-");
+
+// Installments paid is not sent by the API yet; until it is, the figure the
+// legacy report showed is the paid amount divided by one installment.
+const paidCount = (row) => {
+  if (row.noOfInstallmentsPaid != null) return row.noOfInstallmentsPaid;
+  const installment = Number(row.installmentAmount || 0);
+  return installment ? Math.floor(Number(row.amountPaid || 0) / installment) : "";
+};
+
+/**
+ * The legacy report stacked two related figures in one column - the loan
+ * amount over duration/installment, the paid amount over how many installments
+ * that is - so a whole loan reads across one line of the page. These cells do
+ * the same: the figure on top, its companion underneath.
+ */
+const TwoLine = ({ top, bottom, align = "left", tone, wrap = false }) => (
+  <Stack
+    spacing={0.15}
+    sx={{
+      width: "100%",
+      py: 0.75,
+      alignItems: align === "right" ? "flex-end" : "flex-start",
+      textAlign: align,
+    }}
+  >
+    <Typography
+      variant="body2"
+      sx={{
+        fontWeight: 700,
+        lineHeight: 1.25,
+        color: tone,
+        ...(wrap
+          ? { whiteSpace: "normal", wordBreak: "break-word", display: "-webkit-box",
+              WebkitLineClamp: 2, WebkitBoxOrient: "vertical", overflow: "hidden" }
+          : {}),
+      }}
+    >
+      {top}
+    </Typography>
+    {bottom !== "" && bottom != null && (
+      <Typography
+        variant="caption"
+        sx={{
+          color: "text.secondary",
+          lineHeight: 1.2,
+          ...(wrap
+            ? { whiteSpace: "normal", wordBreak: "break-word", display: "-webkit-box",
+                WebkitLineClamp: 2, WebkitBoxOrient: "vertical", overflow: "hidden" }
+            : {}),
+        }}
+      >
+        {bottom}
+      </Typography>
+    )}
+  </Stack>
+);
+
+// Column headings carry the same pairing as the cells under them.
+const TwoLineHeader = ({ top, bottom, align = "left" }) => (
+  <Box sx={{ lineHeight: 1.2, textAlign: align, textTransform: "uppercase", fontWeight: 800, fontSize: "0.75rem" }}>
+    <Box>{top}</Box>
+    <Box>{bottom}</Box>
+  </Box>
+);
 
 const loanTypes = [
   { label: "Daily Finance", value: "DAILY_FINANCE" },
@@ -89,36 +157,125 @@ const InstalmentDues = () => {
     [appliedFilters]
   );
 
+  // Column layout follows the legacy dues report: S.No, Loan ID, Customer,
+  // Guarantor over Partner, Start over End, Amount over Duration/Installment,
+  // each paid / due figure over its installment count, Late Fee and a blank
+  // Remarks column the office fills in by hand. renderCell draws the two lines;
+  // valueFormatter is what the Word / Excel / printed report reads, so each
+  // exported cell carries both figures on one line.
   const columns = [
-    { field: "sno", headerName: "S.No", width: 80 },
-    { field: "loanId", headerName: "Loan ID", width: 120 },
-    { field: "customerName", headerName: "Customer", minWidth: 200, flex: 1 },
-    { field: "startDate", headerName: "Start", width: 130 },
-    { field: "endDate", headerName: "End", width: 130 },
-    { field: "amount", headerName: "Amount", width: 140, align: "right", headerAlign: "right", valueFormatter: (value) => formatINR(value) },
-    { field: "installmentAmount", headerName: "Inst. Amt", width: 140, align: "right", headerAlign: "right", valueFormatter: (value) => formatINR(value) },
-    { field: "amountPaid", headerName: "Paid", width: 140, align: "right", headerAlign: "right", valueFormatter: (value) => formatINR(value) },
+    { field: "sno", headerName: "S.No", width: 70, align: "center", headerAlign: "center" },
+    { field: "loanId", headerName: "Loan ID", width: 118 },
     {
-      field: "installmentDue",
-      headerName: "Due",
+      field: "customerName",
+      headerName: "Customer Name",
+      minWidth: 210,
+      flex: 1.2,
+      renderCell: (params) =>
+        isTotalRow(params.row) ? params.value : <TwoLine top={params.value || "-"} wrap />,
+    },
+    {
+      field: "guarentorName",
+      headerName: "Guarantor / Partner Name",
+      renderHeader: () => <TwoLineHeader top="Guarantor Name" bottom="Partner Name" />,
+      minWidth: 210,
+      flex: 1.2,
+      sortable: false,
+      // Both names are POJO fields the dues API does not fill in yet - the
+      // column is wired to them so it lights up the moment the service does.
+      valueFormatter: (value, row) =>
+        isTotalRow(row) ? "" : [value, row.partnerName].filter(Boolean).join(" / ") || "-",
+      renderCell: (params) =>
+        isTotalRow(params.row) ? "" : (
+          <TwoLine top={params.row.guarentorName || "-"} bottom={params.row.partnerName || "-"} wrap />
+        ),
+    },
+    {
+      field: "startDate",
+      headerName: "Start/End Date",
+      renderHeader: () => <TwoLineHeader top="Start/End" bottom="Date" />,
+      width: 128,
+      valueFormatter: (value, row) =>
+        isTotalRow(row) ? "" : [value, row.endDate].filter(Boolean).join(" / ") || "-",
+      renderCell: (params) =>
+        isTotalRow(params.row) ? "" : (
+          <TwoLine top={params.row.startDate || "-"} bottom={params.row.endDate || "-"} />
+        ),
+    },
+    {
+      field: "amount",
+      headerName: "Amount Dur/Inst.",
+      renderHeader: () => <TwoLineHeader top="Amount" bottom="Dur/Inst." align="right" />,
       width: 140,
       align: "right",
       headerAlign: "right",
-      // renderCell draws the chip on screen; valueFormatter is what the export
-      // reads, so Due prints "₹ 13,000" like its neighbours instead of raw 13000.
-      valueFormatter: (value) => formatINR(value),
+      valueFormatter: (value, row) =>
+        isTotalRow(row)
+          ? money(value)
+          : `${money(value)} (${dash(row.totalNoOfInstallments)}/${money(row.installmentAmount)})`,
       renderCell: (params) =>
-        params.value && !params.row.__isTotal ? (
-          <Chip label={formatINR(params.value)} color="error" size="small" />
-        ) : (
-          params.formattedValue
+        isTotalRow(params.row) ? money(params.value) : (
+          <TwoLine
+            align="right"
+            top={money(params.value)}
+            bottom={`${dash(params.row.totalNoOfInstallments)}/${money(params.row.installmentAmount)}`}
+          />
         ),
     },
-    { field: "noOfInstallmentsPending", headerName: "Pending", width: 120 },
+    {
+      field: "amountPaid",
+      headerName: "Inst. Paid",
+      width: 120,
+      align: "right",
+      headerAlign: "right",
+      valueFormatter: (value, row) =>
+        isTotalRow(row) ? money(value) : `${money(value)} (${dash(paidCount(row))})`,
+      renderCell: (params) =>
+        isTotalRow(params.row) ? money(params.value) : (
+          <TwoLine align="right" top={money(params.value)} bottom={dash(paidCount(params.row))} />
+        ),
+    },
+    {
+      field: "installmentDue",
+      headerName: "Inst. Dues",
+      width: 120,
+      align: "right",
+      headerAlign: "right",
+      valueFormatter: (value, row) =>
+        isTotalRow(row) ? money(value) : `${money(value)} (${dash(row.noOfInstallmentsPending)})`,
+      renderCell: (params) =>
+        isTotalRow(params.row) ? money(params.value) : (
+          <TwoLine
+            align="right"
+            tone="error.main"
+            top={money(params.value)}
+            bottom={dash(params.row.noOfInstallmentsPending)}
+          />
+        ),
+    },
+    {
+      field: "lateFee",
+      headerName: "Late Fee",
+      width: 108,
+      align: "right",
+      headerAlign: "right",
+      valueFormatter: (value, row) =>
+        isTotalRow(row) || row.delayedDays == null
+          ? money(value)
+          : `${money(value)} (${row.delayedDays})`,
+      renderCell: (params) =>
+        isTotalRow(params.row) ? money(params.value) : (
+          <TwoLine
+            align="right"
+            top={money(params.value)}
+            bottom={params.row.delayedDays != null ? `(${params.row.delayedDays})` : ""}
+          />
+        ),
+    },
     // Deliberately blank (unless the API sends `remarks`) - it carries through to
     // the Word / Excel / printed report as an empty column for the client to
     // fill in by hand, the way the legacy report's Remarks column worked.
-    { field: "remarks", headerName: "Remarks", width: 200, sortable: false },
+    { field: "remarks", headerName: "Remarks", width: 170, sortable: false },
   ];
 
   return (
@@ -198,8 +355,12 @@ const InstalmentDues = () => {
         height={580}
         period={reportPeriod}
         reportMeta={reportMeta}
-        totalFields={["amount", "installmentAmount", "amountPaid", "installmentDue"]}
+        totalFields={["amount", "amountPaid", "installmentDue", "lateFee"]}
         totalLabelCell={{ customerName: "TOTAL" }}
+        // Two figures per cell need the taller row and the two-line headings
+        // the legacy report used.
+        rowHeight={64}
+        columnHeaderHeight={62}
       />
     </Stack>
   );

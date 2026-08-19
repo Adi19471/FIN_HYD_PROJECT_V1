@@ -29,6 +29,7 @@ export {
   exportWord,
   exportCsv,
   printReport,
+  detailSections,
   formatReportDate,
   isTotalRow,
   creditDebitSummary,

@@ -16,11 +16,18 @@ import {
   TableRow,
   Typography,
 } from "@mui/material";
+import { PrintRounded } from "@mui/icons-material";
 import { useAuth } from "src/utils/authStore";
 import { API_BASE } from "lib/config";
 import { getSession } from "src/utils/session";
 import { successToast, errorToast } from "toastify";
-import { AppDatePicker, DataTable, PageHeader } from "src/components/ui";
+import {
+  AppDatePicker,
+  DataTable,
+  PageHeader,
+  TableExportMenu,
+  printReport,
+} from "src/components/ui";
 
 const STORAGE_KEY = "dailyBook_lastSelectedDate";
 
@@ -243,17 +250,79 @@ const DailyBook = () => {
     { field: "deletedByUser", headerName: "Deleted By", width: 140 },
   ];
 
+  const exportFileName = `daily-book-${transactionDate || dayjs().format("YYYY-MM-DD")}`;
+
+  // Printed above the table on every download / print: the day, then the balances.
+  const reportPeriod = useMemo(
+    () => (transactionDate ? { label: "Daily Book Date", fromDate: transactionDate } : undefined),
+    [transactionDate]
+  );
+
+  const reportMeta = useMemo(
+    () => [
+      { label: "Opening Balance", value: formatINR(openingBalance) },
+      { label: "Closing Balance", value: formatINR(closingBalance) },
+      { label: "Records", value: transactions.length },
+    ],
+    [openingBalance, closingBalance, transactions.length]
+  );
+
+  // The balance block that sits inside the table. Shared with the exports so a
+  // downloaded or printed book shows exactly the same figures as the screen.
+  const reportSummary = useMemo(
+    () => [
+      { label: "Opening Balance", value: openingBalance },
+      { label: "Credits", value: credits },
+      { label: "Debits", value: debits },
+      { label: "Closing Balance", value: closingBalance },
+    ],
+    [openingBalance, credits, debits, closingBalance]
+  );
+
+  const reportOptions = useMemo(
+    () => ({ period: reportPeriod, meta: reportMeta, summary: reportSummary }),
+    [reportPeriod, reportMeta, reportSummary]
+  );
+
+  const handlePrint = () => {
+    if (!rows.length) {
+      errorToast("Nothing to print. Generate the daily book first.");
+      return;
+    }
+    printReport(rows, columns, exportFileName, reportOptions);
+  };
+
   const cellSx = { fontSize: 13, whiteSpace: "nowrap" };
   const totalCellSx = { ...cellSx, fontWeight: 700 };
 
   return (
     <Stack spacing={2.5}>
+      {/* Download / Print sit at the top beside Refresh, so the whole book can be
+          taken away without scrolling down to the grid toolbar. */}
       <PageHeader
         title="Daily Book"
         subtitle="Day-wise transactions, opening balance, credits, debits, and closing balance."
         totalCount={transactions.length}
         onRefresh={fetchDailyBook}
         loading={loading}
+        actions={
+          <>
+            <TableExportMenu
+              rows={rows}
+              columns={columns}
+              fileName={exportFileName}
+              reportOptions={reportOptions}
+            />
+            <Button
+              variant="outlined"
+              startIcon={<PrintRounded />}
+              onClick={handlePrint}
+              disabled={loading || !rows.length}
+            >
+              Print
+            </Button>
+          </>
+        }
       />
       <Paper className="enterprise-card" elevation={0} sx={{ p: 2 }}>
         <Grid container spacing={2} alignItems="center">
@@ -407,24 +476,26 @@ const DailyBook = () => {
         columns={columns}
         loading={loading}
         title="Daily Book Transactions"
-        subtitle="Date-only MUI calendar filter with fast table, search, Excel, PDF, Word, and print."
+        subtitle="Day-wise credits and debits for the selected date."
         height={580}
-      
-        summary={[
-          { label: "Opening Balance", value: openingBalance },
-          { label: "Credits", value: totalCredit },
-          { label: "Debits", value: totalDebit },
-          { label: "Balance", value: totalCredit - totalDebit },
-        ]}
+        period={reportPeriod}
+        reportMeta={reportMeta}
+        summary={reportSummary}
       />
-      {/* <DataTable
-        rows={deletedTransactions}
-        columns={deletedColumns}
-        loading={loading}
-        title="Deleted Transactions"
-        subtitle="Transactions removed from this date, with who deleted them and when."
-        height={360}
-      /> */}
+      {/* <Grid
+          size={{
+            xs: 12,
+            md: 6
+          }}>
+          <Paper className="enterprise-card" elevation={0} sx={{ p: 2, height: "100%" }}>
+            <Typography variant="subtitle2" fontWeight={700} sx={{ mb: 1 }}>Day Balance</Typography>
+            <SummaryLine label="Opening Balance" value={openingBalance} />
+            <SummaryLine label="Credits (+)" value={credits} color="success.main" />
+            <SummaryLine label="Debits (-)" value={debits} color="error.main" />
+            <Divider sx={{ my: 0.5 }} />
+            <SummaryLine label="Closing Balance" value={closingBalance} strong color="primary.main" />
+          </Paper>
+        </Grid> */}
     </Stack>
   );
 };
