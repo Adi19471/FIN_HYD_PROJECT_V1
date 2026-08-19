@@ -124,6 +124,13 @@ const BusinessOverview = () => {
 
 
 
+  // Blank cells stay blank instead of printing as 0 - the revenue and expense
+  // rows only fill the Amount column.
+  const money = (value) =>
+    value === "" || value === null || value === undefined
+      ? ""
+      : Number(value).toLocaleString("en-IN");
+
   const exportRows = [
     ...loanData.map((loan) => ({
       section: "Loans Disbursed",
@@ -135,7 +142,7 @@ const BusinessOverview = () => {
       interestPaid: loan.interestPaid || 0,
       amount: loan.sumOfloansPaidAndInterestPaid || 0,
     })),
-    ...revenues.filter((r) => r.type === "REVENUES").map((rev) => ({
+    ...revenueList.map((rev) => ({
       section: "Revenue",
       name: rev.code,
       loansDisbursed: "",
@@ -145,11 +152,51 @@ const BusinessOverview = () => {
       interestPaid: "",
       amount: rev.amount || 0,
     })),
+    ...expenseList.map((exp) => ({
+      section: "Expenses",
+      name: exp.code,
+      loansDisbursed: "",
+      interestReceivable: "",
+      totalReceivable: "",
+      loansPaid: "",
+      interestPaid: "",
+      amount: Math.abs(exp.amount || 0),
+    })),
   ];
-  const exportColumns = ["section", "name", "loansDisbursed", "interestReceivable", "totalReceivable", "loansPaid", "interestPaid", "amount"];
+
+  // Amounts stay raw numbers so Excel keeps them summable; the formatter only
+  // dresses up the PDF / Word / CSV / print output.
+  const exportColumns = [
+    { field: "section", headerName: "Section", width: 160 },
+    { field: "name", headerName: "Particulars", width: 200 },
+    { field: "loansDisbursed", headerName: "Loans Disbursed (A)", width: 170, align: "right", valueFormatter: (value) => money(value) },
+    { field: "interestReceivable", headerName: "Interest Receivable (B)", width: 180, align: "right", valueFormatter: (value) => money(value) },
+    { field: "totalReceivable", headerName: "Total (A+B)", width: 150, align: "right", valueFormatter: (value) => money(value) },
+    { field: "loansPaid", headerName: "Loans Paid (X)", width: 150, align: "right", valueFormatter: (value) => money(value) },
+    { field: "interestPaid", headerName: "Interest Paid (Y)", width: 160, align: "right", valueFormatter: (value) => money(value) },
+    { field: "amount", headerName: "Amount / Total (X+Y)", width: 180, align: "right", valueFormatter: (value) => money(value) },
+  ];
+
   const reportRange = useDateRange
     ? `From ${dayjs(fromDate).format("DD-MMM-YYYY")} To ${dayjs(toDate).format("DD-MMM-YYYY")}`
     : "All Dates";
+
+  // Filter lines and the totals block printed on every export.
+  const reportOptions = {
+    period: useDateRange ? { fromDate, toDate, label: "Business Overview Period" } : undefined,
+    meta: [
+      ...(useDateRange ? [] : [{ label: "Period", value: "All Dates" }]),
+      { label: "Exclude Dividends", value: excludeDividends ? "Yes" : "No" },
+      { label: "Accrued Revenues", value: accruedRevenues ? "Yes" : "No" },
+    ],
+    summary: [
+      { label: "Total Revenues", value: totalRevenues },
+      { label: "Total Expenses", value: totalExpenses },
+      { label: "Profit", value: totalProfit },
+      { label: "Net Profit Per Share", value: netProfit },
+    ],
+    orientation: "landscape",
+  };
 
   return (
     <Box sx={{ p: 2, backgroundColor: "#f9f9f9", minHeight: "100vh" }}>
@@ -219,7 +266,12 @@ const BusinessOverview = () => {
             >
               Generate
             </Button>
-            <TableExportMenu rows={exportRows} columns={exportColumns} fileName="Business_Overview" />
+            <TableExportMenu
+              rows={exportRows}
+              columns={exportColumns}
+              fileName="Business_Overview"
+              reportOptions={reportOptions}
+            />
           </Grid>
         </Grid>
       </Paper>

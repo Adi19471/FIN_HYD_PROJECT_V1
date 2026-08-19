@@ -4,6 +4,7 @@ import {
   Button,
   Typography,
   Paper,
+  Stack,
   Table,
   TableBody,
   TableCell,
@@ -17,7 +18,7 @@ import axios from "axios";
 import { API_BASE } from "lib/config";
 import { getSession } from "src/utils/session";
 import LoadingSpinner from "src/LoadingSpinner";
-import { AppDatePicker, useDateRange } from "src/components/ui";
+import { AppDatePicker, TableExportMenu, useDateRange } from "src/components/ui";
 
 const REVENUE = "REVENUES";
 const EXPENSE = "EXPENSES";
@@ -42,6 +43,21 @@ const fmt = (value) =>
     minimumFractionDigits: 2,
     maximumFractionDigits: 2,
   })}`;
+
+// Columns for the Excel / PDF / Word / CSV / Print exports. Amount stays a raw
+// number so Excel keeps it summable; the formatter only dresses up the
+// document exports, which read through valueFormatter.
+const exportColumns = [
+  { field: "sno", headerName: "#", width: 60 },
+  { field: "particulars", headerName: "Particulars", width: 340 },
+  {
+    field: "amount",
+    headerName: "Amount",
+    width: 160,
+    align: "right",
+    valueFormatter: (value) => fmt(value),
+  },
+];
 
 const RevenueExpenseStatement = () => {
   const { fromDate, toDate, setFromDate, setToDate, toDateMin, toDateMax } = useDateRange(null, null);
@@ -125,12 +141,81 @@ const RevenueExpenseStatement = () => {
   const netProfit = totalRevenue - totalExpense;
   const isLoss = netProfit < 0;
 
+  // Flatten the grouped table into export rows in the order shown on screen:
+  // each section heading with its total, then its line items, then Net Profit / Loss.
+  // Section and net rows carry __isTotal so the exports render them bold.
+  const exportRows = useMemo(() => {
+    const rows = [];
+
+    orderedTypes.forEach((type) => {
+      const items = groupedData[type] || [];
+
+      rows.push({
+        id: `${type}-section`,
+        sno: "",
+        particulars: labelFor(type),
+        amount: getTotal(items),
+        __isTotal: true,
+      });
+
+      items.forEach((item, index) => {
+        rows.push({
+          id: `${type}-${item.code}-${index}`,
+          sno: index + 1,
+          particulars: item.description || item.code,
+          amount: Number(item.amount) || 0,
+        });
+      });
+    });
+
+    if (rows.length) {
+      rows.push({
+        id: "net",
+        sno: "",
+        particulars: `Net ${isLoss ? "Loss" : "Profit"}`,
+        amount: netProfit,
+        __isTotal: true,
+      });
+    }
+
+    return rows;
+  }, [groupedData, orderedTypes, isLoss, netProfit]);
+
+  // Period line and the summary block printed under the exported table.
+  const reportOptions = useMemo(
+    () => ({
+      period: { fromDate, toDate, label: "Statement Period" },
+      summary: [
+        { label: "Total Revenue", value: totalRevenue },
+        { label: "Total Expenses", value: totalExpense },
+        { label: isLoss ? "Net Loss" : "Net Profit", value: netProfit },
+      ],
+    }),
+    [fromDate, toDate, totalRevenue, totalExpense, netProfit, isLoss]
+  );
+
   return (
     <Box sx={{ p: 3 }}>
       {/* HEADER */}
-      <Typography variant="h6" fontWeight={700} mb={1}>
-        Revenue & Expense Statement
-      </Typography>
+      <Stack
+        direction="row"
+        alignItems="center"
+        justifyContent="space-between"
+        flexWrap="wrap"
+        gap={1}
+        mb={1}
+      >
+        <Typography variant="h6" fontWeight={700}>
+          Revenue & Expense Statement
+        </Typography>
+        {/* Single download entry point: Excel / PDF / Word / CSV / Print. */}
+        <TableExportMenu
+          rows={exportRows}
+          columns={exportColumns}
+          fileName="Revenue-Expense-Statement"
+          reportOptions={reportOptions}
+        />
+      </Stack>
       {/* FILTER CARD */}
       <Paper sx={{ p: 3, mb: 3, borderRadius: 2 }}>
         <Grid container spacing={2} alignItems="center">

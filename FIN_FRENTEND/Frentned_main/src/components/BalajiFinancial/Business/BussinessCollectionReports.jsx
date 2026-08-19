@@ -20,7 +20,7 @@ import dayjs from "dayjs";
 import { API_BASE } from "lib/config";
 import { getSession } from "src/utils/session";
 import { COMPANY_ADDRESS, COMPANY_NAME } from "src/lib/company";
-import { AppDatePicker, DataTable, useDateRange } from "src/components/ui";
+import { AppDatePicker, DataTable, TableExportMenu, useDateRange } from "src/components/ui";
 
 const money = (value) => Number(value || 0).toLocaleString("en-IN");
 
@@ -109,6 +109,77 @@ const BussinessCollectionReports = () => {
     { field: "receivedCollections", headerName: "Received", width: 150, valueFormatter: (value) => money(value) },
     { field: "balanceCollections", headerName: "Balance", width: 150, valueFormatter: (value) => money(value) },
   ];
+
+  // Whole-screen export for the Download button at the top: both finance blocks
+  // with their active / matured split and per-block totals, then the overall
+  // collections total - i.e. everything the page shows, not just the grid.
+  const screenExportRows = useMemo(() => {
+    if (!reportData.length) return [];
+
+    const out = [];
+
+    const addBlock = (label, group) => {
+      const active = group?.ACTIVE || emptyStatus;
+      const matured = group?.MATURED || emptyStatus;
+      const sumOf = (field) => Number(active[field] || 0) + Number(matured[field] || 0);
+
+      out.push({
+        id: `${label}-section`,
+        section: label,
+        status: "",
+        targetCollections: sumOf("targetCollections"),
+        receivedCollections: sumOf("receivedCollections"),
+        balanceCollections: sumOf("balanceCollections"),
+        __isTotal: true,
+      });
+
+      [["Active", active], ["Matured", matured]].forEach(([statusLabel, item]) => {
+        out.push({
+          id: `${label}-${statusLabel}`,
+          section: label,
+          status: statusLabel,
+          targetCollections: Number(item.targetCollections || 0),
+          receivedCollections: Number(item.receivedCollections || 0),
+          balanceCollections: Number(item.balanceCollections || 0),
+        });
+      });
+    };
+
+    addBlock("Daily Finance", groupedData.DAILY_FINANCE);
+    addBlock("Monthly Finance", groupedData.MONTHLY_FINANCE);
+
+    out.push({
+      id: "total",
+      section: "Total Collections",
+      status: "",
+      targetCollections: totals.target,
+      receivedCollections: totals.received,
+      balanceCollections: totals.balance,
+      __isTotal: true,
+    });
+
+    return out;
+  }, [reportData, groupedData, totals]);
+
+  const screenExportColumns = [
+    { field: "section", headerName: "Loan Type", width: 200 },
+    { field: "status", headerName: "Status", width: 130 },
+    { field: "targetCollections", headerName: "Target", width: 150, align: "right", valueFormatter: (value) => money(value) },
+    { field: "receivedCollections", headerName: "Received", width: 150, align: "right", valueFormatter: (value) => money(value) },
+    { field: "balanceCollections", headerName: "Balance", width: 150, align: "right", valueFormatter: (value) => money(value) },
+  ];
+
+  const reportOptions = useMemo(
+    () => ({
+      period: { fromDate, toDate, label: "Business Collections Period" },
+      summary: [
+        { label: "Target Collections", value: totals.target },
+        { label: "Received Collections", value: totals.received },
+        { label: "Collection Balance", value: totals.balance },
+      ],
+    }),
+    [fromDate, toDate, totals]
+  );
 
   const SummaryCard = ({ title, value, note, color = "primary", icon: Icon = AssessmentRounded }) => (
     <Paper className="enterprise-card" elevation={0} sx={{ p: 2, height: "100%" }}>
@@ -201,6 +272,14 @@ const BussinessCollectionReports = () => {
             <Button variant="contained" startIcon={loading ? <CircularProgress size={18} color="inherit" /> : <RefreshRounded />} onClick={fetchReport} disabled={loading}>
               {loading ? "Loading" : "Generate"}
             </Button>
+            {/* Whole-screen download / print, alongside Generate at the top. */}
+            <TableExportMenu
+              rows={screenExportRows}
+              columns={screenExportColumns}
+              fileName="Business_Collections_Report"
+              buttonLabel="Download"
+              reportOptions={reportOptions}
+            />
           </Stack>
         </Stack>
       </Paper>
@@ -249,8 +328,10 @@ const BussinessCollectionReports = () => {
         loading={loading}
         height={520}
         title={`Business Collections ${fromDate} to ${toDate}`}
-        subtitle="Search, row count, print, PDF, Excel, and Word downloads are available from this table."
+        subtitle="Search, row count, print, PDF, Excel, CSV, and Word downloads are available from this table."
         pageSize={10}
+        period={reportOptions.period}
+        summary={reportOptions.summary}
       />
     </Stack>
   );

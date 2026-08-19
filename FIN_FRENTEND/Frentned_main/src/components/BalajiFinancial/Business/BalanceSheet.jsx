@@ -24,19 +24,25 @@ import {
   ArticleRounded,
   DescriptionRounded,
   FileDownloadRounded,
+  GridOnRounded,
   PrintRounded,
   RefreshRounded,
   TableViewRounded,
 } from "@mui/icons-material";
 import dayjs from "dayjs";
 import axios from "axios";
-import * as XLSX from "xlsx";
-import jsPDF from "jspdf";
-import autoTable from "jspdf-autotable";
 import { API_BASE } from "lib/config";
 import { getSession } from "src/utils/session";
 import LoadingSpinner from "src/LoadingSpinner";
-import { AppDatePicker, DataTable } from "src/components/ui";
+import {
+  AppDatePicker,
+  DataTable,
+  exportCsv,
+  exportExcel,
+  exportPdf,
+  exportWord,
+  printReport,
+} from "src/components/ui";
 
 const reportBorder = "1px solid #263238";
 
@@ -83,12 +89,14 @@ const normalizeType = (type = "") => {
   return value.includes("LIABIL") ? "LIABILITIES" : "ASSETS";
 };
 
+// Amounts stay raw numbers so Excel keeps them summable; the formatter only
+// dresses up the PDF / Word / CSV / print output, which reads valueFormatter.
 const exportColumns = [
-  { field: "section", headerName: "Section" },
-  { field: "masterCode", headerName: "Group" },
-  { field: "code", headerName: "Account" },
-  { field: "displayAmount", headerName: "Amount" },
-  { field: "originalAmount", headerName: "Original Amount" },
+  { field: "section", headerName: "Section", width: 130 },
+  { field: "masterCode", headerName: "Group", width: 180 },
+  { field: "code", headerName: "Account", width: 260 },
+  { field: "displayAmount", headerName: "Amount", width: 150, align: "right", valueFormatter: (value) => money(value) },
+  { field: "originalAmount", headerName: "Original Amount", width: 170, align: "right", valueFormatter: (value) => money(value) },
 ];
 
 const BalanceSheet = () => {
@@ -141,13 +149,27 @@ const BalanceSheet = () => {
   const exportRows = useMemo(
     () =>
       normalizedRows.map((row) => ({
+        id: row.id,
         section: row.section,
         masterCode: row.masterCode,
         code: row.code,
-        displayAmount: money(row.displayAmount),
-        originalAmount: Number(row.originalAmount || 0).toLocaleString("en-IN", { maximumFractionDigits: 2 }),
+        displayAmount: amountValue(row.displayAmount),
+        originalAmount: Number(row.originalAmount || 0),
       })),
     [normalizedRows]
+  );
+
+  // Report date and the totals block printed under every exported table.
+  const reportOptions = useMemo(
+    () => ({
+      period: { fromDate: generatedDate || toDate, label: "Balance Sheet As On" },
+      summary: [
+        { label: "Total Assets", value: totalAssets },
+        { label: "Total Liabilities", value: totalLiabilities },
+        { label: "Difference", value: difference },
+      ],
+    }),
+    [generatedDate, toDate, totalAssets, totalLiabilities, difference]
   );
 
   const detailColumns = useMemo(
@@ -239,67 +261,15 @@ const BalanceSheet = () => {
     }
   };
 
-  const handlePrint = () => window.print();
-
   const closeDownloadMenu = () => setDownloadAnchorEl(null);
 
-  const handleExcel = () => {
+  // Every download goes through the shared report helpers, so the Balance Sheet
+  // exports carry the same company banner, report date and totals block as the
+  // rest of the reports instead of this screen's own cut-down versions.
+  const runExport = (exporter) => () => {
     closeDownloadMenu();
     if (!exportRows.length) return;
-    const worksheet = XLSX.utils.json_to_sheet(
-      exportRows.map((row) =>
-        exportColumns.reduce((acc, column) => {
-          acc[column.headerName] = row[column.field];
-          return acc;
-        }, {})
-      )
-    );
-    const workbook = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(workbook, worksheet, "Balance Sheet");
-    XLSX.writeFile(workbook, "Balance_Sheet.xlsx");
-  };
-
-  const handlePdf = () => {
-    closeDownloadMenu();
-    if (!exportRows.length) return;
-    const doc = new jsPDF({ orientation: "portrait", unit: "mm", format: "a4" });
-    doc.setFontSize(16);
-    doc.text("SRI BALAJI ENTERPRISES", 14, 14);
-    doc.setFontSize(11);
-    doc.text("Balance Sheet", 14, 22);
-    doc.text(`Date: ${dayjs(generatedDate || toDate).format("DD-MMM-YYYY")}`, 14, 29);
-    autoTable(doc, {
-      startY: 36,
-      head: [exportColumns.map((column) => column.headerName)],
-      body: exportRows.map((row) => exportColumns.map((column) => row[column.field])),
-      styles: { fontSize: 8, cellPadding: 2 },
-      headStyles: { fillColor: [15, 98, 254], textColor: 255, fontStyle: "bold" },
-    });
-    doc.save("Balance_Sheet.pdf");
-  };
-
-  const handleWord = () => {
-    closeDownloadMenu();
-    if (!exportRows.length) return;
-    const rows = exportRows
-      .map(
-        (row) =>
-          `<tr><td>${row.section}</td><td>${row.masterCode}</td><td>${row.code}</td><td style="text-align:right">${row.displayAmount}</td><td style="text-align:right">${row.originalAmount}</td></tr>`
-      )
-      .join("");
-    const html = `<html><head><meta charset="utf-8"><style>
-      body{font-family:Arial;padding:20px;color:#111827} table{width:100%;border-collapse:collapse}
-      th,td{border:1px solid #263238;padding:7px;font-size:12px} th{background:#0f62fe;color:#fff}
-      h1{font-size:20px;margin:0 0 4px} p{margin:0 0 14px}
-      </style></head><body><h1>SRI BALAJI ENTERPRISES</h1><p>Balance Sheet - ${dayjs(generatedDate || toDate).format("DD-MMM-YYYY")}</p>
-      <table><tr><th>Section</th><th>Group</th><th>Account</th><th>Amount</th><th>Original Amount</th></tr>${rows}</table></body></html>`;
-    const blob = new Blob([html], { type: "application/msword" });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement("a");
-    link.href = url;
-    link.download = "Balance_Sheet.doc";
-    link.click();
-    URL.revokeObjectURL(url);
+    exporter(exportRows, exportColumns, "Balance_Sheet", reportOptions);
   };
 
   const renderSection = (title, group, color) => {
@@ -546,26 +516,25 @@ const BalanceSheet = () => {
               },
             }}
           >
-            <MenuItem
-              onClick={() => {
-                closeDownloadMenu();
-                handlePrint();
-              }}
-            >
-              <ListItemIcon><PrintRounded fontSize="small" /></ListItemIcon>
-              <ListItemText>Print</ListItemText>
-            </MenuItem>
-            <MenuItem onClick={handleWord}>
-              <ListItemIcon><ArticleRounded fontSize="small" sx={{ color: "#2859a8" }} /></ListItemIcon>
-              <ListItemText>Word</ListItemText>
-            </MenuItem>
-            <MenuItem onClick={handleExcel}>
+            <MenuItem onClick={runExport(exportExcel)}>
               <ListItemIcon><TableViewRounded fontSize="small" sx={{ color: "#2e7d32" }} /></ListItemIcon>
-              <ListItemText>Excel</ListItemText>
+              <ListItemText primary="Download Excel" secondary=".xlsx" />
             </MenuItem>
-            <MenuItem onClick={handlePdf}>
+            <MenuItem onClick={runExport(exportPdf)}>
               <ListItemIcon><DescriptionRounded fontSize="small" sx={{ color: "#c62828" }} /></ListItemIcon>
-              <ListItemText>PDF</ListItemText>
+              <ListItemText primary="Download PDF" secondary=".pdf" />
+            </MenuItem>
+            <MenuItem onClick={runExport(exportWord)}>
+              <ListItemIcon><ArticleRounded fontSize="small" sx={{ color: "#2859a8" }} /></ListItemIcon>
+              <ListItemText primary="Download Word" secondary=".doc" />
+            </MenuItem>
+            <MenuItem onClick={runExport(exportCsv)}>
+              <ListItemIcon><GridOnRounded fontSize="small" color="action" /></ListItemIcon>
+              <ListItemText primary="Download CSV" secondary=".csv" />
+            </MenuItem>
+            <MenuItem onClick={runExport(printReport)}>
+              <ListItemIcon><PrintRounded fontSize="small" /></ListItemIcon>
+              <ListItemText primary="Print" />
             </MenuItem>
           </Menu>
         </Box>
@@ -703,6 +672,8 @@ const BalanceSheet = () => {
                 pageSize={25}
                 getRowId={(row) => row.id}
                 showCompany={false}
+                period={reportOptions.period}
+                summary={reportOptions.summary}
               />
             </Stack>
           )}
