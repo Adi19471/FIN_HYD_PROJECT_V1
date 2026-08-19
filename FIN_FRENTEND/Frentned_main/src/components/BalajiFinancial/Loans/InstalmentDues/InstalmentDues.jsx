@@ -14,8 +14,8 @@ const loanTypes = [
 ];
 
 const orderByOptions = [
-  { label: "Installment Date", value: "INSTALLMENT_DATE" },
   { label: "Loan Start Date", value: "LOAN_START_DATE" },
+  { label: "Installment Date", value: "INSTALLMENT_DATE" },
   { label: "Partner", value: "PARTNER" },
   { label: "Delayed Days", value: "DELAYED_DAYS" },
   { label: "Installment Balance", value: "INSTALLMENT_BALANCE" },

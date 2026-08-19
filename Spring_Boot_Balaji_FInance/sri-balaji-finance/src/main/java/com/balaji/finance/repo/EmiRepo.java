@@ -134,6 +134,7 @@ public interface EmiRepo extends JpaRepository<EMI, Integer> {
 		    JOIN e.businessMember bm
 
 		    WHERE bm.businessMemberId LIKE CONCAT(:startsWithString, '%')
+		      AND e.dueDate >= :fromDate
 		      AND e.dueDate <= :toDate
 
 		    GROUP BY
@@ -148,7 +149,7 @@ public interface EmiRepo extends JpaRepository<EMI, Integer> {
 		    ORDER BY bm.businessMemberId
 		    """)
 		List<InstallmentDueProjection> getInstallmentDues(
-		        @Param("startsWithString") String startsWithString,
+		        @Param("startsWithString") String startsWithString, @Param("fromDate") LocalDateTime fromDate,
 		        @Param("toDate") LocalDateTime toDate);
 
 	

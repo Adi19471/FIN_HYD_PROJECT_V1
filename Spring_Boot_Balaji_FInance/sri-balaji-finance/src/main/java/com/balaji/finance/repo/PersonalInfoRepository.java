@@ -94,7 +94,7 @@ public interface PersonalInfoRepository extends JpaRepository<PersonalInfo, Stri
 
 			GROUP BY p
 
-			ORDER BY p.personalInfoId
+			ORDER BY p.sequence
 			""")
 	List<PartnerInformationProjection> findAllPartnersAndInvestments();
 

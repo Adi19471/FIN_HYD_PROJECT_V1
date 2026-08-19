@@ -49,7 +49,7 @@ public class InstallmentDuesService {
 				break;
 			}
 
-			loansList = emiRepo.getInstallmentDues(starWithString, to);
+			loansList = emiRepo.getInstallmentDues(starWithString,from, to);
 			
 			switch (installmentsDuesRequestPojo.getOrderBy()) {
 
