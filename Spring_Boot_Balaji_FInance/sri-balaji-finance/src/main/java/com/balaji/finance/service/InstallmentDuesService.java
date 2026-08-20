@@ -104,7 +104,9 @@ public class InstallmentDuesService {
 				dto.setSno(++i);
 				dto.setLoanId(bm.getLoanId());
 				dto.setCustomerName(bm.getCustomerName());
-
+				dto.setPartnerName(bm.getPartnerName());
+				dto.setGuarentorName(bm.getGuarantorName());
+				
 				dto.setStartDate(bm.getStartDate() != null ? bm.getStartDate().format(fmt) : "");
 				dto.setEndDate(bm.getEndDate() != null ? bm.getEndDate().format(fmt) : "");
 

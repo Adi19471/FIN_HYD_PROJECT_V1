@@ -11,6 +11,8 @@ public interface InstallmentDueProjection {
 
 	String getPartnerName();
 
+	String getGuarantorName();
+	
 	LocalDateTime getStartDate();
 
 	LocalDateTime getEndDate();

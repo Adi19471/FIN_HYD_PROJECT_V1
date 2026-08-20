@@ -99,6 +99,7 @@ public interface EmiRepo extends JpaRepository<EMI, Integer> {
 		        bm.businessMemberId AS loanId,
 		        bm.customerId.firstName AS customerName,
 		        bm.partnerId.firstName AS partnerName,
+		        bm.guarantor1.firstName AS guarantorName, 
 		        bm.startDate AS startDate,
 		        bm.endDate AS endDate,
 		        bm.amount AS loanAmount,
@@ -136,6 +137,7 @@ public interface EmiRepo extends JpaRepository<EMI, Integer> {
 		    WHERE bm.businessMemberId LIKE CONCAT(:startsWithString, '%')
 		      AND e.dueDate >= :fromDate
 		      AND e.dueDate <= :toDate
+		      and bm.loanStatus='ACTIVE'
 
 		    GROUP BY
 		        bm.businessMemberId,
