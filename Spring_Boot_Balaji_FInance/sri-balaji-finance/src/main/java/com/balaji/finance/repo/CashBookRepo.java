@@ -630,7 +630,7 @@ public interface CashBookRepo extends JpaRepository<CashBook, Long> {
 	@Query("""
 			FROM CashBook c
 			WHERE c.businessMember.businessMemberId = :memberId
-			AND c.accountMasterCode IN ('DF LOAN INSTALLMENT','DF INTEREST')
+			AND c.accountMasterCode IN ('DF LOAN INSTALLMENT')
 			ORDER BY c.transDate asc
 			""")
 	List<CashBook> getAllDailyCollectionsByBusniesMember(@Param("memberId") String memberId);
