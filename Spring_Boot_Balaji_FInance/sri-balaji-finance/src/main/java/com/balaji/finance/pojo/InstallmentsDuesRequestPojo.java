@@ -16,6 +16,9 @@ public class InstallmentsDuesRequestPojo {
 	
 	private InstallmentDueOrderBy orderBy;
 	
+	
+	private boolean activeLoans;
+	
 
 	public String getLoanType() {
 		return loanType;
@@ -47,6 +50,14 @@ public class InstallmentsDuesRequestPojo {
 
 	public void setOrderBy(InstallmentDueOrderBy orderBy) {
 		this.orderBy = orderBy;
+	}
+
+	public boolean isActiveLoans() {
+		return activeLoans;
+	}
+
+	public void setActiveLoans(boolean activeLoans) {
+		this.activeLoans = activeLoans;
 	}
 	
 

@@ -1,6 +1,5 @@
 package com.balaji.finance.service;
 
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
@@ -49,7 +48,7 @@ public class InstallmentDuesService {
 				break;
 			}
 
-			loansList = emiRepo.getInstallmentDues(starWithString,from, to);
+			loansList = emiRepo.getInstallmentDues(starWithString,from, to,installmentsDuesRequestPojo.isActiveLoans());
 			
 			switch (installmentsDuesRequestPojo.getOrderBy()) {
 
