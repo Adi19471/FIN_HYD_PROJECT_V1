@@ -4,6 +4,7 @@ import {
   Button,
   Chip,
   CircularProgress,
+  IconButton,
   LinearProgress,
   ListItemIcon,
   ListItemText,
@@ -11,6 +12,7 @@ import {
   MenuItem,
   Paper,
   Stack,
+  Tooltip,
   Typography,
 } from "@mui/material";
 import {
@@ -20,9 +22,12 @@ import {
   GridToolbarFilterButton,
   GridToolbarDensitySelector,
   GridToolbarQuickFilter,
+  useGridApiContext,
 } from "@mui/x-data-grid";
 import {
   ArticleRounded,
+  ChevronLeftRounded,
+  ChevronRightRounded,
   DescriptionRounded,
   FileDownloadRounded,
   GridOnRounded,
@@ -125,6 +130,76 @@ export function TableExportMenu({
 }
 
 /**
+ * Left / right column scroll buttons. The partner reports are wider than the
+ * screen, and their horizontal scrollbar sits at the foot of the table where it
+ * is easy to miss, so the toolbar carries the same movement as a pair of
+ * buttons. They step by roughly a screenful and hide themselves whenever the
+ * table already fits.
+ */
+function ColumnScrollButtons() {
+  const apiRef = useGridApiContext();
+  const [state, setState] = React.useState({ overflow: false, atStart: true, atEnd: true });
+
+  const sync = React.useCallback(() => {
+    const api = apiRef.current;
+    if (!api?.getRootDimensions) return;
+    const dimensions = api.getRootDimensions();
+    if (!dimensions?.isReady) return;
+    const max = dimensions.contentSize.width - dimensions.viewportInnerSize.width;
+    const left = api.getScrollPosition().left;
+    const next = { overflow: Boolean(dimensions.hasScrollX) && max > 4, atStart: left <= 2, atEnd: left >= max - 2 };
+    // Scroll fires many times a second - only re-render when a button's state
+    // actually turns over, so the toolbar's search box is left alone.
+    setState((current) =>
+      current.overflow === next.overflow && current.atStart === next.atStart && current.atEnd === next.atEnd
+        ? current
+        : next
+    );
+  }, [apiRef]);
+
+  React.useEffect(() => {
+    sync();
+    const events = [
+      "scrollPositionChange",
+      "virtualScrollerContentSizeChange",
+      "viewportInnerSizeChange",
+      "columnsChange",
+      "debouncedResize",
+    ];
+    const unsubscribe = events.map((event) => apiRef.current.subscribeEvent(event, sync));
+    return () => unsubscribe.forEach((off) => off());
+  }, [apiRef, sync]);
+
+  if (!state.overflow) return null;
+
+  const step = (direction) => () => {
+    const api = apiRef.current;
+    const dimensions = api.getRootDimensions();
+    const page = Math.max(240, dimensions.viewportInnerSize.width * 0.8);
+    api.scroll({ left: api.getScrollPosition().left + direction * page });
+  };
+
+  return (
+    <Stack direction="row" spacing={0.25} alignItems="center" sx={{ ml: 0.5 }}>
+      <Tooltip title="Scroll columns left">
+        <span>
+          <IconButton size="small" onClick={step(-1)} disabled={state.atStart}>
+            <ChevronLeftRounded fontSize="small" />
+          </IconButton>
+        </span>
+      </Tooltip>
+      <Tooltip title="Scroll columns right">
+        <span>
+          <IconButton size="small" onClick={step(1)} disabled={state.atEnd}>
+            <ChevronRightRounded fontSize="small" />
+          </IconButton>
+        </span>
+      </Tooltip>
+    </Stack>
+  );
+}
+
+/**
  * GridToolbar - the single toolbar for every table: column visibility, filter,
  * density, a quick search box, and ONE export menu (Excel / PDF / Word / Print).
  * This is the only download entry point per table - no duplicate export buttons.
@@ -135,15 +210,29 @@ function CustomGridToolbar({ rows, columns, fileName, showExport, reportOptions 
       <GridToolbarColumnsButton />
       <GridToolbarFilterButton />
       <GridToolbarDensitySelector />
+      <ColumnScrollButtons />
       <Box sx={{ flex: 1 }} />
       <GridToolbarQuickFilter debounceMs={350} placeholder="Search table..." />
       {showExport && (
-        <TableExportMenu
-          rows={rows}
-          columns={columns}
-          fileName={fileName}
-          reportOptions={reportOptions}
-        />
+        <>
+          <TableExportMenu
+            rows={rows}
+            columns={columns}
+            fileName={fileName}
+            reportOptions={reportOptions}
+          />
+          {/* Print is in the Download menu too, but it is the button people
+              reach for on a report screen, so it also stands on its own. */}
+          <Button
+            size="small"
+            variant="outlined"
+            startIcon={<PrintRounded />}
+            onClick={() => printReport(rows, columns, fileName, reportOptions)}
+            disabled={!rows.length}
+          >
+            Print
+          </Button>
+        </>
       )}
     </GridToolbarContainer>
   );
@@ -256,6 +345,11 @@ const DataTable = ({
               </Typography>
             )}
             {title && <Typography variant="subtitle1" sx={{ mt: showCompany ? 0.25 : 0 }}>{title}</Typography>}
+            {subtitle && (
+              <Typography variant="caption" color="text.secondary" sx={{ display: "block" }}>
+                {subtitle}
+              </Typography>
+            )}
           </Box>
           <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap alignItems="center">
             <Chip size="small" label={`${recordCount} records`} color="primary" variant="outlined" />
@@ -312,11 +406,32 @@ const DataTable = ({
           }}
           rowHeight={rowHeight}
           columnHeaderHeight={headerHeight}
+          // The grid draws its own scrollbars and sizes them from what the
+          // browser reports; browsers with overlay scrollbars report 0, which
+          // left the wide reports with no horizontal bar to grab. Pin it.
+          scrollbarSize={14}
           sx={{
             border: "none",
             flex: 1,
             backgroundColor: "transparent",
             "& .MuiDataGrid-virtualScroller": { overflowAnchor: "none" },
+            // A report wider than the screen is read by scrolling sideways, so
+            // the bar has to look like one: brand thumb on a tinted track.
+            "& .MuiDataGrid-scrollbar": {
+              "&::-webkit-scrollbar": { width: 14, height: 14 },
+              "&::-webkit-scrollbar-track": { backgroundColor: "#e2e8f0", borderRadius: 999 },
+              "&::-webkit-scrollbar-thumb": {
+                backgroundColor: "color-mix(in srgb, var(--brand-primary) 62%, transparent)",
+                border: "3px solid #e2e8f0",
+                borderRadius: 999,
+              },
+              "&::-webkit-scrollbar-thumb:hover": {
+                backgroundColor: "var(--brand-primary)",
+              },
+            },
+            "& .MuiDataGrid-scrollbar--horizontal": {
+              backgroundColor: "#e2e8f0",
+            },
             "& .MuiDataGrid-toolbarContainer": {
               px: 2,
               py: 1.25,

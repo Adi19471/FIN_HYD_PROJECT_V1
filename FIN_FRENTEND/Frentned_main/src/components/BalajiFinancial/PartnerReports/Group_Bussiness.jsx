@@ -23,8 +23,29 @@ import {
   useDateRange,
 } from "src/components/ui";
 
-const formatAmount = (amount) => Number(amount || 0).toLocaleString("en-IN");
-const formatDecimal = (amount) => Number(amount || 0).toFixed(1);
+// Whole rupees - no decimal point on any figure in this report.
+const formatAmount = (amount) =>
+  Number(amount || 0).toLocaleString("en-IN", { maximumFractionDigits: 0 });
+
+// Shares are held in halves, so 0.5 keeps its decimal while a whole share
+// prints as "1", not "1.0".
+const formatDecimal = (amount) =>
+  Number(amount || 0).toLocaleString("en-IN", { maximumFractionDigits: 2 });
+
+// Every figure the ledger adds up, totalled under its own column. The caption
+// sits in the Name cell, right before the numbers start.
+const TOTAL_FIELDS = [
+  "noOfShares",
+  "capital",
+  "noOfLoans",
+  "disbursedAmount",
+  "disbursedAmountWithInterest",
+  "paidAmount",
+  "balanceOutStandingWithInterest",
+  "balanceOutStandingWithOutInterest",
+  "installmentDuesOutStanding",
+];
+const TOTAL_LABEL_CELL = { name: "TOTAL" };
 
 const Group_Bussiness = () => {
   const token = getSession("token") || "";
@@ -207,8 +228,10 @@ const Group_Bussiness = () => {
         rows={rows}
         columns={columns}
         loading={loading}
-        title="Group Business Details"
+        title="Group Business Report"
         subtitle={`Report date: ${dayjs().format("DD-MMM-YYYY")}`}
+        totalFields={TOTAL_FIELDS}
+        totalLabelCell={TOTAL_LABEL_CELL}
         height={640}
         pageSize={25}
       />

@@ -27,6 +27,7 @@ import {
   People,
   Person,
   PersonSearch,
+  PieChart,
   PointOfSale,
   ReceiptLong,
   RequestQuote,
@@ -109,6 +110,7 @@ export const sidebarGroups = [
       { label: "Balance Sheet", path: "/Bussiness/BalanceSheetimport", icon: Balance },
       { label: "Business Overview", path: "/Bussiness/BussinessOverviewimport", icon: DashboardCustomize },
       { label: "Collection Reports", path: "/Bussiness/BussinessCollectionReportsimport", icon: Assessment },
+      { label: "Business Share", path: "/Bussiness/BussinessShare", icon: PieChart },
     ],
   },
   {

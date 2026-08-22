@@ -150,6 +150,7 @@ const RevenueExpenseStatment  = lazy(() =>import("./components/BalajiFinancial/B
 const BalanceSheetimport  = lazy(() =>import("./components/BalajiFinancial/Business/BalanceSheet"))
 const BussinessOverviewimport =lazy(() =>import("./components/BalajiFinancial/Business/BussinessOverview"))
 const BussinessCollectionReportsimport =lazy(() =>import('./components/BalajiFinancial/Business/BussinessCollectionReports'))
+const BussinessShareimport =lazy(() =>import('./components/BalajiFinancial/Business/BussinessShare'))
 
 
 
@@ -230,6 +231,7 @@ const routes = [
    { path: "/Bussiness/BalanceSheetimport", element: BalanceSheetimport, title: "Balance Sheet" },
    { path: "/Bussiness/BussinessOverviewimport", element: BussinessOverviewimport, title: "Business Overview" },
    { path: "/Bussiness/BussinessCollectionReportsimport", element: BussinessCollectionReportsimport, title: "Business Collection Reports" },
+   { path: "/Bussiness/BussinessShare", element: BussinessShareimport, title: "Business Share" },
 
 
   //  Customer Reports

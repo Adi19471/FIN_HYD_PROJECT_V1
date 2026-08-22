@@ -11,6 +11,7 @@ import {
   Stack,
   TextField,
 } from "@mui/material";
+import { PrintRounded } from "@mui/icons-material";
 import axios from "axios";
 import dayjs from "dayjs";
 import { API_BASE } from "lib/config";
@@ -20,13 +21,16 @@ import {
   DataTable,
   isTotalRow,
   PageHeader,
+  printReport,
   ReportCompanyHeader,
   ReportToolbar,
   TableExportMenu,
   useReportZoom,
 } from "src/components/ui";
 
-const formatAmount = (amount) => Number(amount || 0).toLocaleString("en-IN");
+// Whole rupees - no decimal point on the printed report.
+const formatAmount = (amount) =>
+  Number(amount || 0).toLocaleString("en-IN", { maximumFractionDigits: 0 });
 
 // Passes unparseable text straight through so the TOTAL caption sitting in the
 // End Date cell prints as "TOTAL" instead of "Invalid Date".
@@ -307,6 +311,17 @@ const Installment_Dues = () => {
           fileName="Installment-Dues"
           reportOptions={reportOptions}
         />
+        {/* Print is in the Download menu too, but it is the button people reach
+            for on a report screen, so it also stands on its own. */}
+        <Button
+          size="small"
+          variant="outlined"
+          startIcon={<PrintRounded />}
+          onClick={() => printReport(exportRows, columns, "Installment-Dues", reportOptions)}
+          disabled={!exportRows.length}
+        >
+          Print
+        </Button>
       </ReportToolbar>
       <Paper className="enterprise-card" elevation={0} sx={{ p: 2 }}>
         <Grid container spacing={2} alignItems="center">

@@ -24,7 +24,21 @@ import {
   useDateRange,
 } from "src/components/ui";
 
-const formatAmount = (amount) => Number(amount || 0).toLocaleString("en-IN");
+// Whole rupees - no decimal point on any figure in this report.
+const formatAmount = (amount) =>
+  Number(amount || 0).toLocaleString("en-IN", { maximumFractionDigits: 0 });
+
+// Every figure the report adds up, totalled under its own column. The caption
+// sits in the Name cell, right before the numbers start.
+const TOTAL_FIELDS = [
+  "loansDisbursed",
+  "loansPayment",
+  "interest",
+  "documentCharges",
+  "lateFee",
+  "income",
+];
+const TOTAL_LABEL_CELL = { name: "TOTAL" };
 
 const Performance = () => {
   const zoom = useReportZoom();
@@ -173,8 +187,10 @@ const Performance = () => {
         rows={rows}
         columns={columns}
         loading={loading}
-        title="Partner Performance Ledger"
+        title="Partner Performance Report"
         subtitle={`Report date: ${dayjs().format("DD-MMM-YYYY")}`}
+        totalFields={TOTAL_FIELDS}
+        totalLabelCell={TOTAL_LABEL_CELL}
         height={640}
         pageSize={25}
       />

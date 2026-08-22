@@ -18,17 +18,35 @@ import { getSession } from "src/utils/session";
 import { errorToast } from "toastify";
 import {
   DataTable,
+  isTotalRow,
   PageHeader,
   ReportCompanyHeader,
   ReportToolbar,
   useReportZoom,
 } from "src/components/ui";
 
+// Whole rupees - no decimal point on the printed report.
 const formatAmount = (amount) =>
-  Number(amount || 0).toLocaleString("en-IN");
+  Number(amount || 0).toLocaleString("en-IN", { maximumFractionDigits: 0 });
 
 const formatDate = (date) =>
   date ? dayjs(date).format("DD-MMM-YYYY") : "-";
+
+// Figures the report adds up at the foot. Duration is left out - a sum of loan
+// durations means nothing.
+const TOTAL_FIELDS = [
+  "amount",
+  "installmentAmount",
+  "installmentPaid",
+  "noofInstallmentsPaid",
+  "noOfInstallmentsPending",
+  "balanceAmount",
+  "excemption",
+  "settledAmount",
+];
+
+// TOTAL caption sits in the End Date cell, immediately before Amount.
+const TOTAL_LABEL_CELL = { endDate: "TOTAL" };
 
 const Partner_Settelment = () => {
   const [loading, setLoading] = useState(false);
@@ -94,7 +112,14 @@ const Partner_Settelment = () => {
         { headers }
       );
 
-      setRows(response?.data || []);
+      // A partner can hold the same loan id twice over, so the row key is the
+      // loan id paired with its position - the grid needs one that is unique.
+      setRows(
+        (response?.data || []).map((row, index) => ({
+          ...row,
+          id: `${row.loanId || "row"}-${index + 1}`,
+        }))
+      );
     } catch (error) {
       console.error(error);
       errorToast("Failed to load settlement data");
@@ -120,17 +145,20 @@ const Partner_Settelment = () => {
       headerName: "Loan Type",
       flex: 1.2,
       minWidth: 150,
-      renderCell: ({ row }) => (
-        <Chip
-          label={row.loanType}
-          color={
-            row.loanType === "DAILY_FINANCE"
-              ? "primary"
-              : "secondary"
-          }
-          size="small"
-        />
-      ),
+      renderCell: ({ row }) =>
+        isTotalRow(row) ? (
+          ""
+        ) : (
+          <Chip
+            label={row.loanType}
+            color={
+              row.loanType === "DAILY_FINANCE"
+                ? "primary"
+                : "secondary"
+            }
+            size="small"
+          />
+        ),
     },
     {
       field: "loanId",
@@ -155,20 +183,23 @@ const Partner_Settelment = () => {
       headerName: "Start Date",
       flex: 1,
       minWidth: 130,
-      renderCell: ({ row }) => formatDate(row.startDate),
+      renderCell: ({ row }) => (isTotalRow(row) ? "" : formatDate(row.startDate)),
     },
     {
       field: "endDate",
       headerName: "End Date",
       flex: 1,
       minWidth: 130,
-      renderCell: ({ row }) => formatDate(row.endDate),
+      // The TOTAL row lends this cell to its caption.
+      renderCell: ({ row }) => (isTotalRow(row) ? row.endDate : formatDate(row.endDate)),
     },
     {
       field: "amount",
       headerName: "Amount",
       flex: 1,
       minWidth: 140,
+      align: "right",
+      headerAlign: "right",
       renderCell: ({ row }) => `₹ ${formatAmount(row.amount)}`,
     },
     {
@@ -181,6 +212,8 @@ const Partner_Settelment = () => {
       headerName: "Installment",
       flex: 1,
       minWidth: 150,
+      align: "right",
+      headerAlign: "right",
       renderCell: ({ row }) =>
         `₹ ${formatAmount(row.installmentAmount)}`,
     },
@@ -189,6 +222,8 @@ const Partner_Settelment = () => {
       headerName: "Paid",
       flex: 1,
       minWidth: 140,
+      align: "right",
+      headerAlign: "right",
       renderCell: ({ row }) =>
         `₹ ${formatAmount(row.installmentPaid)}`,
     },
@@ -207,6 +242,8 @@ const Partner_Settelment = () => {
       headerName: "Balance",
       flex: 1,
       minWidth: 140,
+      align: "right",
+      headerAlign: "right",
       renderCell: ({ row }) =>
         `₹ ${formatAmount(row.balanceAmount)}`,
     },
@@ -215,8 +252,11 @@ const Partner_Settelment = () => {
       headerName: "Excemption",
       flex: 1,
       minWidth: 130,
+      align: "right",
+      headerAlign: "right",
+      // The TOTAL row always prints its figure, even when it comes to zero.
       renderCell: ({ row }) =>
-        row.excemption
+        row.excemption || isTotalRow(row)
           ? `₹ ${formatAmount(row.excemption)}`
           : "-",
     },
@@ -225,8 +265,10 @@ const Partner_Settelment = () => {
       headerName: "Settled Amount",
       flex: 1,
       minWidth: 160,
+      align: "right",
+      headerAlign: "right",
       renderCell: ({ row }) =>
-        row.settledAmount
+        row.settledAmount || isTotalRow(row)
           ? `₹ ${formatAmount(row.settledAmount)}`
           : "-",
     },
@@ -325,10 +367,16 @@ const Partner_Settelment = () => {
             <DataTable
               rows={rows}
               columns={columns}
-              getRowId={(row, index) => `${row.loanId}-${index}`}
-              autoHeight
-              pageSize={10}
-              rowsPerPageOptions={[10, 25, 50]}
+              title="Partner Settlement"
+              subtitle={`Settlement as on ${formatDate(targetDate)}${
+                selectedPartner?.label ? ` / ${selectedPartner.label}` : ""
+              }`}
+              totalFields={TOTAL_FIELDS}
+              totalLabelCell={TOTAL_LABEL_CELL}
+              // No autoHeight: this report is far wider than the screen, and a
+              // grid that grows to fit every row puts its horizontal scrollbar
+              // out of reach at the bottom of the page.
+              pageSize={25}
             />
           </Box>
         )}

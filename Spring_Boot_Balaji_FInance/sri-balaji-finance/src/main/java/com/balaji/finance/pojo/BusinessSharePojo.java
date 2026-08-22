@@ -12,6 +12,11 @@ public class BusinessSharePojo {
 	private BigDecimal interestPaid;
 	private BigDecimal sumOfloansPaidAndInterestPaid;
 
+	// A position as on the report's To date rather than a total for the range:
+	// everything lent up to that day, less everything collected back by it.
+	private BigDecimal totalOutstanding;
+	private BigDecimal outstandingExcludingInterest;
+
 	public String getLoanType() {
 		return loanType;
 	}
@@ -66,6 +71,22 @@ public class BusinessSharePojo {
 
 	public void setSumOfloansPaidAndInterestPaid(BigDecimal sumOfloansPaidAndInterestPaid) {
 		this.sumOfloansPaidAndInterestPaid = sumOfloansPaidAndInterestPaid;
+	}
+
+	public BigDecimal getTotalOutstanding() {
+		return totalOutstanding;
+	}
+
+	public void setTotalOutstanding(BigDecimal totalOutstanding) {
+		this.totalOutstanding = totalOutstanding;
+	}
+
+	public BigDecimal getOutstandingExcludingInterest() {
+		return outstandingExcludingInterest;
+	}
+
+	public void setOutstandingExcludingInterest(BigDecimal outstandingExcludingInterest) {
+		this.outstandingExcludingInterest = outstandingExcludingInterest;
 	}
 
 }

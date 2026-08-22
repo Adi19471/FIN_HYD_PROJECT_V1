@@ -19,12 +19,31 @@ import {
 import {
   AppDatePicker,
   DataTable,
+  isTotalRow,
   PageHeader,
   ReportCompanyHeader,
   ReportToolbar,
   useReportZoom,
   useDateRange,
 } from "src/components/ui";
+
+// The figures the legacy report adds up on its last line: the loan counts, the
+// money columns and the target / excess split. Anything else (S.No, Partner ID,
+// Name, Shares) stays blank on the TOTAL row, as it does on the old report.
+const TOTAL_FIELDS = [
+  "noOfMonthlyLoans",
+  "monthlyLoanAmount",
+  "noOfDailyLoans",
+  "dailyLoanAmount",
+  "totalLoanAmount",
+  "targetAmount",
+  "excess_or_deficit",
+  "amount",
+];
+
+// TOTAL caption sits in the Exempt cell, immediately before MF Loans, exactly
+// where the old report prints it.
+const TOTAL_LABEL_CELL = { bussinessExemption: "Total" };
 
 const Bussiness_Reports = () => {
   const [rows, setRows] = useState([]);
@@ -43,10 +62,9 @@ const Bussiness_Reports = () => {
     "Content-Type": "application/json",
   };
 
+  // Whole rupees - the report carries no paise, so no decimal point is printed.
   const formatAmount = (value) =>
-
-    
-    Number(value || 0).toLocaleString("en-IN");
+    Number(value || 0).toLocaleString("en-IN", { maximumFractionDigits: 0 });
 
 
 
@@ -113,8 +131,10 @@ const Bussiness_Reports = () => {
       field: "bussinessExemption",
       headerName: "Exempt",
       width: 100,
-      renderCell: ({ row }) =>
-        row.bussinessExemption === "Y" ? "Yes" : "No",
+      renderCell: ({ row }) => {
+        if (isTotalRow(row)) return row.bussinessExemption;
+        return row.bussinessExemption === "Y" ? "Yes" : "No";
+      },
     },
     {
       field: "noOfMonthlyLoans",
@@ -255,7 +275,15 @@ const Bussiness_Reports = () => {
             rows={rows}
             columns={columns}
             loading={loading}
-            autoHeight
+            // Names the screen on the printed / downloaded report.
+            title="Business Report"
+            subtitle={`Report date: ${dayjs().format("DD-MMM-YYYY")}`}
+            totalFields={TOTAL_FIELDS}
+            totalLabelCell={TOTAL_LABEL_CELL}
+            // No autoHeight: the report is wider than the screen, and a grid
+            // that grows to fit every row puts its horizontal scrollbar out of
+            // reach at the very bottom of the page.
+            pageSize={25}
             disableRowSelectionOnClick
           />
         </Box>

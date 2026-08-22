@@ -285,6 +285,41 @@ public interface CashBookRepo extends JpaRepository<CashBook, Long> {
 	LoanCollectionProjection getLoanCollectionDataByDateRange(@Param("fromDate") LocalDateTime fromDate,
 			@Param("toDate") LocalDateTime toDate);
 
+	/**
+	 * The same four collection figures taken from the start of the books up to a
+	 * day, for working out what is still outstanding on it. The principal and
+	 * the interest sit under codes of their own, which is what lets the
+	 * outstanding be split into principal and interest at all.
+	 */
+	@Query(value = """
+			SELECT
+			    SUM(CASE
+			        WHEN ACCOUNT_MASTER_CODE = 'DF LOAN INSTALLMENT'
+			        THEN CREDIT ELSE 0 END) AS dailyLoanInstallmentsReceived,
+
+			    SUM(CASE
+			        WHEN ACCOUNT_MASTER_CODE = 'DF INTEREST'
+			        THEN CREDIT ELSE 0 END) AS dailyLoanInterestReceived,
+
+			    SUM(CASE
+			        WHEN ACCOUNT_MASTER_CODE = 'MF LOAN INSTALLMENT'
+			        THEN CREDIT ELSE 0 END) AS monthlyLoanInstallmentsReceived,
+
+			    SUM(CASE
+			        WHEN ACCOUNT_MASTER_CODE = 'MF INTEREST'
+			        THEN CREDIT ELSE 0 END) AS monthlyLoanInterestReceived
+
+			FROM cash_book
+			WHERE TRANS_DATE <= :toDate
+			AND ACCOUNT_MASTER_CODE IN (
+			    'DF LOAN INSTALLMENT',
+			    'DF INTEREST',
+			    'MF LOAN INSTALLMENT',
+			    'MF INTEREST'
+			)
+						""", nativeQuery = true)
+	LoanCollectionProjection getLoanCollectionDataUpTo(@Param("toDate") LocalDateTime toDate);
+
 	@Query(value = """
 			SELECT
 			    SUM(CASE

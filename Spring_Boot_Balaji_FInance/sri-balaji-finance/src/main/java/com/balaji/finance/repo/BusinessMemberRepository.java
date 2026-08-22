@@ -107,6 +107,22 @@ public interface BusinessMemberRepository extends JpaRepository<BusinessMember, 
 	List<LoanSummaryProjection> findAllLoansDisbursedByDateRange(@Param("fromDate") LocalDateTime fromDate,
 			@Param("toDate") LocalDateTime toDate);
 
+	/**
+	 * Everything lent up to a day, whichever range the report was run for. What
+	 * is still outstanding is a position on a date, so it cannot be worked out
+	 * from the loans that happen to start inside the range.
+	 */
+	@Query("""
+			  SELECT
+			    loanType as loanType,
+			    SUM(amount) AS loansDisbursed,
+			    SUM(interest) AS interestReceivable
+			FROM BusinessMember
+			WHERE startDate <= :toDate
+			GROUP BY loanType
+						  """)
+	List<LoanSummaryProjection> findAllLoansDisbursedUpTo(@Param("toDate") LocalDateTime toDate);
+
 	@Query("""
 			  SELECT
 			    loanType as loanType,

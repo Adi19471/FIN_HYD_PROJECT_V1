@@ -21,6 +21,16 @@ import {
   useReportZoom,
 } from "src/components/ui";
 
+// Whole rupees - no decimal point on any figure in this report.
+const formatAmount = (value) =>
+  Number(value || 0).toLocaleString("en-IN", { maximumFractionDigits: 0 });
+
+// The two limit columns the report adds up at the foot.
+const TOTAL_FIELDS = ["authLimit", "currentLimit"];
+
+// TOTAL caption sits in the Partner Name cell, right before the figures.
+const TOTAL_LABEL_CELL = { partnerName: "TOTAL" };
+
 const Partner_Loan_Limit = () => {
   const [rows, setRows] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -90,15 +100,17 @@ const Partner_Loan_Limit = () => {
       field: "authLimit",
       headerName: "Auth Limit",
       width: 150,
-      renderCell: ({ row }) =>
-        Number(row.authLimit).toLocaleString("en-IN"),
+      align: "right",
+      headerAlign: "right",
+      renderCell: ({ row }) => formatAmount(row.authLimit),
     },
     {
       field: "currentLimit",
       headerName: "Current Limit",
       width: 170,
-      renderCell: ({ row }) =>
-        Number(row.currentLimit).toLocaleString("en-IN"),
+      align: "right",
+      headerAlign: "right",
+      renderCell: ({ row }) => formatAmount(row.currentLimit),
     },
   ];
 
@@ -130,7 +142,11 @@ const Partner_Loan_Limit = () => {
             rows={rows}
             columns={columns}
             loading={loading}
-            autoHeight
+            // Names the screen on the printed / downloaded report.
+            title="Partner Loan Limit Report"
+            totalFields={TOTAL_FIELDS}
+            totalLabelCell={TOTAL_LABEL_CELL}
+            pageSize={25}
             disableRowSelectionOnClick
           />
         </Box>

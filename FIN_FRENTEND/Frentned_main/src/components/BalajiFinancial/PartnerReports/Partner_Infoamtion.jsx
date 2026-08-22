@@ -12,14 +12,26 @@ import { getSession } from "src/utils/session";
 import { errorToast } from "toastify";
 import {
   DataTable,
+  isTotalRow,
   PageHeader,
   ReportCompanyHeader,
   ReportToolbar,
   useReportZoom,
 } from "src/components/ui";
 
+// Whole rupees - no decimal point on the printed report.
 const formatAmount = (amount) =>
-  Number(amount || 0).toLocaleString("en-IN");
+  Number(amount || 0).toLocaleString("en-IN", { maximumFractionDigits: 0 });
+
+// Shares are held in halves, so 0.5 keeps its decimal while a whole share
+// prints as "1", not "1.0".
+const formatShares = (value) =>
+  Number(value || 0).toLocaleString("en-IN", { maximumFractionDigits: 2 });
+
+// Totalled at the foot of the report; the caption sits in the Mobile cell,
+// immediately before Investment.
+const TOTAL_FIELDS = ["shares", "investment"];
+const TOTAL_LABEL_CELL = { mobile: "TOTAL" };
 
 const Partner_Infoamtion = () => {
   const [loading, setLoading] = useState(false);
@@ -85,58 +97,70 @@ const Partner_Infoamtion = () => {
       headerName: "Father Name",
       flex: 1.5,
       minWidth: 180,
-      renderCell: ({ row }) => row?.fatherName || "-",
+      renderCell: ({ row }) => (isTotalRow(row) ? "" : row?.fatherName || "-"),
     },
     {
       field: "shares",
       headerName: "Shares",
       width: 100,
-      renderCell: ({ row }) => row?.shares || "-",
+      align: "right",
+      headerAlign: "right",
+      renderCell: ({ row }) =>
+        row?.shares == null ? (isTotalRow(row) ? "" : "-") : formatShares(row.shares),
     },
     {
       field: "address",
       headerName: "Address",
       flex: 2,
       minWidth: 250,
-      renderCell: ({ row }) => (
-        <Typography
-          variant="body2"
-          sx={{ whiteSpace: "pre-line", py: 1 }}
-        >
-          {row?.address || "-"}
-        </Typography>
-      ),
+      renderCell: ({ row }) =>
+        isTotalRow(row) ? (
+          ""
+        ) : (
+          <Typography
+            variant="body2"
+            sx={{ whiteSpace: "pre-line", py: 1 }}
+          >
+            {row?.address || "-"}
+          </Typography>
+        ),
     },
     {
       field: "mobile",
       headerName: "Mobile",
       flex: 1,
       minWidth: 140,
-      renderCell: ({ row }) => row?.mobile || "-",
+      // The TOTAL row lends this cell to its caption.
+      renderCell: ({ row }) => (isTotalRow(row) ? row.mobile : row?.mobile || "-"),
     },
     {
       field: "investment",
       headerName: "Investment",
       flex: 1,
       minWidth: 150,
+      align: "right",
+      headerAlign: "right",
       renderCell: ({ row }) => `₹ ${formatAmount(row?.investment)}`,
     },
     {
       field: "status",
       headerName: "Status",
       width: 130,
-      renderCell: ({ row }) => (
-        <Chip
-          label={row?.status || "-"}
-          color={
-            row?.status?.toLowerCase() === "active" ||
-            row?.status?.toLowerCase() === "active"
-              ? "success"
-              : "default"
-          }
-          size="small"
-        />
-      ),
+      renderCell: ({ row }) =>
+        isTotalRow(row) ? (
+          ""
+        ) : (
+          <Chip
+            label={row?.status || "-"}
+            color={
+              row?.status?.toLowerCase() === "active" ||
+              row?.status?.toLowerCase() === "active"
+                ? "success"
+                : "default"
+            }
+            size="small"
+          />
+        ),
     },
   ];
 
@@ -177,10 +201,14 @@ const Partner_Infoamtion = () => {
             <DataTable
               rows={rows}
               columns={columns}
-              getRowId={(row) => row.partnerId}
-              autoHeight
-              pageSize={10}
-              rowsPerPageOptions={[10, 25, 50]}
+              // The TOTAL row carries no partnerId, so fall back to its own id.
+              getRowId={(row) => row.partnerId ?? row.id}
+              title="Partner Information"
+              totalFields={TOTAL_FIELDS}
+              totalLabelCell={TOTAL_LABEL_CELL}
+              // No autoHeight: a grid that grows to fit every row puts its
+              // horizontal scrollbar out of reach at the bottom of the page.
+              pageSize={25}
             />
           </Box>
         )}

@@ -1,5 +1,5 @@
 import React, { useMemo, useState } from "react";
-import { Box, Button, Grid, MenuItem, Paper, Stack, TextField, Typography } from "@mui/material";
+import { Box, Button, Checkbox, FormControlLabel, Grid, MenuItem, Paper, Stack, TextField, Typography } from "@mui/material";
 import axios from "axios";
 import { API_BASE } from "lib/config";
 import { getSession } from "src/utils/session";
@@ -97,6 +97,9 @@ const InstalmentDues = () => {
   const { fromDate, toDate, setFromDate, setToDate, toDateMin, toDateMax } = useDateRange("", "");
   const [loading, setLoading] = useState(false);
   const [orderBy, setOrderBy] = useState("INSTALLMENT_DATE");
+  // On by default, the same way the partner dues report opens - closed loans
+  // stay out of the list unless the office asks for them.
+  const [activeLoans, setActiveLoans] = useState(true);
   // Snapshot of the filters that produced the rows on screen. Exports print
   // this, not the live pickers, so a downloaded file always states the range it
   // actually covers even if the user changes the pickers afterwards.
@@ -120,11 +123,11 @@ const InstalmentDues = () => {
       setLoading(true);
       const res = await axios.post(
         `${API_BASE}/installmentDuesList`,
-        { loanType, fromDate, toDate, orderBy, },
+        { loanType, fromDate, toDate, orderBy, activeLoans },
         { headers }
       );
       setData((res.data || []).map((row, index) => ({ id: row.loanId || row.sno || index + 1, sno: row.sno || index + 1, ...row })));
-      setAppliedFilters({ loanType, fromDate, toDate, orderBy });
+      setAppliedFilters({ loanType, fromDate, toDate, orderBy, activeLoans });
       successToast("Installment dues loaded successfully");
     } catch (error) {
       console.error("API Error:", error);
@@ -152,6 +155,7 @@ const InstalmentDues = () => {
         ? [
             { label: "Loan Type", value: labelOf(loanTypes, appliedFilters.loanType) },
             { label: "Order By", value: labelOf(orderByOptions, appliedFilters.orderBy) },
+            { label: "Active Loans", value: appliedFilters.activeLoans ? "Yes" : "No" },
           ]
         : [],
     [appliedFilters]
@@ -335,6 +339,16 @@ const InstalmentDues = () => {
               md: 3
             }}>
             <AppDatePicker label="To Date" value={toDate} onChange={setToDate} minDate={toDateMin} maxDate={toDateMax} />
+          </Grid>
+          <Grid
+            size={{
+              xs: 12,
+              md: 2
+            }}>
+            <FormControlLabel
+              control={<Checkbox checked={activeLoans} onChange={(event) => setActiveLoans(event.target.checked)} />}
+              label="Active Loans"
+            />
           </Grid>
           <Grid
             size={{
