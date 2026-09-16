@@ -75,9 +75,6 @@ const Distubuted = () => {
   return (
     <Stack spacing={2.5}>
       <PageHeader
-        title="Distributed Loans"
-        subtitle="Disbursed loan list with date-only MUI calendar filters and export-ready totals."
-        totalCount={data.length}
         onRefresh={getDisbursedList}
         loading={loading}
       />

@@ -98,6 +98,7 @@ public interface EmiRepo extends JpaRepository<EMI, Integer> {
 		    SELECT
 		        bm.businessMemberId AS loanId,
 		        bm.customerId.firstName AS customerName,
+		        bm.customerId.mobile AS customerMobile,
 		        bm.partnerId.firstName AS partnerName,
 		        bm.guarantor1.firstName AS guarantorName, 
 		        bm.startDate AS startDate,
@@ -145,6 +146,7 @@ public interface EmiRepo extends JpaRepository<EMI, Integer> {
 		    GROUP BY
 		        bm.businessMemberId,
 		        bm.customerId.firstName,
+		        bm.customerId.mobile,
 		        bm.partnerId.firstName,
 		        bm.startDate,
 		        bm.endDate,

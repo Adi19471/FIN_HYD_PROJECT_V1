@@ -16,20 +16,20 @@ import {
   TextField,
   Typography,
 } from "@mui/material";
-import {
-  AddRounded,
-  ContentCopyRounded,
-  EditRounded,
-  RefreshRounded,
-  SaveRounded,
-  VisibilityRounded,
-} from "@mui/icons-material";
+import { actionIcons } from "src/lib/icons";
 import axios from "axios";
 import { API_BASE } from "lib/config";
 import { errorToast, successToast } from "toastify";
 import { getSession } from "src/utils/session";
 import { fetchAllPersonalInfo } from "src/utils/personalInfoCache";
 import { DataTable, ProfilePhotoBox } from "src/components/ui";
+
+const AddRounded = actionIcons.add;
+const ContentCopyRounded = actionIcons.copy;
+const EditRounded = actionIcons.edit;
+const RefreshRounded = actionIcons.refresh;
+const SaveRounded = actionIcons.save;
+const VisibilityRounded = actionIcons.view;
 
 const TYPE_LABELS = {
   CUSTOMER: "Customer",

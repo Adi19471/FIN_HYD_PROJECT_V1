@@ -30,20 +30,20 @@ import {
 } from "@mui/material";
 import { DROPDOWN_MENU_PROPS } from "src/components/ui";
 
-import {
-  Add as AddIcon,
-  Edit as EditIcon,
-  Save as SaveIcon,
-  Close as CloseIcon,
-  Visibility,
-  VisibilityOff,
-} from "@mui/icons-material";
+import { actionIcons } from "src/lib/icons";
 
 import axios from "axios";
 import { toast } from "react-toastify";
 import { API_BASE } from "lib/config";
 import { getSession } from "src/utils/session";
 import { TableExportMenu } from "src/components/ui";
+
+const AddIcon = actionIcons.add;
+const EditIcon = actionIcons.edit;
+const SaveIcon = actionIcons.save;
+const CloseIcon = actionIcons.close;
+const Visibility = actionIcons.view;
+const VisibilityOff = actionIcons.hide;
 
 const PERSON_TYPES = ["Customer", "Partner", "Employee", "Vendor"];
 const TRANS_TYPES = ["CREDIT", "DEBIT"];

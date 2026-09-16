@@ -14,33 +14,25 @@ import {
   Stack,
   Typography,
 } from "@mui/material";
+import { ApprovalRounded, ArrowForwardRounded, AssessmentRounded, ContactsRounded, PointOfSaleRounded, LaunchRounded, PaymentsRounded, ReceiptLongRounded, RequestQuoteRounded, TrendingUpRounded } from "@mui/icons-material";
+import { actionIcons } from "src/lib/icons";
 import {
-  ApprovalRounded,
-  ArrowForwardRounded,
-  AssessmentRounded,
-  ContactsRounded,
-  PointOfSaleRounded,
-  LaunchRounded,
-  PaymentsRounded,
-  ReceiptLongRounded,
-  RefreshRounded,
-  RequestQuoteRounded,
-  TrendingUpRounded,
-} from "@mui/icons-material";
-import {
-  Area,
-  AreaChart,
   Bar,
   BarChart,
   CartesianGrid,
+  Cell,
   ResponsiveContainer,
   Tooltip,
   XAxis,
   YAxis,
 } from "recharts";
 import { COMPANY_ADDRESS, COMPANY_NAME } from "src/lib/company";
+import { DataTable } from "src/components/ui";
+import { useTheme } from "@mui/material/styles";
 import { API_BASE } from "lib/config";
 import { getSession } from "src/utils/session";
+
+const RefreshRounded = actionIcons.refresh;
 
 const formatINR = (value) =>
   `Rs ${Number(value || 0).toLocaleString("en-IN", { maximumFractionDigits: 0 })}`;
@@ -79,6 +71,11 @@ function Panel({ title, subtitle, action, children }) {
       <Stack direction="row" justifyContent="space-between" alignItems="flex-start" spacing={2} sx={{ mb: 2 }}>
         <Box>
           <Typography variant="h6">{title}</Typography>
+          {subtitle && (
+            <Typography variant="body2" color="text.secondary">
+              {subtitle}
+            </Typography>
+          )}
         </Box>
         {action}
       </Stack>
@@ -87,8 +84,44 @@ function Panel({ title, subtitle, action, children }) {
   );
 }
 
+/**
+ * A chart panel's three real states: still loading, loaded with nothing to
+ * plot, or loaded with data. Recharts renders an empty axis pair for [], which
+ * reads as a bug rather than "no collections yet" - so the empty state is
+ * handled explicitly instead of handing recharts a blank array.
+ */
+function ChartCard({ height = 260, loading, empty, emptyLabel, children }) {
+  if (loading) return <Skeleton variant="rounded" height={height} />;
+  if (empty) {
+    return (
+      <Box
+        sx={{
+          height,
+          display: "grid",
+          placeItems: "center",
+          border: "1px dashed",
+          borderColor: "divider",
+          borderRadius: 1,
+        }}
+      >
+        <Typography variant="body2" color="text.secondary">
+          {emptyLabel}
+        </Typography>
+      </Box>
+    );
+  }
+  return (
+    <Box sx={{ height }}>
+      <ResponsiveContainer width="100%" height="100%">
+        {children}
+      </ResponsiveContainer>
+    </Box>
+  );
+}
+
 export default function Dashboard() {
   const navigate = useNavigate();
+  const theme = useTheme();
   // No "noopener" here on purpose: this is same-origin, trusted navigation, and dropping
   // the opener reference would break sessionStorage inheritance into the new tab, forcing
   // an unwanted re-login there.
@@ -226,16 +259,31 @@ export default function Dashboard() {
     }));
   }, [metrics.collectionRows]);
 
+  // Today only has one day's figures to show, so a Credit/Debit pair reads
+  // better as two comparable bars than as a single-point line.
   const dailyFlowRows = useMemo(
     () => [
-      {
-        label: dayjs().format("DD-MMM"),
-        credit: Number(metrics.dailyTotals.credits || metrics.todayCollection || 0),
-        debit: Number(metrics.dailyTotals.debits || 0),
-      },
+      { name: "Credit", value: Number(metrics.dailyTotals.credits || metrics.todayCollection || 0) },
+      { name: "Debit", value: Number(metrics.dailyTotals.debits || 0) },
     ],
     [metrics.dailyTotals.credits, metrics.dailyTotals.debits, metrics.todayCollection]
   );
+  const hasDailyFlow = dailyFlowRows.some((row) => row.value > 0);
+  const hasCollections = collections.some((row) => row.value > 0);
+
+  // Tooltip styling is the one place recharts needs the theme handed to it
+  // directly - it renders its own floating box outside the app's CSS.
+  const tooltipStyle = {
+    contentStyle: {
+      background: theme.palette.background.paper,
+      border: `1px solid ${theme.palette.divider}`,
+      borderRadius: 8,
+      color: theme.palette.text.primary,
+      fontSize: 13,
+    },
+    labelStyle: { color: theme.palette.text.secondary, fontWeight: 700 },
+    formatter: (value) => [formatINR(value), ""],
+  };
 
   const transactionColumns = [
     { field: "id", headerName: "Txn ID", width: 120 },
@@ -319,6 +367,67 @@ export default function Dashboard() {
       </Paper>
       {error && <Alert severity="warning">{error}</Alert>}
       <Grid container spacing={2}>
+        {/* Collections this month, and today's credit/debit - the two series
+            the live-metrics fetch already computes but never used to render
+            anything. Credit/debit keep the same green-in / red-out convention
+            as every status chip elsewhere in the app; the collections bars
+            take the theme accent since they carry no win/loss meaning of
+            their own. */}
+        <Grid size={{ xs: 12, lg: 7 }}>
+          <Panel title="Collections This Month" subtitle="By loan type and status">
+            <ChartCard height={260} loading={loading && !collections.length} empty={!hasCollections} emptyLabel="No collections recorded for this month yet.">
+              <BarChart data={collections} margin={{ top: 8, right: 12, left: 0, bottom: 8 }}>
+                <CartesianGrid strokeDasharray="3 3" stroke={theme.palette.divider} vertical={false} />
+                <XAxis dataKey="label" tick={{ fontSize: 11, fill: theme.palette.text.secondary }} interval={0} angle={-20} textAnchor="end" height={54} />
+                <YAxis tick={{ fontSize: 11, fill: theme.palette.text.secondary }} tickFormatter={(value) => formatINR(value)} width={90} />
+                <Tooltip {...tooltipStyle} />
+                <Bar dataKey="value" name="Received" fill={theme.palette.primary.main} radius={[4, 4, 0, 0]} maxBarSize={48} />
+              </BarChart>
+            </ChartCard>
+          </Panel>
+        </Grid>
+
+        <Grid size={{ xs: 12, lg: 5 }}>
+          <Panel title="Today's Cash Flow" subtitle={dayjs().format("DD-MMM-YYYY")}>
+            <ChartCard height={260} loading={loading && !hasDailyFlow} empty={!hasDailyFlow} emptyLabel="No credit or debit posted for today yet.">
+              <BarChart data={dailyFlowRows} margin={{ top: 8, right: 12, left: 0, bottom: 8 }}>
+                <CartesianGrid strokeDasharray="3 3" stroke={theme.palette.divider} vertical={false} />
+                <XAxis dataKey="name" tick={{ fontSize: 12, fill: theme.palette.text.secondary }} />
+                <YAxis tick={{ fontSize: 11, fill: theme.palette.text.secondary }} tickFormatter={(value) => formatINR(value)} width={90} />
+                <Tooltip {...tooltipStyle} />
+                <Bar dataKey="value" radius={[4, 4, 0, 0]} maxBarSize={72}>
+                  {dailyFlowRows.map((row) => (
+                    <Cell key={row.name} fill={row.name === "Credit" ? theme.palette.success.main : theme.palette.error.main} />
+                  ))}
+                </Bar>
+              </BarChart>
+            </ChartCard>
+          </Panel>
+        </Grid>
+
+        <Grid size={12}>
+          <Panel
+            title="Recent Transactions"
+            subtitle="Today's postings from the daily book"
+            action={<Button size="small" endIcon={<ArrowForwardRounded />} onClick={() => navigate("/AccountsModules/DailyBook")}>Daily Book</Button>}
+          >
+            {metrics.transactionRows.length === 0 && !loading ? (
+              <Box sx={{ height: 160, display: "grid", placeItems: "center" }}>
+                <Typography variant="body2" color="text.secondary">No transactions posted today yet.</Typography>
+              </Box>
+            ) : (
+              <DataTable
+                rows={metrics.transactionRows}
+                columns={transactionColumns}
+                loading={loading && metrics.transactionRows.length === 0}
+                height={360}
+                pageSize={5}
+                disableRowSelectionOnClick
+              />
+            )}
+          </Panel>
+        </Grid>
+
         <Grid size={12}>
           <Panel
             title="Finance Workspace"

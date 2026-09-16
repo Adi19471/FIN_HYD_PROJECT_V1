@@ -1,44 +1,51 @@
 import React from "react";
 import {
   Box,
-  Typography,
   Button,
   TextField,
   InputAdornment,
   Stack,
-  Chip,
 } from "@mui/material";
-import {
-  Search as SearchIcon,
-  Add as AddIcon,
-  RefreshRounded,
-  TuneRounded,
-} from "@mui/icons-material";
+import { actionIcons } from "src/lib/icons";
+
+const SearchIcon = actionIcons.search;
+const AddIcon = actionIcons.add;
+const RefreshIcon = actionIcons.refresh;
+const FilterIcon = actionIcons.filter;
 /**
- * PageHeader - Consistent header for all pages
- * @param {string} title - Page title
+ * PageHeader - the row of page-level controls (search, filter, refresh, add).
+ *
+ * It carries no title. The screen is already named twice above the content -
+ * once by the breadcrumb in the top bar and once by the report banner over the
+ * grid - and a third heading between them was just noise.
+ *
+ * It deliberately does NOT show a record count: the grid card carries its own
+ * "N records" chip right above the rows it counts, and two counts on one screen
+ * only invite the question of which is authoritative. Refresh likewise belongs
+ * to ReportToolbar on screens that have one - pass onRefresh here only when the
+ * screen has no toolbar of its own.
  * @param {string} searchPlaceholder - Search input placeholder
  * @param {string} searchValue - Current search value
  * @param {function} onSearchChange - Search change handler
  * @param {function} onAddClick - Add button click handler
  * @param {string} addButtonLabel - Add button label
- * @param {number} totalCount - Total count to display
  * @param {boolean} loading - Loading state
  */
 const PageHeader = ({
-  title,
   searchPlaceholder = "Search...",
   searchValue = "",
   onSearchChange,
   onAddClick,
   addButtonLabel = "Add New",
-  totalCount,
   loading = false,
-  subtitle = "",
   onRefresh,
   onFilterClick,
   actions,
 }) => {
+  // Nothing to show if the screen passed no controls.
+  const hasControls = Boolean(onSearchChange || onFilterClick || onRefresh || actions || onAddClick);
+  if (!hasControls) return null;
+
   return (
     <Box sx={{ mb: 1.5, px: 0.5 }}>
       <Box
@@ -50,13 +57,6 @@ const PageHeader = ({
           gap: 2,
         }}
         >
-        <Box>
-          <Stack direction="row" alignItems="center" spacing={1.5} flexWrap="wrap">
-            <Typography variant="h5">{title}</Typography>
-            {totalCount !== undefined && <Chip size="small" label={`${totalCount} records`} color="primary" />}
-          </Stack>
-        </Box>
-
         <Box
           sx={{
             display: "flex",
@@ -87,12 +87,12 @@ const PageHeader = ({
 
           <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
             {onFilterClick && (
-              <Button variant="outlined" startIcon={<TuneRounded />} onClick={onFilterClick} disabled={loading}>
+              <Button variant="outlined" startIcon={<FilterIcon />} onClick={onFilterClick} disabled={loading}>
                 Filters
               </Button>
             )}
             {onRefresh && (
-              <Button variant="outlined" startIcon={<RefreshRounded />} onClick={onRefresh} disabled={loading}>
+              <Button variant="outlined" startIcon={<RefreshIcon />} onClick={onRefresh} disabled={loading}>
                 Refresh
               </Button>
             )}

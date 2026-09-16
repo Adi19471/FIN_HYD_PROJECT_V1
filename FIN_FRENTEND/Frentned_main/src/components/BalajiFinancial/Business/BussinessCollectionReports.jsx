@@ -9,18 +9,22 @@ import {
   Stack,
   Typography,
 } from "@mui/material";
-import {
-  AssessmentRounded,
-  CalendarMonthRounded,
-  RefreshRounded,
-  TrendingUpRounded,
-} from "@mui/icons-material";
+import { AssessmentRounded, CalendarMonthRounded, TrendingUpRounded } from "@mui/icons-material";
+import { actionIcons } from "src/lib/icons";
 import axios from "axios";
 import dayjs from "dayjs";
 import { API_BASE } from "lib/config";
 import { getSession } from "src/utils/session";
-import { COMPANY_ADDRESS, COMPANY_NAME } from "src/lib/company";
-import { AppDatePicker, DataTable, TableExportMenu, useDateRange } from "src/components/ui";
+import {
+  AppDatePicker,
+  DataTable,
+  ReportCompanyHeader,
+  ReportToolbar,
+  TableExportMenu,
+  useDateRange,
+} from "src/components/ui";
+
+const GenerateIcon = actionIcons.generate;
 
 const money = (value) => Number(value || 0).toLocaleString("en-IN");
 
@@ -102,12 +106,12 @@ const BussinessCollectionReports = () => {
   );
 
   const columns = [
-    { field: "sno", headerName: "S No", width: 80 },
+    { field: "sno", headerName: "S No", width: 80, align: "right", headerAlign: "right" },
     { field: "loanType", headerName: "Loan Type", flex: 1, minWidth: 180 },
     { field: "loanStatus", headerName: "Status", width: 130 },
-    { field: "targetCollections", headerName: "Target", width: 150, valueFormatter: (value) => money(value) },
-    { field: "receivedCollections", headerName: "Received", width: 150, valueFormatter: (value) => money(value) },
-    { field: "balanceCollections", headerName: "Balance", width: 150, valueFormatter: (value) => money(value) },
+    { field: "targetCollections", headerName: "Target", width: 150, align: "right", headerAlign: "right", valueFormatter: (value) => money(value) },
+    { field: "receivedCollections", headerName: "Received", width: 150, align: "right", headerAlign: "right", valueFormatter: (value) => money(value) },
+    { field: "balanceCollections", headerName: "Balance", width: 150, align: "right", headerAlign: "right", valueFormatter: (value) => money(value) },
   ];
 
   // Whole-screen export for the Download button at the top: both finance blocks
@@ -235,26 +239,33 @@ const BussinessCollectionReports = () => {
   };
 
   return (
-    <Stack spacing={2.5} sx={{ p: { xs: 1.5, md: 2.5 } }}>
-      <Paper className="enterprise-card" elevation={0} sx={{ p: 2.5 }}>
-        <Stack direction={{ xs: "column", lg: "row" }} justifyContent="space-between" spacing={2}>
-          <Box>
-            <Stack direction="row" spacing={1} alignItems="center" flexWrap="wrap">
-              <AssessmentRounded color="primary" />
-              <Typography variant="h5">Business Collections Report</Typography>
-              <Chip size="small" label={`${rows.length} records`} color="primary" variant="outlined" />
-            </Stack>
-            <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
-              {COMPANY_NAME} / {COMPANY_ADDRESS}
-            </Typography>
-            {lastUpdated && (
-              <Typography variant="caption" color="text.secondary">
-                Last updated {lastUpdated.format("DD-MMM-YYYY hh:mm A")}
-              </Typography>
-            )}
-          </Box>
+    <>
+      {/* Action bar, then the company banner - the same order every report
+          uses. The screen is already named by the breadcrumb and the banner,
+          and the grid below carries its own record count. */}
+      <ReportToolbar onRefresh={fetchReport} loading={loading}>
+        {/* Whole-screen download / print. */}
+        <TableExportMenu
+          rows={screenExportRows}
+          columns={screenExportColumns}
+          fileName="Business_Collections_Report"
+          reportOptions={reportOptions}
+        />
+      </ReportToolbar>
 
-          <Stack direction="row" spacing={1.25} flexWrap="wrap" useFlexGap alignItems="center">
+      <Stack spacing={2.5} sx={{ mt: 2 }}>
+        <ReportCompanyHeader
+          title="Business Collections Report"
+          subtitle={
+            lastUpdated
+              ? `Last updated ${lastUpdated.format("DD-MMM-YYYY hh:mm A")}`
+              : "Collection targets, receipts and balances"
+          }
+          date={toDate}
+        />
+
+        <Paper className="enterprise-card" elevation={0} sx={{ p: 2.5 }}>
+          <Stack direction="row" spacing={1.25} flexWrap="wrap" useFlexGap alignItems="center" justifyContent="flex-end">
             <AppDatePicker
               label="From Date"
               size="small"
@@ -269,71 +280,68 @@ const BussinessCollectionReports = () => {
               minDate={toDateMin}
               maxDate={toDateMax}
             />
-            <Button variant="contained" startIcon={loading ? <CircularProgress size={18} color="inherit" /> : <RefreshRounded />} onClick={fetchReport} disabled={loading}>
+            <Button
+              variant="contained"
+              startIcon={loading ? <CircularProgress size={18} color="inherit" /> : <GenerateIcon />}
+              onClick={fetchReport}
+              disabled={loading}
+            >
               {loading ? "Loading" : "Generate"}
             </Button>
-            {/* Whole-screen download / print, alongside Generate at the top. */}
-            <TableExportMenu
-              rows={screenExportRows}
-              columns={screenExportColumns}
-              fileName="Business_Collections_Report"
-              buttonLabel="Download"
-              reportOptions={reportOptions}
-            />
           </Stack>
-        </Stack>
-      </Paper>
-      <Grid container spacing={2}>
-        <Grid
-          size={{
-            xs: 12,
-            md: 4
-          }}>
-          <SummaryCard title="Target Collections" value={totals.target} note="Total expected collection" icon={CalendarMonthRounded} />
+        </Paper>
+        <Grid container spacing={2}>
+          <Grid
+            size={{
+              xs: 12,
+              md: 4
+            }}>
+            <SummaryCard title="Target Collections" value={totals.target} note="Total expected collection" icon={CalendarMonthRounded} />
+          </Grid>
+          <Grid
+            size={{
+              xs: 12,
+              md: 4
+            }}>
+            <SummaryCard title="Received Collections" value={totals.received} note="Total amount received" color="success" icon={TrendingUpRounded} />
+          </Grid>
+          <Grid
+            size={{
+              xs: 12,
+              md: 4
+            }}>
+            <SummaryCard title="Collection Balance" value={totals.balance} note="Pending collection balance" color="warning" icon={AssessmentRounded} />
+          </Grid>
         </Grid>
-        <Grid
-          size={{
-            xs: 12,
-            md: 4
-          }}>
-          <SummaryCard title="Received Collections" value={totals.received} note="Total amount received" color="success" icon={TrendingUpRounded} />
+        <Grid container spacing={2}>
+          <Grid
+            size={{
+              xs: 12,
+              lg: 6
+            }}>
+            <FinanceBlock title="Daily Finance" data={groupedData.DAILY_FINANCE} />
+          </Grid>
+          <Grid
+            size={{
+              xs: 12,
+              lg: 6
+            }}>
+            <FinanceBlock title="Monthly Finance" data={groupedData.MONTHLY_FINANCE} />
+          </Grid>
         </Grid>
-        <Grid
-          size={{
-            xs: 12,
-            md: 4
-          }}>
-          <SummaryCard title="Collection Balance" value={totals.balance} note="Pending collection balance" color="warning" icon={AssessmentRounded} />
-        </Grid>
-      </Grid>
-      <Grid container spacing={2}>
-        <Grid
-          size={{
-            xs: 12,
-            lg: 6
-          }}>
-          <FinanceBlock title="Daily Finance" data={groupedData.DAILY_FINANCE} />
-        </Grid>
-        <Grid
-          size={{
-            xs: 12,
-            lg: 6
-          }}>
-          <FinanceBlock title="Monthly Finance" data={groupedData.MONTHLY_FINANCE} />
-        </Grid>
-      </Grid>
-      <DataTable
-        rows={rows}
-        columns={columns}
-        loading={loading}
-        height={520}
-        title={`Business Collections ${fromDate} to ${toDate}`}
-        subtitle="Search, row count, print, PDF, Excel, CSV, and Word downloads are available from this table."
-        pageSize={10}
-        period={reportOptions.period}
-        summary={reportOptions.summary}
-      />
-    </Stack>
+        <DataTable
+          rows={rows}
+          columns={columns}
+          loading={loading}
+          height={520}
+          fileName="Business_Collections"
+          subtitle={`Collections ${dayjs(fromDate).format("DD-MMM-YYYY")} to ${dayjs(toDate).format("DD-MMM-YYYY")}`}
+          pageSize={10}
+          period={reportOptions.period}
+          summary={reportOptions.summary}
+        />
+      </Stack>
+    </>
   );
 };
 

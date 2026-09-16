@@ -1,26 +1,56 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-labelledby="title desc">
   <title id="title">Sri Balaji Finance Logo</title>
-  <desc id="desc">A blue and green finance mark with a temple roof, rupee symbol, and ledger lines.</desc>
+  <desc id="desc">The Tirumala namam of Lord Venkateswara Swamy — a red centre stroke between two cream strokes — over a temple gopuram arch on a maroon and saffron ground.</desc>
   <defs>
     <linearGradient id="bg" x1="80" y1="60" x2="430" y2="455" gradientUnits="userSpaceOnUse">
-      <stop offset="0" stop-color="#0f62fe"/>
-      <stop offset="1" stop-color="#10b981"/>
+      <stop offset="0" stop-color="#7f1d1d"/>
+      <stop offset="0.55" stop-color="#a3300f"/>
+      <stop offset="1" stop-color="#d97706"/>
     </linearGradient>
-    <linearGradient id="shine" x1="155" y1="110" x2="357" y2="408" gradientUnits="userSpaceOnUse">
-      <stop offset="0" stop-color="#ffffff" stop-opacity="0.96"/>
-      <stop offset="1" stop-color="#dff7ff" stop-opacity="0.9"/>
+    <linearGradient id="gold" x1="256" y1="96" x2="256" y2="420" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#fde68a"/>
+      <stop offset="1" stop-color="#d4a017"/>
+    </linearGradient>
+    <linearGradient id="namam" x1="256" y1="150" x2="256" y2="350" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#ffffff"/>
+      <stop offset="1" stop-color="#fdf3d8"/>
     </linearGradient>
   </defs>
+
   <rect width="512" height="512" rx="108" fill="#f8fafc"/>
   <rect x="32" y="32" width="448" height="448" rx="92" fill="url(#bg)"/>
-  <path d="M95 198 256 92l161 106v36H95v-36Z" fill="#ffffff" opacity="0.96"/>
-  <path d="M128 232h256v36H128v-36Z" fill="#c7f9e8" opacity="0.96"/>
-  <path d="M150 285h212c31 0 56 25 56 56v34c0 31-25 56-56 56H150c-31 0-56-25-56-56v-34c0-31 25-56 56-56Z" fill="#0b2f6b" opacity="0.25"/>
-  <path d="M148 268h216c25 0 45 20 45 45v62c0 25-20 45-45 45H148c-25 0-45-20-45-45v-62c0-25 20-45 45-45Z" fill="url(#shine)"/>
-  <path d="M171 317h170" stroke="#0f62fe" stroke-width="18" stroke-linecap="round"/>
-  <path d="M171 362h112" stroke="#10b981" stroke-width="18" stroke-linecap="round"/>
-  <path d="M238 151h55c27 0 48 18 48 43s-21 43-48 43h-28l59 70" fill="none" stroke="#0f62fe" stroke-width="27" stroke-linecap="round" stroke-linejoin="round"/>
-  <path d="M228 151h116M228 194h116" stroke="#0f62fe" stroke-width="24" stroke-linecap="round"/>
-  <circle cx="376" cy="140" r="28" fill="#facc15"/>
-  <path d="M256 92 95 198h322L256 92Z" fill="#ffffff" opacity="0.14"/>
+
+  <!-- Gopuram: stepped temple tower behind the mark -->
+  <g fill="url(#gold)" opacity="0.36">
+    <path d="M256 84l30 26h-60l30-26Z"/>
+    <path d="M214 118h84l10 30H204l10-30Z"/>
+    <path d="M198 156h116l12 34H186l12-34Z"/>
+    <path d="M180 198h152l14 38H166l14-38Z"/>
+  </g>
+
+  <!-- Kalasha finial -->
+  <g fill="url(#gold)">
+    <circle cx="256" cy="70" r="13"/>
+    <path d="M256 40c8 12 12 19 12 25a12 12 0 0 1-24 0c0-6 4-13 12-25Z"/>
+  </g>
+
+  <!-- Namam: two cream strokes meeting at the base, red Sri churnam between -->
+  <g fill="none" stroke-linecap="round">
+    <path d="M198 150V288q0 46 58 54" stroke="url(#namam)" stroke-width="34"/>
+    <path d="M314 150V288q0 46-58 54" stroke="url(#namam)" stroke-width="34"/>
+    <path d="M256 196v128" stroke="#dc2626" stroke-width="22"/>
+  </g>
+
+  <!-- Lotus base -->
+  <g fill="url(#gold)">
+    <path d="M256 392c-26 0-44-14-52-32 20-6 38-2 52 12 14-14 32-18 52-12-8 18-26 32-52 32Z"/>
+    <path d="M154 372c22-8 42-4 56 10-20 10-42 6-56-10Z" opacity="0.75"/>
+    <path d="M358 372c-22-8-42-4-56 10 20 10 42 6 56-10Z" opacity="0.75"/>
+  </g>
+
+  <!-- Ledger rule: the finance half of the mark -->
+  <g stroke="url(#gold)" stroke-width="9" stroke-linecap="round" opacity="0.9">
+    <path d="M176 424h160"/>
+    <path d="M206 446h100"/>
+  </g>
 </svg>

@@ -24,18 +24,11 @@ import {
   GridToolbarQuickFilter,
   useGridApiContext,
 } from "@mui/x-data-grid";
-import {
-  ArticleRounded,
-  ChevronLeftRounded,
-  ChevronRightRounded,
-  DescriptionRounded,
-  FileDownloadRounded,
-  GridOnRounded,
-  PrintRounded,
-  TableViewRounded,
-} from "@mui/icons-material";
+import { actionIcons, formatIconColors, formatIcons } from "src/lib/icons";
 import { COMPANY_ADDRESS, COMPANY_NAME } from "src/lib/company";
 import { useThemeProvider } from "src/utils/ThemeContext";
+import { useTheme } from "@mui/material/styles";
+import { alpha, darken } from "src/lib/themeTokens";
 import {
   exportCsv,
   exportExcel,
@@ -44,8 +37,15 @@ import {
   isTotalRow,
   printReport,
   reportDateLabel,
+  roundAmount,
   summaryValue,
 } from "./reportExport";
+
+// Action marks, pulled once from the shared icon language.
+const DownloadIcon = actionIcons.download;
+const PrintIcon = actionIcons.print;
+const ScrollLeftIcon = actionIcons.scrollLeft;
+const ScrollRightIcon = actionIcons.scrollRight;
 
 // Default responsive height for a DataTable that doesn't pass its own `height`.
 // Exported so outlier screens (e.g. Partner.jsx, which wraps a raw DataGrid
@@ -70,18 +70,21 @@ export const DEFAULT_TABLE_HEIGHT = {
 export const withTotalsRow = (rows = [], totalFields = [], labelCell = {}) => {
   if (!rows.length || !totalFields.length) return rows;
   const totals = totalFields.reduce((acc, field) => {
-    acc[field] = rows.reduce((sum, row) => sum + Number(row[field] || 0), 0);
+    // Rounded, or a column of paise accumulates float drift and the TOTAL row
+    // reads 500000.0199999999 instead of 500000.02.
+    acc[field] = roundAmount(rows.reduce((sum, row) => sum + Number(row[field] || 0), 0));
     return acc;
   }, {});
   return [...rows, { id: "total", __isTotal: true, ...labelCell, ...totals }];
 };
 
 export function TableExportMenu({
-  rows,
-  columns,
-  fileName,
+  rows = [],
+  columns = [],
+  fileName = "report",
   buttonLabel = "Download",
   reportOptions = {},
+  className,
 }) {
   const [anchorEl, setAnchorEl] = React.useState(null);
   const hasData = rows.length > 0;
@@ -92,38 +95,80 @@ export function TableExportMenu({
     if (hasData) exporter(rows, columns, fileName, reportOptions);
   };
 
+  // One row per format, so every item is built the same way and the icon
+  // column, label column and extension column all line up.
+  const items = [
+    { key: "excel", label: "Download Excel", ext: ".xlsx", run: exportExcel },
+    { key: "pdf", label: "Download PDF", ext: ".pdf", run: exportPdf },
+    { key: "word", label: "Download Word", ext: ".doc", run: exportWord },
+    { key: "csv", label: "Download CSV", ext: ".csv", run: exportCsv },
+    { key: "print", label: "Print", ext: "", run: printReport },
+  ];
+
+  // Icon and colour per format come from the shared icon language, so this
+  // menu cannot drift from the one ExportButtons renders.
+  const iconFor = (key) => {
+    const Icon = key === "print" ? actionIcons.print : formatIcons[key];
+    return <Icon fontSize="small" color={key === "print" ? "action" : formatIconColors[key]} />;
+  };
+
   return (
     <>
       <Button
         size="small"
         variant="outlined"
-        startIcon={<FileDownloadRounded />}
+        startIcon={<DownloadIcon />}
         onClick={(event) => setAnchorEl(event.currentTarget)}
         disabled={!hasData}
       >
         {buttonLabel}
       </Button>
-      <Menu anchorEl={anchorEl} open={Boolean(anchorEl)} onClose={closeMenu}>
-        <MenuItem onClick={run(exportExcel)}>
-          <ListItemIcon><TableViewRounded fontSize="small" color="success" /></ListItemIcon>
-          <ListItemText primary="Download Excel" secondary=".xlsx" />
-        </MenuItem>
-        <MenuItem onClick={run(exportPdf)}>
-          <ListItemIcon><DescriptionRounded fontSize="small" color="error" /></ListItemIcon>
-          <ListItemText primary="Download PDF" secondary=".pdf" />
-        </MenuItem>
-        <MenuItem onClick={run(exportWord)}>
-          <ListItemIcon><ArticleRounded fontSize="small" color="primary" /></ListItemIcon>
-          <ListItemText primary="Download Word" secondary=".doc" />
-        </MenuItem>
-        <MenuItem onClick={run(exportCsv)}>
-          <ListItemIcon><GridOnRounded fontSize="small" color="action" /></ListItemIcon>
-          <ListItemText primary="Download CSV" secondary=".csv" />
-        </MenuItem>
-        <MenuItem onClick={run(printReport)}>
-          <ListItemIcon><PrintRounded fontSize="small" /></ListItemIcon>
-          <ListItemText primary="Print" />
-        </MenuItem>
+      <Menu
+        anchorEl={anchorEl}
+        open={Boolean(anchorEl)}
+        onClose={closeMenu}
+        // Drop straight down from the button's bottom-left corner instead of
+        // opening over it, so the menu never covers the toolbar it came from.
+        anchorOrigin={{ vertical: "bottom", horizontal: "left" }}
+        transformOrigin={{ vertical: "top", horizontal: "left" }}
+        slotProps={{
+          paper: {
+            elevation: 4,
+            sx: {
+              mt: 0.75,
+              minWidth: 232,
+              borderRadius: 1.5,
+              overflow: "hidden",
+              border: "1px solid",
+              borderColor: "divider",
+            },
+          },
+          list: { sx: { py: 0.5 } },
+        }}
+      >
+        {items.map((item) => (
+          <MenuItem
+            key={item.key}
+            onClick={run(item.run)}
+            sx={{
+              minHeight: 44,
+              px: 1.5,
+              gap: 1,
+              "&:hover": { bgcolor: "action.hover" },
+              "&:focus-visible": { bgcolor: "action.selected" },
+            }}
+          >
+            <ListItemIcon sx={{ minWidth: 32, "& .MuiSvgIcon-root": { fontSize: 20 } }}>
+              {iconFor(item.key)}
+            </ListItemIcon>
+            <ListItemText
+              primary={item.label}
+              secondary={item.ext || null}
+              primaryTypographyProps={{ fontSize: 14, fontWeight: 600, lineHeight: 1.3 }}
+              secondaryTypographyProps={{ fontSize: 11, color: "text.disabled", lineHeight: 1.2 }}
+            />
+          </MenuItem>
+        ))}
       </Menu>
     </>
   );
@@ -184,14 +229,14 @@ function ColumnScrollButtons() {
       <Tooltip title="Scroll columns left">
         <span>
           <IconButton size="small" onClick={step(-1)} disabled={state.atStart}>
-            <ChevronLeftRounded fontSize="small" />
+            <ScrollLeftIcon fontSize="small" />
           </IconButton>
         </span>
       </Tooltip>
       <Tooltip title="Scroll columns right">
         <span>
           <IconButton size="small" onClick={step(1)} disabled={state.atEnd}>
-            <ChevronRightRounded fontSize="small" />
+            <ScrollRightIcon fontSize="small" />
           </IconButton>
         </span>
       </Tooltip>
@@ -226,7 +271,7 @@ function CustomGridToolbar({ rows, columns, fileName, showExport, reportOptions 
           <Button
             size="small"
             variant="outlined"
-            startIcon={<PrintRounded />}
+            startIcon={<PrintIcon />}
             onClick={() => printReport(rows, columns, fileName, reportOptions)}
             disabled={!rows.length}
           >
@@ -261,6 +306,9 @@ const DataTable = ({
   height = DEFAULT_TABLE_HEIGHT,
   title,
   subtitle,
+  // Download name. Screens whose report title is already shown above the grid
+  // pass this instead of `title`, so the heading is not printed twice.
+  fileName,
   pageSize = 25,
   initialState,
   showCompany = false,
@@ -274,7 +322,14 @@ const DataTable = ({
   ...otherProps
 }) => {
   const { settings } = useThemeProvider();
-  const tableTitle = title || "finance-export";
+  // Heading band follows the accent chosen in Settings. getContrastText picks
+  // white or dark ink automatically, so a light accent stays readable.
+  const theme = useTheme();
+  const headBg = theme.palette.primary.main;
+  const headFg = theme.palette.getContrastText(headBg);
+  const headHover = darken(headBg, 0.12);
+  const headDivider = alpha(headFg, 0.34);
+  const tableTitle = fileName || title || "finance-export";
 
   // A screen either hands us a totals row itself (the older screens do) or asks
   // for one via totalFields. Either way it must reach the export, and it must
@@ -451,21 +506,35 @@ const DataTable = ({
               maxWidth: { xs: "100%", sm: 360 },
               marginLeft: { xs: 0, sm: "auto" },
             },
+            // Solid house-green heading band with white type, the same one the
+            // printed and exported reports carry. The colour itself lives in
+            // src/css/style.css as --table-head-*, so every report grid in the
+            // app moves together.
             "& .MuiDataGrid-columnHeaders, & .MuiDataGrid-columnHeader": {
-              backgroundColor: "#f8fafc",
+              backgroundColor: headBg,
             },
             // Grid lines live in the global enterprise layer (src/css/style.css),
             // which sets them with !important - do not restyle borders here.
             "& .MuiDataGrid-columnHeader": {
               borderRight: "1px solid",
-              borderColor: "divider",
+              borderColor: headDivider,
             },
             "& .MuiDataGrid-columnHeaderTitle": {
               fontWeight: 800,
-              color: "text.primary",
+              color: headFg,
               textTransform: "uppercase",
               fontSize: `${0.75 * fontScale * tableScale}rem`,
               letterSpacing: 0,
+            },
+            // Sort / filter / menu affordances have to read on the green too.
+            "& .MuiDataGrid-columnHeader .MuiDataGrid-sortIcon, & .MuiDataGrid-columnHeader .MuiDataGrid-filterIcon, & .MuiDataGrid-columnHeader .MuiDataGrid-menuIconButton, & .MuiDataGrid-columnHeader .MuiDataGrid-iconButtonContainer .MuiSvgIcon-root": {
+              color: headFg,
+            },
+            "& .MuiDataGrid-columnHeader:hover": {
+              backgroundColor: headHover,
+            },
+            "& .MuiDataGrid-columnSeparator": {
+              color: headDivider,
             },
             "& .MuiDataGrid-cell": {
               borderBottom: "1px solid",

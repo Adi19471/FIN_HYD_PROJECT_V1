@@ -7,6 +7,7 @@ public class InstallmentDuesPojo {
 	private int sno;
 	private String loanId;
 	private String customerName;
+	private String customerMobile;
 	private String guarentorName;
 	private String partnerName;
 	private String startDate;
@@ -45,6 +46,14 @@ public class InstallmentDuesPojo {
 
 	public void setCustomerName(String customerName) {
 		this.customerName = customerName;
+	}
+
+	public String getCustomerMobile() {
+		return customerMobile;
+	}
+
+	public void setCustomerMobile(String customerMobile) {
+		this.customerMobile = customerMobile;
 	}
 
 	public String getGuarentorName() {

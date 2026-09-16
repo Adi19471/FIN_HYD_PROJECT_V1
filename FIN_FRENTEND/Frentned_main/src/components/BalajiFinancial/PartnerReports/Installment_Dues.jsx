@@ -11,7 +11,7 @@ import {
   Stack,
   TextField,
 } from "@mui/material";
-import { PrintRounded } from "@mui/icons-material";
+import { actionIcons } from "src/lib/icons";
 import axios from "axios";
 import dayjs from "dayjs";
 import { API_BASE } from "lib/config";
@@ -20,13 +20,15 @@ import { errorToast } from "toastify";
 import {
   DataTable,
   isTotalRow,
-  PageHeader,
+  
   printReport,
   ReportCompanyHeader,
   ReportToolbar,
   TableExportMenu,
   useReportZoom,
 } from "src/components/ui";
+
+const PrintRounded = actionIcons.print;
 
 // Whole rupees - no decimal point on the printed report.
 const formatAmount = (amount) =>
@@ -291,13 +293,6 @@ const Installment_Dues = () => {
 
   return (
     <Stack spacing={1.5}>
-      <PageHeader
-        title="Partner Installment Dues"
-        subtitle="Installment dues report with grid search, sorting, pagination, and Excel/PDF/Word downloads."
-        totalCount={rows.length}
-        onRefresh={generateReport}
-        loading={loading}
-      />
       <ReportToolbar
         onGenerate={generateReport}
         onRefresh={generateReport}

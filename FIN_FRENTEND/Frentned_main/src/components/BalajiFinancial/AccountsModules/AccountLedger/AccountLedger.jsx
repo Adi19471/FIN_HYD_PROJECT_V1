@@ -58,9 +58,6 @@ const AccountLedger = () => {
   return (
     <Stack spacing={2.5}>
       <PageHeader
-        title="Account Ledger"
-        subtitle="Generate all account ledger data or filter by a date-only range."
-        totalCount={rows.length}
         onRefresh={handleGenerate}
         loading={loading}
       />

@@ -23,7 +23,17 @@ import axios from "axios";
 import { API_BASE } from "lib/config";
 import { getSession } from "src/utils/session";
 import LoadingSpinner from "src/LoadingSpinner";
-import { ReportCompanyHeader, TableExportMenu } from "src/components/ui";
+import { ReportCompanyHeader, TableExportMenu, withTotalsRow, formatReportDate } from "src/components/ui";
+
+// Dates arrive as ISO strings; the reports print them the house way.
+const formatDate = (value) => (value ? formatReportDate(value) : "");
+
+// Printed money carries separators. Excel is unaffected - it exports the raw
+// number so the columns stay summable.
+const formatMoney = (value) =>
+  value === null || value === undefined || value === ""
+    ? ""
+    : Number(value).toLocaleString("en-IN");
 
 const Customer_Dues = () => {
   const [customerInput, setCustomerInput] = useState("");
@@ -123,19 +133,46 @@ const Customer_Dues = () => {
     return { totalAmount, totalPaid, totalDue };
   }, [duesData]);
 
+  // Report column configuration. Naming every column here is what keeps the
+  // printed/downloaded headings readable - the field names alone would print as
+  // "guarentor Name" - and the widths are what the PDF, Word, print preview and
+  // Excel all size their columns from.
   const exportColumns = [
-    "loanId",
-    "customerName",
-    "guarentorName",
-    "partnerName",
-    "startDate",
-    "endDate",
-    "amount",
-    "totalInstallmentAmountPaid",
-    "installmentAmountPending",
-    "dueDate",
-    "remarks",
+    { field: "sNo", headerName: "S.No", width: 55, align: "right" },
+    { field: "loanId", headerName: "Loan ID", width: 110 },
+    { field: "customerName", headerName: "Customer Name", width: 175 },
+    { field: "guarentorName", headerName: "Guarantor Name", width: 175 },
+    { field: "partnerName", headerName: "Partner Name", width: 150 },
+    { field: "startDate", headerName: "Start Date", width: 95, align: "center", valueGetter: (value) => formatDate(value) },
+    { field: "endDate", headerName: "End Date", width: 95, align: "center", valueGetter: (value) => formatDate(value) },
+    { field: "amount", headerName: "Loan Amount", width: 115, align: "right", valueFormatter: (value) => formatMoney(value) },
+    { field: "totalInstallmentAmountPaid", headerName: "Installment Paid", width: 120, align: "right", valueFormatter: (value) => formatMoney(value) },
+    { field: "installmentAmountPending", headerName: "Installment Due", width: 120, align: "right", valueFormatter: (value) => formatMoney(value) },
+    { field: "dueDate", headerName: "Due Date", width: 95, align: "center", valueGetter: (value) => formatDate(value) },
+    { field: "remarks", headerName: "Remarks", width: 140 },
   ];
+
+  // The serial number is a report column, not an API field, so it is numbered
+  // here; the totals row mirrors the one shown under the grid.
+  const exportRows = useMemo(
+    () =>
+      withTotalsRow(
+        duesData.map((row, index) => ({ ...row, id: row.loanId ?? index, sNo: index + 1 })),
+        ["amount", "totalInstallmentAmountPaid", "installmentAmountPending"],
+        { partnerName: "TOTAL" }
+      ),
+    [duesData]
+  );
+
+  // Report context: the customer line printed under the date, and the title the
+  // report carries (the file still downloads as Customer_Dues).
+  const reportOptions = useMemo(
+    () => ({
+      title: "Customer Dues",
+      meta: selectedCustomer?.label ? [{ label: "Customer", value: selectedCustomer.label }] : [],
+    }),
+    [selectedCustomer]
+  );
 
   return (
     <Box sx={{ p: 3 }}>
@@ -200,7 +237,12 @@ const Customer_Dues = () => {
               md: 4
             }}>
             <Box sx={{ display: "flex", gap: 1, justifyContent: "flex-end" }}>
-              <TableExportMenu rows={duesData} columns={exportColumns} fileName="Customer_Dues" />
+              <TableExportMenu
+                rows={exportRows}
+                columns={exportColumns}
+                fileName="Customer_Dues"
+                reportOptions={reportOptions}
+              />
             </Box>
           </Grid>
         </Grid>

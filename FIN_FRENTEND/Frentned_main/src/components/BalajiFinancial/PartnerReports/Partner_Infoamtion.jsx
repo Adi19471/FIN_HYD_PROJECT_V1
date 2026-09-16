@@ -13,7 +13,7 @@ import { errorToast } from "toastify";
 import {
   DataTable,
   isTotalRow,
-  PageHeader,
+  
   ReportCompanyHeader,
   ReportToolbar,
   useReportZoom,
@@ -166,13 +166,6 @@ const Partner_Infoamtion = () => {
 
   return (
     <Box p={2}>
-      <PageHeader
-        title="Partner Information"
-        subtitle="Master list of all partners with shares, investment and status."
-        totalCount={rows.length}
-        onRefresh={getPartnerInformation}
-        loading={loading}
-      />
 
       <ReportToolbar
         onGenerate={getPartnerInformation}
@@ -203,7 +196,8 @@ const Partner_Infoamtion = () => {
               columns={columns}
               // The TOTAL row carries no partnerId, so fall back to its own id.
               getRowId={(row) => row.partnerId ?? row.id}
-              title="Partner Information"
+              fileName="Partner-Information"
+              subtitle="Master list of all partners with shares, investment and status."
               totalFields={TOTAL_FIELDS}
               totalLabelCell={TOTAL_LABEL_CELL}
               // No autoHeight: a grid that grows to fit every row puts its

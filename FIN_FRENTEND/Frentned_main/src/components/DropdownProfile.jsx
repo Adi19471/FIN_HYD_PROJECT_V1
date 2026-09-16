@@ -12,14 +12,12 @@ import {
   Tooltip,
   Typography,
 } from "@mui/material";
-import {
-  KeyboardArrowDownRounded,
-  LogoutRounded,
-  ManageAccountsRounded,
-  PersonRounded,
-  SettingsRounded,
-} from "@mui/icons-material";
+import { KeyboardArrowDownRounded, ManageAccountsRounded, PersonRounded } from "@mui/icons-material";
+import { actionIcons } from "src/lib/icons";
 import { useAuth } from "../utils/authStore";
+
+const LogoutRounded = actionIcons.logout;
+const SettingsRounded = actionIcons.settings;
 
 function DropdownProfile({ align }) {
   const [anchorEl, setAnchorEl] = useState(null);

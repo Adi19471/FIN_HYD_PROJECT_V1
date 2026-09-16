@@ -20,17 +20,26 @@ import {
   Radio,
   RadioGroup,
   FormControl,
+  alpha,
 } from "@mui/material";
+import { useTheme } from "@mui/material/styles";
 
 import axios from "axios";
 import { API_BASE } from "lib/config";
 import { getSession } from "src/utils/session";
 import dayjs from "dayjs";
-import { AppDatePicker, ReportCompanyHeader, TableExportMenu, useDateRange as useDateRangeHook } from "src/components/ui";
+import {
+  AppDatePicker,
+  ReportCompanyHeader,
+  ReportToolbar,
+  TableExportMenu,
+  useDateRange as useDateRangeHook,
+} from "src/components/ui";
 
 const token = getSession()?.token || getSession("token") || "";
 
 const BusinessOverview = () => {
+  const theme = useTheme();
   const [loanData, setLoanData] = useState([]);
   const [revenues, setRevenues] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -199,9 +208,20 @@ const BusinessOverview = () => {
   };
 
   return (
-    <Box sx={{ p: 2, backgroundColor: "#f9f9f9", minHeight: "100vh" }}>
+    <>
+      {/* Action bar, as on every other report. Generate stays down in the
+          filter card, next to the dates and switches it acts on. */}
+      <ReportToolbar onRefresh={fetchReport} loading={loading}>
+        <TableExportMenu
+          rows={exportRows}
+          columns={exportColumns}
+          fileName="Business_Overview"
+          reportOptions={reportOptions}
+        />
+      </ReportToolbar>
+
       {/* Top Controls */}
-      <Paper sx={{ p: 2, mb: 3 }}>
+      <Paper sx={{ p: 2, mt: 2, mb: 3 }}>
         <Grid container spacing={2} alignItems="center">
           <Grid>
             <FormControl component="fieldset">
@@ -258,20 +278,9 @@ const BusinessOverview = () => {
           </Grid>
 
           <Grid>
-            <Button
-              variant="contained"
-              color="primary"
-              onClick={fetchReport}
-              sx={{ mr: 1 }}
-            >
-              Generate
+            <Button variant="contained" onClick={fetchReport} disabled={loading}>
+              {loading ? "Generating..." : "Generate"}
             </Button>
-            <TableExportMenu
-              rows={exportRows}
-              columns={exportColumns}
-              fileName="Business_Overview"
-              reportOptions={reportOptions}
-            />
           </Grid>
         </Grid>
       </Paper>
@@ -283,7 +292,7 @@ const BusinessOverview = () => {
       ) : error ? (
         <Alert severity="error" sx={{ mb: 3 }}>{error}</Alert>
       ) : (
-        <Paper sx={{ p: 4, backgroundColor: "white", boxShadow: 2 }}>
+        <Paper sx={{ p: { xs: 2, md: 4 }, bgcolor: "background.paper", boxShadow: 2 }}>
           <ReportCompanyHeader
             title="Business Overview"
             subtitle={reportRange}
@@ -298,7 +307,7 @@ const BusinessOverview = () => {
           <TableContainer component={Paper} variant="outlined" sx={{ mb: 5, overflow: "auto" }}>
             <Table sx={{ minWidth: 720 }}>
               <TableHead>
-                <TableRow sx={{ backgroundColor: "#e3f2fd" }}>
+                <TableRow sx={{ backgroundColor: alpha(theme.palette.primary.main, 0.1) }}>
                   <TableCell><strong>Loan Type</strong></TableCell>
                   <TableCell align="right"><strong>Loans Disbursed (A)</strong></TableCell>
                   <TableCell align="right"><strong>Interest Receivable (B)</strong></TableCell>
@@ -327,7 +336,7 @@ const BusinessOverview = () => {
                   </TableRow>
                 ))}
 
-                <TableRow sx={{ backgroundColor: "#e3f2fd", fontWeight: "bold" }}>
+                <TableRow sx={{ backgroundColor: alpha(theme.palette.primary.main, 0.16), fontWeight: "bold" }}>
                   <TableCell><strong>Total</strong></TableCell>
                   <TableCell align="right"><strong>{totalLoansDisbursed.toLocaleString()}</strong></TableCell>
                   <TableCell align="right"><strong>{totalInterestReceivable.toLocaleString()}</strong></TableCell>
@@ -437,12 +446,12 @@ const BusinessOverview = () => {
 
             </Grid>
           </Box>
-          <Typography align="center" sx={{ mt: 5, color: "#666" }}>
+          <Typography align="center" variant="caption" sx={{ mt: 5, display: "block", color: "text.secondary" }}>
             Page 1 of 1
           </Typography>
         </Paper>
       )}
-    </Box>
+    </>
   );
 };
 

@@ -19,7 +19,7 @@ import { errorToast } from "toastify";
 import {
   DataTable,
   isTotalRow,
-  PageHeader,
+  
   ReportCompanyHeader,
   ReportToolbar,
   useReportZoom,
@@ -276,13 +276,6 @@ const Partner_Settelment = () => {
 
   return (
     <Box p={2}>
-      <PageHeader
-        title="Partner Settlement"
-        subtitle="Loan-wise settlement position for a partner on a target date."
-        totalCount={rows.length}
-        onRefresh={getSettlementData}
-        loading={loading}
-      />
       <ReportToolbar
         onGenerate={getSettlementData}
         onRefresh={getSettlementData}
@@ -367,7 +360,7 @@ const Partner_Settelment = () => {
             <DataTable
               rows={rows}
               columns={columns}
-              title="Partner Settlement"
+              fileName="Partner-Settlement"
               subtitle={`Settlement as on ${formatDate(targetDate)}${
                 selectedPartner?.label ? ` / ${selectedPartner.label}` : ""
               }`}

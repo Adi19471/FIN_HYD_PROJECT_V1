@@ -20,7 +20,7 @@ import {
   AppDatePicker,
   DataTable,
   isTotalRow,
-  PageHeader,
+  
   ReportCompanyHeader,
   ReportToolbar,
   useReportZoom,
@@ -192,15 +192,8 @@ const Bussiness_Reports = () => {
 
   return (
     <>
-      <PageHeader
-        title="Business Report"
-        subtitle="Partner-wise business report with totals, search, exports and print."
-        totalCount={rows.length}
-        onRefresh={generateReport}
-        loading={loading}
-      />
+      {/* Generate lives in the filter card, next to the dates it acts on. */}
       <ReportToolbar
-        onGenerate={generateReport}
         onRefresh={generateReport}
         loading={loading}
         rows={rows}
@@ -259,11 +252,11 @@ const Bussiness_Reports = () => {
               md: 2
             }}>
             <Button
-              fullWidth
+        
               variant="contained"
               onClick={generateReport}
               disabled={loading}
-              sx={{ height: 56 }}
+           
             >
               {loading ? "Loading..." : "Generate"}
             </Button>
@@ -275,8 +268,9 @@ const Bussiness_Reports = () => {
             rows={rows}
             columns={columns}
             loading={loading}
-            // Names the screen on the printed / downloaded report.
-            title="Business Report"
+            // The banner above the grid already names the report, so the card
+            // header carries only the download name and the record count.
+            fileName="Business-Report"
             subtitle={`Report date: ${dayjs().format("DD-MMM-YYYY")}`}
             totalFields={TOTAL_FIELDS}
             totalLabelCell={TOTAL_LABEL_CELL}

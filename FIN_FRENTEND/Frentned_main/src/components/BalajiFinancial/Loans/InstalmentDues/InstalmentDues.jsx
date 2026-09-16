@@ -172,11 +172,16 @@ const InstalmentDues = () => {
     { field: "loanId", headerName: "Loan ID", width: 118 },
     {
       field: "customerName",
-      headerName: "Customer Name",
+      headerName: "Customer Name / Mobile",
+      renderHeader: () => <TwoLineHeader top="Customer Name" bottom="Mobile Number" />,
       minWidth: 210,
       flex: 1.2,
+      valueFormatter: (value, row) =>
+        isTotalRow(row) ? value : [value, row.customerMobile].filter(Boolean).join(" / ") || "-",
       renderCell: (params) =>
-        isTotalRow(params.row) ? params.value : <TwoLine top={params.value || "-"} wrap />,
+        isTotalRow(params.row) ? params.value : (
+          <TwoLine top={params.row.customerName || "-"} bottom={params.row.customerMobile || "-"} wrap />
+        ),
     },
     {
       field: "guarentorName",
@@ -285,9 +290,6 @@ const InstalmentDues = () => {
   return (
     <Stack spacing={2.5}>
       <PageHeader
-        title="Instalment Dues"
-        subtitle="Pending installment dues by loan type and date-only MUI calendar range."
-        totalCount={data.length}
         onRefresh={getInstallmentDues}
         loading={loading}
       />

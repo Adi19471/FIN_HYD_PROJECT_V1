@@ -16,7 +16,7 @@ import { getSession } from "src/utils/session";
 import {
   AppDatePicker,
   DataTable,
-  PageHeader,
+  
   ReportCompanyHeader,
   ReportToolbar,
   useReportZoom,
@@ -158,13 +158,6 @@ const Group_Bussiness = () => {
 
   return (
     <Stack spacing={2.5}>
-      <PageHeader
-        title="Partner Group Business Ledger"
-        subtitle="Group-wise partner business ledger with filters, count, totals, search, sorting, and exports."
-        totalCount={rows.length}
-        onRefresh={fetchReport}
-        loading={loading}
-      />
       <ReportToolbar
         onGenerate={fetchReport}
         onRefresh={fetchReport}
@@ -228,7 +221,7 @@ const Group_Bussiness = () => {
         rows={rows}
         columns={columns}
         loading={loading}
-        title="Group Business Report"
+        fileName="Group-Business"
         subtitle={`Report date: ${dayjs().format("DD-MMM-YYYY")}`}
         totalFields={TOTAL_FIELDS}
         totalLabelCell={TOTAL_LABEL_CELL}

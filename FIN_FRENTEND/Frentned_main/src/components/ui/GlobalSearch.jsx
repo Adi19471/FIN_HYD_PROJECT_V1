@@ -1,6 +1,9 @@
 import React from "react";
 import { IconButton, InputAdornment, TextField } from "@mui/material";
-import { ClearRounded, SearchRounded } from "@mui/icons-material";
+import { actionIcons } from "src/lib/icons";
+
+const SearchIcon = actionIcons.search;
+const ClearIcon = actionIcons.clear;
 
 /**
  * GlobalSearch - controlled search box for filtering any report/table.
@@ -26,13 +29,13 @@ const GlobalSearch = ({
     InputProps={{
       startAdornment: (
         <InputAdornment position="start">
-          <SearchRounded fontSize="small" color="action" />
+          <SearchIcon fontSize="small" color="action" />
         </InputAdornment>
       ),
       endAdornment: value ? (
         <InputAdornment position="end">
           <IconButton size="small" edge="end" onClick={() => onChange?.("")} aria-label="Clear search">
-            <ClearRounded fontSize="small" />
+            <ClearIcon fontSize="small" />
           </IconButton>
         </InputAdornment>
       ) : null,

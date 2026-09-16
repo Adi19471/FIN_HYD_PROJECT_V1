@@ -1,12 +1,10 @@
 import React from "react";
 import { Box, Chip, Divider, Tooltip, IconButton } from "@mui/material";
-import {
-  FullscreenRounded,
-  FullscreenExitRounded,
-  RestartAltRounded,
-  ZoomInRounded,
-  ZoomOutRounded,
-} from "@mui/icons-material";
+import { FullscreenRounded, FullscreenExitRounded, RestartAltRounded } from "@mui/icons-material";
+import { actionIcons } from "src/lib/icons";
+
+const ZoomInRounded = actionIcons.zoomIn;
+const ZoomOutRounded = actionIcons.zoomOut;
 
 /**
  * ZoomControls - presentational zoom + fullscreen button group.

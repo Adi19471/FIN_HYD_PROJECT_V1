@@ -105,9 +105,6 @@ const AccountMasterLedger = () => {
   return (
     <Stack spacing={2.5}>
       <PageHeader
-        title="Account Master Ledger"
-        subtitle="Master account statement with MUI date-only calendar filters and export-ready table."
-        totalCount={rows.length}
         onRefresh={fetchLedger}
         loading={loading}
       />

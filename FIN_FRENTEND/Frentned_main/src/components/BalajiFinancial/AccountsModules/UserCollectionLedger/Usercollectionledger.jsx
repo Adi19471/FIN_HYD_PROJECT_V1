@@ -96,9 +96,6 @@ const Usercollectionledger = () => {
   return (
     <Stack spacing={2.5}>
       <PageHeader
-        title="User Collections Ledger"
-        subtitle="User-wise collection ledger with MUI date-only filters and export-ready table."
-        totalCount={rows.filter((row) => row.id !== "total").length}
         onRefresh={fetchLedger}
         loading={loading}
       />

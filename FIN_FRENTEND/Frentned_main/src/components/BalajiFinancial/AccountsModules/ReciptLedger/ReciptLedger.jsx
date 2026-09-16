@@ -57,9 +57,6 @@ const ReceiptLedger = () => {
   return (
     <Stack spacing={2.5}>
       <PageHeader
-        title="Receipt Ledger"
-        subtitle="Receipt, installment, late fee, paid amount, and balance details with date-only filters."
-        totalCount={ledgerData.length}
         onRefresh={fetchLedger}
         loading={loading}
       />

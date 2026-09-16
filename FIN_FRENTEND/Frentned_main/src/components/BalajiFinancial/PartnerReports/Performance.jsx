@@ -17,7 +17,7 @@ import { errorToast } from "toastify";
 import {
   AppDatePicker,
   DataTable,
-  PageHeader,
+  
   ReportCompanyHeader,
   ReportToolbar,
   useReportZoom,
@@ -125,13 +125,6 @@ const Performance = () => {
 
   return (
     <Stack spacing={2.5}>
-      <PageHeader
-        title="Partner Performance Report"
-        subtitle="Performance details of all partners with count, searchable table, exports, and total summary."
-        totalCount={rows.length}
-        onRefresh={fetchPerformance}
-        loading={loading}
-      />
       <ReportToolbar
         onGenerate={fetchPerformance}
         onRefresh={fetchPerformance}
@@ -187,7 +180,7 @@ const Performance = () => {
         rows={rows}
         columns={columns}
         loading={loading}
-        title="Partner Performance Report"
+        fileName="Partner-Performance"
         subtitle={`Report date: ${dayjs().format("DD-MMM-YYYY")}`}
         totalFields={TOTAL_FIELDS}
         totalLabelCell={TOTAL_LABEL_CELL}

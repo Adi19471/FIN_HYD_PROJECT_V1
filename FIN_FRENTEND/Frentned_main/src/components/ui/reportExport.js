@@ -11,7 +11,9 @@ import * as XLSX from "xlsx";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 import dayjs from "dayjs";
-import { COMPANY_ADDRESS, COMPANY_NAME } from "src/lib/company";
+import { COMPANY_ADDRESS, COMPANY_APP_NAME, COMPANY_NAME } from "src/lib/company";
+import { breadcrumbTrail } from "src/lib/breadcrumbs";
+import { reportPalette } from "src/lib/reportTheme";
 
 export const reportDateLabel = () =>
   new Date()
@@ -26,16 +28,53 @@ export const formatReportDate = (value) => {
   return parsed.isValid() ? parsed.format("DD-MMM-YYYY") : String(value);
 };
 
+// Words that must not be title-cased letter by letter. Without this a field
+// name like `loanId` prints as "Loan Id" instead of "Loan ID".
+const ACRONYMS = new Set([
+  "ID", "EMI", "GST", "PAN", "TDS", "ROI", "NPA", "IFSC", "KYC", "CIF",
+  "NEFT", "RTGS", "UPI", "CR", "DR", "OD", "PCT", "YTD", "MTD",
+]);
+
+// Whole field names whose house spelling no rule would arrive at.
+const FIELD_LABELS = { sno: "S.No", srno: "S.No", slno: "S.No" };
+
+// Small words that stay lower case inside a label ("Date of Birth").
+const MINOR_WORDS = new Set(["of", "to", "for", "and", "in", "on", "at", "by", "per"]);
+
+/**
+ * `customerName` -> "Customer Name", `loanId` -> "Loan ID".
+ *
+ * The old version only inserted spaces before capitals, which left the first
+ * word lower case — that is where the "customer Name" / "guarantor Name"
+ * headings in the printed reports came from.
+ */
+export const humaniseField = (field = "") => {
+  const key = String(field).replace(/[\s_-]+/g, "").toLowerCase();
+  if (FIELD_LABELS[key]) return FIELD_LABELS[key];
+
+  return String(field)
+    // camelCase and PascalCase boundaries, including ALLCAPS runs (GSTNumber).
+    .replace(/([a-z0-9])([A-Z])/g, "$1 $2")
+    .replace(/([A-Z]+)([A-Z][a-z])/g, "$1 $2")
+    .replace(/[_-]+/g, " ")
+    .trim()
+    .split(/\s+/)
+    .filter(Boolean)
+    .map((word, index) => {
+      const upper = word.toUpperCase();
+      if (ACRONYMS.has(upper)) return upper;
+      if (index > 0 && MINOR_WORDS.has(word.toLowerCase())) return word.toLowerCase();
+      return word.charAt(0).toUpperCase() + word.slice(1);
+    })
+    .join(" ");
+};
+
 // Build a human label from a column definition or a plain string field name.
+// An explicit `headerName` always wins — a screen that names its columns keeps
+// exactly the wording it chose.
 export const labelFor = (column) => {
-  if (typeof column === "string") {
-    return column.replace(/([A-Z])/g, " $1").replace(/_/g, " ").trim();
-  }
-  return (
-    column.headerName ||
-    column.field?.replace(/([A-Z])/g, " $1").replace(/_/g, " ").trim() ||
-    ""
-  );
+  if (typeof column === "string") return humaniseField(column);
+  return column.headerName || humaniseField(column.field || "");
 };
 
 const fieldOf = (column) => (typeof column === "string" ? column : column.field);
@@ -47,22 +86,24 @@ export const rawValue = (row, column) => row[fieldOf(column)];
 // Resolve a single cell's display value, honouring valueGetter / valueFormatter.
 export const cellValue = (row, column) => {
   const raw = rawValue(row, column);
-  if (typeof column === "string") return raw ?? "";
+  // A summed float would otherwise print its full binary expansion.
+  const clean = (value) => (typeof value === "number" ? roundAmount(value) : value);
+  if (typeof column === "string") return clean(raw) ?? "";
   if (column.valueGetter) {
     try {
       return column.valueGetter(raw, row, column) ?? "";
     } catch {
-      return raw ?? "";
+      return clean(raw) ?? "";
     }
   }
   if (column.valueFormatter) {
     try {
       return column.valueFormatter(raw, row, column) ?? "";
     } catch {
-      return raw ?? "";
+      return clean(raw) ?? "";
     }
   }
-  return raw ?? "";
+  return clean(raw) ?? "";
 };
 
 // Keep only exportable columns (skip action columns flagged disableExport).
@@ -70,6 +111,22 @@ export const exportableColumns = (columns = []) =>
   columns.filter((column) =>
     typeof column === "string" ? column : column.field && !column.disableExport
   );
+
+/**
+ * Snap a money figure back to two decimals.
+ *
+ * Summing currency in binary floating point drifts: adding a column of paise
+ * produced 500000.0199999999 in the totals row, and a balance that should have
+ * been zero came out as -0.020000000004074536. Every derived figure goes
+ * through here so the grid, the totals row and every export agree.
+ */
+export const roundAmount = (value) => {
+  const n = Number(value);
+  if (!Number.isFinite(n)) return 0;
+  const rounded = Math.round((n + Number.EPSILON) * 100) / 100;
+  // -0 prints as "-0.00"; normalise it away.
+  return Object.is(rounded, -0) ? 0 : rounded;
+};
 
 // A totals row is flagged by the screen (__isTotal) or uses the id convention
 // the existing report screens already follow.
@@ -105,9 +162,54 @@ export const metaLines = ({ period, meta } = {}) => {
   return lines;
 };
 
-// A4 portrait is the house paper - every report prints portrait unless the
-// caller asks otherwise, or the user flips it in the print preview.
-export const resolveOrientation = (options = {}) => options.orientation || "portrait";
+/**
+ * A4 portrait is the house paper, but a wide grid squeezed onto it is what
+ * makes headings wrap to one letter per line. So portrait is the default only
+ * while the report is narrow enough to carry it: from seven columns up the
+ * sheet turns landscape on its own. An explicit `options.orientation` still
+ * wins, and the print preview lets the user flip it either way.
+ */
+export const LANDSCAPE_COLUMN_THRESHOLD = 7;
+
+export const resolveOrientation = (options = {}, columns = []) => {
+  if (options.orientation) return options.orientation;
+  return exportableColumns(columns).length >= LANDSCAPE_COLUMN_THRESHOLD
+    ? "landscape"
+    : "portrait";
+};
+
+/**
+ * Type size for the printed grid, stepped down as columns are added so a wide
+ * report stays on the page. Held inside the 8-10px band a printed statement
+ * needs to stay readable.
+ */
+export const printFontSize = (columnCount = 0) => {
+  if (columnCount <= 8) return 10;
+  if (columnCount <= 12) return 9;
+  return 8;
+};
+
+/**
+ * Heading printed over the grid. Defaults to the download file name, which is
+ * how every screen has always driven it, but `options.title` lets a screen
+ * print "Customer Dues" while the file still downloads as Customer_Dues.xlsx.
+ */
+export const reportTitle = (fileName = "", options = {}) =>
+  options.title || String(fileName).replace(/_/g, " ");
+
+/**
+ * The application band that sits above the company banner: the product name
+ * and the same breadcrumb trail the on-screen header shows, so a printed page
+ * says which screen produced it. `options.breadcrumb` overrides the trail;
+ * `options.appName` overrides the product name.
+ */
+export const appHeader = (options = {}) => ({
+  name: options.appName || COMPANY_APP_NAME,
+  trail:
+    typeof options.breadcrumb === "string"
+      ? options.breadcrumb
+      : breadcrumbTrail(options.breadcrumb),
+});
 
 // The grid's own column width, used to size the exported columns. Without it an
 // intentionally blank column (e.g. Remarks, filled in by hand after download)
@@ -135,12 +237,12 @@ export const summaryLines = ({ summary } = {}) =>
  */
 export const creditDebitSummary = (rows = [], { creditField = "credit", debitField = "debit" } = {}) => {
   const data = rows.filter((row) => !isTotalRow(row));
-  const credits = data.reduce((sum, row) => sum + Number(row[creditField] || 0), 0);
-  const debits = data.reduce((sum, row) => sum + Number(row[debitField] || 0), 0);
+  const credits = roundAmount(data.reduce((sum, row) => sum + Number(row[creditField] || 0), 0));
+  const debits = roundAmount(data.reduce((sum, row) => sum + Number(row[debitField] || 0), 0));
   return [
     { label: "Credits", value: credits },
     { label: "Debits", value: debits },
-    { label: "Balance", value: credits - debits },
+    { label: "Balance", value: roundAmount(credits - debits) },
   ];
 };
 
@@ -160,18 +262,20 @@ export const exportExcel = (rows = [], columns = [], fileName = "report", option
 
   // Company banner + report period sit above the header row, mirroring the
   // printed report, then the grid itself.
+  const app = appHeader(options);
   const banner = [
+    [app.trail ? `${app.name} | ${app.trail}` : app.name],
     [COMPANY_NAME],
     [COMPANY_ADDRESS],
     [`Date: ${reportDateLabel()}`],
     ...lines.map((line) => [`${line.label}: ${line.value}`]),
-    [fileName],
+    [reportTitle(fileName, options)],
     [],
   ];
   const dataRows = rows.map((row) =>
     cols.map((column) => {
       const raw = rawValue(row, column);
-      return typeof raw === "number" ? raw : cellValue(row, column);
+      return typeof raw === "number" ? roundAmount(raw) : cellValue(row, column);
     })
   );
   // Credits / Debits / Balance, in the last two columns so they line up under
@@ -206,12 +310,20 @@ export const exportExcel = (rows = [], columns = [], fileName = "report", option
     ),
   }));
 
-  // Thousands separators on the numeric cells so Excel right-aligns them.
+  // Thousands separators on the numeric cells so Excel right-aligns them. A
+  // column carrying paise anywhere gets two decimals throughout, so a rounded
+  // total is never displayed as a whole number that disagrees with the report.
+  const columnHasDecimals = cols.map((column) =>
+    rows.some((row) => {
+      const raw = rawValue(row, column);
+      return typeof raw === "number" && !Number.isInteger(roundAmount(raw));
+    })
+  );
   rows.forEach((row, rowIndex) => {
     cols.forEach((column, colIndex) => {
       if (typeof rawValue(row, column) !== "number") return;
       const address = XLSX.utils.encode_cell({ r: headerRowIndex + 1 + rowIndex, c: colIndex });
-      if (worksheet[address]) worksheet[address].z = "#,##0";
+      if (worksheet[address]) worksheet[address].z = columnHasDecimals[colIndex] ? "#,##0.00" : "#,##0";
     });
   });
 
@@ -228,12 +340,14 @@ export const exportCsv = (rows = [], columns = [], fileName = "report", options 
     return /[",\n]/.test(str) ? `"${str.replace(/"/g, '""')}"` : str;
   };
   const lines = metaLines(options);
+  const app = appHeader(options);
   const csv = [
+    escape(app.trail ? `${app.name} | ${app.trail}` : app.name),
     escape(COMPANY_NAME),
     escape(COMPANY_ADDRESS),
     escape(`Date: ${reportDateLabel()}`),
     ...lines.map((line) => escape(`${line.label}: ${line.value}`)),
-    escape(fileName),
+    escape(reportTitle(fileName, options)),
     "",
     cols.map(labelFor).map(escape).join(","),
   ]
@@ -256,28 +370,40 @@ export const exportCsv = (rows = [], columns = [], fileName = "report", options 
 export const exportPdf = (rows = [], columns = [], fileName = "report", options = {}) => {
   const cols = exportableColumns(columns);
   if (!rows.length) return;
-  const orientation = resolveOrientation(options);
+  const orientation = resolveOrientation(options, cols);
+  // Resolved once per document so every page uses the same accent.
+  const palette = reportPalette();
   const doc = new jsPDF({ orientation, unit: "mm", format: "a4" });
   const pageWidth = doc.internal.pageSize.getWidth();
   const centre = pageWidth / 2;
 
-  doc.setFontSize(16);
+  // Application band first - product name and the screen's breadcrumb - then
+  // the company banner, matching the on-screen hierarchy.
+  const app = appHeader(options);
+  doc.setFontSize(9);
   doc.setFont(undefined, "bold");
-  doc.text(COMPANY_NAME, centre, 14, { align: "center" });
+  doc.setTextColor(...palette.headerRuleRgb);
+  doc.text(app.trail ? `${app.name}  |  ${app.trail}` : app.name, centre, 9, { align: "center" });
+  doc.setTextColor(17, 24, 39);
+  doc.setDrawColor(226, 232, 240);
+  doc.line(10, 11.5, pageWidth - 10, 11.5);
+
+  doc.setFontSize(16);
+  doc.text(COMPANY_NAME, centre, 19, { align: "center" });
   doc.setFont(undefined, "normal");
   doc.setFontSize(10);
-  doc.text(COMPANY_ADDRESS, centre, 20, { align: "center" });
+  doc.text(COMPANY_ADDRESS, centre, 25, { align: "center" });
 
-  let y = 26;
+  let y = 31;
   doc.text(`Date: ${reportDateLabel()}`, pageWidth - 14, y, { align: "right" });
   metaLines(options).forEach((line) => {
     doc.text(`${line.label} : ${line.value}`, 14, y);
     y += 6;
   });
-  y = Math.max(y, 32);
+  y = Math.max(y, 37);
   doc.setFontSize(12);
   doc.setFont(undefined, "bold");
-  doc.text(fileName, centre, y, { align: "center" });
+  doc.text(reportTitle(fileName, options), centre, y, { align: "center" });
   doc.setFont(undefined, "normal");
 
   const aligns = cols.map((column) => alignFor(column, rows));
@@ -290,8 +416,27 @@ export const exportPdf = (rows = [], columns = [], fileName = "report", options 
     startY: y + 6,
     head: [cols.map(labelFor)],
     body: matrix(rows, cols),
-    styles: { fontSize: 8, cellPadding: 2.2, overflow: "linebreak", valign: "middle" },
-    headStyles: { fillColor: [79, 70, 229], textColor: 255, fontStyle: "bold", halign: "center" },
+    // jsPDF measures in points; the CSS band is px, so step the same way.
+    styles: {
+      fontSize: printFontSize(cols.length) - 1.5,
+      cellPadding: 2.2,
+      overflow: "linebreak",
+      valign: "middle",
+      // Wrap headings and long values between words, never mid-word.
+      minCellWidth: 12,
+    },
+    // A deeper head band gives a two-line heading room to breathe instead of
+    // clipping it against the first data row.
+    headStyles: {
+      fillColor: palette.headerBgRgb,
+      textColor: 255,
+      fontStyle: "bold",
+      halign: "center",
+      valign: "middle",
+      cellPadding: { top: 3.2, bottom: 3.2, left: 2, right: 2 },
+      minCellHeight: 11,
+      lineWidth: 0.1,
+    },
     alternateRowStyles: { fillColor: [245, 247, 251] },
     columnStyles: cols.reduce(
       (acc, column, index) => ({
@@ -307,7 +452,7 @@ export const exportPdf = (rows = [], columns = [], fileName = "report", options 
     willDrawCell: (data) => {
       if (data.section === "body" && isTotalRow(rows[data.row.index])) {
         doc.setFont(undefined, "bold");
-        data.cell.styles.fillColor = [226, 232, 240];
+        data.cell.styles.fillColor = palette.totalBgRgb;
         data.cell.styles.fontStyle = "bold";
       }
     },
@@ -356,7 +501,7 @@ export const detailSections = ({ details } = {}) => {
     .map((section) => ({
       title: section.title || "",
       // Only a plain colour literal reaches the inline style below.
-      color: /^#[0-9a-f]{3,8}$/i.test(section.color || "") ? section.color : "#4f46e5",
+      color: /^#[0-9a-f]{3,8}$/i.test(section.color || "") ? section.color : reportPalette().headerBg,
       columns: section.columns || 4,
       fields: (section.fields || []).filter((field) => field && field.label),
     }))
@@ -432,12 +577,20 @@ const reportHtml = (rows, cols, fileName, options) => {
   const lines = metaLines(options)
     .map((line) => `<p class="meta"><strong>${escapeHtml(line.label)} :</strong> ${escapeHtml(line.value)}</p>`)
     .join("");
+  // The application band repeats what the on-screen header shows, so a printed
+  // page still says which product and which screen it came from.
+  const app = appHeader(options);
+  const appBand = `<div class="report-app">
+      <span class="report-app-name">${escapeHtml(app.name)}</span>
+      ${app.trail ? `<span class="report-app-trail">${escapeHtml(app.trail)}</span>` : ""}
+    </div>`;
   return `<div class="report-head">
+      ${appBand}
       <h1>${escapeHtml(COMPANY_NAME)}</h1>
       <p>${escapeHtml(COMPANY_ADDRESS)}</p>
       <p class="report-date"><strong>Date:</strong> ${reportDateLabel()}</p>
       ${lines}
-      <h2>${escapeHtml(fileName)}</h2>
+      <h2>${escapeHtml(reportTitle(fileName, options))}</h2>
     </div>
     ${detailsHtml(options)}
     <table class="report-table">${colGroup}<thead><tr>${head}</tr></thead><tbody>${body}</tbody></table>
@@ -459,8 +612,14 @@ const summaryHtml = (options) => {
 };
 
 // `size` is filled per call so a wide grid prints landscape instead of
-// spilling columns off the right edge of the sheet.
-const tableStyles = (orientation) => `
+// spilling columns off the right edge of the sheet. `columnCount` steps the
+// grid's type down as columns are added, keeping it inside the 8-10px band.
+const tableStyles = (orientation, columnCount = 0) => {
+  const fontSize = printFontSize(columnCount);
+  // Accent comes from the live theme; the paper stays white with dark ink so a
+  // dark application theme never produces a dark printed report.
+  const palette = reportPalette();
+  return `
   @page{size:A4 ${orientation};margin:10mm}
   body{font-family:Inter,'Segoe UI',Roboto,Arial,sans-serif;padding:12px;color:#111827}
   h1{font-size:20px;margin:0;text-align:center;letter-spacing:.4px}
@@ -469,11 +628,25 @@ const tableStyles = (orientation) => `
   p.meta{text-align:left;color:#111827;margin:2px 0}
   p.report-date{text-align:right;margin-top:-14px}
   .report-head{margin-bottom:8px}
+  /* Application band - product name over the breadcrumb of the screen that
+     produced the report, so the printed page keeps the on-screen hierarchy. */
+  .report-app{display:flex;align-items:baseline;justify-content:center;gap:8px;
+    flex-wrap:wrap;padding-bottom:6px;margin-bottom:8px;border-bottom:1px solid #e2e8f0}
+  .report-app-name{font-size:12px;font-weight:800;color:${palette.headerRule};letter-spacing:.3px}
+  .report-app-trail{font-size:11px;font-weight:600;color:#64748b}
+  .report-app-trail:before{content:"|";margin-right:8px;color:#cbd5e1}
   table{width:100%;border-collapse:collapse;border:1.5px solid #94a3b8;table-layout:fixed}
-  th,td{border:1px solid #cbd5e1;padding:5px 7px;font-size:11px;vertical-align:middle;word-wrap:break-word;overflow-wrap:break-word}
-  th{background:#4f46e5;color:#fff;border-bottom:2px solid #3730a3}
+  th,td{border:1px solid #cbd5e1;padding:5px 7px;font-size:${fontSize}px;vertical-align:middle}
+  /* Cells may wrap, but only between words - break-word on its own was
+     splitting names mid-letter ("guaranto r") once a column got narrow. */
+  td{overflow-wrap:break-word;word-break:normal;hyphens:none}
+  /* A heading never breaks inside a word: it wraps at spaces or not at all,
+     which is what keeps "Installment Pending" readable in a tight column. */
+  th{background:${palette.headerBg};color:${palette.headerText};border-bottom:2px solid ${palette.headerRule};
+    padding:8px 7px;height:auto;min-height:26px;line-height:1.25;
+    white-space:normal;overflow-wrap:normal;word-break:keep-all;hyphens:none}
   tbody tr:nth-child(even){background:#f8fafc}
-  tr.total-row td{font-weight:700;background:#e2e8f0;border-top:2px solid #4f46e5}
+  tr.total-row td{font-weight:700;background:${palette.totalBg};border-top:2px solid ${palette.headerBg}}
   /* Credits / Debits / Balance block, right aligned under the table. */
   table.report-summary{width:auto;margin:10px 0 0 auto;border:none}
   table.report-summary th,table.report-summary td{border:none;padding:2px 6px;font-size:12px}
@@ -491,7 +664,7 @@ const tableStyles = (orientation) => `
   .report-details .detail-photo img{width:24mm;height:28mm;object-fit:cover;
     border:1px solid #cbd5e1;border-radius:4px}
   p.detail-title{display:inline-block;text-align:left;margin:6px 0 4px;padding:2px 12px;
-    border-radius:10px;background:#4f46e5;color:#fff;font-size:10px;font-weight:700;letter-spacing:.5px}
+    border-radius:10px;background:${palette.headerBg};color:${palette.headerText};font-size:10px;font-weight:700;letter-spacing:.5px}
   table.detail-table{width:100%;border:1px solid #cbd5e1;table-layout:fixed}
   table.detail-table td{border:1px solid #e2e8f0;padding:4px 7px;vertical-align:top}
   .detail-table .dl{display:block;font-size:9px;color:#64748b;letter-spacing:.3px;text-transform:uppercase}
@@ -500,15 +673,16 @@ const tableStyles = (orientation) => `
   thead{display:table-header-group}
   tr{page-break-inside:avoid;break-inside:avoid}
   @media print{body{padding:0} tr.total-row td{background:#e2e8f0 !important;-webkit-print-color-adjust:exact;print-color-adjust:exact}
-    th{background:#4f46e5 !important;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+    th{background:${palette.headerBg} !important;-webkit-print-color-adjust:exact;print-color-adjust:exact}
     p.detail-title{-webkit-print-color-adjust:exact;print-color-adjust:exact}}`;
+};
 
 export const exportWord = (rows = [], columns = [], fileName = "report", options = {}) => {
   const cols = exportableColumns(columns);
   if (!rows.length) return;
-  const orientation = resolveOrientation(options);
+  const orientation = resolveOrientation(options, cols);
   const html = `<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:w="urn:schemas-microsoft-com:office:word"><head><meta charset="utf-8">
-    <style>${tableStyles(orientation)}
+    <style>${tableStyles(orientation, cols.length)}
     /* Word reads page setup from @page WordSection1. */
     @page WordSection1{size:${orientation === "landscape" ? "841.9pt 595.3pt" : "595.3pt 841.9pt"};margin:1cm}
     div.WordSection1{page:WordSection1}</style></head>
@@ -532,11 +706,15 @@ export const exportWord = (rows = [], columns = [], fileName = "report", options
 // half by a page break.
 // ---------------------------------------------------------------------------
 
-const viewerStyles = () => `
+const viewerStyles = () => {
+  // The viewer's own chrome follows the accent too. Resolved here rather than
+  // borrowed from tableStyles — these are two independent stylesheets.
+  const palette = reportPalette();
+  return `
   html,body{height:100%}
   body{margin:0;padding:0;display:flex;flex-direction:column;background:#525659}
   .toolbar{flex:0 0 auto;display:flex;align-items:center;gap:8px;flex-wrap:wrap;
-    padding:8px 14px;background:#3730a3;color:#fff;box-shadow:0 2px 8px rgba(0,0,0,.35)}
+    padding:8px 14px;background:${palette.headerRule};color:#fff;box-shadow:0 2px 8px rgba(0,0,0,.35)}
   .toolbar .title{font-weight:700;font-size:14px;margin-right:auto;
     white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:38%}
   .toolbar button,.toolbar select{font-family:inherit;font-size:13px;border:0;border-radius:6px;
@@ -565,6 +743,7 @@ const viewerStyles = () => `
     .sheet:last-child{page-break-after:auto;break-after:auto}
     .sheet-foot{position:static;margin-top:6px}
   }`;
+};
 
 const toolbarHtml = (fileName, orientation) => `<div class="toolbar">
   <span class="title">${escapeHtml(fileName)}</span>
@@ -740,23 +919,96 @@ const viewerScript = `
   else window.addEventListener('load',boot);
 })();`;
 
+/**
+ * Full-screen preview inside the current page.
+ *
+ * The preview used to live only in a popup window, so whenever the browser's
+ * popup blocker stopped it — the common case, since most people never allow
+ * popups — Print appeared to do nothing at all. An overlay cannot be blocked,
+ * so this is the fallback whenever window.open comes back empty.
+ */
+const openOverlayPreview = (html, title) => {
+  const overlay = document.createElement("div");
+  overlay.setAttribute("role", "dialog");
+  overlay.setAttribute("aria-label", title);
+  overlay.style.cssText =
+    "position:fixed;inset:0;z-index:2147483000;background:#525659;display:flex;flex-direction:column;";
+
+  const bar = document.createElement("div");
+  bar.style.cssText =
+    "flex:0 0 auto;display:flex;align-items:center;gap:12px;padding:6px 12px;" +
+    "background:#1e293b;color:#fff;font:600 13px/1.4 Inter,'Segoe UI',Roboto,Arial,sans-serif;";
+  const label = document.createElement("span");
+  label.textContent = title;
+  label.style.cssText = "margin-right:auto;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;";
+  const close = document.createElement("button");
+  close.type = "button";
+  close.textContent = "Close preview";
+  close.style.cssText =
+    "border:0;border-radius:6px;padding:6px 14px;cursor:pointer;background:#e2e8f0;color:#0f172a;font:inherit;";
+  bar.appendChild(label);
+  bar.appendChild(close);
+
+  const frame = document.createElement("iframe");
+  frame.title = title;
+  frame.style.cssText = "flex:1 1 auto;width:100%;border:0;background:#525659;";
+
+  overlay.appendChild(bar);
+  overlay.appendChild(frame);
+  document.body.appendChild(overlay);
+
+  const previousOverflow = document.body.style.overflow;
+  document.body.style.overflow = "hidden";
+
+  const dismiss = () => {
+    document.body.style.overflow = previousOverflow;
+    if (overlay.parentNode) document.body.removeChild(overlay);
+    document.removeEventListener("keydown", onKey);
+  };
+  const onKey = (event) => {
+    if (event.key === "Escape") dismiss();
+  };
+  close.addEventListener("click", dismiss);
+  document.addEventListener("keydown", onKey);
+
+  const doc = frame.contentDocument;
+  doc.open();
+  doc.write(html);
+  doc.close();
+  frame.contentWindow?.focus();
+};
+
 export const printReport = (rows = [], columns = [], fileName = "report", options = {}) => {
   const cols = exportableColumns(columns);
   // A statement stands on its detail block alone - a loan with no payments yet
   // still prints - so an empty grid only blocks a report that has nothing else.
   if (!rows.length && !detailSections(options).length) return;
-  const orientation = resolveOrientation(options);
-  const printWindow = window.open("", "", "width=1280,height=880");
-  if (!printWindow) return;
-  printWindow.document.write(
-    `<html><head><meta charset="utf-8"><title>${escapeHtml(fileName)}</title>
-      <style>${tableStyles(orientation)}${viewerStyles()}</style>
+  const orientation = resolveOrientation(options, cols);
+  const title = reportTitle(fileName, options);
+
+  const html = `<html><head><meta charset="utf-8"><title>${escapeHtml(title)}</title>
+      <style>${tableStyles(orientation, cols.length)}${viewerStyles()}</style>
       <style id="page-rule">@page{size:A4 ${orientation};margin:10mm}</style></head>
-      <body>${toolbarHtml(fileName, orientation)}
+      <body>${toolbarHtml(title, orientation)}
       <div class="viewport"><div id="sheets"></div></div>
       <template id="report-source">${reportHtml(rows, cols, fileName, options)}</template>
-      <script>${viewerScript}<\/script></body></html>`
-  );
+      <script>${viewerScript}<\/script></body></html>`;
+
+  // A separate window is still the nicer place for a long report, so try it
+  // first — but never let a blocked popup end as silence.
+  let printWindow = null;
+  try {
+    printWindow = window.open("", "", "width=1280,height=880");
+  } catch {
+    printWindow = null;
+  }
+
+  if (!printWindow) {
+    openOverlayPreview(html, title);
+    return;
+  }
+
+  printWindow.document.write(html);
   printWindow.document.close();
   printWindow.focus();
 };

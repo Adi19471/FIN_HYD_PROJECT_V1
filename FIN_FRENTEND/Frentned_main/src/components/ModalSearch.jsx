@@ -1,10 +1,7 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { Link } from "react-router-dom";
-import {
-  AssessmentRounded,
-  CloseRounded,
-  SearchRounded,
-} from "@mui/icons-material";
+import { AssessmentRounded } from "@mui/icons-material";
+import { actionIcons } from "src/lib/icons";
 import {
   Box,
   Chip,
@@ -24,6 +21,9 @@ import {
 import { useAuth } from "src/utils/authStore";
 import { hasPermissionAccess, PATH_PERMISSION_CODES } from "src/utils/permissions";
 import { sidebarGroups } from "src/partials/SidebarConfig";
+
+const CloseRounded = actionIcons.close;
+const SearchRounded = actionIcons.search;
 
 // Every searchable screen, derived from the sidebar's own nav config (the
 // same sidebarGroups data that renders Sidebar.jsx) plus Dashboard, which

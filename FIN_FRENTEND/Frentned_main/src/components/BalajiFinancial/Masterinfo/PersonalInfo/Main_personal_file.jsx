@@ -31,14 +31,17 @@ const MainPersonalFile = () => {
     setValue(newValue);
   };
 
+  // The active tab, its underline and its hover wash all follow the accent
+  // chosen in Settings, like every other "active" affordance in the app
+  // (sidebar, buttons, table headers) - this was pinned to a fixed blue.
   const colors = useMemo(
     () => ({
-      active: "#2563eb",
-      inactive: "#64748b",
-      indicator: "#2563eb",
-      hover: alpha("#2563eb", 0.08),
+      active: theme.palette.primary.main,
+      inactive: theme.palette.text.secondary,
+      indicator: theme.palette.primary.main,
+      hover: alpha(theme.palette.primary.main, 0.08),
     }),
-    []
+    [theme.palette.primary.main, theme.palette.text.secondary]
   );
 
   const tabs = useMemo(
@@ -62,7 +65,8 @@ const MainPersonalFile = () => {
     <Box
       sx={{
         p: { xs: 0, md: 1 },
-        bgcolor: "#f1f5f9",
+        // Was a fixed light-grey #f1f5f9, which stayed light in dark mode.
+        bgcolor: "background.default",
         minHeight: "100vh",
       }}
     >

@@ -15,18 +15,8 @@ import {
   TextField,
   Typography,
 } from "@mui/material";
-import {
-  AccountBalanceRounded,
-  AutoAwesomeRounded,
-  BoltRounded,
-  InsightsRounded,
-  LockRounded,
-  PersonRounded,
-  ShieldRounded,
-  VerifiedUserRounded,
-  Visibility,
-  VisibilityOff,
-} from "@mui/icons-material";
+import { AutoAwesomeRounded, BoltRounded, InsightsRounded, LockRounded, PersonRounded, ShieldRounded, VerifiedUserRounded } from "@mui/icons-material";
+import { actionIcons } from "src/lib/icons";
 import { AnimatePresence, motion } from "framer-motion";
 import { successToast, errorToast } from "toastify";
 import { API_BASE } from "lib/config";
@@ -34,15 +24,23 @@ import { setSession } from "src/utils/session";
 import { setAuthToken, setRefreshToken } from "src/utils/authToken";
 import { getDefaultAuthorizedPath, normalizePermissionCodes, normalizeRoles } from "src/utils/permissions";
 import ThemeToggle from "../ThemeToggle";
-import { COMPANY_ADDRESS, COMPANY_APP_NAME } from "src/lib/company";
+import { COMPANY_ADDRESS, COMPANY_APP_NAME, COMPANY_LOGO } from "src/lib/company";
 import "./Login.css";
+
+const Visibility = actionIcons.view;
+const VisibilityOff = actionIcons.hide;
+
+// Devotional portrait shown on the sign-in panel. Drop the picture at
+// public/images/venkateswara.jpg (or .png and change this path) and it appears
+// on its own; until then the panel simply falls back to the brand emblem.
+const DEITY_IMAGE = "/images/venkateswara.jpg";
 
 const ROTATING_WORDS = ["clarity.", "automation.", "intelligence.", "control."];
 
 const FEATURES = [
   { icon: ShieldRounded, title: "Secure Access", text: "Token-based authentication" },
   { icon: InsightsRounded, title: "Live Insights", text: "Collections & portfolio KPIs" },
-  { icon: BoltRounded, title: "AI Assisted", text: "Smart reports & ledgers" },
+  // { icon: BoltRounded, title: "AI Assisted", text: "Smart reports & ledgers" },
 ];
 
 const STATS = [
@@ -61,6 +59,14 @@ const Login = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [rememberMe, setRememberMe] = useState(true);
   const [wordIndex, setWordIndex] = useState(0);
+  // Caps Lock is the single commonest reason a correct password is rejected,
+  // so the field says so rather than letting the server answer for it.
+  const [capsLock, setCapsLock] = useState(false);
+  // Hidden entirely if the picture has not been added yet, so the panel never
+  // shows a broken image.
+  const [deityImage, setDeityImage] = useState(true);
+
+  const canSubmit = formData.username.trim() !== "" && formData.password !== "" && !loading;
 
   // Prefill a previously remembered username.
   useEffect(() => {
@@ -73,6 +79,12 @@ const Login = () => {
     const id = setInterval(() => setWordIndex((i) => (i + 1) % ROTATING_WORDS.length), 2600);
     return () => clearInterval(id);
   }, []);
+
+  const trackCapsLock = (event) => {
+    if (typeof event.getModifierState === "function") {
+      setCapsLock(event.getModifierState("CapsLock"));
+    }
+  };
 
   const handleChange = (field) => (event) => {
     setFormData((prev) => ({ ...prev, [field]: event.target.value }));
@@ -137,6 +149,15 @@ const Login = () => {
       {/* ---------------- Left visual ---------------- */}
       <Box className="auth-visual">
         <Box className="auth-grid" />
+        {deityImage && (
+          <Box className="auth-deity" aria-hidden="true">
+            <img
+              src={DEITY_IMAGE}
+              alt=""
+              onError={() => setDeityImage(false)}
+            />
+          </Box>
+        )}
         <Box className="auth-orb one" />
         <Box className="auth-orb two" />
         <Box className="auth-orb three" />
@@ -149,7 +170,12 @@ const Login = () => {
         >
           <Box className="auth-brand">
             <Box className="auth-brand-mark">
-              <AccountBalanceRounded />
+              <img
+                src={deityImage ? DEITY_IMAGE : COMPANY_LOGO}
+                alt=""
+                aria-hidden="true"
+                onError={() => setDeityImage(false)}
+              />
             </Box>
             <Box>
               <Box className="auth-brand-name">{COMPANY_APP_NAME}</Box>
@@ -265,8 +291,11 @@ const Login = () => {
                   value={formData.password}
                   onChange={handleChange("password")}
                   error={!!errors.password}
-                  helperText={errors.password}
                   autoComplete="current-password"
+                  onKeyUp={trackCapsLock}
+                  onKeyDown={trackCapsLock}
+                  onBlur={() => setCapsLock(false)}
+                  helperText={errors.password || (capsLock ? "Caps Lock is on" : " ")}
                   InputProps={{
                     startAdornment: (
                       <InputAdornment position="start">
@@ -283,7 +312,7 @@ const Login = () => {
                   }}
                 />
 
-                <Stack direction="row" justifyContent="space-between" alignItems="center">
+                {/* <Stack direction="row" justifyContent="space-between" alignItems="center">
                   <FormControlLabel
                     control={<Checkbox checked={rememberMe} onChange={(event) => setRememberMe(event.target.checked)} />}
                     label="Remember me"
@@ -291,18 +320,25 @@ const Login = () => {
                   <Link component="button" type="button" underline="hover" variant="body2">
                     Forgot password?
                   </Link>
-                </Stack>
+                </Stack> */}
 
                 <Button
                   type="submit"
                   fullWidth
                   variant="contained"
                   size="large"
-                  disabled={loading}
+                  disabled={!canSubmit}
                   startIcon={!loading && <ShieldRounded />}
                   sx={{ py: 1.4, fontWeight: 700, fontSize: "0.98rem" }}
                 >
-                  {loading ? <CircularProgress size={24} color="inherit" /> : "Sign in securely"}
+                  {loading ? (
+                    <Stack direction="row" spacing={1.2} alignItems="center">
+                      <CircularProgress size={20} color="inherit" />
+                      <span>Signing in…</span>
+                    </Stack>
+                  ) : (
+                    "Sign in securely"
+                  )}
                 </Button>
               </Stack>
             </form>

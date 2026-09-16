@@ -24,6 +24,7 @@ import {
   Skeleton,
 } from "@mui/material";
 import { DataGrid, GridToolbar } from "@mui/x-data-grid";
+import { useTheme } from "@mui/material/styles";
 import axios from "axios";
 import { getSession } from "src/utils/session";
 import { fetchAllPersonalInfo } from "src/utils/personalInfoCache";
@@ -137,6 +138,16 @@ const avatarColor = (id) => {
 
 /* ─── Main Component ─────────────────────────────────────────── */
 const Partner = ({ personType = "CUSTOMER" }) => {
+  const theme = useTheme();
+  // This grid is a raw MUI DataGrid, not the shared DataTable wrapper, so it
+  // doesn't inherit the app's --table-head-* CSS tokens automatically. It
+  // used to hardcode "grey.50" for the header band; the app's global stylesheet
+  // then force-applies white header text (var(--table-head-fg)) to every
+  // MuiDataGrid-columnHeaderTitle so themed headers stay readable - which left
+  // this screen with near-invisible white-on-near-white header text. Resolving
+  // the same primary/contrast pair every other report header uses fixes it.
+  const headerBg = theme.palette.primary.main;
+  const headerFg = theme.palette.getContrastText(headerBg);
   const [rows, setRows] = useState([]);
   const [filteredRows, setFilteredRows] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -605,8 +616,12 @@ const Partner = ({ personType = "CUSTOMER" }) => {
             sx={{
               border: "none",
               "& .MuiDataGrid-virtualScroller": { overflowAnchor: "none" },
-              "& .MuiDataGrid-columnHeaders": { bgcolor: "grey.50", fontWeight: 700 },
-              "& .MuiDataGrid-row:hover": { bgcolor: "primary.50" },
+              "& .MuiDataGrid-columnHeaders, & .MuiDataGrid-columnHeader": { bgcolor: headerBg, fontWeight: 700 },
+              "& .MuiDataGrid-columnHeaderTitle": { color: headerFg },
+              "& .MuiDataGrid-columnHeader .MuiSvgIcon-root, & .MuiDataGrid-columnHeader .MuiDataGrid-sortIcon, & .MuiDataGrid-columnHeader .MuiDataGrid-menuIcon": {
+                color: headerFg,
+              },
+              "& .MuiDataGrid-row:hover": { bgcolor: "action.hover" },
               "& .MuiDataGrid-cell:focus": { outline: "none" },
               "& .MuiDataGrid-cell:focus-within": { outline: "none" },
             }}

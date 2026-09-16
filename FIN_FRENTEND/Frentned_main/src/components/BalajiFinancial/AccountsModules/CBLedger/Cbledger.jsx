@@ -80,9 +80,6 @@ const Cbledger = () => {
   return (
     <Stack spacing={2.5}>
       <PageHeader
-        title="CB Ledger Report"
-        subtitle="Cash book ledger with date-only MUI calendar filters and fast export table."
-        totalCount={ledgerData.length}
         onRefresh={fetchLedgerData}
         loading={loading}
       />

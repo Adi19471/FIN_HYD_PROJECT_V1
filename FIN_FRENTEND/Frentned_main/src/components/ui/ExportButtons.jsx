@@ -1,86 +1,36 @@
 import React from "react";
-import {
-  Button,
-  ListItemIcon,
-  ListItemText,
-  Menu,
-  MenuItem,
-} from "@mui/material";
-import {
-  ArticleRounded,
-  DescriptionRounded,
-  FileDownloadRounded,
-  GridOnRounded,
-  PrintRounded,
-  TableViewRounded,
-} from "@mui/icons-material";
-import {
-  exportCsv,
-  exportExcel,
-  exportPdf,
-  exportWord,
-  printReport,
-} from "./reportExport";
+import { TableExportMenu } from "./DataTable";
 
 /**
- * ExportButtons - one menu with Excel / PDF / Word / CSV / Print actions.
- * Reusable across every report; shares logic with reportExport.js.
+ * ExportButtons - the Download menu for screens that are not built on
+ * DataTable.
+ *
+ * It used to be a second copy of the same menu with its own labels and its own
+ * layout, which is how the app ended up with two different-looking Download
+ * dropdowns. It now delegates to TableExportMenu, so there is exactly one
+ * Download menu implementation in the app: same items, same order, same icons.
+ *
  * @param {Array} rows
  * @param {Array} columns
  * @param {string} fileName
+ * @param {object} reportOptions  title / breadcrumb / period / meta / summary
  */
 const ExportButtons = ({
   rows = [],
   columns = [],
   fileName = "report",
-  buttonLabel = "Export",
-  size = "small",
-  variant = "outlined",
-}) => {
-  const [anchorEl, setAnchorEl] = React.useState(null);
-  const close = () => setAnchorEl(null);
-  const hasData = rows.length > 0;
-
-  const run = (fn) => () => {
-    close();
-    if (hasData) fn(rows, columns, fileName);
-  };
-
-  return (
-    <>
-      <Button
-        size={size}
-        variant={variant}
-        startIcon={<FileDownloadRounded />}
-        onClick={(event) => setAnchorEl(event.currentTarget)}
-        disabled={!hasData}
-      >
-        {buttonLabel}
-      </Button>
-      <Menu anchorEl={anchorEl} open={Boolean(anchorEl)} onClose={close}>
-        <MenuItem onClick={run(exportExcel)}>
-          <ListItemIcon><TableViewRounded fontSize="small" color="success" /></ListItemIcon>
-          <ListItemText primary="Excel" secondary=".xlsx" />
-        </MenuItem>
-        <MenuItem onClick={run(exportPdf)}>
-          <ListItemIcon><DescriptionRounded fontSize="small" color="error" /></ListItemIcon>
-          <ListItemText primary="PDF" secondary=".pdf" />
-        </MenuItem>
-        <MenuItem onClick={run(exportWord)}>
-          <ListItemIcon><ArticleRounded fontSize="small" color="primary" /></ListItemIcon>
-          <ListItemText primary="Word" secondary=".doc" />
-        </MenuItem>
-        <MenuItem onClick={run(exportCsv)}>
-          <ListItemIcon><GridOnRounded fontSize="small" color="action" /></ListItemIcon>
-          <ListItemText primary="CSV" secondary=".csv" />
-        </MenuItem>
-        <MenuItem onClick={run(printReport)}>
-          <ListItemIcon><PrintRounded fontSize="small" /></ListItemIcon>
-          <ListItemText primary="Print" />
-        </MenuItem>
-      </Menu>
-    </>
-  );
-};
+  buttonLabel = "Download",
+  reportOptions = {},
+  className,
+}) => (
+  <TableExportMenu
+    rows={rows}
+    columns={columns}
+    fileName={fileName}
+    buttonLabel={buttonLabel}
+    reportOptions={reportOptions}
+    className={className}
+  />
+);
 
 export default ExportButtons;

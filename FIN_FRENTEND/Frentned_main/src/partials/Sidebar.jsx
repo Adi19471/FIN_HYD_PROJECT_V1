@@ -1,18 +1,19 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { NavLink, useLocation } from "react-router-dom";
-import {
-  ChevronRight,
-  Close,
-  ExpandMore,
-  Home,
-} from "@mui/icons-material";
+import { actionIcons } from "src/lib/icons";
 
 import ThemeToggle from "../components/ThemeToggle";
 import { COMPANY_ADDRESS, COMPANY_APP_NAME, COMPANY_LOGO } from "src/lib/company";
 import { useAuth } from "src/utils/authStore";
 import { hasPermissionAccess, PATH_PERMISSION_CODES } from "src/utils/permissions";
 import { BREAKPOINTS } from "src/utils/breakpoints";
-import { sidebarGroups } from "./SidebarConfig";
+import { dashboardIcon as DashboardIcon, sidebarGroups } from "./SidebarConfig";
+
+// Chrome for the sidebar itself comes from the shared action set, so the
+// close / expand / collapse marks match every other screen.
+const CloseIcon = actionIcons.close;
+const ExpandIcon = actionIcons.expand;
+const CollapseToggleIcon = actionIcons.scrollRight;
 import "./Sidebar.css";
 
 const tabletQuery = () => `(min-width: ${BREAKPOINTS.md}px) and (max-width: ${BREAKPOINTS.lg - 0.02}px)`;
@@ -148,7 +149,7 @@ function Sidebar({ sidebarOpen, setSidebarOpen }) {
             <span>{COMPANY_ADDRESS}</span>
           </div>
           <button ref={trigger} type="button" className="admin-sidebar-close" onClick={handleSidebarToggle} aria-label="Close navigation">
-            <Close />
+            <CloseIcon />
           </button>
         </div>
 
@@ -161,7 +162,7 @@ function Sidebar({ sidebarOpen, setSidebarOpen }) {
               className={({ isActive }) => `admin-sidebar-link ${isActive ? "is-active" : ""}`}
               title="Dashboard"
             >
-              <Home className="admin-sidebar-icon" />
+              <DashboardIcon className="admin-sidebar-icon" />
               <span>Dashboard</span>
             </NavLink>
           )}
@@ -181,7 +182,7 @@ function Sidebar({ sidebarOpen, setSidebarOpen }) {
                 >
                   <Icon className="admin-sidebar-icon" />
                   <span>{group.label}</span>
-                  <ExpandMore className="admin-sidebar-chevron" />
+                  <ExpandIcon className="admin-sidebar-chevron" />
                 </button>
 
                 {isOpen && (
@@ -217,7 +218,7 @@ function Sidebar({ sidebarOpen, setSidebarOpen }) {
             className="admin-sidebar-collapse"
             aria-label={sidebarExpanded ? "Collapse sidebar" : "Expand sidebar"}
           >
-            <ChevronRight className={sidebarExpanded ? "is-expanded" : ""} />
+            <CollapseToggleIcon className={sidebarExpanded ? "is-expanded" : ""} />
           </button>
         </div>
       </aside>

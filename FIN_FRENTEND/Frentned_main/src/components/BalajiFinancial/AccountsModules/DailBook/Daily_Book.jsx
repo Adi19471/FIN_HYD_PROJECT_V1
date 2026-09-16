@@ -16,7 +16,7 @@ import {
   TableRow,
   Typography,
 } from "@mui/material";
-import { PrintRounded } from "@mui/icons-material";
+import { actionIcons } from "src/lib/icons";
 import { useAuth } from "src/utils/authStore";
 import { API_BASE } from "lib/config";
 import { getSession } from "src/utils/session";
@@ -28,6 +28,8 @@ import {
   TableExportMenu,
   printReport,
 } from "src/components/ui";
+
+const PrintRounded = actionIcons.print;
 
 const STORAGE_KEY = "dailyBook_lastSelectedDate";
 
@@ -300,9 +302,6 @@ const DailyBook = () => {
       {/* Download / Print sit at the top beside Refresh, so the whole book can be
           taken away without scrolling down to the grid toolbar. */}
       <PageHeader
-        title="Daily Book"
-        subtitle="Day-wise transactions, opening balance, credits, debits, and closing balance."
-        totalCount={transactions.length}
         onRefresh={fetchDailyBook}
         loading={loading}
         actions={

@@ -9,6 +9,8 @@ public interface InstallmentDueProjection {
 
 	String getCustomerName();
 
+	String getCustomerMobile();
+
 	String getPartnerName();
 
 	String getGuarantorName();

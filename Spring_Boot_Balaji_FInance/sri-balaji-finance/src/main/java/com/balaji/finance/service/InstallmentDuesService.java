@@ -103,6 +103,7 @@ public class InstallmentDuesService {
 				dto.setSno(++i);
 				dto.setLoanId(bm.getLoanId());
 				dto.setCustomerName(bm.getCustomerName());
+				dto.setCustomerMobile(bm.getCustomerMobile());
 				dto.setPartnerName(bm.getPartnerName());
 				dto.setGuarentorName(bm.getGuarantorName());
 				

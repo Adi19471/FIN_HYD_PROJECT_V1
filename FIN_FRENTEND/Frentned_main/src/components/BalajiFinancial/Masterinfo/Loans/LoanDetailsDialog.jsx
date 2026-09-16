@@ -15,10 +15,13 @@ import {
   Button,
   CircularProgress,
 } from "@mui/material";
-import { Close as CloseIcon, Print as PrintIcon } from "@mui/icons-material";
+import { actionIcons } from "src/lib/icons";
 import { API_BASE } from "lib/config";
 import { getSession } from "src/utils/session";
 import { DataTable, ProfilePhotoBox, printReport } from "src/components/ui";
+
+const CloseIcon = actionIcons.close;
+const PrintIcon = actionIcons.print;
 
 const money = (value) => Number(value || 0).toLocaleString("en-IN");
 

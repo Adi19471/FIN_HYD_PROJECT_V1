@@ -11,12 +11,15 @@ import {
   TextField,
   Typography,
 } from "@mui/material";
-import { AssessmentRounded, RefreshRounded } from "@mui/icons-material";
+import { AssessmentRounded } from "@mui/icons-material";
+import { actionIcons } from "src/lib/icons";
 import axios from "axios";
 import dayjs from "dayjs";
 import { API_BASE } from "lib/config";
 import { getSession } from "src/utils/session";
 import { AppDatePicker, DataTable, useDateRange, DROPDOWN_MENU_PROPS } from "src/components/ui";
+
+const RefreshRounded = actionIcons.refresh;
 
 const loanTypes = [
   { label: "Daily Finance", value: "DAILY_FINANCE" },

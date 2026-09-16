@@ -1,14 +1,14 @@
 import React from "react";
 import { Box, Button, Tooltip, IconButton } from "@mui/material";
-import {
-  Edit as EditIcon,
-  Delete as DeleteIcon,
-  Visibility as ViewIcon,
-  Add as AddIcon,
-  Save as SaveIcon,
-  Close as CloseIcon,
-  Refresh as RefreshIcon,
-} from "@mui/icons-material";
+import { actionIcons } from "src/lib/icons";
+
+const EditIcon = actionIcons.edit;
+const DeleteIcon = actionIcons.delete;
+const ViewIcon = actionIcons.view;
+const AddIcon = actionIcons.add;
+const SaveIcon = actionIcons.save;
+const CloseIcon = actionIcons.close;
+const RefreshIcon = actionIcons.refresh;
 
 /**
  * ActionButtonGroup - Consistent action buttons

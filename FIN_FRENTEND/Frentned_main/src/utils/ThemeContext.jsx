@@ -5,6 +5,7 @@ import {
 } from "@mui/material/styles";
 import CssBaseline from "@mui/material/CssBaseline";
 import { BREAKPOINTS } from "./breakpoints";
+import { deriveTokens, publishThemeTokens } from "src/lib/themeTokens";
 
 const ThemeContext = createContext({
   currentTheme: "light",
@@ -155,6 +156,16 @@ export default function ThemeProvider({ children }) {
       document.documentElement.style.colorScheme = "dark";
     }
     document.documentElement.dataset.themeColor = settings.colorTheme;
+
+    // Publish the accent and everything derived from it (hover, dark, soft
+    // tint, and the readable ink for text on the accent) as CSS custom
+    // properties. This is the single source every layer reads: stylesheets via
+    // var(--brand-*), and the report exporters via readThemeTokens(). Changing
+    // the colour in Settings updates all of them on the spot, no reload.
+    {
+      const accent = colorThemes[settings.colorTheme] || colorThemes.trust;
+      publishThemeTokens(deriveTokens(accent.primary, accent.secondary));
+    }
     document.documentElement.dataset.density = settings.density;
     document.documentElement.dataset.tableDensity = settings.tableDensity;
     document.documentElement.dataset.tableStyle = settings.tableStyle;

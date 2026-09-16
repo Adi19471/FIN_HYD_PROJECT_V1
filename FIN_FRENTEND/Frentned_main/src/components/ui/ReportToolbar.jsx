@@ -1,7 +1,10 @@
 import React from "react";
 import { Button, Divider, Paper, Stack, Typography } from "@mui/material";
-import { PlayArrowRounded, RefreshRounded } from "@mui/icons-material";
+import { actionIcons } from "src/lib/icons";
 import ZoomControls from "./ZoomControls";
+
+const GenerateIcon = actionIcons.generate;
+const RefreshIcon = actionIcons.refresh;
 
 /**
  * ReportToolbar - the common action bar on every report screen:
@@ -53,7 +56,7 @@ const ReportToolbar = ({
         <Button
           size="small"
           variant="contained"
-          startIcon={<PlayArrowRounded />}
+          startIcon={<GenerateIcon />}
           onClick={onGenerate}
           disabled={loading}
         >
@@ -65,7 +68,7 @@ const ReportToolbar = ({
         <Button
           size="small"
           variant="outlined"
-          startIcon={<RefreshRounded />}
+          startIcon={<RefreshIcon />}
           onClick={onRefresh}
           disabled={loading}
         >

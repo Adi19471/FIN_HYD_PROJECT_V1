@@ -9,6 +9,7 @@ import { API_BASE } from "lib/config";
 import { getSession } from "src/utils/session";
 import { AppDatePicker, TableExportMenu } from "src/components/ui";
 import { COMPANY_ADDRESS, COMPANY_NAME } from "src/lib/company";
+import { reportPalette } from "src/lib/reportTheme";
 
 import {
   Box,
@@ -27,7 +28,11 @@ import {
   TextField,
   Typography,
 } from "@mui/material";
-import { Add, ArticleRounded, Delete, DescriptionRounded, PrintRounded, Save, TableViewRounded } from "@mui/icons-material";
+import { actionIcons } from "src/lib/icons";
+
+const SaveIcon = actionIcons.save;
+const AddIcon = actionIcons.add;
+const DeleteIcon = actionIcons.delete;
 import { Autocomplete as MuiAutocomplete } from "@mui/material";
 
 const blankRow = (accountNo = "") => ({
@@ -303,10 +308,12 @@ const QuickCashBook = () => {
 
   const handleWord = () => {
     if (!exportRows.length) return errorToast("No data to export");
+    // Header band follows the accent picked in Settings, like every other report.
+    const qcbPalette = reportPalette();
     const html = `<html><head><meta charset="utf-8"><style>
       body{font-family:Arial;padding:20px;color:#111827} h1{margin:0} p{color:#475569}
       table{width:100%;border-collapse:collapse} th,td{border:1px solid #cbd5e1;padding:8px;font-size:12px;text-align:left}
-      th{background:#0f62fe;color:#fff}
+      th{background:${qcbPalette.headerBg};color:${qcbPalette.headerText}}
       </style></head><body><h1>${COMPANY_NAME}</h1><p>${COMPANY_ADDRESS}</p><h2>Quick Cash Book - ${dayjs(transactionDate).format("DD-MMM-YYYY")}</h2>${tableHtml()}</body></html>`;
     const blob = new Blob(["\ufeff", html], { type: "application/msword" });
     const url = URL.createObjectURL(blob);
@@ -319,12 +326,13 @@ const QuickCashBook = () => {
 
   const handlePrint = () => {
     if (!exportRows.length) return errorToast("No data to print");
+    const qcbPalette = reportPalette();
     const printWindow = window.open("", "", "width=1200,height=760");
     if (!printWindow) return;
     printWindow.document.write(`<html><head><title>Quick Cash Book</title><style>
       body{font-family:Arial;padding:20px;color:#111827} h1{text-align:center;margin:0} p{text-align:center;color:#475569}
       table{width:100%;border-collapse:collapse} th,td{border:1px solid #cbd5e1;padding:8px;font-size:12px;text-align:left}
-      th{background:#0f62fe;color:white}
+      th{background:${qcbPalette.headerBg};color:${qcbPalette.headerText}}
     </style></head><body><h1>${COMPANY_NAME}</h1><p>${COMPANY_ADDRESS}</p><h2>Quick Cash Book - ${dayjs(transactionDate).format("DD-MMM-YYYY")}</h2>${tableHtml()}</body></html>`);
     printWindow.document.close();
     printWindow.focus();
@@ -344,7 +352,7 @@ const QuickCashBook = () => {
           <Typography variant="h5">Quick Cash Book</Typography>
           <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap justifyContent="flex-end">
             <TableExportMenu rows={exportRows} columns={Object.keys(exportRows[0] || {})} fileName={exportFileName} />
-            <Button variant="contained" startIcon={<Save />} onClick={handleSaveAll} disabled={loading}>
+            <Button variant="contained" startIcon={<SaveIcon />} onClick={handleSaveAll} disabled={loading}>
               {loading ? "Saving..." : "Save All"}
             </Button>
           </Stack>
@@ -435,7 +443,7 @@ const QuickCashBook = () => {
                 <TableRow key={row.id}>
                   <TableCell align="center">
                     <IconButton color="error" onClick={() => deleteRow(row.id)}>
-                      <Delete />
+                      <DeleteIcon />
                     </IconButton>
                   </TableCell>
                   <TableCell sx={{ minWidth: 290 }}>
@@ -531,7 +539,7 @@ const QuickCashBook = () => {
 
         {/* Footer */}
         <Stack direction="row" spacing={2} alignItems="center" flexWrap="wrap" useFlexGap>
-          <Button variant="outlined" startIcon={<Add />} onClick={() => addNewRowWithPrefix(defaultAccountPrefix())}>
+          <Button variant="outlined" startIcon={<AddIcon />} onClick={() => addNewRowWithPrefix(defaultAccountPrefix())}>
             Add New Row
           </Button>
           <Typography fontWeight={900}>

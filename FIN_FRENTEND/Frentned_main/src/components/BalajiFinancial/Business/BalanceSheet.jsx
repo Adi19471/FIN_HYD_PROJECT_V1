@@ -5,10 +5,6 @@ import {
   Button,
   Chip,
   Grid,
-  ListItemIcon,
-  ListItemText,
-  Menu,
-  MenuItem,
   Paper,
   Stack,
   Table,
@@ -20,15 +16,7 @@ import {
   Typography,
   alpha,
 } from "@mui/material";
-import {
-  ArticleRounded,
-  DescriptionRounded,
-  FileDownloadRounded,
-  GridOnRounded,
-  PrintRounded,
-  RefreshRounded,
-  TableViewRounded,
-} from "@mui/icons-material";
+import { actionIcons } from "src/lib/icons";
 import dayjs from "dayjs";
 import axios from "axios";
 import { API_BASE } from "lib/config";
@@ -37,14 +25,13 @@ import LoadingSpinner from "src/LoadingSpinner";
 import {
   AppDatePicker,
   DataTable,
-  exportCsv,
-  exportExcel,
-  exportPdf,
-  exportWord,
-  printReport,
+  ReportCompanyHeader,
+  ReportToolbar,
+  TableExportMenu,
 } from "src/components/ui";
+import { useTheme } from "@mui/material/styles";
 
-const reportBorder = "1px solid #263238";
+const GenerateIcon = actionIcons.generate;
 
 const scrollTableSx = {
   height: {
@@ -100,11 +87,11 @@ const exportColumns = [
 ];
 
 const BalanceSheet = () => {
+  const theme = useTheme();
   const [toDate, setToDate] = useState(dayjs());
   const [data, setData] = useState([]);
   const [loading, setLoading] = useState(false);
   const [generatedDate, setGeneratedDate] = useState(null);
-  const [downloadAnchorEl, setDownloadAnchorEl] = useState(null);
 
   const token = getSession()?.token || getSession("token") || "";
 
@@ -261,28 +248,23 @@ const BalanceSheet = () => {
     }
   };
 
-  const closeDownloadMenu = () => setDownloadAnchorEl(null);
 
-  // Every download goes through the shared report helpers, so the Balance Sheet
-  // exports carry the same company banner, report date and totals block as the
-  // rest of the reports instead of this screen's own cut-down versions.
-  const runExport = (exporter) => () => {
-    closeDownloadMenu();
-    if (!exportRows.length) return;
-    exporter(exportRows, exportColumns, "Balance_Sheet", reportOptions);
-  };
 
+  // ASSETS take the theme's primary, LIABILITIES its secondary, so the two
+  // halves stay distinguishable in every accent instead of being pinned to a
+  // hardcoded teal and blue.
   const renderSection = (title, group, color) => {
+    const onColor = theme.palette.getContrastText(color);
     const groups = Object.entries(group || {});
 
     return (
       <Paper
         elevation={0}
         sx={{
-          border: reportBorder,
+          border: "1px solid", borderColor: "divider",
           borderRadius: 0,
           overflow: "hidden",
-          bgcolor: "#fff",
+          bgcolor: "background.paper",
           boxShadow: "0 14px 30px rgba(15, 23, 42, 0.06)",
           height: "100%",
           display: "flex",
@@ -296,7 +278,7 @@ const BalanceSheet = () => {
             px: 1.5,
             py: 1,
             bgcolor: color,
-            color: "#fff",
+            color: onColor,
             display: "flex",
             flexDirection: { xs: "column", sm: "row" },
             justifyContent: "space-between",
@@ -310,14 +292,14 @@ const BalanceSheet = () => {
           </Typography>
         </Box>
 
-        <TableContainer sx={scrollTableSx}>
-          <Table size="small" stickyHeader sx={{ minWidth: { xs: 520, sm: 620 }, borderCollapse: "collapse" }}>
+        <TableContainer sx={{ ...scrollTableSx, overflowX: "auto" }}>
+          <Table size="small" stickyHeader sx={{ minWidth: 460, borderCollapse: "collapse" }}>
             <TableHead>
               <TableRow>
                 <TableCell
                   sx={{
-                    border: reportBorder,
-                    bgcolor: "#e5e7eb",
+                    border: "1px solid", borderColor: "divider",
+                    bgcolor: "action.hover",
                     fontWeight: 900,
                     width: { xs: 44, sm: 52 },
                     py: 0.75,
@@ -329,8 +311,8 @@ const BalanceSheet = () => {
                 </TableCell>
                 <TableCell
                   sx={{
-                    border: reportBorder,
-                    bgcolor: "#e5e7eb",
+                    border: "1px solid", borderColor: "divider",
+                    bgcolor: "action.hover",
                     fontWeight: 900,
                     py: 0.75,
                     px: { xs: 0.75, sm: 1 },
@@ -342,8 +324,8 @@ const BalanceSheet = () => {
                 <TableCell
                   align="right"
                   sx={{
-                    border: reportBorder,
-                    bgcolor: "#e5e7eb",
+                    border: "1px solid", borderColor: "divider",
+                    bgcolor: "action.hover",
                     fontWeight: 900,
                     width: { xs: 126, sm: 150 },
                     py: 0.75,
@@ -358,7 +340,7 @@ const BalanceSheet = () => {
             <TableBody>
               {groups.length === 0 ? (
                 <TableRow>
-                  <TableCell sx={{ border: reportBorder, py: 1.5, color: "text.secondary" }}>
+                  <TableCell colSpan={3} align="center" sx={{ border: "1px solid", borderColor: "divider", py: 2.5, color: "text.secondary" }}>
                     No records
                   </TableCell>
                 </TableRow>
@@ -369,7 +351,7 @@ const BalanceSheet = () => {
                       <TableCell
                         colSpan={2}
                         sx={{
-                          border: reportBorder,
+                          border: "1px solid", borderColor: "divider",
                           py: 0.65,
                           px: { xs: 0.75, sm: 1 },
                           bgcolor: alpha(color, 0.11),
@@ -383,7 +365,7 @@ const BalanceSheet = () => {
                       <TableCell
                         align="right"
                         sx={{
-                          border: reportBorder,
+                          border: "1px solid", borderColor: "divider",
                           py: 0.65,
                           px: { xs: 0.75, sm: 1 },
                           bgcolor: alpha(color, 0.11),
@@ -400,16 +382,16 @@ const BalanceSheet = () => {
                         key={`${masterCode}-${index}`}
                         hover
                         sx={{
-                          "&:nth-of-type(even) td": { bgcolor: "#f8fafc" },
+                          "&:nth-of-type(even) td": { bgcolor: "action.hover" },
                         }}
                       >
-                        <TableCell sx={{ border: reportBorder, width: { xs: 44, sm: 52 }, py: 0.65, px: { xs: 0.75, sm: 1 }, color: "text.secondary", fontSize: { xs: 12, sm: 13 } }}>
+                        <TableCell sx={{ border: "1px solid", borderColor: "divider", width: { xs: 44, sm: 52 }, py: 0.65, px: { xs: 0.75, sm: 1 }, color: "text.secondary", fontSize: { xs: 12, sm: 13 } }}>
                           {index + 1}
                         </TableCell>
-                        <TableCell sx={{ border: reportBorder, py: 0.65, px: { xs: 0.75, sm: 1 }, fontWeight: 600, fontSize: { xs: 12, sm: 13 }, overflowWrap: "anywhere" }}>
-                          {row.code || rowName(row)}
+                        <TableCell sx={{ border: "1px solid", borderColor: "divider", py: 0.65, px: { xs: 0.75, sm: 1 }, fontWeight: 600, fontSize: { xs: 12, sm: 13 }, overflowWrap: "anywhere" }}>
+                          {row.code || rowName(row) || "\u2014"}
                         </TableCell>
-                        <TableCell align="right" sx={{ border: reportBorder, py: 0.65, px: { xs: 0.75, sm: 1 }, fontWeight: 800, fontSize: { xs: 12, sm: 13 }, whiteSpace: "nowrap" }}>
+                        <TableCell align="right" sx={{ border: "1px solid", borderColor: "divider", py: 0.65, px: { xs: 0.75, sm: 1 }, fontWeight: 800, fontSize: { xs: 12, sm: 13 }, whiteSpace: "nowrap" }}>
                           {money(row.displayAmount ?? row.amount)}
                         </TableCell>
                       </TableRow>
@@ -425,121 +407,25 @@ const BalanceSheet = () => {
   };
 
   return (
-    <Box
-      sx={{
-        p: { xs: 1, sm: 1.5, md: 2.5, xl: 3 },
-        bgcolor: "#eef2f6",
-        minHeight: "100vh",
-        overflowX: "hidden",
-      }}
-    >
-      <Paper
-        elevation={0}
-        sx={{
-          border: "1px solid #d6dee8",
-          borderRadius: 0,
-          bgcolor: "#ffffff",
-          overflow: "hidden",
-          boxShadow: "0 18px 45px rgba(15, 23, 42, 0.08)",
-          width: "100%",
-          maxWidth: { xs: "100%", xl: 1720 },
-          mx: "auto",
-        }}
-      >
-        <Box
-          sx={{
-            px: { xs: 2, md: 2.5 },
-            py: 2,
-            bgcolor: "#102a43",
-            color: "#fff",
-            display: "flex",
-            justifyContent: "space-between",
-            alignItems: { xs: "stretch", md: "center" },
-            gap: 1.5,
-            flexDirection: { xs: "column", sm: "row" },
-            flexWrap: "wrap",
-          }}
-        >
-          <Box sx={{ minWidth: 0, flex: "1 1 280px" }}>
-            <Typography
-              variant="h5"
-              sx={{
-                fontWeight: 900,
-                lineHeight: 1.1,
-                fontSize: { xs: 20, sm: 22, md: 24, xl: 28 },
-                overflowWrap: "anywhere",
-              }}
-            >
-              Balance Sheet
-            </Typography>
-            <Typography
-              variant="body2"
-              sx={{
-                opacity: 0.86,
-                fontSize: { xs: 12, sm: 13, md: 14 },
-                overflowWrap: "anywhere",
-              }}
-            >
-              SRI BALAJI ENTERPRISES | Assets, liabilities, and balance difference
-            </Typography>
-          </Box>
+    <>
+      {/* Same furniture as every other report: an action bar, then the company
+          banner. The breadcrumb overhead already names the screen. */}
+      <ReportToolbar onRefresh={fetchData} loading={loading}>
+        <TableExportMenu
+          rows={exportRows}
+          columns={exportColumns}
+          fileName="Balance_Sheet"
+          reportOptions={reportOptions}
+        />
+      </ReportToolbar>
 
-          <Button
-            variant="contained"
-            startIcon={<FileDownloadRounded />}
-            disabled={!data.length}
-            onClick={(event) => setDownloadAnchorEl(event.currentTarget)}
-            sx={{
-              borderRadius: 0,
-              alignSelf: { xs: "stretch", sm: "center" },
-              bgcolor: "#f8fafc",
-              color: "#102a43",
-              fontWeight: 900,
-              boxShadow: "none",
-              textTransform: "none",
-              "&:hover": { bgcolor: "#e2e8f0", boxShadow: "none" },
-              "&.Mui-disabled": { bgcolor: "rgba(255,255,255,0.35)", color: "rgba(255,255,255,0.75)" },
-            }}
-          >
-            Download
-          </Button>
-          <Menu
-            anchorEl={downloadAnchorEl}
-            open={Boolean(downloadAnchorEl)}
-            onClose={closeDownloadMenu}
-            PaperProps={{
-              sx: {
-                borderRadius: 0,
-                minWidth: 190,
-                border: "1px solid #cbd5e1",
-                boxShadow: "0 14px 30px rgba(15, 23, 42, 0.16)",
-              },
-            }}
-          >
-            <MenuItem onClick={runExport(exportExcel)}>
-              <ListItemIcon><TableViewRounded fontSize="small" sx={{ color: "#2e7d32" }} /></ListItemIcon>
-              <ListItemText primary="Download Excel" secondary=".xlsx" />
-            </MenuItem>
-            <MenuItem onClick={runExport(exportPdf)}>
-              <ListItemIcon><DescriptionRounded fontSize="small" sx={{ color: "#c62828" }} /></ListItemIcon>
-              <ListItemText primary="Download PDF" secondary=".pdf" />
-            </MenuItem>
-            <MenuItem onClick={runExport(exportWord)}>
-              <ListItemIcon><ArticleRounded fontSize="small" sx={{ color: "#2859a8" }} /></ListItemIcon>
-              <ListItemText primary="Download Word" secondary=".doc" />
-            </MenuItem>
-            <MenuItem onClick={runExport(exportCsv)}>
-              <ListItemIcon><GridOnRounded fontSize="small" color="action" /></ListItemIcon>
-              <ListItemText primary="Download CSV" secondary=".csv" />
-            </MenuItem>
-            <MenuItem onClick={runExport(printReport)}>
-              <ListItemIcon><PrintRounded fontSize="small" /></ListItemIcon>
-              <ListItemText primary="Print" />
-            </MenuItem>
-          </Menu>
-        </Box>
-
-        <Box sx={{ p: { xs: 1.25, sm: 1.75, md: 2.5, xl: 3 } }}>
+      <Paper sx={{ p: { xs: 1.5, md: 3 }, mt: 2 }}>
+        <ReportCompanyHeader
+          title="Balance Sheet"
+          subtitle="Assets, liabilities and the balance difference"
+          date={generatedDate || toDate}
+        />
+        <Box sx={{ mt: 2 }}>
           <Stack
             direction={{ xs: "column", md: "row" }}
             spacing={1.5}
@@ -551,32 +437,27 @@ const BalanceSheet = () => {
               label="Date"
               value={toDate}
               onChange={setToDate}
-              sx={{
-                width: { xs: "100%", md: 240, xl: 280 },
-                "& .MuiOutlinedInput-root": { borderRadius: 0, bgcolor: "#fff" },
-              }}
+              sx={{ width: { xs: "100%", md: 240, xl: 280 } }}
             />
             <Button
               variant="contained"
               onClick={fetchData}
               disabled={loading}
-              startIcon={<RefreshRounded />}
+              startIcon={<GenerateIcon />}
               sx={{
                 height: 40,
-                borderRadius: 0,
                 fontWeight: 800,
                 width: { xs: "100%", md: "auto" },
                 minWidth: { md: 132 },
-                bgcolor: "#102a43",
-                "&:hover": { bgcolor: "#173b5c" },
               }}
             >
               {loading ? "Generating..." : "Generate"}
             </Button>
             <Chip
               label={`Report Date: ${dayjs(generatedDate || toDate).format("DD-MMM-YYYY")}`}
+              variant="outlined"
+              color="primary"
               sx={{
-                borderRadius: 0,
                 fontWeight: 800,
                 alignSelf: { xs: "stretch", sm: "flex-start", md: "center" },
                 justifyContent: "center",
@@ -590,7 +471,7 @@ const BalanceSheet = () => {
               <LoadingSpinner />
             </Box>
           ) : data.length === 0 ? (
-            <Alert severity="info" sx={{ borderRadius: 0 }}>
+            <Alert severity="info">
               Select a date and generate the balance sheet.
             </Alert>
           ) : (
@@ -602,11 +483,11 @@ const BalanceSheet = () => {
                     sm: 6,
                     lg: 4
                   }}>
-                  <Paper elevation={0} sx={{ p: { xs: 1.25, md: 1.75 }, border: "1px solid #d6dee8", borderRadius: 0, bgcolor: "#f8fffd", height: "100%" }}>
+                  <Paper elevation={0} sx={{ p: { xs: 1.25, md: 1.75 }, border: "1px solid", borderColor: "divider", bgcolor: alpha(theme.palette.primary.main, 0.06), height: "100%" }}>
                     <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 800 }}>
                       TOTAL ASSETS
                     </Typography>
-                    <Typography variant="h5" sx={{ fontWeight: 900, color: "#0f766e", fontSize: { xs: 22, md: 24, xl: 30 }, overflowWrap: "anywhere" }}>
+                    <Typography variant="h5" sx={{ fontWeight: 900, color: "primary.main", fontSize: { xs: 22, md: 24, xl: 30 }, overflowWrap: "anywhere" }}>
                       {money(totalAssets)}
                     </Typography>
                   </Paper>
@@ -617,11 +498,11 @@ const BalanceSheet = () => {
                     sm: 6,
                     lg: 4
                   }}>
-                  <Paper elevation={0} sx={{ p: { xs: 1.25, md: 1.75 }, border: "1px solid #d6dee8", borderRadius: 0, bgcolor: "#f8fbff", height: "100%" }}>
+                  <Paper elevation={0} sx={{ p: { xs: 1.25, md: 1.75 }, border: "1px solid", borderColor: "divider", bgcolor: alpha(theme.palette.secondary.main, 0.06), height: "100%" }}>
                     <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 800 }}>
                       TOTAL LIABILITIES
                     </Typography>
-                    <Typography variant="h5" sx={{ fontWeight: 900, color: "#1d4ed8", fontSize: { xs: 22, md: 24, xl: 30 }, overflowWrap: "anywhere" }}>
+                    <Typography variant="h5" sx={{ fontWeight: 900, color: "secondary.main", fontSize: { xs: 22, md: 24, xl: 30 }, overflowWrap: "anywhere" }}>
                       {money(totalLiabilities)}
                     </Typography>
                   </Paper>
@@ -632,11 +513,11 @@ const BalanceSheet = () => {
                     sm: 12,
                     lg: 4
                   }}>
-                  <Paper elevation={0} sx={{ p: { xs: 1.25, md: 1.75 }, border: "1px solid #d6dee8", borderRadius: 0, bgcolor: difference === 0 ? "#f8fffd" : "#fffbeb", height: "100%" }}>
+                  <Paper elevation={0} sx={{ p: { xs: 1.25, md: 1.75 }, border: "1px solid", borderColor: difference === 0 ? "divider" : "warning.main", bgcolor: alpha(difference === 0 ? theme.palette.success.main : theme.palette.warning.main, 0.08), height: "100%" }}>
                     <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 800 }}>
                       DIFFERENCE
                     </Typography>
-                    <Typography variant="h5" sx={{ fontWeight: 900, color: difference === 0 ? "#0f766e" : "#b45309", fontSize: { xs: 22, md: 24, xl: 30 }, overflowWrap: "anywhere" }}>
+                    <Typography variant="h5" sx={{ fontWeight: 900, color: difference === 0 ? "success.main" : "warning.main", fontSize: { xs: 22, md: 24, xl: 30 }, overflowWrap: "anywhere" }}>
                       {money(difference)}
                     </Typography>
                   </Paper>
@@ -648,23 +529,23 @@ const BalanceSheet = () => {
                   sx={{ minHeight: 0, display: "flex" }}
                   size={{
                     xs: 12,
-                    lg: 6
+                    xl: 6
                   }}>
-                  {renderSection("ASSETS", groupedData.ASSETS, "#0f766e")}
+                  {renderSection("ASSETS", groupedData.ASSETS, theme.palette.primary.main)}
                 </Grid>
                 <Grid
                   sx={{ minHeight: 0, display: "flex" }}
                   size={{
                     xs: 12,
-                    lg: 6
+                    xl: 6
                   }}>
-                  {renderSection("LIABILITIES", groupedData.LIABILITIES, "#1d4ed8")}
+                  {renderSection("LIABILITIES", groupedData.LIABILITIES, theme.palette.secondary.main)}
                 </Grid>
               </Grid>
 
               <DataTable
-                title="Balance Sheet - All Rows"
-                subtitle="Complete API data in DataTable format with search, filters, pagination, print, and downloads."
+                fileName="Balance_Sheet_Rows"
+                subtitle="Every row behind the summary above - searchable, filterable and downloadable."
                 rows={normalizedRows}
                 columns={detailColumns}
                 loading={loading}
@@ -679,7 +560,7 @@ const BalanceSheet = () => {
           )}
         </Box>
       </Paper>
-    </Box>
+    </>
   );
 };
 

@@ -12,13 +12,25 @@ import {
   TableHead,
   TableRow,
   Grid,
+  FormControl,
+  FormControlLabel,
+  Radio,
+  RadioGroup,
+  alpha,
 } from "@mui/material";
+import { useTheme } from "@mui/material/styles";
 import dayjs from "dayjs";
 import axios from "axios";
 import { API_BASE } from "lib/config";
 import { getSession } from "src/utils/session";
 import LoadingSpinner from "src/LoadingSpinner";
-import { AppDatePicker, TableExportMenu, useDateRange } from "src/components/ui";
+import {
+  AppDatePicker,
+  ReportCompanyHeader,
+  ReportToolbar,
+  TableExportMenu,
+  useDateRange as useDateRangeHook,
+} from "src/components/ui";
 
 const REVENUE = "REVENUES";
 const EXPENSE = "EXPENSES";
@@ -60,7 +72,9 @@ const exportColumns = [
 ];
 
 const RevenueExpenseStatement = () => {
-  const { fromDate, toDate, setFromDate, setToDate, toDateMin, toDateMax } = useDateRange(null, null);
+  const theme = useTheme();
+  const [useDateRange, setUseDateRange] = useState(true); // true = Date Range, false = All
+  const { fromDate, toDate, setFromDate, setToDate, toDateMin, toDateMax } = useDateRangeHook(null, null);
   const [data, setData] = useState([]);
   const [loading, setLoading] = useState(false);
 
@@ -69,7 +83,7 @@ const RevenueExpenseStatement = () => {
 
   // API CALL with Token
   const fetchData = async () => {
-    if (!fromDate || !toDate) {
+    if (useDateRange && (!fromDate || !toDate)) {
       alert("Please select both From and To dates");
       return;
     }
@@ -82,17 +96,18 @@ const RevenueExpenseStatement = () => {
     try {
       setLoading(true);
 
-      const res = await axios.get(
-        `${API_BASE}/revenueExpenseStatement/${dayjs(fromDate).format(
-          "YYYY-MM-DD"
-        )}/${dayjs(toDate).format("YYYY-MM-DD")}`,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-            "Content-Type": "application/json",
-          },
-        }
-      );
+      const url = useDateRange
+        ? `${API_BASE}/revenueExpenseStatement/${dayjs(fromDate).format(
+            "YYYY-MM-DD"
+          )}/${dayjs(toDate).format("YYYY-MM-DD")}`
+        : `${API_BASE}/revenueExpenseStatement`;
+
+      const res = await axios.get(url, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+      });
 
       setData(Array.isArray(res.data) ? res.data : []);
     } catch (err) {
@@ -181,33 +196,29 @@ const RevenueExpenseStatement = () => {
     return rows;
   }, [groupedData, orderedTypes, isLoss, netProfit]);
 
+  const reportRange = useDateRange
+    ? `Statement period: ${dayjs(fromDate).format("DD-MMM-YYYY")} to ${dayjs(toDate).format("DD-MMM-YYYY")}`
+    : "All Dates";
+
   // Period line and the summary block printed under the exported table.
   const reportOptions = useMemo(
     () => ({
-      period: { fromDate, toDate, label: "Statement Period" },
+      period: useDateRange ? { fromDate, toDate, label: "Statement Period" } : undefined,
+      meta: useDateRange ? [] : [{ label: "Period", value: "All Dates" }],
       summary: [
         { label: "Total Revenue", value: totalRevenue },
         { label: "Total Expenses", value: totalExpense },
         { label: isLoss ? "Net Loss" : "Net Profit", value: netProfit },
       ],
     }),
-    [fromDate, toDate, totalRevenue, totalExpense, netProfit, isLoss]
+    [useDateRange, fromDate, toDate, totalRevenue, totalExpense, netProfit, isLoss]
   );
 
   return (
-    <Box sx={{ p: 3 }}>
-      {/* HEADER */}
-      <Stack
-        direction="row"
-        alignItems="center"
-        justifyContent="space-between"
-        flexWrap="wrap"
-        gap={1}
-        mb={1}
-      >
-        <Typography variant="h6" fontWeight={700}>
-          Revenue & Expense Statement
-        </Typography>
+    <>
+      {/* Same furniture as every other report: action bar, then the company
+          banner. The breadcrumb overhead already names the screen. */}
+      <ReportToolbar onRefresh={fetchData} loading={loading}>
         {/* Single download entry point: Excel / PDF / Word / CSV / Print. */}
         <TableExportMenu
           rows={exportRows}
@@ -215,17 +226,30 @@ const RevenueExpenseStatement = () => {
           fileName="Revenue-Expense-Statement"
           reportOptions={reportOptions}
         />
-      </Stack>
+      </ReportToolbar>
+
+      <ReportCompanyHeader
+        title="Revenue & Expense Statement"
+        subtitle={reportRange}
+        date={toDate}
+        sx={{ mt: 2 }}
+      />
+
       {/* FILTER CARD */}
-      <Paper sx={{ p: 3, mb: 3, borderRadius: 2 }}>
+      <Paper sx={{ p: 3, mb: 3 }}>
         <Grid container spacing={2} alignItems="center">
 
-          <Grid
-            size={{
-              xs: 12,
-              md: 3
-            }}>
-            <AppDatePicker label="From Date" value={fromDate} onChange={setFromDate} />
+          <Grid>
+            <FormControl component="fieldset">
+              <RadioGroup
+                row
+                value={useDateRange ? "date" : "all"}
+                onChange={(e) => setUseDateRange(e.target.value === "date")}
+              >
+                <FormControlLabel value="all" control={<Radio />} label="All" />
+                <FormControlLabel value="date" control={<Radio />} label="Date Range" />
+              </RadioGroup>
+            </FormControl>
           </Grid>
 
           <Grid
@@ -233,7 +257,15 @@ const RevenueExpenseStatement = () => {
               xs: 12,
               md: 3
             }}>
-            <AppDatePicker label="To Date" value={toDate} onChange={setToDate} minDate={toDateMin} maxDate={toDateMax} />
+            <AppDatePicker label="From Date" value={fromDate} onChange={setFromDate} disabled={!useDateRange} />
+          </Grid>
+
+          <Grid
+            size={{
+              xs: 12,
+              md: 3
+            }}>
+            <AppDatePicker label="To Date" value={toDate} onChange={setToDate} minDate={toDateMin} maxDate={toDateMax} disabled={!useDateRange} />
           </Grid>
 
           <Grid
@@ -246,7 +278,7 @@ const RevenueExpenseStatement = () => {
               variant="contained"
               size="large"
               onClick={fetchData}
-              disabled={loading || !fromDate || !toDate}
+              disabled={loading || (useDateRange && (!fromDate || !toDate))}
             >
               {loading ? "Generating..." : "Generate Report"}
             </Button>
@@ -262,7 +294,7 @@ const RevenueExpenseStatement = () => {
               xs: 12,
               md: 4
             }}>
-            <Paper sx={{ p: 2, borderLeft: "5px solid green" }}>
+            <Paper sx={{ p: 2, borderLeft: "5px solid", borderLeftColor: "success.main" }}>
               <Typography variant="subtitle2">Total Revenue</Typography>
               <Typography variant="h6" fontWeight={700}>
                 {fmt(totalRevenue)}
@@ -275,7 +307,7 @@ const RevenueExpenseStatement = () => {
               xs: 12,
               md: 4
             }}>
-            <Paper sx={{ p: 2, borderLeft: "5px solid red" }}>
+            <Paper sx={{ p: 2, borderLeft: "5px solid", borderLeftColor: "error.main" }}>
               <Typography variant="subtitle2">Total Expenses</Typography>
               <Typography variant="h6" fontWeight={700}>
                 {fmt(totalExpense)}
@@ -288,7 +320,7 @@ const RevenueExpenseStatement = () => {
               xs: 12,
               md: 4
             }}>
-            <Paper sx={{ p: 2, borderLeft: "5px solid blue" }}>
+            <Paper sx={{ p: 2, borderLeft: "5px solid", borderLeftColor: "primary.main" }}>
               <Typography variant="subtitle2">Net Profit / Loss</Typography>
               <Typography
                 variant="h6"
@@ -349,12 +381,14 @@ const RevenueExpenseStatement = () => {
                     {/* SECTION HEADER */}
                     <TableRow
                       sx={{
+                        // Revenue reads as success, expense as error - taken
+                        // from the palette so both follow the theme.
                         backgroundColor:
                           type === REVENUE
-                            ? "#e8f5e9"
+                            ? alpha(theme.palette.success.main, 0.12)
                             : type === EXPENSE
-                              ? "#ffebee"
-                              : "#f5f5f5",
+                              ? alpha(theme.palette.error.main, 0.1)
+                              : "action.hover",
                       }}
                     >
                       <TableCell colSpan={2}>
@@ -397,7 +431,7 @@ const RevenueExpenseStatement = () => {
               {/* NET PROFIT / LOSS - LAST ROW */}
               <TableRow
                 sx={{
-                  backgroundColor: isLoss ? "#ffebee" : "#e8f5e9",
+                  backgroundColor: alpha(isLoss ? theme.palette.error.main : theme.palette.success.main, 0.12),
                   borderTop: "2px solid",
                   borderColor: "divider",
                 }}
@@ -421,7 +455,7 @@ const RevenueExpenseStatement = () => {
           </Table>
         </TableContainer>
       )}
-    </Box>
+    </>
   );
 };
 

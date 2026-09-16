@@ -23,17 +23,17 @@ import {
   Stack,
   Toolbar,
 } from "@mui/material";
-import {
-  Close as CloseIcon,
-  Save as SaveIcon,
-  Edit as EditIcon,
-  SearchRounded,
-  TuneRounded,
-  RestartAltRounded,
-} from "@mui/icons-material";
+import { RestartAltRounded } from "@mui/icons-material";
+import { actionIcons } from "src/lib/icons";
 import dayjs from "dayjs";
 import { AppDatePicker, TableExportMenu, ProfilePhotoBox } from "src/components/ui";
 import LoanDetailsDialog from "../LoanDetailsDialog";
+
+const CloseIcon = actionIcons.close;
+const SaveIcon = actionIcons.save;
+const EditIcon = actionIcons.edit;
+const SearchRounded = actionIcons.search;
+const TuneRounded = actionIcons.filter;
 
 
 const FIXED_DURATION_MONTHS = 10;

@@ -15,7 +15,7 @@ import {
 
 import {
   DataTable,
-  PageHeader,
+  
   ReportCompanyHeader,
   ReportToolbar,
   useReportZoom,
@@ -116,13 +116,6 @@ const Partner_Loan_Limit = () => {
 
   return (
     <>
-      <PageHeader
-        title="Partner Loan Limit Report"
-        subtitle="Authorised vs current loan limits per partner."
-        totalCount={rows.length}
-        onRefresh={getPartnerLoanLimits}
-        loading={loading}
-      />
 
       <ReportToolbar
         onGenerate={getPartnerLoanLimits}
@@ -142,8 +135,10 @@ const Partner_Loan_Limit = () => {
             rows={rows}
             columns={columns}
             loading={loading}
-            // Names the screen on the printed / downloaded report.
-            title="Partner Loan Limit Report"
+            // The banner above the grid already names the report, so the card
+            // header carries only the download name and the record count.
+            fileName="Partner-Loan-Limit"
+            subtitle={`Report date: ${dayjs().format("DD-MMM-YYYY")}`}
             totalFields={TOTAL_FIELDS}
             totalLabelCell={TOTAL_LABEL_CELL}
             pageSize={25}

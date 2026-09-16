@@ -4,15 +4,15 @@ import {
   Table, TableBody, TableCell, TableContainer, TableHead, TableRow,
   TablePagination, InputAdornment, Alert, CircularProgress, Chip, Stack,
 } from '@mui/material';
-import {
-  DeleteForever as DeleteIcon,
-  Search as SearchIcon,
-  Visibility as ViewIcon,
-} from '@mui/icons-material';
+import { DeleteForever as DeleteIcon } from "@mui/icons-material";
+import { actionIcons } from "src/lib/icons";
 import axios from 'axios';
 import { API_BASE } from 'lib/config';
 import { getSession } from 'src/utils/session';
 import { AppDatePicker } from 'src/components/ui';
+
+const SearchIcon = actionIcons.search;
+const ViewIcon = actionIcons.view;
 
 const DeleteTransactions = () => {
   const [date, setDate] = useState('2026-01-07');

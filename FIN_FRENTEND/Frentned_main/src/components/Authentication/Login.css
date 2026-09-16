@@ -60,18 +60,24 @@
 .auth-orb.one {
   width: 360px; height: 360px;
   top: -90px; right: -60px;
-  background: radial-gradient(circle, rgba(125, 211, 252, 0.9), transparent 70%);
+  background: radial-gradient(circle,
+    color-mix(in srgb, var(--brand-primary-light, var(--brand-primary)) 80%, transparent),
+    transparent 70%);
 }
 .auth-orb.two {
   width: 320px; height: 320px;
   bottom: -120px; left: 8%;
-  background: radial-gradient(circle, rgba(167, 139, 250, 0.8), transparent 70%);
+  background: radial-gradient(circle,
+    color-mix(in srgb, var(--brand-secondary) 72%, transparent),
+    transparent 70%);
   animation-delay: -5s;
 }
 .auth-orb.three {
   width: 240px; height: 240px;
   top: 38%; left: 44%;
-  background: radial-gradient(circle, rgba(56, 189, 248, 0.55), transparent 70%);
+  background: radial-gradient(circle,
+    color-mix(in srgb, var(--brand-primary) 55%, transparent),
+    transparent 70%);
   animation-delay: -9s;
 }
 
@@ -108,6 +114,20 @@
   backdrop-filter: blur(14px);
 }
 .auth-brand-mark svg { font-size: 30px; }
+/* The Venkateswara emblem is a square artwork, so it fills the plate rather
+   than sitting inside it like a glyph would. */
+.auth-brand-mark img {
+  width: 100%;
+  height: 100%;
+  border-radius: inherit;
+  object-fit: cover;
+  display: block;
+}
+.auth-brand-mark:has(img) {
+  padding: 0;
+  background: none;
+  overflow: hidden;
+}
 .auth-brand-name { font-size: 1.35rem; font-weight: 800; letter-spacing: 0.2px; line-height: 1.1; }
 .auth-brand-sub { font-size: 0.85rem; color: rgba(255, 255, 255, 0.72); margin-top: 2px; }
 
@@ -149,7 +169,10 @@
   margin: 0;
 }
 .auth-headline .accent {
-  background: linear-gradient(90deg, #ffffff, #bae6fd 45%, #a78bfa);
+  background: linear-gradient(90deg,
+    #ffffff,
+    color-mix(in srgb, var(--brand-primary-light, var(--brand-primary)) 55%, #ffffff) 45%,
+    color-mix(in srgb, var(--brand-secondary) 70%, #ffffff));
   -webkit-background-clip: text;
   background-clip: text;
   -webkit-text-fill-color: transparent;
@@ -289,4 +312,63 @@
 
 @media (prefers-reduced-motion: reduce) {
   .auth-visual, .auth-orb, .auth-card::before, .auth-live-dot { animation: none; }
+}
+
+/* ------------------------------------------------------------------
+   Devotional portrait on the sign-in panel.
+
+   Rendered only when public/images/venkateswara.jpg exists - Login.jsx drops
+   the element on the image's error event - so the panel degrades to the brand
+   emblem rather than showing a broken picture.
+   ------------------------------------------------------------------ */
+.auth-deity {
+  position: absolute;
+  right: clamp(8px, 3vw, 56px);
+  bottom: 0;
+  width: clamp(200px, 26%, 330px);
+  z-index: 0;
+  pointer-events: none;
+  /* Grounded on the panel: the figure stands, and its base dissolves into the
+     gradient instead of ending on a hard edge. */
+  -webkit-mask-image: linear-gradient(180deg, #000 78%, transparent 99%);
+  mask-image: linear-gradient(180deg, #000 78%, transparent 99%);
+  opacity: 0.92;
+  filter: drop-shadow(0 24px 48px rgba(0, 0, 0, 0.45));
+}
+
+.auth-deity img {
+  width: 100%;
+  height: auto;
+  display: block;
+  /* The source is a dark studio plate; multiply-free blending keeps the gold
+     bright while the halo below supplies separation from the gradient. */
+  mix-blend-mode: normal;
+  border-radius: 18px 18px 0 0;
+}
+
+/* Soft halo so the portrait reads against any accent colour. */
+.auth-deity::before {
+  content: "";
+  position: absolute;
+  inset: -14% -18% -6%;
+  border-radius: 50%;
+  background: radial-gradient(circle at 50% 42%,
+    color-mix(in srgb, var(--brand-primary-light, #ffffff) 45%, transparent),
+    transparent 68%);
+  z-index: -1;
+}
+
+/* Above ~1600px the panel has room for the portrait to read properly. */
+@media (min-width: 1600px) {
+  .auth-deity { width: clamp(260px, 28%, 400px); }
+}
+
+/* On short or narrow screens the portrait only crowds the copy. */
+@media (max-width: 1200px), (max-height: 720px) {
+  .auth-deity { display: none; }
+}
+
+/* Brand plate: crop to the crown and face, which is what reads at 56px. */
+.auth-brand-mark img {
+  object-position: top center;
 }

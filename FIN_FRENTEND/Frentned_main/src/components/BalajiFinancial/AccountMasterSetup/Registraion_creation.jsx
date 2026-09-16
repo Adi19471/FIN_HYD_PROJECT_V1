@@ -293,16 +293,12 @@ const Registration_creation = () => {
   return (
     <Box>
       <PageHeader
-        title="User Management"
-        subtitle="Create users, update roles, assign menu permissions, search records, and export the current register."
         searchPlaceholder="Search user, role, or ID..."
         searchValue={search}
         onSearchChange={setSearch}
         onAddClick={() => handleOpen()}
         addButtonLabel="Add New User"
-        totalCount={filteredRows.length}
         loading={loading || saving}
-        onRefresh={loadUsers}
       />
       <ReportToolbar
         data={filteredRows}

@@ -10,12 +10,8 @@ import {
   Tooltip,
   Typography,
 } from "@mui/material";
-import {
-  FullscreenRounded,
-  MenuRounded,
-  SearchRounded,
-  SettingsRounded,
-} from "@mui/icons-material";
+import { FullscreenRounded } from "@mui/icons-material";
+import { actionIcons } from "src/lib/icons";
 import SearchModal from "../components/ModalSearch";
 import Notifications from "../components/DropdownNotifications.jsx";
 import Help from "../components/DropdownHelp";
@@ -24,18 +20,11 @@ import EnterpriseThemePanel from "../components/EnterpriseThemePanel";
 import ThemeToggle from "../components/ThemeToggle";
 import { useThemeProvider } from "../utils/ThemeContext";
 import { COMPANY_ADDRESS, COMPANY_APP_NAME, COMPANY_LOGO } from "src/lib/company";
+import { breadcrumbsFor } from "src/lib/breadcrumbs";
 
-const routeLabels = {
-  "": "Dashboard",
-  AccountsModules: "Accounts",
-  AccountMasterSetup: "Account Master",
-  Bussiness: "Business",
-  Customer: "Customer Reports",
-  Loans: "Loans",
-  Partners: "Partners",
-  Transactions: "Transactions",
-  Main_personal_file: "Personal Info",
-};
+const MenuRounded = actionIcons.menu;
+const SearchRounded = actionIcons.search;
+const SettingsRounded = actionIcons.settings;
 
 function Header({ sidebarOpen, setSidebarOpen }) {
   const location = useLocation();
@@ -43,11 +32,7 @@ function Header({ sidebarOpen, setSidebarOpen }) {
   const [searchModalOpen, setSearchModalOpen] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
 
-  const breadcrumbs = useMemo(() => {
-    const parts = location.pathname.split("/").filter(Boolean);
-    if (!parts.length) return ["Dashboard"];
-    return parts.map((part) => routeLabels[part] || part.replaceAll("_", " ").replaceAll("-", " "));
-  }, [location.pathname]);
+  const breadcrumbs = useMemo(() => breadcrumbsFor(location.pathname), [location.pathname]);
 
   const toggleFullscreen = () => {
     if (!document.fullscreenElement) {
