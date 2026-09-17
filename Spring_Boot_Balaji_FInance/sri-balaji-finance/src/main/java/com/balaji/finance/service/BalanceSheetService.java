@@ -26,6 +26,10 @@ public class BalanceSheetService {
 		BigDecimal openingBalanceForToDatePlusOneDay = Optional.ofNullable(cashBookRepo.findOpeningBalanceForDate(toDate.plusDays(1)))
 				.orElse(BigDecimal.ZERO);
 		
+		BigDecimal profitByTranscDate = cashBookRepo.getProfitByTranscDate(to);
+		
+		
+		
 		List<BalanceSheetProjection> balanceSheetByTrasncDate = cashBookRepo.getBalanceSheetByTrasncDate(to,
 				Arrays.asList("ASSETS", "LIABILITIES"));
 
@@ -51,9 +55,37 @@ public class BalanceSheetService {
 				return openingBalanceForToDatePlusOneDay;
 			}
 		};
+		
+		
+		BalanceSheetProjection profit = new BalanceSheetProjection() {
+
+			@Override
+			public String getType() {
+				return "LIABILITIES";
+			}
+
+			@Override
+			public String getMasterCode() {
+				return "PROFIT";
+			}
+
+			@Override
+			public String getCode() {
+				return "PROFIT";
+			}
+
+			@Override
+			public BigDecimal getAmount() {
+				return profitByTranscDate;
+			}
+		};
+		
+		
 
 		balanceSheetByTrasncDate.add(cashOnHandProjection);
+		balanceSheetByTrasncDate.add(profit);
 
+		
 		return balanceSheetByTrasncDate;
 	}
 

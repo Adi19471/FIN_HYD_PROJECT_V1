@@ -670,6 +670,25 @@ public interface CashBookRepo extends JpaRepository<CashBook, Long> {
 			""")
 	List<CashBook> getAllDailyCollectionsByBusniesMember(@Param("memberId") String memberId);
 	
-	
-	
+	@Query(value = """
+			SELECT
+			    COALESCE(
+			        SUM(
+			            CASE
+			                WHEN cb.ACCOUNT_MASTER_TYPE = 'REVENUES'
+			                    THEN COALESCE(cb.CREDIT, 0) - COALESCE(cb.DEBIT, 0)
+
+			                WHEN cb.ACCOUNT_MASTER_TYPE = 'EXPENSES'
+			                    THEN -(COALESCE(cb.CREDIT, 0) - COALESCE(cb.DEBIT, 0))
+
+			                ELSE 0
+			            END
+			        ),
+			        0
+			    ) AS profit
+			FROM cash_book cb
+			WHERE cb.TRANS_DATE <= :toDate
+			  AND cb.ACCOUNT_MASTER_TYPE IN ('REVENUES', 'EXPENSES')
+			""", nativeQuery = true)
+	BigDecimal getProfitByTranscDate(@Param("toDate") LocalDateTime toDate);
 }
