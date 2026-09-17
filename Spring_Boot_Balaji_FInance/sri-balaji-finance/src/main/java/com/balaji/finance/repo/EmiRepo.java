@@ -130,7 +130,8 @@ public interface EmiRepo extends JpaRepository<EMI, Integer> {
 		                END
 		            ),
 		            0
-		        ) AS pendingCount
+		        ) AS pendingCount,
+		        bm.duration AS totalNoOfInstallments
 
 		    FROM EMI e
 		    JOIN e.businessMember bm
