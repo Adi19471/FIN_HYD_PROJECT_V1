@@ -119,7 +119,7 @@ public class DailyLoanInstallmentPaymentService {
 		int count = 0;
 		List<EmiPaymentHistoryDto> emiPaymentHistoryList = new ArrayList<EmiPaymentHistoryDto>();
 
-		BigDecimal totalLoanAmount = bm.getAmount().add(bm.getInterest());
+		BigDecimal totalLoanAmount = bm.getAmount();
 		BigDecimal totalAmountPaid = BigDecimal.ZERO;
 		LocalDateTime lastPaidDate = bm.getStartDate();
 
