@@ -13,7 +13,7 @@ public class InstallmentDuesPojo {
 	private String startDate;
 	private String endDate;
 	private BigDecimal amount;
-	private int totalNoOfInstallments;
+	private Long totalNoOfInstallments;
 	private BigDecimal installmentAmount;
 
 	private BigDecimal amountPaid;
@@ -120,11 +120,11 @@ public class InstallmentDuesPojo {
 		this.remarks = remarks;
 	}
 
-	public int getTotalNoOfInstallments() {
+	public Long getTotalNoOfInstallments() {
 		return totalNoOfInstallments;
 	}
 
-	public void setTotalNoOfInstallments(int totalNoOfInstallments) {
+	public void setTotalNoOfInstallments(Long totalNoOfInstallments) {
 		this.totalNoOfInstallments = totalNoOfInstallments;
 	}
 

@@ -14,7 +14,7 @@ public interface InstallmentDueProjection {
 	String getPartnerName();
 
 	String getGuarantorName();
-	
+
 	LocalDateTime getStartDate();
 
 	LocalDateTime getEndDate();
@@ -30,4 +30,6 @@ public interface InstallmentDueProjection {
 	BigDecimal getDueAmount();
 
 	Long getPendingCount();
+
+	Long getTotalNoOfInstallments();
 }
