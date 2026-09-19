@@ -21,10 +21,26 @@ import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 
 @Entity
-@Table(name = "BUSINESS_MEMBER", indexes = {
-		@Index(name = "idx_bm_status_start", columnList = "LOAN_STATUS, START_DATE"),
-		@Index(name = "idx_bm_status_end", columnList = "LOAN_STATUS, END_DATE"),
-		@Index(name = "idx_bm_loan_type", columnList = "LOAN_TYPE") })
+@Table(
+	    name = "BUSINESS_MEMBER",
+	    indexes = {
+
+	        @Index(
+	            name = "idx_bm_status_start",
+	            columnList = "LOAN_STATUS, START_DATE"
+	        ),
+
+	        @Index(
+	            name = "idx_bm_status_end",
+	            columnList = "LOAN_STATUS, END_DATE"
+	        ),
+
+	        @Index(
+	            name = "idx_bm_loan_type",
+	            columnList = "LOAN_TYPE"
+	        )
+	    }
+	)
 @EntityListeners(AuditingEntityListener.class)
 public class BusinessMember {
 

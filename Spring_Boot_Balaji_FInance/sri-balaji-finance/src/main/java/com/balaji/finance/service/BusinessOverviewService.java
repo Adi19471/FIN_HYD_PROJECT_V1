@@ -12,14 +12,17 @@ import java.util.stream.Collectors;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import com.balaji.finance.dto.BalanceSheetProjection;
 import com.balaji.finance.dto.BusinessOverviewProjection;
 import com.balaji.finance.dto.LoanCollectionProjection;
 import com.balaji.finance.dto.LoanSummaryProjection;
+import com.balaji.finance.dto.LoanTypeInterestProjection;
 import com.balaji.finance.dto.RevenueExpenseProjection;
 import com.balaji.finance.pojo.BusinessOverviewResponsePojo;
 import com.balaji.finance.pojo.BusinessSharePojo;
 import com.balaji.finance.repo.BusinessMemberRepository;
 import com.balaji.finance.repo.CashBookRepo;
+import com.balaji.finance.repo.EmiRepo;
 import com.balaji.finance.repo.PersonalInfoRepository;
 
 @Service
@@ -34,6 +37,9 @@ public class BusinessOverviewService {
 	
 	@Autowired
 	private CashBookRepo cashBookRepo;
+	
+	@Autowired
+	private EmiRepo emiRepo;
 
 	public BusinessOverviewResponsePojo getBusinessOverViewByDateRange(LocalDate fromDate, LocalDate toDate,boolean excludeDividends,boolean accruedRevenue) {
 
@@ -151,9 +157,40 @@ public class BusinessOverviewService {
 					.filter(p -> !p.getMasterCode().equalsIgnoreCase("DIVIDENDS")).collect(Collectors.toList());
 		}
 
-		if (!accruedRevenue) {
+		if (accruedRevenue) {
 			businessOverviewTrasncDate = businessOverviewTrasncDate.stream()
 					.filter(p -> !p.getMasterCode().equalsIgnoreCase("INTEREST")).collect(Collectors.toList());
+
+			List<LoanTypeInterestProjection> expectedInterest = emiRepo.getExpectedInterest(from, to);
+
+			for (LoanTypeInterestProjection interestProjection : expectedInterest) {
+
+				BusinessOverviewProjection accuralRevenueProjection = new BusinessOverviewProjection() {
+
+					@Override
+					public String getType() {
+						return "REVENUES";
+					}
+
+					@Override
+					public String getMasterCode() {
+						return (interestProjection.getLoanType().equalsIgnoreCase("MONTHLY_FINANCE") ? "MF" : "DF" )+ " INTEREST ( ACCURAL REVENUE) ";
+					}
+
+					@Override
+					public String getCode() {
+						return (interestProjection.getLoanType().equalsIgnoreCase("MONTHLY_FINANCE") ? "MF" : "DF" ) + " INTEREST ( ACCURAL REVENUE) ";
+					}
+
+					@Override
+					public BigDecimal getAmount() {
+						return interestProjection.getInterestAmount();
+					}
+				};
+
+				businessOverviewTrasncDate.add(accuralRevenueProjection);
+			}
+
 		}
 
 		return businessOverviewTrasncDate;

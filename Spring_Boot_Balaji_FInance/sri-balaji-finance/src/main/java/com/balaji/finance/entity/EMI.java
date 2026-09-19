@@ -21,9 +21,21 @@ import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 
 @Entity
-@Table(name = "EMI", indexes = {
-		@Index(name = "idx_emi_duedate", columnList = "due_date"),
-		@Index(name = "idx_emi_member_status", columnList = "business_member_id, status") })
+@Table(
+	    name = "EMI",
+	    indexes = {
+
+	        @Index(
+	            name = "idx_emi_member_due_status",
+	            columnList = "business_member_id, due_date, status"
+	        ),
+
+	        @Index(
+	            name = "idx_emi_member_status",
+	            columnList = "business_member_id, status"
+	        )
+	    }
+	)
 @EntityListeners(AuditingEntityListener.class)
 public class EMI {
 

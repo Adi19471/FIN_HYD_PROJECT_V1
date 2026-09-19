@@ -9,6 +9,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 import com.balaji.finance.dto.InstallmentDueProjection;
+import com.balaji.finance.dto.LoanTypeInterestProjection;
 import com.balaji.finance.dto.PartnerDueAmountProjection;
 import com.balaji.finance.entity.BusinessMember;
 import com.balaji.finance.entity.EMI;
@@ -102,44 +103,48 @@ public interface EmiRepo extends JpaRepository<EMI, Integer> {
 		        bm.businessMemberId AS loanId,
 
 		        bm.customerId.firstName AS customerName,
-
 		        bm.customerId.mobile AS customerMobile,
 
 		        bm.partnerId.firstName AS partnerName,
-
 		        bm.guarantor1.firstName AS guarantorName,
 
 		        bm.startDate AS startDate,
-
 		        bm.endDate AS endDate,
 
 		        bm.amount AS loanAmount,
-
 		        bm.installment AS installmentAmount,
 
 		        MIN(e.dueDate) AS dueDate,
 
+		   
 		        COALESCE(
-		            SUM(e.paidAmount),
+		            (
+		                SELECT SUM(e3.paidAmount)
+		                FROM EMI e3
+		                WHERE e3.businessMember = bm
+		                  AND e3.status NOT IN ('PENDING', 'PARTIAL')
+		            ),
 		            0
 		        ) AS paidAmount,
 
+		        
 		        COALESCE(
 		            SUM(
 		                CASE
 		                    WHEN e.status IN ('PENDING', 'PARTIAL')
-		                    THEN (e.totalAmount - e.paidAmount)
+		                    THEN e.totalAmount - e.paidAmount
 		                    ELSE 0
 		                END
 		            ),
 		            0
 		        ) AS dueAmount,
 
+		        
 		        (
-		            SELECT COUNT(e3)
-		            FROM EMI e3
-		            WHERE e3.businessMember = bm
-		              AND e3.status IN ('PENDING', 'PARTIAL')
+		            SELECT COUNT(e4.emiId)
+		            FROM EMI e4
+		            WHERE e4.businessMember = bm
+		              AND e4.status IN ('PENDING', 'PARTIAL')
 		        ) AS pendingCount,
 
 		        bm.duration AS totalNoOfInstallments
@@ -171,15 +176,11 @@ public interface EmiRepo extends JpaRepository<EMI, Integer> {
 		        bm.installment,
 		        bm.duration
 
-		    ORDER BY bm.businessMemberId
-		    """)
-		List<InstallmentDueProjection> getInstallmentDues(
-		        @Param("startsWithString") String startsWithString,
-		        @Param("fromDate") LocalDateTime fromDate,
-		        @Param("toDate") LocalDateTime toDate,
-		        @Param("activeLoans") Boolean activeLoans
-		);
-	
+			ORDER BY bm.businessMemberId
+			""")
+	List<InstallmentDueProjection> getInstallmentDues(@Param("startsWithString") String startsWithString,
+			@Param("fromDate") LocalDateTime fromDate, @Param("toDate") LocalDateTime toDate,
+			@Param("activeLoans") Boolean activeLoans);
 
 	@Query("""
 			SELECT COUNT(e)
@@ -188,4 +189,18 @@ public interface EmiRepo extends JpaRepository<EMI, Integer> {
 			AND e.status <> 'PAID'
 			""")
 	Long getPendingInstallmentsCount(@Param("businessMemberId") String string);
+
+	@Query("""
+			    SELECT
+			        bm.loanType AS loanType,
+			        COALESCE(SUM(e.interestAmount), 0) AS interestAmount
+			    FROM EMI e
+			    JOIN e.businessMember bm
+			    WHERE e.dueDate >= :fromDate
+			      AND e.dueDate < :toDate
+			    GROUP BY bm.loanType
+			""")
+	List<LoanTypeInterestProjection> getExpectedInterest(@Param("fromDate") LocalDateTime fromDate,
+			@Param("toDate") LocalDateTime toDate);
+
 }
