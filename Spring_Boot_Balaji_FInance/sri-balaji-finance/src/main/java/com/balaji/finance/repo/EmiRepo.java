@@ -93,27 +93,41 @@ public interface EmiRepo extends JpaRepository<EMI, Integer> {
 			    WHERE e.businessMember.businessMemberId = :businessMemberId
 			""")
 	BigDecimal getTotalPaidOfLoan(@Param("businessMemberId") String businessMemberId);
-
+	
+	
+	
+	
 	@Query("""
 		    SELECT
 		        bm.businessMemberId AS loanId,
+
 		        bm.customerId.firstName AS customerName,
+
 		        bm.customerId.mobile AS customerMobile,
+
 		        bm.partnerId.firstName AS partnerName,
-		        bm.guarantor1.firstName AS guarantorName, 
+
+		        bm.guarantor1.firstName AS guarantorName,
+
 		        bm.startDate AS startDate,
+
 		        bm.endDate AS endDate,
+
 		        bm.amount AS loanAmount,
+
 		        bm.installment AS installmentAmount,
 
 		        MIN(e.dueDate) AS dueDate,
 
-		        COALESCE(SUM(e.paidAmount), 0) AS paidAmount,
+		        COALESCE(
+		            SUM(e.paidAmount),
+		            0
+		        ) AS paidAmount,
 
 		        COALESCE(
 		            SUM(
 		                CASE
-		                    WHEN e.status IN ('PENDING','PARTIAL')
+		                    WHEN e.status IN ('PENDING', 'PARTIAL')
 		                    THEN (e.totalAmount - e.paidAmount)
 		                    ELSE 0
 		                END
@@ -121,46 +135,50 @@ public interface EmiRepo extends JpaRepository<EMI, Integer> {
 		            0
 		        ) AS dueAmount,
 
-		        COALESCE(
-		            SUM(
-		                CASE
-		                    WHEN e.status IN ('PENDING','PARTIAL')
-		                    THEN 1
-		                    ELSE 0
-		                END
-		            ),
-		            0
+		        (
+		            SELECT COUNT(e3)
+		            FROM EMI e3
+		            WHERE e3.businessMember = bm
+		              AND e3.status IN ('PENDING', 'PARTIAL')
 		        ) AS pendingCount,
+
 		        bm.duration AS totalNoOfInstallments
 
 		    FROM EMI e
+
 		    JOIN e.businessMember bm
 
 		    WHERE bm.businessMemberId LIKE CONCAT(:startsWithString, '%')
+
 		      AND e.dueDate >= :fromDate
 		      AND e.dueDate <= :toDate
-		      AND ((:activeLoans = true AND bm.loanStatus = 'ACTIVE')
-                   OR
-                   (:activeLoans = false AND bm.loanStatus <> 'ACTIVE')
-                  )
+
+		      AND (
+		            (:activeLoans = true AND bm.loanStatus = 'ACTIVE')
+		            OR
+		            (:activeLoans = false AND bm.loanStatus <> 'ACTIVE')
+		          )
 
 		    GROUP BY
 		        bm.businessMemberId,
 		        bm.customerId.firstName,
 		        bm.customerId.mobile,
 		        bm.partnerId.firstName,
+		        bm.guarantor1.firstName,
 		        bm.startDate,
 		        bm.endDate,
 		        bm.amount,
-		        bm.installment
+		        bm.installment,
+		        bm.duration
 
 		    ORDER BY bm.businessMemberId
 		    """)
 		List<InstallmentDueProjection> getInstallmentDues(
-		        @Param("startsWithString") String startsWithString, @Param("fromDate") LocalDateTime fromDate,
-		        @Param("toDate") LocalDateTime toDate, @Param("activeLoans") Boolean activeLoans);
-
-	
+		        @Param("startsWithString") String startsWithString,
+		        @Param("fromDate") LocalDateTime fromDate,
+		        @Param("toDate") LocalDateTime toDate,
+		        @Param("activeLoans") Boolean activeLoans
+		);
 	
 
 	@Query("""
