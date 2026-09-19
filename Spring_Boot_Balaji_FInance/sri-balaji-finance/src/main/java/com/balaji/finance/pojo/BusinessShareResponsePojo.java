@@ -3,6 +3,8 @@ package com.balaji.finance.pojo;
 import java.math.BigDecimal;
 import java.util.List;
 
+import com.balaji.finance.dto.BalanceSheetProjection;
+
 /**
  * The whole Business Share report in one answer: the loan rows the report has
  * always printed, and under them what the business is worth and what one share
@@ -17,21 +19,16 @@ public class BusinessShareResponsePojo {
 	private List<BusinessSharePojo> loanInformation;
 
 	private BigDecimal loansOutstanding;
-	private BigDecimal advances;
-	private BigDecimal bankDeposits;
-	private BigDecimal cashInHand;
-	private BigDecimal otherAssets;
-	private BigDecimal totalAssets;
-
-	private BigDecimal handLoans;
-	private BigDecimal fdDeposits;
-	private BigDecimal otherLiabilities;
-	private BigDecimal totalLiabilities;
+	private List<BalanceSheetProjection> balanceSheetProjectionList;
 
 	private BigDecimal netBusinessValue;
 	private BigDecimal totalShares;
 	private BigDecimal valuePerShare;
 
+	private BigDecimal totalAssets;
+	private BigDecimal totalLiabilities;
+
+	
 	public List<BusinessSharePojo> getLoanInformation() {
 		return loanInformation;
 	}
@@ -48,76 +45,12 @@ public class BusinessShareResponsePojo {
 		this.loansOutstanding = loansOutstanding;
 	}
 
-	public BigDecimal getAdvances() {
-		return advances;
+	public List<BalanceSheetProjection> getBalanceSheetProjectionList() {
+		return balanceSheetProjectionList;
 	}
 
-	public void setAdvances(BigDecimal advances) {
-		this.advances = advances;
-	}
-
-	public BigDecimal getBankDeposits() {
-		return bankDeposits;
-	}
-
-	public void setBankDeposits(BigDecimal bankDeposits) {
-		this.bankDeposits = bankDeposits;
-	}
-
-	public BigDecimal getCashInHand() {
-		return cashInHand;
-	}
-
-	public void setCashInHand(BigDecimal cashInHand) {
-		this.cashInHand = cashInHand;
-	}
-
-	public BigDecimal getOtherAssets() {
-		return otherAssets;
-	}
-
-	public void setOtherAssets(BigDecimal otherAssets) {
-		this.otherAssets = otherAssets;
-	}
-
-	public BigDecimal getTotalAssets() {
-		return totalAssets;
-	}
-
-	public void setTotalAssets(BigDecimal totalAssets) {
-		this.totalAssets = totalAssets;
-	}
-
-	public BigDecimal getHandLoans() {
-		return handLoans;
-	}
-
-	public void setHandLoans(BigDecimal handLoans) {
-		this.handLoans = handLoans;
-	}
-
-	public BigDecimal getFdDeposits() {
-		return fdDeposits;
-	}
-
-	public void setFdDeposits(BigDecimal fdDeposits) {
-		this.fdDeposits = fdDeposits;
-	}
-
-	public BigDecimal getOtherLiabilities() {
-		return otherLiabilities;
-	}
-
-	public void setOtherLiabilities(BigDecimal otherLiabilities) {
-		this.otherLiabilities = otherLiabilities;
-	}
-
-	public BigDecimal getTotalLiabilities() {
-		return totalLiabilities;
-	}
-
-	public void setTotalLiabilities(BigDecimal totalLiabilities) {
-		this.totalLiabilities = totalLiabilities;
+	public void setBalanceSheetProjectionList(List<BalanceSheetProjection> balanceSheetProjectionList) {
+		this.balanceSheetProjectionList = balanceSheetProjectionList;
 	}
 
 	public BigDecimal getNetBusinessValue() {
@@ -144,4 +77,21 @@ public class BusinessShareResponsePojo {
 		this.valuePerShare = valuePerShare;
 	}
 
+	public BigDecimal getTotalAssets() {
+		return totalAssets;
+	}
+
+	public void setTotalAssets(BigDecimal totalAssets) {
+		this.totalAssets = totalAssets;
+	}
+
+	public BigDecimal getTotalLiabilities() {
+		return totalLiabilities;
+	}
+
+	public void setTotalLiabilities(BigDecimal totalLiabilities) {
+		this.totalLiabilities = totalLiabilities;
+	}
+
+	
 }

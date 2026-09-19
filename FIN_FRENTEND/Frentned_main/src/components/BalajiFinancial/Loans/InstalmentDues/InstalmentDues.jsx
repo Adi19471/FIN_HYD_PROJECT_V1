@@ -43,8 +43,10 @@ const TwoLine = ({ top, bottom, align = "left", tone, wrap = false }) => (
         lineHeight: 1.25,
         color: tone,
         ...(wrap
-          ? { whiteSpace: "normal", wordBreak: "break-word", display: "-webkit-box",
-              WebkitLineClamp: 2, WebkitBoxOrient: "vertical", overflow: "hidden" }
+          ? {
+            whiteSpace: "normal", wordBreak: "break-word", display: "-webkit-box",
+            WebkitLineClamp: 2, WebkitBoxOrient: "vertical", overflow: "hidden"
+          }
           : {}),
       }}
     >
@@ -57,8 +59,10 @@ const TwoLine = ({ top, bottom, align = "left", tone, wrap = false }) => (
           color: "text.secondary",
           lineHeight: 1.2,
           ...(wrap
-            ? { whiteSpace: "normal", wordBreak: "break-word", display: "-webkit-box",
-                WebkitLineClamp: 2, WebkitBoxOrient: "vertical", overflow: "hidden" }
+            ? {
+              whiteSpace: "normal", wordBreak: "break-word", display: "-webkit-box",
+              WebkitLineClamp: 2, WebkitBoxOrient: "vertical", overflow: "hidden"
+            }
             : {}),
         }}
       >
@@ -100,6 +104,9 @@ const InstalmentDues = () => {
   // On by default, the same way the partner dues report opens - closed loans
   // stay out of the list unless the office asks for them.
   const [activeLoans, setActiveLoans] = useState(true);
+  const [showReceivedDues, setShowReceivedDues] = useState(false);
+
+
   // Snapshot of the filters that produced the rows on screen. Exports print
   // this, not the live pickers, so a downloaded file always states the range it
   // actually covers even if the user changes the pickers afterwards.
@@ -123,11 +130,11 @@ const InstalmentDues = () => {
       setLoading(true);
       const res = await axios.post(
         `${API_BASE}/installmentDuesList`,
-        { loanType, fromDate, toDate, orderBy, activeLoans },
+        { loanType, fromDate, toDate, orderBy, activeLoans,showReceivedDues },
         { headers }
       );
       setData((res.data || []).map((row, index) => ({ id: row.loanId || row.sno || index + 1, sno: row.sno || index + 1, ...row })));
-      setAppliedFilters({ loanType, fromDate, toDate, orderBy, activeLoans });
+      setAppliedFilters({ loanType, fromDate, toDate, orderBy, activeLoans ,showReceivedDues});
       successToast("Installment dues loaded successfully");
     } catch (error) {
       console.error("API Error:", error);
@@ -141,10 +148,10 @@ const InstalmentDues = () => {
     () =>
       appliedFilters
         ? {
-            label: "Installments Dues From",
-            fromDate: appliedFilters.fromDate,
-            toDate: appliedFilters.toDate,
-          }
+          label: "Installments Dues From",
+          fromDate: appliedFilters.fromDate,
+          toDate: appliedFilters.toDate,
+        }
         : undefined,
     [appliedFilters]
   );
@@ -153,10 +160,11 @@ const InstalmentDues = () => {
     () =>
       appliedFilters
         ? [
-            { label: "Loan Type", value: labelOf(loanTypes, appliedFilters.loanType) },
-            { label: "Order By", value: labelOf(orderByOptions, appliedFilters.orderBy) },
-            { label: "Active Loans", value: appliedFilters.activeLoans ? "Yes" : "No" },
-          ]
+          { label: "Loan Type", value: labelOf(loanTypes, appliedFilters.loanType) },
+          { label: "Order By", value: labelOf(orderByOptions, appliedFilters.orderBy) },
+          { label: "Active Loans", value: appliedFilters.activeLoans ? "Yes" : "No" },
+          { label: "Show Received Dues", value: appliedFilters.showReceivedDues ? "Yes" : "No" },
+        ]
         : [],
     [appliedFilters]
   );
@@ -350,6 +358,16 @@ const InstalmentDues = () => {
             <FormControlLabel
               control={<Checkbox checked={activeLoans} onChange={(event) => setActiveLoans(event.target.checked)} />}
               label="Active Loans"
+            />
+          </Grid>
+          <Grid
+            size={{
+              xs: 12,
+              md: 2
+            }}>
+            <FormControlLabel
+              control={<Checkbox checked={showReceivedDues} onChange={(event) => setShowReceivedDues(event.target.checked)} />}
+              label="Show Received Dues"
             />
           </Grid>
           <Grid

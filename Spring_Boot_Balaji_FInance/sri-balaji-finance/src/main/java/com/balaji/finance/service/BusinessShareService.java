@@ -5,9 +5,11 @@ import java.math.RoundingMode;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -38,21 +40,13 @@ public class BusinessShareService {
 	 * rather than ASSETS. Its figure is what was lent, not what is still owed,
 	 * so this report works the outstanding out from the loans themselves.
 	 */
-	private static final List<String> LOAN_GROUPS = List.of("LOANS");
-	private static final List<String> ADVANCE_GROUPS = List.of("ADVANCES");
-	private static final List<String> BANK_GROUPS = List.of("BANK ACCOUNTS", "BANK DEPOSITS");
-	private static final List<String> CASH_GROUPS = List.of("CASH ON HAND", "CASH IN HAND");
-	private static final List<String> HAND_LOAN_GROUPS = List.of("HAND LOAN", "HAND LOANS");
-	private static final List<String> FD_GROUPS = List.of("FD DIPOSIT", "FD DEPOSIT", "FD DEPOSITS");
-
+	
 	@Autowired
 	private BusinessMemberRepository businessMemberRepository;
 
 	@Autowired
 	private CashBookRepo cashBookRepo;
 
-	@Autowired
-	private BalanceSheetService balanceSheetService;
 
 	@Autowired
 	private PersonalInfoRepository personalInfoRepository;
@@ -73,7 +67,7 @@ public class BusinessShareService {
 		BusinessShareResponsePojo response = new BusinessShareResponsePojo();
 		response.setLoanInformation(loanInformation);
 
-		setValueOfBusiness(response, loanInformation, toDate);
+		setValueOfBusiness(response, loanInformation, to);
 
 		return response;
 	}
@@ -187,62 +181,54 @@ public class BusinessShareService {
 	 * here; the block itself decides what adds and what comes off.
 	 */
 	private void setValueOfBusiness(BusinessShareResponsePojo response, List<BusinessSharePojo> loanInformation,
-			LocalDate toDate) {
+			LocalDateTime toDate) {
 
-		List<BalanceSheetProjection> balanceSheet = balanceSheetService.getBalanceSheetByTrasncDate(toDate);
+		List<BalanceSheetProjection> balanceSheetByTrasncDate = cashBookRepo.getBalanceSheetByTrasncDate(toDate,
+				Arrays.asList("ASSETS", "LIABILITIES"));
 
-		List<BalanceSheetProjection> assets = balanceSheet.stream().filter(row -> !isLiability(row)).toList();
-		List<BalanceSheetProjection> liabilities = balanceSheet.stream().filter(this::isLiability).toList();
+		balanceSheetByTrasncDate = balanceSheetByTrasncDate.stream()
+				.filter(p -> !p.getMasterCode().equalsIgnoreCase("LOANS")).collect(Collectors.toList());
 
+		response.setBalanceSheetProjectionList(balanceSheetByTrasncDate);
+		
+		
+		BigDecimal totalAssets = BigDecimal.ZERO;
+		BigDecimal totalLiabilities = BigDecimal.ZERO;
+
+		for (BalanceSheetProjection balance : balanceSheetByTrasncDate) {
+
+		    if ("ASSETS".equalsIgnoreCase(balance.getType())) {
+		        totalAssets = totalAssets.add(
+		                balance.getAmount() != null ? balance.getAmount() : BigDecimal.ZERO
+		        );
+
+		    } else if ("LIABILITIES".equalsIgnoreCase(balance.getType())) {
+		        totalLiabilities = totalLiabilities.add(
+		                balance.getAmount() != null ? balance.getAmount() : BigDecimal.ZERO
+		        );
+		    }
+		}
+		
+	
 		BigDecimal loansOutstanding = loanInformation.stream().map(row -> nz(row.getOutstandingExcludingInterest()))
 				.reduce(BigDecimal.ZERO, BigDecimal::add);
-
-		BigDecimal advances = sumOfGroups(assets, ADVANCE_GROUPS);
-		BigDecimal bankDeposits = sumOfGroups(assets, BANK_GROUPS);
-		BigDecimal cashInHand = sumOfGroups(assets, CASH_GROUPS);
-
-		// Chits and the like are held by the business too, so they are gathered
-		// up rather than dropped - a share of the business is a share of all of
-		// it. LOANS is left out; the outstanding above already stands for it.
-		List<String> namedAssets = new ArrayList<>(LOAN_GROUPS);
-		namedAssets.addAll(ADVANCE_GROUPS);
-		namedAssets.addAll(BANK_GROUPS);
-		namedAssets.addAll(CASH_GROUPS);
-		BigDecimal otherAssets = sumExceptGroups(assets, namedAssets);
-
-		BigDecimal handLoans = sumOfGroups(liabilities, HAND_LOAN_GROUPS);
-		BigDecimal fdDeposits = sumOfGroups(liabilities, FD_GROUPS);
-
-		List<String> namedLiabilities = new ArrayList<>(HAND_LOAN_GROUPS);
-		namedLiabilities.addAll(FD_GROUPS);
-		BigDecimal otherLiabilities = sumExceptGroups(liabilities, namedLiabilities);
-
-		BigDecimal totalAssets = loansOutstanding.add(advances).add(bankDeposits).add(cashInHand).add(otherAssets);
-		BigDecimal totalLiabilities = handLoans.add(fdDeposits).add(otherLiabilities);
-		BigDecimal netBusinessValue = totalAssets.subtract(totalLiabilities);
-
-		// The shares that take part in the business, as the Business Overview
-		// counts them. A blank SHARES column leaves this at zero, and the report
-		// then gives the net value without pretending to a split.
 		BigDecimal totalShares = nz(personalInfoRepository.findTotalShares());
-
+		
+		
+		BigDecimal assestProperties = totalAssets
+        .add(loansOutstanding);
+		
+		BigDecimal netBusiness = assestProperties.subtract(totalLiabilities);
+		
+		response.setNetBusinessValue(netBusiness);
 		response.setLoansOutstanding(loansOutstanding);
-		response.setAdvances(advances);
-		response.setBankDeposits(bankDeposits);
-		response.setCashInHand(cashInHand);
-		response.setOtherAssets(otherAssets);
-		response.setTotalAssets(totalAssets);
-
-		response.setHandLoans(handLoans);
-		response.setFdDeposits(fdDeposits);
-		response.setOtherLiabilities(otherLiabilities);
-		response.setTotalLiabilities(totalLiabilities);
-
-		response.setNetBusinessValue(netBusinessValue);
 		response.setTotalShares(totalShares);
-		response.setValuePerShare(totalShares.compareTo(BigDecimal.ZERO) > 0
-				? netBusinessValue.divide(totalShares, 2, RoundingMode.HALF_UP)
-				: BigDecimal.ZERO);
+		response.setTotalLiabilities(totalLiabilities);
+		response.setTotalAssets(totalAssets);
+		
+		response.setValuePerShare(
+				totalShares.compareTo(BigDecimal.ZERO) > 0 ? netBusiness.divide(totalShares, 2, RoundingMode.HALF_UP)
+						: BigDecimal.ZERO);
 	}
 
 	private BigDecimal installmentsReceived(LoanCollectionProjection collection, String loanType) {

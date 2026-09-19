@@ -245,7 +245,9 @@ public interface CashBookRepo extends JpaRepository<CashBook, Long> {
 			    cb.ACCOUNT_MASTER_TYPE AS type,
 			    cb.ACCOUNT_MASTER_MASTER_CODE as masterCode,
 			    cb.ACCOUNT_MASTER_CODE AS code,
-			    COALESCE(SUM(cb.CREDIT),0) - COALESCE(SUM(cb.DEBIT),0) AS amount
+			    ABS(
+                      COALESCE(SUM(cb.CREDIT), 0) - COALESCE(SUM(cb.DEBIT), 0)
+                    ) AS amount
 			FROM cash_book cb
 			WHERE cb.TRANS_DATE < :toDate
 			  and cb.ACCOUNT_MASTER_TYPE IN (:typeList)

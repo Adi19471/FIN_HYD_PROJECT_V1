@@ -18,6 +18,7 @@ public class InstallmentsDuesRequestPojo {
 	
 	
 	private boolean activeLoans;
+	private boolean showReceivedDues;
 	
 
 	public String getLoanType() {
@@ -59,6 +60,15 @@ public class InstallmentsDuesRequestPojo {
 	public void setActiveLoans(boolean activeLoans) {
 		this.activeLoans = activeLoans;
 	}
+
+	public boolean isShowReceivedDues() {
+		return showReceivedDues;
+	}
+
+	public void setShowReceivedDues(boolean showReceivedDues) {
+		this.showReceivedDues = showReceivedDues;
+	}
+
 	
 
 }

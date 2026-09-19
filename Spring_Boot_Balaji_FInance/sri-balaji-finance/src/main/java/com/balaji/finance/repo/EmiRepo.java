@@ -101,22 +101,17 @@ public interface EmiRepo extends JpaRepository<EMI, Integer> {
 	@Query("""
 		    SELECT
 		        bm.businessMemberId AS loanId,
-
 		        bm.customerId.firstName AS customerName,
 		        bm.customerId.mobile AS customerMobile,
-
 		        bm.partnerId.firstName AS partnerName,
 		        bm.guarantor1.firstName AS guarantorName,
-
 		        bm.startDate AS startDate,
 		        bm.endDate AS endDate,
-
 		        bm.amount AS loanAmount,
 		        bm.installment AS installmentAmount,
 
 		        MIN(e.dueDate) AS dueDate,
 
-		   
 		        COALESCE(
 		            (
 		                SELECT SUM(e3.paidAmount)
@@ -127,7 +122,6 @@ public interface EmiRepo extends JpaRepository<EMI, Integer> {
 		            0
 		        ) AS paidAmount,
 
-		        
 		        COALESCE(
 		            SUM(
 		                CASE
@@ -139,7 +133,6 @@ public interface EmiRepo extends JpaRepository<EMI, Integer> {
 		            0
 		        ) AS dueAmount,
 
-		        
 		        (
 		            SELECT COUNT(e4.emiId)
 		            FROM EMI e4
@@ -150,13 +143,17 @@ public interface EmiRepo extends JpaRepository<EMI, Integer> {
 		        bm.duration AS totalNoOfInstallments
 
 		    FROM EMI e
-
 		    JOIN e.businessMember bm
 
 		    WHERE bm.businessMemberId LIKE CONCAT(:startsWithString, '%')
 
 		      AND e.dueDate >= :fromDate
 		      AND e.dueDate <= :toDate
+
+		      AND (
+		            :showInstReceivedRecords = true
+		            OR e.status IN ('PENDING', 'PARTIAL')
+		          )
 
 		      AND (
 		            (:activeLoans = true AND bm.loanStatus = 'ACTIVE')
@@ -176,12 +173,16 @@ public interface EmiRepo extends JpaRepository<EMI, Integer> {
 		        bm.installment,
 		        bm.duration
 
-			ORDER BY bm.businessMemberId
-			""")
-	List<InstallmentDueProjection> getInstallmentDues(@Param("startsWithString") String startsWithString,
-			@Param("fromDate") LocalDateTime fromDate, @Param("toDate") LocalDateTime toDate,
-			@Param("activeLoans") Boolean activeLoans);
-
+		    ORDER BY bm.businessMemberId
+		    """)
+		List<InstallmentDueProjection> getInstallmentDues(
+		        @Param("startsWithString") String startsWithString,
+		        @Param("fromDate") LocalDateTime fromDate,
+		        @Param("toDate") LocalDateTime toDate,
+		        @Param("activeLoans") Boolean activeLoans,
+		        @Param("showInstReceivedRecords") Boolean showInstReceivedRecords
+		);
+	
 	@Query("""
 			SELECT COUNT(e)
 			FROM EMI e
