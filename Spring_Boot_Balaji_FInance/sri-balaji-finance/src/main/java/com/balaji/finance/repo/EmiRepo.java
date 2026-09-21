@@ -151,8 +151,9 @@ public interface EmiRepo extends JpaRepository<EMI, Integer> {
 		      AND e.dueDate <= :toDate
 
 		      AND (
-		            :showInstReceivedRecords = true
-		            OR e.status IN ('PENDING', 'PARTIAL')
+		            (:showInstReceivedRecords = true AND e.status NOT IN ('PENDING', 'PARTIAL'))
+		            OR
+		            (:showInstReceivedRecords = false AND e.status IN ('PENDING', 'PARTIAL'))
 		          )
 
 		      AND (
