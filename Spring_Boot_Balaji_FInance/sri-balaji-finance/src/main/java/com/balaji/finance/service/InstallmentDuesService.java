@@ -48,7 +48,7 @@ public class InstallmentDuesService {
 				break;
 			}
 
-			loansList = emiRepo.getInstallmentDues(starWithString,from, to,installmentsDuesRequestPojo.isActiveLoans(),installmentsDuesRequestPojo.isShowReceivedDues());
+			loansList = emiRepo.getInstallmentDues(starWithString, to,installmentsDuesRequestPojo.isActiveLoans(),installmentsDuesRequestPojo.isShowReceivedDues());
 			
 			switch (installmentsDuesRequestPojo.getOrderBy()) {
 

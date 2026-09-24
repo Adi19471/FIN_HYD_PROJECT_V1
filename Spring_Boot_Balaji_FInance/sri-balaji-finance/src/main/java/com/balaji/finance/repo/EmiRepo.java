@@ -117,7 +117,7 @@ public interface EmiRepo extends JpaRepository<EMI, Integer> {
 		                SELECT SUM(e3.paidAmount)
 		                FROM EMI e3
 		                WHERE e3.businessMember = bm
-		                  AND e3.status NOT IN ('PENDING', 'PARTIAL')
+		                  AND e3.status NOT IN ('PENDING')
 		            ),
 		            0
 		        ) AS paidAmount,
@@ -147,7 +147,6 @@ public interface EmiRepo extends JpaRepository<EMI, Integer> {
 
 		    WHERE bm.businessMemberId LIKE CONCAT(:startsWithString, '%')
 
-		      AND e.dueDate >= :fromDate
 		      AND e.dueDate <= :toDate
 
 		      AND (
@@ -178,7 +177,6 @@ public interface EmiRepo extends JpaRepository<EMI, Integer> {
 		    """)
 		List<InstallmentDueProjection> getInstallmentDues(
 		        @Param("startsWithString") String startsWithString,
-		        @Param("fromDate") LocalDateTime fromDate,
 		        @Param("toDate") LocalDateTime toDate,
 		        @Param("activeLoans") Boolean activeLoans,
 		        @Param("showInstReceivedRecords") Boolean showInstReceivedRecords
