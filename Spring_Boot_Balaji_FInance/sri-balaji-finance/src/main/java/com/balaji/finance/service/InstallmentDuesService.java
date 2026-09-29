@@ -119,7 +119,7 @@ public class InstallmentDuesService {
 				dto.setInstallmentDue(bm.getDueAmount());
 				dto.setRemarks(""); // fill if you have any remarks
 				dto.setTotalNoOfInstallments(bm.getTotalNoOfInstallments());
-				dto.setNoOfInstallmentsPaid(bm.getTotalNoOfInstallments()-bm.getPendingCount());
+				dto.setNoOfInstallmentsPaid(bm.getPaidInstallments());
 				returnList.add(dto);
 			}
 		}

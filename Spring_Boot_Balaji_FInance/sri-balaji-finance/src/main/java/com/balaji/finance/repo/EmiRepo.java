@@ -121,6 +121,17 @@ public interface EmiRepo extends JpaRepository<EMI, Integer> {
 		            ),
 		            0
 		        ) AS paidAmount,
+		        
+		         COALESCE(
+		            (
+		                SELECT COUNT(e4.emiId)
+		                FROM EMI e4
+		                WHERE e4.businessMember = bm
+		                  AND e4.status NOT IN ('PENDING', 'PARTIAL')
+		            ),
+		            0
+		        ) AS paidInstallments,
+
 
 		        COALESCE(
 		            SUM(
@@ -134,10 +145,11 @@ public interface EmiRepo extends JpaRepository<EMI, Integer> {
 		        ) AS dueAmount,
 
 		        (
-		            SELECT COUNT(e4.emiId)
-		            FROM EMI e4
-		            WHERE e4.businessMember = bm
-		              AND e4.status IN ('PENDING', 'PARTIAL')
+		            SELECT COUNT(e5.emiId)
+		            FROM EMI e5
+		            WHERE e5.businessMember = bm
+		              AND e5.status IN ('PENDING', 'PARTIAL')
+		              AND e5.dueDate <= :toDate
 		        ) AS pendingCount,
 
 		        bm.duration AS totalNoOfInstallments
@@ -146,7 +158,6 @@ public interface EmiRepo extends JpaRepository<EMI, Integer> {
 		    JOIN e.businessMember bm
 
 		    WHERE bm.businessMemberId LIKE CONCAT(:startsWithString, '%')
-
 		      AND e.dueDate <= :toDate
 
 		      AND (

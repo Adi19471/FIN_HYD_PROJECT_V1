@@ -27,6 +27,8 @@ public interface InstallmentDueProjection {
 
 	BigDecimal getPaidAmount();
 
+	Long getPaidInstallments();
+
 	BigDecimal getDueAmount();
 
 	Long getPendingCount();
