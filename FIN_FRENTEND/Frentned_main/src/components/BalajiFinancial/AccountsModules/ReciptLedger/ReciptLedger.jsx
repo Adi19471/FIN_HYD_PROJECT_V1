@@ -1,10 +1,17 @@
-import React, { useState } from "react";
+import React, { useMemo, useState } from "react";
 import { Button, Grid, Paper, Stack } from "@mui/material";
 import axios from "axios";
 import { API_BASE } from "lib/config";
 import { getSession } from "src/utils/session";
 import { successToast, errorToast } from "toastify";
 import { AppDatePicker, DataTable, PageHeader, useDateRange } from "src/components/ui";
+import { roundAmount } from "src/components/ui/reportExport";
+
+// TOTAL row directly under these columns. Module-level so DataTable's totals memo stays stable.
+const TOTAL_FIELDS = ["amountPaid", "lateFee", "total", "totalPaid", "balance"];
+const TOTAL_LABEL_CELL = { customerName: "TOTAL" };
+
+const sumOf = (rows, field) => roundAmount(rows.reduce((sum, row) => sum + Number(row[field] || 0), 0));
 
 const ReceiptLedger = () => {
   const { fromDate, toDate, setFromDate, setToDate, toDateMin, toDateMax } = useDateRange("", "");
@@ -36,6 +43,13 @@ const ReceiptLedger = () => {
       setLoading(false);
     }
   };
+
+  // Grand total under the TOTAL row (and on every export). TA = Amount + Total + Total Paid + Balance.
+  const summary = useMemo(() => {
+    if (!ledgerData.length) return undefined;
+    const ta = ["amountPaid", "total", "totalPaid", "balance"].reduce((sum, field) => sum + sumOf(ledgerData, field), 0);
+    // return [{ label: "Total Amount (TA)", value: roundAmount(ta) }];
+  }, [ledgerData]);
 
   const columns = [
     { field: "sno", headerName: "S.No", width: 80 },
@@ -87,7 +101,16 @@ const ReceiptLedger = () => {
           </Grid>
         </Grid>
       </Paper>
-      <DataTable rows={ledgerData} columns={columns} loading={loading} title="Receipt Ledger Details" height={580} />
+      <DataTable
+        rows={ledgerData}
+        columns={columns}
+        loading={loading}
+        title="Receipt Ledger Details"
+        height={580}
+        totalFields={TOTAL_FIELDS}
+        totalLabelCell={TOTAL_LABEL_CELL}
+        summary={summary}
+      />
     </Stack>
   );
 };

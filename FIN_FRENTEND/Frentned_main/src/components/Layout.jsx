@@ -6,8 +6,10 @@ import { motion } from "framer-motion";
 function Layout({ children }) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
+  // Shell height comes from .enterprise-shell (zoom-aware), not h-screen.
+
   return (
-    <div className="enterprise-shell flex h-screen overflow-hidden">
+    <div className="enterprise-shell flex overflow-hidden">
       <Sidebar sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} />
 
       <div className="relative flex flex-col flex-1 overflow-y-auto overflow-x-hidden">

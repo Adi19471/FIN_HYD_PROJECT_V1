@@ -42,11 +42,11 @@ const GenerateIcon = actionIcons.generate;
 
 const scrollTableSx = {
   height: {
-    xs: "min(62vh, 420px)",
-    sm: "min(58vh, 460px)",
-    md: "min(56vh, 520px)",
-    lg: "calc(100vh - 390px)",
-    xl: "calc(100vh - 410px)",
+    xs: "min(calc(62 * var(--app-vh)), 420px)",
+    sm: "min(calc(58 * var(--app-vh)), 460px)",
+    md: "min(calc(56 * var(--app-vh)), 520px)",
+    lg: "calc(100 * var(--app-vh) - 390px)",
+    xl: "calc(100 * var(--app-vh) - 410px)",
   },
 
   minHeight: {

@@ -311,7 +311,7 @@ const Registration_creation = () => {
         columns={columns}
         getRowId={(row) => row.id}
         loading={loading}
-        height="calc(100vh - 310px)"
+        height="calc(100 * var(--app-vh) - 310px)"
         title="User register"
         subtitle="Use the shield action to assign API menu permissions to a user."
       />

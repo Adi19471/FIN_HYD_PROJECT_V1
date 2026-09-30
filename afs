@@ -1,0 +1,48 @@
+[33mcommit a5c30d3ea4355aab77b82b698819fb6ec5314efc[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mmaster[m[33m, [m[1;31morigin/master[m[33m, [m[1;31morigin/HEAD[m[33m)[m
+Author: 8067 <adinarayana.k@infyzterminals.com>
+Date:   Thu Sep 24 21:59:13 2026 +0530
+
+    installment dues due issue
+
+[1mdiff --git a/Spring_Boot_Balaji_FInance/sri-balaji-finance/src/main/java/com/balaji/finance/repo/EmiRepo.java b/Spring_Boot_Balaji_FInance/sri-balaji-finance/src/main/java/com/balaji/finance/repo/EmiRepo.java[m
+[1mindex 8672570..5479390 100644[m
+[1m--- a/Spring_Boot_Balaji_FInance/sri-balaji-finance/src/main/java/com/balaji/finance/repo/EmiRepo.java[m
+[1m+++ b/Spring_Boot_Balaji_FInance/sri-balaji-finance/src/main/java/com/balaji/finance/repo/EmiRepo.java[m
+[36m@@ -117,7 +117,7 @@[m [mpublic interface EmiRepo extends JpaRepository<EMI, Integer> {[m
+ 		                SELECT SUM(e3.paidAmount)[m
+ 		                FROM EMI e3[m
+ 		                WHERE e3.businessMember = bm[m
+[31m-		                  AND e3.status NOT IN ('PENDING', 'PARTIAL')[m
+[32m+[m		[32m                  AND e3.status NOT IN ('PENDING')[m
+ 		            ),[m
+ 		            0[m
+ 		        ) AS paidAmount,[m
+[36m@@ -147,7 +147,6 @@[m [mpublic interface EmiRepo extends JpaRepository<EMI, Integer> {[m
+ [m
+ 		    WHERE bm.businessMemberId LIKE CONCAT(:startsWithString, '%')[m
+ [m
+[31m-		      AND e.dueDate >= :fromDate[m
+ 		      AND e.dueDate <= :toDate[m
+ [m
+ 		      AND ([m
+[36m@@ -178,7 +177,6 @@[m [mpublic interface EmiRepo extends JpaRepository<EMI, Integer> {[m
+ 		    """)[m
+ 		List<InstallmentDueProjection> getInstallmentDues([m
+ 		        @Param("startsWithString") String startsWithString,[m
+[31m-		        @Param("fromDate") LocalDateTime fromDate,[m
+ 		        @Param("toDate") LocalDateTime toDate,[m
+ 		        @Param("activeLoans") Boolean activeLoans,[m
+ 		        @Param("showInstReceivedRecords") Boolean showInstReceivedRecords[m
+[1mdiff --git a/Spring_Boot_Balaji_FInance/sri-balaji-finance/src/main/java/com/balaji/finance/service/InstallmentDuesService.java b/Spring_Boot_Balaji_FInance/sri-balaji-finance/src/main/java/com/balaji/finance/service/InstallmentDuesService.java[m
+[1mindex 647f46f..b9c8f54 100644[m
+[1m--- a/Spring_Boot_Balaji_FInance/sri-balaji-finance/src/main/java/com/balaji/finance/service/InstallmentDuesService.java[m
+[1m+++ b/Spring_Boot_Balaji_FInance/sri-balaji-finance/src/main/java/com/balaji/finance/service/InstallmentDuesService.java[m
+[36m@@ -48,7 +48,7 @@[m [mpublic class InstallmentDuesService {[m
+ 				break;[m
+ 			}[m
+ [m
+[31m-			loansList = emiRepo.getInstallmentDues(starWithString,from, to,installmentsDuesRequestPojo.isActiveLoans(),installmentsDuesRequestPojo.isShowReceivedDues());[m
+[32m+[m			[32mloansList = emiRepo.getInstallmentDues(starWithString, to,installmentsDuesRequestPojo.isActiveLoans(),installmentsDuesRequestPojo.isShowReceivedDues());[m
+ 			[m
+ 			switch (installmentsDuesRequestPojo.getOrderBy()) {[m
+ [m

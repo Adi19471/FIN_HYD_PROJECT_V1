@@ -110,7 +110,7 @@ const Distubuted = () => {
         columns={columns}
         loading={loading}
         title="Distributed Loan Details"
-        height="calc(100vh - 300px)"
+        height="calc(100 * var(--app-vh) - 300px)"
         pageSize={50}
         period={reportPeriod}
         totalFields={totalFields}

@@ -45,7 +45,7 @@ const FinanceTabs = () => {
   return (
     <Box
       sx={{
-        minHeight: "100vh",
+        minHeight: "calc(100 * var(--app-vh))",
         bgcolor: "#f1f5f9",
         p: { xs: 0, md: 0 },
       }}
@@ -125,7 +125,7 @@ const FinanceTabs = () => {
         <Box
           sx={{
             p: { xs: 1.5, md: 2 },
-            minHeight: "60vh",
+            minHeight: "calc(60 * var(--app-vh))",
           }}
         >
 <Suspense

@@ -67,7 +67,7 @@ const MainPersonalFile = () => {
         p: { xs: 0, md: 1 },
         // Was a fixed light-grey #f1f5f9, which stayed light in dark mode.
         bgcolor: "background.default",
-        minHeight: "100vh",
+        minHeight: "calc(100 * var(--app-vh))",
       }}
     >
 
@@ -124,7 +124,7 @@ const MainPersonalFile = () => {
         <Box
           sx={{
             p: { xs: 1.5, md: 2 },
-            minHeight: "55vh",
+            minHeight: "calc(55 * var(--app-vh))",
           }}
         >
           {tabs[value] && (

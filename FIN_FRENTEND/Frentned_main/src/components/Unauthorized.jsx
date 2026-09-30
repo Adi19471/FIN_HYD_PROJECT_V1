@@ -3,7 +3,7 @@ import { Link } from "react-router-dom";
 
 export default function Unauthorized() {
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-100">
+    <div className="flex items-center justify-center bg-gray-100" style={{ minHeight: "calc(100 * var(--app-vh))" }}>
       <div className="p-8 bg-white rounded shadow text-center max-w-md">
         <h2 className="text-2xl font-bold mb-2">Unauthorized</h2>
         <p className="mb-4">You do not have permission to access this page.</p>

@@ -137,7 +137,7 @@ const CustomerTransactions = () => {
   const exportColumns = ["sno", "transactionId", "transactionDate", "accountNumber", "transactionName", "particulars", "credit", "debit"];
 
   return (
-    <Box sx={{ p: 3, backgroundColor: "#f8f9fa", minHeight: "100vh" }}>
+    <Box sx={{ p: 3, backgroundColor: "#f8f9fa", minHeight: "calc(100 * var(--app-vh))" }}>
       <Typography variant="h5" gutterBottom>
         Customer Transactions / Ledger
       </Typography>
@@ -269,7 +269,7 @@ const CustomerTransactions = () => {
           <TableContainer
             sx={{
               overflow: "auto",
-              maxHeight: { xs: "min(70vh, 460px)", sm: "min(66vh, 520px)", md: "min(62vh, 560px)", lg: "calc(100vh - 320px)" },
+              maxHeight: { xs: "min(calc(70 * var(--app-vh)), 460px)", sm: "min(calc(66 * var(--app-vh)), 520px)", md: "min(calc(62 * var(--app-vh)), 560px)", lg: "calc(100 * var(--app-vh) - 320px)" },
             }}
           >
             <Table

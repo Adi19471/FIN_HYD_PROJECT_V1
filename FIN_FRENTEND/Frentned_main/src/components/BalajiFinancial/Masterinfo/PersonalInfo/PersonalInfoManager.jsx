@@ -222,7 +222,7 @@ const PersonalInfoManager = ({ personType = "CUSTOMER" }) => {
         columns={columns}
         getRowId={(r) => r.id}
         loading={loading}
-        height="calc(100vh - 170px)"
+        height="calc(100 * var(--app-vh) - 170px)"
         title={`${label}s`}
         actions={
           <>

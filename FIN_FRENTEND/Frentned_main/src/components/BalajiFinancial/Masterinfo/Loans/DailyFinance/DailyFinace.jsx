@@ -669,7 +669,7 @@ const DailyFinance = () => {
             overflow: "hidden",
             display: "flex",
             flexDirection: "column",
-            height: "min(720px, calc(100vh - 200px))",
+            height: "min(720px, calc(100 * var(--app-vh) - 200px))",
             minHeight: 500,
           }}
         >

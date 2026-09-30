@@ -165,7 +165,7 @@ const CustomerOutstanding = () => {
                 border: "1px solid #ccc",
                 borderRadius: 1,
                 overflow: "auto",
-                height: { xs: "min(70vh, 460px)", sm: "min(66vh, 520px)", md: "min(62vh, 560px)", lg: "calc(100vh - 320px)" },
+                height: { xs: "min(calc(70 * var(--app-vh)), 460px)", sm: "min(calc(66 * var(--app-vh)), 520px)", md: "min(calc(62 * var(--app-vh)), 560px)", lg: "calc(100 * var(--app-vh) - 320px)" },
               }}
             >
               <Table size="small" sx={{ minWidth: 900 }}>

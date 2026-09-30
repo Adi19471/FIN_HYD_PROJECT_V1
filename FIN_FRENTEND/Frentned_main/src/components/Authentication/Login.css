@@ -4,7 +4,7 @@
    ============================================================ */
 
 .auth-root {
-  min-height: 100vh;
+  min-height: calc(100 * var(--app-vh));
   display: grid;
   grid-template-columns: minmax(0, 1.1fr) minmax(440px, 0.9fr);
   background: var(--surface-2);
@@ -242,7 +242,7 @@
 /* ---------------- Right form panel ---------------- */
 .auth-form-side {
   position: relative;
-  min-height: 100vh;
+  min-height: calc(100 * var(--app-vh));
   display: grid;
   place-items: center;
   padding: 32px;
@@ -301,7 +301,7 @@
 /* ---------------- Responsive ---------------- */
 @media (max-width: 991px) {
   .auth-root { grid-template-columns: 1fr; }
-  .auth-visual { min-height: 46vh; }
+  .auth-visual { min-height: calc(46 * var(--app-vh)); }
   .auth-form-side { min-height: auto; padding: 28px 16px 44px; }
   .auth-features { grid-template-columns: repeat(3, 1fr); }
 }

@@ -50,12 +50,13 @@ const ScrollRightIcon = actionIcons.scrollRight;
 // Default responsive height for a DataTable that doesn't pass its own `height`.
 // Exported so outlier screens (e.g. Partner.jsx, which wraps a raw DataGrid
 // instead of this component) can reuse the exact same breakpoint scale.
+// --app-vh keeps these filling the screen under Settings > Screen Zoom.
 export const DEFAULT_TABLE_HEIGHT = {
-  xs: "min(70vh, 460px)",
-  sm: "min(66vh, 520px)",
-  md: "min(62vh, 560px)",
-  lg: "calc(100vh - 260px)",
-  xl: "calc(100vh - 280px)",
+  xs: "min(calc(70 * var(--app-vh)), 460px)",
+  sm: "min(calc(66 * var(--app-vh)), 520px)",
+  md: "min(calc(62 * var(--app-vh)), 560px)",
+  lg: "calc(100 * var(--app-vh) - 260px)",
+  xl: "calc(100 * var(--app-vh) - 280px)",
 };
 
 /**
