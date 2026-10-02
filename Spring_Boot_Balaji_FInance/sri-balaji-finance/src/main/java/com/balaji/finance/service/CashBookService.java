@@ -1,14 +1,18 @@
 package com.balaji.finance.service;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -20,6 +24,7 @@ import org.springframework.stereotype.Service;
 import com.balaji.finance.dto.DateWiseCashBookProjection;
 import com.balaji.finance.dto.DateWiseCollectionsProjection;
 import com.balaji.finance.dto.SummaryByParticularsProjection;
+import com.balaji.finance.entity.BusinessMember;
 import com.balaji.finance.entity.CashBook;
 import com.balaji.finance.entity.CashBookBackUp;
 import com.balaji.finance.entity.EMI;
@@ -562,61 +567,127 @@ public class CashBookService {
 		return result;
 	}
 
-	public List<ReceiptsLedgerPojo> getReceiptsLedger(LocalDate fromDate, LocalDate toDate) {
+	public List<ReceiptsLedgerPojo> getReceiptsLedger(
+	        LocalDate fromDate,
+			LocalDate toDate) {
 
-		List<CashBook> rows = new ArrayList<CashBook>();
+
+		List<CashBook> reportRows;
 
 		if (fromDate == null && toDate == null) {
 
-			rows = cashBookRepo.findByDateRangeAndBusinessNotNull();
+			reportRows = cashBookRepo.findByDateRangeAndBusinessNotNull();
 
 		} else {
 
 			LocalDateTime from = fromDate.atStartOfDay();
 			LocalDateTime to = toDate.atTime(23, 59, 59);
 
-			rows = cashBookRepo.findByDateRangeAndBusinessNotNull(from, to);
-
+			reportRows = cashBookRepo.findByDateRangeAndBusinessNotNull(from, to);
 		}
+
+
+		List<CashBook> allReceiptRows = cashBookRepo.findByDateRangeAndBusinessNotNull();
+
+
+		Map<String, List<CashBook>> paymentGroups = reportRows.stream()
+		        .collect(Collectors.groupingBy(
+		                c -> {
+		                    String paymentRefId = c.getPaymentRefId();
+
+		                    if (paymentRefId != null && !paymentRefId.trim().isEmpty()) {
+		                        return paymentRefId.trim();
+		                    }
+
+		                    return "CASHBOOK_" + c.getCashBookId();
+		                },
+		                LinkedHashMap::new,
+		                Collectors.toList()
+		        ));
+		
+		
+		
+		Map<String, List<CashBook>> memberCashBooks = allReceiptRows.stream()
+				.filter(c -> c.getBusinessMember() != null)
+				.collect(Collectors.groupingBy(c -> c.getBusinessMember().getBusinessMemberId()));
+
 
 		List<ReceiptsLedgerPojo> result = new ArrayList<>();
 
-		int i = 0;
+		int sno = 1;
 
-		for (CashBook r : rows) {
+
+		for (Map.Entry<String, List<CashBook>> entry : paymentGroups.entrySet()) {
+
+			List<CashBook> paymentRows = entry.getValue();
+
+			if (paymentRows == null || paymentRows.isEmpty()) {
+				continue;
+			}
+
+			CashBook firstRow = paymentRows.get(0);
+
+			BusinessMember businessMember = firstRow.getBusinessMember();
+
+			if (businessMember == null) {
+				continue;
+			}
+
+			String businessMemberId = businessMember.getBusinessMemberId();
+
+			LocalDateTime transactionDate = firstRow.getTransDate();
+
+			BigDecimal currentPaymentAmount = paymentRows.stream().map(CashBook::getCredit).filter(Objects::nonNull)
+					.reduce(BigDecimal.ZERO, BigDecimal::add);
+
+			List<CashBook> memberPayments = memberCashBooks.getOrDefault(businessMemberId, Collections.emptyList());
+
+			BigDecimal totalPaid = memberPayments.stream().filter(c -> c.getTransDate() != null)
+					.filter(c -> !c.getTransDate().isAfter(transactionDate)).map(CashBook::getCredit)
+					.filter(Objects::nonNull).reduce(BigDecimal.ZERO, BigDecimal::add);
+
+
+			BigDecimal totalPayable = businessMember.getAmount().add(businessMember.getInterest());
+			BigDecimal balance = totalPayable.subtract(totalPaid);
+
+			if (balance.compareTo(BigDecimal.ZERO) < 0) {
+				balance = BigDecimal.ZERO;
+			}
+
+			BigDecimal installmentAmount = businessMember.getInstallment();
+
+
+			int paidInstallments = 0;
+
+			if (installmentAmount != null && installmentAmount.compareTo(BigDecimal.ZERO) > 0) {
+
+				paidInstallments = totalPaid.divide(installmentAmount, 0, RoundingMode.FLOOR).intValue();
+			}
+
+
+			int totalInstallments = businessMember.getDuration();
+			int pendingInstallments = Math.max(totalInstallments - paidInstallments, 0);
+
 
 			ReceiptsLedgerPojo cashBookLedger = new ReceiptsLedgerPojo();
-			cashBookLedger.setSno(++i);
-			cashBookLedger.setDate(r.getTransDate().toLocalDate());
-			cashBookLedger.setTransId(r.getCashBookId());
-			cashBookLedger.setLoanId(r.getBusinessMember().getBusinessMemberId());
-			cashBookLedger.setLoanDate(r.getBusinessMember().getStartDate().toLocalDate());
-			cashBookLedger.setCustomerName(r.getPersonalInfo() != null ? r.getPersonalInfo().getFirstName() : null);
-			cashBookLedger.setAmountPaid(r.getCredit());
+
+			cashBookLedger.setSno(sno++);
+			cashBookLedger.setDate(transactionDate != null ? transactionDate.toLocalDate() : null);
+			cashBookLedger.setTransId(firstRow.getCashBookId());
+			cashBookLedger.setLoanId(businessMemberId);
+			cashBookLedger.setLoanDate(
+					businessMember.getStartDate() != null ? businessMember.getStartDate().toLocalDate() : null);
+			cashBookLedger.setCustomerName(
+					firstRow.getPersonalInfo() != null ? firstRow.getPersonalInfo().getFirstName() : null);
+			cashBookLedger.setAmountPaid(currentPaymentAmount);
 			cashBookLedger.setLateFee(BigDecimal.ZERO);
-			cashBookLedger.setTotal(r.getCredit());
+			cashBookLedger.setTotal(currentPaymentAmount);
+			cashBookLedger.setTotalPaid(totalPaid);
+			cashBookLedger.setBalance(balance);
+			cashBookLedger.setCurrentInstallmentNumber(paidInstallments);
+			cashBookLedger.setBalanceInstallmentNumber(pendingInstallments);
+			//cashBookLedger.setParticulars(firstRow.getAccountMasterCode());
 
-			List<EMI> allEMIs = emiRepo.findByBusinessMember(r.getBusinessMember());
-
-			Map<Boolean, List<EMI>> collect = allEMIs.stream().collect(Collectors.partitioningBy(
-					emi -> emi.getPaymentDate() == null || emi.getPaymentDate().isBefore(r.getTransDate())));
-
-			List<EMI> currentCashBook_beforeEMis = collect.get(true);
-			List<EMI> currentCashBook_afterEMis = collect.get(false);
-
-			BigDecimal totalAmountPaidUpToThisCashBookTrasac = currentCashBook_beforeEMis.stream()
-					.map(EMI::getPaidAmount).reduce(BigDecimal.ZERO, BigDecimal::add);
-
-			BigDecimal totalAmountpendingAfterToThisCashBookTrasac = currentCashBook_afterEMis.stream()
-					.map(EMI::getRemainingAmount).reduce(BigDecimal.ZERO, BigDecimal::add);
-
-			cashBookLedger.setTotalPaid(totalAmountPaidUpToThisCashBookTrasac);
-			cashBookLedger.setBalance(totalAmountpendingAfterToThisCashBookTrasac);
-
-			cashBookLedger.setCurrentInstallmentNumber(currentCashBook_beforeEMis.size());
-			cashBookLedger.setBalanceInstallmentNumber(currentCashBook_afterEMis.size());
-
-			cashBookLedger.setParticulars(r.getAccountMasterCode());
 
 			result.add(cashBookLedger);
 		}

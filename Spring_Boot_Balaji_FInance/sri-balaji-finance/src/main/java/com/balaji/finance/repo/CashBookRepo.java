@@ -190,6 +190,7 @@ public interface CashBookRepo extends JpaRepository<CashBook, Long> {
 			FROM CashBook c
 			WHERE c.transDate BETWEEN :fromDate AND :toDate
 			AND c.businessMember.businessMemberId IS NOT NULL
+			AND c.accountMasterCode IN ('DF LOAN INSTALLMENT','MF LOAN INSTALLMENT','MF INTEREST')
 			""")
 	List<CashBook> findByDateRangeAndBusinessNotNull(@Param("fromDate") LocalDateTime fromDate,
 			@Param("toDate") LocalDateTime toDate);
@@ -198,6 +199,7 @@ public interface CashBookRepo extends JpaRepository<CashBook, Long> {
 			SELECT c
 			FROM CashBook c
 			WHERE c.businessMember.businessMemberId IS NOT NULL
+			  AND c.accountMasterCode IN ('DF LOAN INSTALLMENT','MF LOAN INSTALLMENT','MF INTEREST')
 			""")
 	List<CashBook> findByDateRangeAndBusinessNotNull();
 
