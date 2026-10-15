@@ -21,9 +21,14 @@
   --surface-1: #ffffff;
   --surface-2: #f8fafc;
   --surface-3: #eef2f7;
+  /* total rows, scrollbar tracks: one step stronger than --surface-3 */
+  --surface-4: #e2e8f0;
   --text-strong: #0f172a;
   --text-muted: #64748b;
   --border-soft: rgba(15, 23, 42, 0.1);
+  /* The page behind the cards. "Integrate" in Settings > Colors paints the
+     menu or the top bar in it, so they sit flat on the page. */
+  --canvas: #eef2f7;
   /* Report grids are read like a printed ledger, so their box lines are a
      shade stronger than --border-soft, with a heavier frame and header rule.
      Kept separate so ordinary panel borders stay light. */
@@ -83,9 +88,11 @@
   --surface-1: #0f172a;
   --surface-2: #111827;
   --surface-3: #172033;
+  --surface-4: #1e293b;
   --text-strong: #f8fafc;
   --text-muted: #94a3b8;
   --border-soft: rgba(148, 163, 184, 0.18);
+  --canvas: #0b1322;
   --table-line: rgba(148, 163, 184, 0.34);
   --table-line-strong: rgba(148, 163, 184, 0.62);
   --shadow-panel: 0 22px 50px rgba(0, 0, 0, 0.32);
@@ -103,10 +110,11 @@ body,
   color: var(--text-strong);
 }
 
+/* The two corner tints take the theme colours, not a fixed blue and green. */
 body {
   background:
-    linear-gradient(135deg, rgba(15, 98, 254, 0.08), transparent 32%),
-    linear-gradient(315deg, rgba(5, 150, 105, 0.08), transparent 30%),
+    linear-gradient(135deg, color-mix(in srgb, var(--brand-primary) 8%, transparent), transparent 32%),
+    linear-gradient(315deg, color-mix(in srgb, var(--brand-secondary) 8%, transparent), transparent 30%),
     #f5f7fb;
 }
 
@@ -183,24 +191,33 @@ body {
 
 .dark body {
   background:
-    linear-gradient(135deg, rgba(59, 130, 246, 0.16), transparent 28%),
-    linear-gradient(315deg, rgba(16, 185, 129, 0.1), transparent 28%),
+    linear-gradient(135deg, color-mix(in srgb, var(--brand-primary) 16%, transparent), transparent 28%),
+    linear-gradient(315deg, color-mix(in srgb, var(--brand-secondary) 10%, transparent), transparent 28%),
     #080f1d;
 }
 
+/* The page behind every screen is --canvas, so it turns with Light / Dark.
+   It used to be a fixed #eef2f7 on .enterprise-main: in dark mode the cards
+   went dark and the page under them - the Dashboard most of all - stayed
+   light grey. */
 .enterprise-shell {
   height: calc(100 * var(--app-vh));
-  background: #eef2f7;
+  background: var(--canvas);
 }
 
 .dark .enterprise-shell {
   background:
-    radial-gradient(circle at top left, rgba(37, 99, 235, 0.18), transparent 34rem),
+    radial-gradient(circle at top left, color-mix(in srgb, var(--brand-primary) 20%, transparent), transparent 34rem),
     linear-gradient(180deg, rgba(8, 15, 29, 0.98), rgba(15, 23, 42, 0.98));
 }
 
 .enterprise-main {
-  background: #eef2f7;
+  background: var(--canvas);
+}
+
+/* dark: let the shell's glow through; the grid lines are added further down */
+.dark .enterprise-main {
+  background-color: transparent;
 }
 
 .workspace-tabs {
@@ -213,7 +230,7 @@ body {
   overflow-x: auto;
   border: 1px solid var(--border-soft);
   border-radius: 8px;
-  background: #ffffff;
+  background: var(--surface-1);
   box-shadow: none;
 }
 
@@ -344,6 +361,22 @@ body {
     linear-gradient(90deg, rgba(148, 163, 184, 0.045) 1px, transparent 1px);
 }
 
+/* The top bar and, in the Horizontal layout, the menu under it: one sticky
+   block (components/Layout.jsx). */
+.enterprise-topstack {
+  position: sticky;
+  top: 0;
+  z-index: 35;
+  flex: 0 0 auto;
+}
+
+/* ------------------------------------------------------------------
+   Top bar
+
+   Its colours are the --bar-* tokens. ThemeProvider publishes them when
+   Settings > Colors > Top bar is anything but Default; with none published,
+   the fallbacks written here are the look that follows Light / Dark.
+   ------------------------------------------------------------------ */
 .enterprise-header {
   position: sticky;
   top: 0;
@@ -353,18 +386,19 @@ body {
   align-items: center;
   gap: 16px;
   padding: 10px 18px;
-  border-bottom: 1px solid var(--border-soft);
-  background: rgba(255, 255, 255, 0.78);
+  color: var(--bar-fg, inherit);
+  border-bottom: 1px solid var(--bar-border, var(--border-soft));
+  background: var(--bar-bg, rgba(255, 255, 255, 0.78));
   backdrop-filter: blur(18px) saturate(140%);
   -webkit-backdrop-filter: blur(18px) saturate(140%);
 }
 
 .dark .enterprise-header {
-  background: rgba(15, 23, 42, 0.78);
+  background: var(--bar-bg, rgba(15, 23, 42, 0.78));
 }
 
 .enterprise-header-solid {
-  background: var(--surface-1);
+  background: var(--bar-bg, var(--surface-1));
   backdrop-filter: none;
 }
 
@@ -374,8 +408,9 @@ body {
 }
 
 :root[data-navbar-style="accent"] .enterprise-header {
-  background: var(--surface-1);
-  border-bottom: 3px solid var(--brand-primary);
+  background: var(--bar-bg, var(--surface-1));
+  /* on a bar painted in the accent itself, the line takes the bar's ink */
+  border-bottom: 3px solid var(--bar-accent, var(--brand-primary));
   backdrop-filter: none;
 }
 
@@ -383,10 +418,172 @@ body {
   width: calc(100% - 24px);
   min-height: 64px;
   margin: 12px;
-  border: 1px solid var(--border-soft);
+  border: 1px solid var(--bar-border, var(--border-soft));
   border-radius: calc(var(--app-radius) + 8px);
-  background: color-mix(in srgb, var(--surface-1) 88%, transparent);
+  background: var(--bar-bg, color-mix(in srgb, var(--surface-1) 88%, transparent));
   box-shadow: var(--shadow-panel);
+}
+
+/* The menu button: a phone always has it; a desktop only in the Overlay
+   layout, where the sidebar is off the page until asked for. */
+.enterprise-header .enterprise-header-menu {
+  display: inline-flex;
+}
+
+@media (min-width: 768px) {
+  :root:not([data-nav-layout="overlay"]) .enterprise-header .enterprise-header-menu {
+    display: none;
+  }
+}
+
+/* "Master Information / Loans" stays on one line beside the search box */
+.enterprise-header .enterprise-crumb,
+.enterprise-header .enterprise-crumb-sep {
+  white-space: nowrap;
+}
+
+.enterprise-header .enterprise-crumb,
+.enterprise-header .enterprise-header-brand-line {
+  color: var(--bar-muted, #475569);
+}
+
+.enterprise-header .enterprise-crumb-sep {
+  color: var(--bar-muted, rgba(0, 0, 0, 0.38));
+}
+
+.dark .enterprise-header .enterprise-crumb,
+.dark .enterprise-header .enterprise-header-brand-line {
+  color: var(--bar-muted, #94a3b8);
+}
+
+.dark .enterprise-header .enterprise-crumb-sep {
+  color: var(--bar-muted, rgba(255, 255, 255, 0.5));
+}
+
+.enterprise-header .enterprise-crumb.is-current,
+.enterprise-header .enterprise-header-brand-name {
+  color: var(--bar-fg, var(--text-strong));
+}
+
+/* On a phone the brand shares the bar with seven buttons: the mark keeps its
+   shape and the name is cut with an ellipsis rather than stacked on three lines. */
+.enterprise-header-brand .enterprise-brand-mark {
+  flex: 0 0 42px;
+}
+
+.enterprise-header .enterprise-header-brand-name,
+.enterprise-header .enterprise-header-brand-line {
+  display: block;
+  max-width: 28vw;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* On a painted bar the light / dark switch takes the bar's ink too. */
+:root[data-navbar-color]:not([data-navbar-color="default"]):not([data-navbar-color="integrate"]) .enterprise-header label[for="light-switch"] svg {
+  color: var(--bar-muted);
+}
+
+:root[data-navbar-color]:not([data-navbar-color="default"]):not([data-navbar-color="integrate"]) .enterprise-header label[for="light-switch"]:hover {
+  background: var(--bar-tile);
+}
+
+/* ------------------------------------------------------------------
+   Horizontal menu (partials/TopNav.jsx) - Settings > Layout > Horizontal.
+   It is the menu, so it wears the menu's colours: the same --sidebar-*
+   tokens as the sidebar, with the same fallbacks.
+   ------------------------------------------------------------------ */
+.enterprise-topnav {
+  display: none;
+}
+
+@media (min-width: 768px) {
+  .enterprise-topnav {
+    display: flex;
+    align-items: center;
+    /* a narrow window gets a second row rather than a scrollbar */
+    flex-wrap: wrap;
+    gap: 2px;
+    min-height: 48px;
+    padding: 6px 12px;
+    color: var(--sidebar-fg, var(--text-strong));
+    background: var(--sidebar-bg, var(--surface-1));
+    border-bottom: 1px solid var(--sidebar-border, var(--border-soft));
+  }
+
+  /* under a floating (Rounded) top bar the menu floats with it */
+  :root[data-navbar-style="rounded"] .enterprise-topnav {
+    width: calc(100% - 24px);
+    margin: -4px 12px 12px;
+    border: 1px solid var(--sidebar-border, var(--border-soft));
+    border-radius: calc(var(--app-radius) + 8px);
+    box-shadow: var(--shadow-panel);
+  }
+}
+
+.enterprise-topnav-item {
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 36px;
+  padding: 6px 9px;
+  border: 0;
+  border-radius: 8px;
+  color: inherit;
+  background: transparent;
+  font-family: var(--app-font-family);
+  font-size: 13.5px;
+  font-weight: 800;
+  text-decoration: none;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.enterprise-topnav-item:hover,
+.enterprise-topnav-item.is-open {
+  color: var(--sidebar-accent, var(--brand-primary));
+  background: var(--sidebar-accent-soft, color-mix(in srgb, var(--brand-primary) 9%, transparent));
+}
+
+.enterprise-topnav-item.is-active {
+  color: var(--sidebar-on-accent, var(--on-primary, #fff));
+  background: var(--sidebar-accent, var(--brand-primary));
+}
+
+.enterprise-topnav-icon {
+  width: 20px !important;
+  height: 20px !important;
+}
+
+.enterprise-topnav-chevron {
+  width: 18px !important;
+  height: 18px !important;
+  margin-left: -2px;
+  transition: transform 160ms ease;
+}
+
+.enterprise-topnav-item.is-open .enterprise-topnav-chevron {
+  transform: rotate(180deg);
+}
+
+.enterprise-topnav-menu {
+  min-width: 230px;
+  margin-top: 6px;
+}
+
+.enterprise-topnav-menu .MuiMenuItem-root.Mui-selected {
+  color: var(--brand-primary);
+}
+
+.enterprise-topnav-menu .MuiMenuItem-root.Mui-selected .MuiListItemIcon-root {
+  color: var(--brand-primary);
+}
+
+.enterprise-topnav-menu .MuiMenuItem-root.is-danger,
+.enterprise-topnav-menu .MuiMenuItem-root.is-danger .MuiListItemIcon-root {
+  color: #b91c1c;
 }
 
 .enterprise-brand {
@@ -435,9 +632,9 @@ body {
 .enterprise-header .MuiIconButton-root {
   width: 40px;
   height: 40px;
-  color: var(--text-muted);
-  background: color-mix(in srgb, var(--surface-2) 82%, transparent);
-  border: 1px solid color-mix(in srgb, var(--border-soft) 72%, transparent);
+  color: var(--bar-muted, var(--text-muted));
+  background: var(--bar-tile, color-mix(in srgb, var(--surface-2) 82%, transparent));
+  border: 1px solid var(--bar-border, color-mix(in srgb, var(--border-soft) 72%, transparent));
 }
 
 .enterprise-header .MuiIconButton-root svg {
@@ -446,9 +643,16 @@ body {
 }
 
 .enterprise-header .MuiIconButton-root:hover {
-  color: var(--brand-primary);
-  background: color-mix(in srgb, var(--brand-primary) 10%, var(--surface-1));
-  border-color: color-mix(in srgb, var(--brand-primary) 28%, var(--border-soft));
+  color: var(--bar-accent, var(--brand-primary));
+  background: var(--bar-accent-soft, color-mix(in srgb, var(--brand-primary) 10%, var(--surface-1)));
+  border-color: var(--bar-border, color-mix(in srgb, var(--brand-primary) 28%, var(--border-soft)));
+}
+
+/* The search box is a field in its own right: on a painted bar it keeps a
+   plate of its own rather than taking the bar's colour. */
+:root[data-navbar-color]:not([data-navbar-color="default"]):not([data-navbar-color="integrate"]) .enterprise-header .enterprise-global-search .MuiOutlinedInput-root {
+  color: var(--text-strong);
+  background: var(--surface-1);
 }
 
 :root[data-icon-style="sharp"] .enterprise-brand-mark,
@@ -513,7 +717,7 @@ body {
   padding: 4px 8px 4px 5px;
   border: 1px solid transparent;
   border-radius: 999px;
-  color: var(--text-strong);
+  color: var(--bar-fg, var(--text-strong));
   background: transparent;
   cursor: pointer;
   transition: background 160ms ease, border-color 160ms ease, box-shadow 160ms ease;
@@ -521,8 +725,8 @@ body {
 
 .enterprise-profile-trigger:hover,
 .enterprise-profile-trigger:focus-visible {
-  background: color-mix(in srgb, var(--brand-primary) 7%, var(--surface-1));
-  border-color: color-mix(in srgb, var(--brand-primary) 18%, var(--border-soft));
+  background: var(--bar-accent-soft, color-mix(in srgb, var(--brand-primary) 7%, var(--surface-1)));
+  border-color: var(--bar-border, color-mix(in srgb, var(--brand-primary) 18%, var(--border-soft)));
   box-shadow: 0 10px 24px rgba(15, 23, 42, 0.08);
   outline: none;
 }
@@ -562,7 +766,7 @@ body {
 }
 
 .enterprise-profile-chevron {
-  color: var(--text-muted);
+  color: var(--bar-muted, var(--text-muted));
   transition: transform 160ms ease;
 }
 
@@ -736,10 +940,34 @@ body {
   color: var(--table-head-fg) !important;
 }
 
+/* The frame round the rows is an outline drawn inside the edge, not a border.
+   The grid sizes its columns to fill this box and does not know about a border
+   put on it from here, so a 1px border left the columns 2px too wide: every
+   grid, even one that fitted, grew a full-width horizontal scrollbar. */
 .MuiDataGrid-main {
-  border: 1px solid var(--table-line-strong);
+  outline: 1px solid var(--table-line-strong);
+  outline-offset: -1px;
   border-radius: 6px;
   overflow: hidden;
+}
+
+/* A table a screen builds by hand (MUI Table - Quick Cash Book, the customer
+   statements...) wears the same heading band as the report grids, so every
+   table in the app reads as one family and follows Settings > Colors > Table
+   header together. Three classes deep on purpose: it has to outrank a
+   screen's own `& .MuiTableCell-head` colour. */
+.enterprise-main .MuiTableHead-root .MuiTableCell-root {
+  color: var(--table-head-fg);
+  background: var(--table-head-bg);
+  border-bottom: 2px solid var(--table-head-bg-hover);
+  font-weight: 800;
+}
+
+.enterprise-main .MuiTableHead-root .MuiTableCell-root .MuiTypography-root,
+.enterprise-main .MuiTableHead-root .MuiCheckbox-root,
+.enterprise-main .MuiTableHead-root .MuiTableSortLabel-root,
+.enterprise-main .MuiTableHead-root .MuiTableSortLabel-root .MuiTableSortLabel-icon {
+  color: var(--table-head-fg) !important;
 }
 
 .MuiDataGrid-columnHeaderTitle {
@@ -865,6 +1093,22 @@ body {
   transition: border-color 160ms ease, box-shadow 160ms ease, background-color 160ms ease;
 }
 
+/* Date fields are a different MUI component (the X date pickers) from every
+   other input, so none of the input rules in this file reached them: a date
+   stood shorter, square-cornered and in a lighter, smaller type beside the
+   fields next to it. Same plate, corners, type and weight as the rest. */
+.MuiPickersOutlinedInput-root {
+  border-radius: 8px !important;
+  background-color: var(--surface-1);
+  transition: border-color 160ms ease, box-shadow 160ms ease, background-color 160ms ease;
+}
+
+.MuiPickersInputBase-root {
+  font-family: var(--app-font-family) !important;
+  font-size: calc(0.94rem * var(--app-font-scale)) !important;
+  font-weight: 700 !important;
+}
+
 .MuiAutocomplete-option {
   border-radius: 6px;
   min-height: 38px;
@@ -949,10 +1193,16 @@ body {
   background: var(--surface-1);
 }
 
+/* The theme colour as a wash in two corners and a rule along the top, so the
+   Dashboard turns with the theme as a whole and not only in its buttons. */
 .dashboard-hero-redesign {
   position: relative;
   border-radius: 8px !important;
-  background: var(--surface-1) !important;
+  border-top: 3px solid var(--brand-primary) !important;
+  background:
+    radial-gradient(52rem 20rem at 100% 0%, color-mix(in srgb, var(--brand-primary) 13%, transparent), transparent 62%),
+    radial-gradient(36rem 18rem at 0% 100%, color-mix(in srgb, var(--brand-secondary) 9%, transparent), transparent 62%),
+    var(--surface-1) !important;
 }
 
 .dashboard-hero-copy {
@@ -1005,16 +1255,45 @@ body {
   line-height: 1.15;
 }
 
+/* each figure carries its tone as a bar down the left edge */
+.dashboard-strip {
+  border-left-width: 3px;
+}
+
+.dashboard-strip-primary {
+  border-color: color-mix(in srgb, var(--brand-primary) 24%, var(--border-soft));
+  border-left-color: var(--brand-primary);
+}
+
 .dashboard-strip-success {
   border-color: color-mix(in srgb, var(--brand-success) 24%, var(--border-soft));
+  border-left-color: var(--brand-success);
 }
 
 .dashboard-strip-warning {
   border-color: color-mix(in srgb, #d97706 26%, var(--border-soft));
+  border-left-color: #d97706;
 }
 
 .dashboard-strip-info {
   border-color: color-mix(in srgb, var(--brand-secondary) 24%, var(--border-soft));
+  border-left-color: var(--brand-secondary);
+}
+
+/* a short accent mark beside each panel's title */
+.dashboard-panel > .MuiStack-root .MuiTypography-h6,
+.dashboard-panel > .MuiStack-root .MuiTypography-h6 + .MuiTypography-body2 {
+  position: relative;
+  padding-left: 12px;
+}
+
+.dashboard-panel > .MuiStack-root .MuiTypography-h6::before {
+  content: "";
+  position: absolute;
+  inset: 0.18em auto 0.18em 0;
+  width: 4px;
+  border-radius: 2px;
+  background: var(--brand-primary);
 }
 
 .dashboard-kpi,
@@ -1032,7 +1311,7 @@ body {
   flex-direction: column;
   justify-content: space-between;
   overflow: hidden;
-  background: #ffffff !important;
+  background: var(--surface-1) !important;
   box-shadow: none;
   transition: transform 160ms ease, border-color 160ms ease, box-shadow 160ms ease, background-color 160ms ease;
 }
@@ -1054,14 +1333,14 @@ body {
 
 .dashboard-kpi .MuiTypography-body2 {
   max-width: 100%;
-  color: #475569;
+  color: var(--text-muted);
   font-weight: 750;
   line-height: 1.25;
   overflow-wrap: anywhere;
 }
 
 .dashboard-kpi .MuiTypography-h5 {
-  color: #0f172a;
+  color: var(--text-strong);
   font-size: clamp(1.35rem, 2vw, 1.85rem);
   line-height: 1.08;
   font-weight: 950;
@@ -1100,7 +1379,8 @@ body {
 .dashboard-module {
   transition: transform 160ms ease, box-shadow 160ms ease, border-color 160ms ease;
   min-height: 116px;
-  background: #ffffff !important;
+  /* was a fixed white, which stayed white in dark mode */
+  background: var(--surface-1) !important;
 }
 
 .dashboard-module:hover {
@@ -1204,6 +1484,998 @@ body {
   }
 }
 
+/* ------------------------------------------------------------------
+   Dashboard (src/pages/Dashboard.jsx)
+
+   A greeting line, four headline figures, the day's cash position as one
+   sum, two charts, the day's postings and shortcuts. Every colour is a theme
+   token: cards are --surface-1 on the --canvas, the accent is --brand-primary,
+   so the screen follows Light / Dark and the theme colour with the rest.
+   ------------------------------------------------------------------ */
+.dash {
+  /* cards here are rounded even when the app's own corners are square;
+     a larger radius in Settings still carries over */
+  --dash-radius: max(12px, var(--app-radius));
+  display: grid;
+  gap: 16px;
+}
+
+/* the MUI grid's own negative-margin maths needs a plain block around it */
+.dash > .MuiGrid-container {
+  min-width: 0;
+}
+
+.dash-head {
+  position: relative;
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 16px 24px;
+  flex-wrap: wrap;
+  padding-bottom: 4px;
+}
+
+.dash-head-text {
+  min-width: 0;
+}
+
+.dash-eyebrow {
+  margin: 0;
+  color: var(--brand-primary);
+  font-size: 0.78rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.dash-title {
+  margin: 4px 0 0;
+  font-size: clamp(1.5rem, 2.2vw, 2rem);
+  font-weight: 800;
+  line-height: 1.15;
+  letter-spacing: -0.02em;
+}
+
+.dash-sub {
+  margin: 6px 0 0;
+  color: var(--text-muted);
+  font-size: 0.86rem;
+  font-weight: 500;
+}
+
+.dash-head-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.dash-head-progress {
+  position: absolute;
+  right: 0;
+  bottom: -8px;
+  left: 0;
+  height: 2px !important;
+  border-radius: 2px;
+}
+
+.dash-live {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 32px;
+  padding: 0 12px;
+  border: 1px solid var(--border-soft);
+  border-radius: 999px;
+  color: var(--text-muted);
+  background: var(--surface-1);
+  font-size: 0.8rem;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.dash-live-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--brand-success);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--brand-success) 22%, transparent);
+}
+
+.dash-live.is-loading .dash-live-dot {
+  background: #d97706;
+  box-shadow: 0 0 0 3px rgba(217, 119, 6, 0.22);
+}
+
+/* ---- cards ---- */
+.dash-card,
+.dash-kpi {
+  min-width: 0;
+  border: 1px solid var(--border-soft);
+  border-radius: var(--dash-radius);
+  background: var(--surface-1);
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04), 0 8px 24px rgba(15, 23, 42, 0.05);
+}
+
+.dark .dash-card,
+.dark .dash-kpi {
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.3), 0 10px 28px rgba(0, 0, 0, 0.22);
+}
+
+.dash-card {
+  height: 100%;
+  padding: 18px 20px 20px;
+}
+
+.dash-card-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 14px;
+}
+
+.dash-card-heading {
+  min-width: 0;
+}
+
+.dash-card-heading h2 {
+  margin: 0;
+  font-size: 1.02rem;
+  font-weight: 800;
+  line-height: 1.25;
+}
+
+.dash-card-heading p {
+  margin: 3px 0 0;
+  color: var(--text-muted);
+  font-size: 0.82rem;
+  font-weight: 500;
+}
+
+/* the table inside brings its own frame: no second border around it */
+.dash-card-flush .MuiPaper-root.enterprise-card {
+  border: 0;
+  box-shadow: none;
+  background: transparent;
+}
+
+.dash-empty {
+  display: grid;
+  place-items: center;
+  padding: 16px;
+  border: 1px dashed var(--border-soft);
+  border-radius: calc(var(--dash-radius) - 4px);
+  color: var(--text-muted);
+  font-size: 0.88rem;
+  font-weight: 500;
+  text-align: center;
+}
+
+/* ---- the four figures ---- */
+.dash-kpis {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.dash-kpi {
+  /* each figure names its tone once; the icon plate and the meter read it */
+  --tone: var(--brand-primary);
+  display: grid;
+  gap: 4px;
+  padding: 16px 18px 18px;
+}
+
+.dash-tone-success {
+  --tone: var(--brand-success);
+}
+
+.dash-tone-warning {
+  --tone: #d97706;
+}
+
+.dash-tone-info {
+  --tone: var(--brand-secondary);
+}
+
+.dash-kpi-top {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 8px;
+}
+
+.dash-kpi-icon {
+  width: 36px;
+  height: 36px;
+  flex: 0 0 36px;
+  display: grid;
+  place-items: center;
+  border-radius: 10px;
+  color: var(--tone);
+  background: color-mix(in srgb, var(--tone) 13%, transparent);
+}
+
+.dash-kpi-icon svg {
+  width: 20px;
+  height: 20px;
+}
+
+.dash-kpi-label {
+  color: var(--text-muted);
+  font-size: 0.82rem;
+  font-weight: 700;
+}
+
+.dash-kpi-value {
+  font-size: clamp(1.35rem, 1.9vw, 1.75rem);
+  font-weight: 800;
+  line-height: 1.15;
+  letter-spacing: -0.01em;
+  font-variant-numeric: tabular-nums;
+  overflow-wrap: anywhere;
+}
+
+.dash-kpi-note {
+  color: var(--text-muted);
+  font-size: 0.8rem;
+  font-weight: 500;
+}
+
+.dash-meter {
+  height: 6px;
+  margin-top: 10px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--tone) 14%, transparent);
+}
+
+.dash-meter span {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: var(--tone);
+  transition: width 400ms ease;
+}
+
+/* ---- today's cash position, written as the sum it is ---- */
+.dash-position {
+  height: auto;
+  display: grid;
+  grid-template-columns: 1fr auto 1fr auto 1fr auto 1.15fr;
+  align-items: center;
+  gap: 8px 14px;
+  padding: 16px 20px;
+}
+
+.dash-position-item {
+  min-width: 0;
+  display: grid;
+  gap: 3px;
+}
+
+.dash-position-item span {
+  color: var(--text-muted);
+  font-size: 0.78rem;
+  font-weight: 700;
+}
+
+.dash-position-item strong {
+  font-size: clamp(1.02rem, 1.4vw, 1.25rem);
+  font-weight: 800;
+  line-height: 1.2;
+  font-variant-numeric: tabular-nums;
+  overflow-wrap: anywhere;
+}
+
+.dash-position-item.is-credit strong {
+  color: #15803d;
+}
+
+.dash-position-item.is-debit strong {
+  color: #dc2626;
+}
+
+.dark .dash-position-item.is-credit strong {
+  color: #4ade80;
+}
+
+.dark .dash-position-item.is-debit strong {
+  color: #f87171;
+}
+
+/* the answer of the sum sits on a tint of the accent */
+.dash-position-item.is-closing {
+  padding: 10px 14px;
+  border-radius: calc(var(--dash-radius) - 4px);
+  background: var(--brand-primary-soft, color-mix(in srgb, var(--brand-primary) 10%, transparent));
+}
+
+.dash-position-item.is-closing span {
+  color: var(--text-strong);
+}
+
+.dash-op {
+  color: var(--text-muted);
+  font-size: 1.2rem;
+  font-weight: 700;
+  line-height: 1;
+}
+
+/* ---- shortcuts ---- */
+.dash-links {
+  display: grid;
+  gap: 4px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.dash-link {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.dash-link-main {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 10px;
+  border: 0;
+  border-radius: calc(var(--dash-radius) - 4px);
+  color: var(--text-strong);
+  background: transparent;
+  font-family: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition: background 140ms ease;
+}
+
+.dash-link-main:hover {
+  background: var(--brand-primary-soft, color-mix(in srgb, var(--brand-primary) 10%, transparent));
+}
+
+.dash-link-main:focus-visible {
+  outline: 2px solid var(--brand-primary);
+  outline-offset: 1px;
+}
+
+.dash-link-icon {
+  width: 34px;
+  height: 34px;
+  flex: 0 0 34px;
+  display: grid;
+  place-items: center;
+  border-radius: 9px;
+  color: var(--brand-primary);
+  background: color-mix(in srgb, var(--brand-primary) 12%, transparent);
+}
+
+.dash-link-icon svg {
+  width: 19px;
+  height: 19px;
+}
+
+.dash-link-title {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  font-size: 0.9rem;
+  font-weight: 700;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.dash-link-arrow {
+  width: 18px !important;
+  height: 18px !important;
+  color: var(--text-muted);
+  opacity: 0;
+  transform: translateX(-4px);
+  transition: opacity 140ms ease, transform 140ms ease;
+}
+
+.dash-link-main:hover .dash-link-arrow,
+.dash-link-main:focus-visible .dash-link-arrow {
+  opacity: 1;
+  transform: none;
+}
+
+@media (max-width: 1199px) {
+  .dash-kpis {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  /* no room for the sum on one line: the four figures stand two by two,
+     without the signs between them */
+  .dash-position {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .dash-position .dash-op {
+    display: none;
+  }
+}
+
+@media (max-width: 575px) {
+  .enterprise-page {
+    padding: 12px 10px 20px;
+  }
+
+  .dash-kpis {
+    grid-template-columns: 1fr;
+  }
+
+  .dash-position {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* ------------------------------------------------------------------
+   Working screens (src/components/ui/ScreenParts.jsx)
+
+   The entry screens under Transactions - Business Cash Book, Quick Cash
+   Book, Cashbook, Delete Transaction - are laid out from the same few parts:
+   a header, cards, read-only facts, running figures, an empty state. Colours
+   are theme tokens throughout, so they follow Light / Dark and the accent.
+   ------------------------------------------------------------------ */
+/* The margin every screen sits in (components/Layout.jsx). Screens used to
+   start hard against the menu and the top bar, each padding itself or not. */
+.enterprise-page {
+  /* defaults for the screen parts (ScreenHeader, the report header...) on
+     screens that do not sit inside a .scr-page of their own */
+  --scr-radius: max(12px, var(--app-radius));
+  --tone: var(--brand-primary);
+  padding: 16px clamp(12px, 1.5vw, 24px) 28px;
+}
+
+/* one search-as-you-type box that should fill its layout cell (see the note
+   on .scr-page .MuiAutocomplete-root) */
+.MuiAutocomplete-root.scr-fill {
+  width: 100% !important;
+}
+
+.scr-page {
+  /* cards here are rounded even when the app's own corners are square;
+     a larger radius in Settings still carries over */
+  --scr-radius: max(12px, var(--app-radius));
+  --tone: var(--brand-primary);
+  display: grid;
+  gap: 16px;
+}
+
+/* filters of a report: as many columns as fit, every control the same width */
+.scr-filters {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 12px 14px;
+  align-items: center;
+}
+
+/* a filter that needs the room of two (only where the grid has two to give) */
+@media (min-width: 700px) {
+  .scr-filters > .scr-span-2 {
+    grid-column: span 2;
+  }
+}
+
+/* Money in a report grid that carries a meaning: received, paid out, still
+   owed. Used as cellClassName on DataTable columns. */
+.MuiDataGrid-cell.cell-credit {
+  color: #15803d;
+  font-weight: 800;
+}
+
+.MuiDataGrid-cell.cell-debit,
+.MuiDataGrid-cell.cell-due {
+  color: #dc2626;
+  font-weight: 800;
+}
+
+.dark .MuiDataGrid-cell.cell-credit {
+  color: #4ade80;
+}
+
+.dark .MuiDataGrid-cell.cell-debit,
+.dark .MuiDataGrid-cell.cell-due {
+  color: #f87171;
+}
+
+.scr-stack {
+  min-width: 0;
+  display: grid;
+  gap: 16px;
+  align-content: start;
+}
+
+/* App.css caps every search-as-you-type box at 220px. On these screens the
+   box fills the space its layout gives it - a customer search cut off at
+   "Search Customer /..." was the first thing on the Business Cash Book. */
+.scr-page .MuiAutocomplete-root {
+  width: 100% !important;
+}
+
+/* work on the left, the thing being filled in on the right */
+.scr-split {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(320px, 400px);
+  gap: 16px;
+  align-items: start;
+}
+
+.scr-tone-success {
+  --tone: var(--brand-success);
+}
+
+.scr-tone-warning {
+  --tone: #d97706;
+}
+
+.scr-tone-danger {
+  --tone: #dc2626;
+}
+
+/* ---- header ---- */
+.scr-head {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  flex-wrap: wrap;
+}
+
+.scr-head-icon {
+  width: 44px;
+  height: 44px;
+  flex: 0 0 44px;
+  display: grid;
+  place-items: center;
+  border-radius: 12px;
+  color: var(--tone);
+  background: color-mix(in srgb, var(--tone) 13%, transparent);
+}
+
+.scr-head-text {
+  flex: 1 1 260px;
+  min-width: 0;
+}
+
+.scr-head-text h1 {
+  margin: 0;
+  font-size: clamp(1.3rem, 1.9vw, 1.6rem);
+  font-weight: 800;
+  line-height: 1.2;
+  letter-spacing: -0.015em;
+}
+
+.scr-head-text p {
+  margin: 3px 0 0;
+  color: var(--text-muted);
+  font-size: 0.86rem;
+  font-weight: 500;
+  line-height: 1.45;
+}
+
+.scr-head-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+/* a search box that sits with the header's actions: it stands on the page
+   canvas, not in a card, so it carries its own surface */
+.scr-head-search {
+  /* a fixed width, not min(320px, 100%): a percentage here is measured against
+     the actions row it sizes, so the row came out too narrow and the button
+     beside it wrapped under the box */
+  width: 320px;
+  max-width: 100%;
+}
+
+.scr-head-search .MuiOutlinedInput-root {
+  background: var(--surface-1);
+}
+
+.scr-date-chip {
+  display: inline-flex;
+  align-items: center;
+  min-height: 34px;
+  padding: 0 12px;
+  border: 1px solid var(--border-soft);
+  border-radius: 999px;
+  color: var(--text-strong);
+  background: var(--surface-1);
+  font-size: 0.82rem;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+/* Daily / Monthly: MUI Tabs drawn as one segmented switch */
+.scr-switch.MuiTabs-root {
+  min-height: 0;
+  padding: 4px;
+  border: 1px solid var(--border-soft);
+  border-radius: calc(var(--scr-radius) - 2px);
+  background: var(--surface-1);
+}
+
+.scr-switch .MuiTabs-indicator {
+  display: none;
+}
+
+.scr-switch .MuiTab-root {
+  min-height: 34px;
+  padding: 4px 16px;
+  border-radius: calc(var(--scr-radius) - 6px);
+  color: var(--text-muted);
+}
+
+.scr-switch .MuiTab-root.Mui-selected {
+  color: var(--on-primary, #fff);
+  background: var(--brand-primary);
+}
+
+/* ---- cards ---- */
+.scr-card {
+  min-width: 0;
+  padding: 18px 20px 20px;
+  border: 1px solid var(--border-soft);
+  border-radius: var(--scr-radius);
+  background: var(--surface-1);
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04), 0 8px 24px rgba(15, 23, 42, 0.05);
+}
+
+.dark .scr-card {
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.3), 0 10px 28px rgba(0, 0, 0, 0.22);
+}
+
+/* a card that holds a table edge to edge */
+.scr-card-flush {
+  padding: 0;
+  overflow: hidden;
+}
+
+.scr-pad {
+  padding: 16px 20px;
+}
+
+.scr-card-head {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.scr-card-icon {
+  width: 34px;
+  height: 34px;
+  flex: 0 0 34px;
+  display: grid;
+  place-items: center;
+  border-radius: 9px;
+  color: var(--brand-primary);
+  background: color-mix(in srgb, var(--brand-primary) 12%, transparent);
+}
+
+.scr-card-icon svg {
+  width: 19px;
+  height: 19px;
+}
+
+.scr-card-heading {
+  flex: 1;
+  min-width: 0;
+}
+
+.scr-card-heading h2 {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 800;
+  line-height: 1.25;
+}
+
+.scr-card-heading p {
+  margin: 2px 0 0;
+  color: var(--text-muted);
+  font-size: 0.8rem;
+  font-weight: 500;
+}
+
+/* a plain sub-heading between groups of fields in one form */
+.scr-group-title {
+  margin: 0 0 12px;
+  color: var(--text-muted);
+  font-size: 0.74rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.scr-group-title:not(:first-child) {
+  margin-top: 22px;
+}
+
+/* ---- read-only facts ---- */
+.scr-facts {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: 16px 20px;
+  margin: 0;
+}
+
+.scr-fact {
+  min-width: 0;
+}
+
+.scr-fact dt {
+  color: var(--text-muted);
+  font-size: 0.76rem;
+  font-weight: 700;
+}
+
+.scr-fact dd {
+  margin: 3px 0 0;
+  font-size: 0.95rem;
+  font-weight: 700;
+  line-height: 1.3;
+  overflow-wrap: anywhere;
+}
+
+/* ---- running figures ---- */
+.scr-stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+  gap: 10px;
+}
+
+.scr-stats-2 {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.scr-stat {
+  min-width: 0;
+  display: grid;
+  gap: 2px;
+  padding: 10px 14px;
+  border: 1px solid var(--border-soft);
+  border-left: 3px solid var(--tone);
+  border-radius: calc(var(--scr-radius) - 4px);
+  background: var(--surface-2);
+}
+
+.scr-stat span {
+  color: var(--text-muted);
+  font-size: 0.74rem;
+  font-weight: 700;
+}
+
+.scr-stat strong {
+  font-size: 1.08rem;
+  font-weight: 800;
+  line-height: 1.2;
+  font-variant-numeric: tabular-nums;
+  overflow-wrap: anywhere;
+}
+
+/* ---- toolbars and bars ---- */
+.scr-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 12px 16px;
+  flex-wrap: wrap;
+}
+
+.scr-toolbar-date {
+  flex: 0 0 220px;
+}
+
+.scr-toolbar .scr-stats,
+.scr-toolbar .scr-grow {
+  flex: 1 1 320px;
+}
+
+/* a search box grows with the window, but not into a line the whole card wide */
+.scr-toolbar .scr-search {
+  max-width: 560px;
+}
+
+/* the line under a table or a form: what is left of it, and the button */
+.scr-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px 16px;
+  flex-wrap: wrap;
+  margin-top: 18px;
+  padding-top: 16px;
+  border-top: 1px solid var(--border-soft);
+}
+
+.scr-bar-total {
+  color: var(--text-muted);
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
+.scr-bar-total strong {
+  color: var(--text-strong);
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+}
+
+.scr-hint {
+  margin: 0;
+  color: var(--text-muted);
+  font-size: 0.82rem;
+  font-weight: 500;
+  line-height: 1.45;
+}
+
+/* the sum a payment comes to, above its button */
+.scr-total {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px 14px;
+  border-radius: calc(var(--scr-radius) - 4px);
+  background: var(--brand-primary-soft, color-mix(in srgb, var(--brand-primary) 10%, transparent));
+}
+
+.scr-total span {
+  font-size: 0.82rem;
+  font-weight: 700;
+}
+
+.scr-total strong {
+  font-size: 1.3rem;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+}
+
+.scr-form {
+  display: grid;
+  gap: 14px;
+}
+
+/* Active / Deleted and the like: two or three choices, one of them on */
+.scr-seg {
+  display: inline-flex;
+  padding: 4px;
+  border: 1px solid var(--border-soft);
+  border-radius: calc(var(--scr-radius) - 2px);
+  background: var(--surface-2);
+}
+
+.scr-seg button {
+  min-height: 32px;
+  padding: 4px 14px;
+  border: 0;
+  border-radius: calc(var(--scr-radius) - 6px);
+  color: var(--text-muted);
+  background: transparent;
+  font-family: inherit;
+  font-size: 0.84rem;
+  font-weight: 700;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.scr-seg button:hover {
+  color: var(--text-strong);
+}
+
+.scr-seg button[aria-pressed="true"] {
+  color: var(--on-primary, #fff);
+  background: var(--brand-primary);
+}
+
+.scr-seg button:focus-visible {
+  outline: 2px solid var(--brand-primary);
+  outline-offset: 2px;
+}
+
+/* the reason and the button of a deletion, kept together and set apart */
+.scr-danger-bar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  border-top: 1px solid var(--border-soft);
+  background: color-mix(in srgb, #dc2626 5%, var(--surface-1));
+}
+
+.scr-danger-bar .scr-grow {
+  flex: 1 1 280px;
+}
+
+.scr-selected {
+  color: var(--text-muted);
+  font-size: 0.84rem;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+/* ---- tables built by hand ---- */
+.scr-table .MuiTableCell-root {
+  border: 1px solid var(--border-soft);
+}
+
+.scr-table .MuiTableCell-body {
+  font-variant-numeric: tabular-nums;
+}
+
+/* entries posted together open with a bar of the accent down their left edge */
+.scr-table .scr-group-start > .MuiTableCell-root:first-of-type {
+  box-shadow: inset 3px 0 0 var(--brand-primary);
+}
+
+/* ---- nothing here yet ---- */
+.scr-empty {
+  display: grid;
+  justify-items: center;
+  gap: 6px;
+  padding: 36px 20px;
+  border: 1px dashed color-mix(in srgb, var(--text-muted) 40%, transparent);
+  border-radius: var(--scr-radius);
+  background: color-mix(in srgb, var(--surface-1) 60%, transparent);
+  text-align: center;
+}
+
+.scr-card .scr-empty {
+  border-radius: calc(var(--scr-radius) - 4px);
+  background: transparent;
+}
+
+.scr-empty-icon {
+  width: 48px;
+  height: 48px;
+  display: grid;
+  place-items: center;
+  margin-bottom: 4px;
+  border-radius: 50%;
+  color: var(--brand-primary);
+  background: color-mix(in srgb, var(--brand-primary) 12%, transparent);
+}
+
+.scr-empty strong {
+  font-size: 0.98rem;
+  font-weight: 800;
+}
+
+.scr-empty p {
+  max-width: 44ch;
+  margin: 0;
+  color: var(--text-muted);
+  font-size: 0.86rem;
+  font-weight: 500;
+  line-height: 1.5;
+}
+
+@media (max-width: 1100px) {
+  .scr-split {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 575px) {
+  .scr-card {
+    padding: 14px;
+  }
+
+  .scr-card-flush {
+    padding: 0;
+  }
+
+  .scr-toolbar-date {
+    flex-basis: 100%;
+  }
+}
+
 .finance-status {
   display: inline-flex;
   align-items: center;
@@ -1279,7 +2551,8 @@ body {
 }
 
 :root[data-table-style="bordered"] .MuiDataGrid-main {
-  border-width: 2px;
+  outline-width: 2px;
+  outline-offset: -2px;
 }
 
 /* Superseded by the .custom-toast rules above (main.jsx sets toastClassName

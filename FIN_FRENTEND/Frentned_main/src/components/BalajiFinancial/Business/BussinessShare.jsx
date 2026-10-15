@@ -17,7 +17,7 @@ import {
   alpha,
 } from "@mui/material";
 
-import { actionIcons } from "src/lib/icons";
+import { actionIcons, navIcons } from "src/lib/icons";
 import dayjs from "dayjs";
 import axios from "axios";
 
@@ -27,7 +27,6 @@ import LoadingSpinner from "src/LoadingSpinner";
 
 import {
   AppDatePicker,
-  ReportCompanyHeader,
   ReportToolbar,
   TableExportMenu,
 } from "src/components/ui";
@@ -77,7 +76,7 @@ const scrollTableSx = {
   },
 
   "&::-webkit-scrollbar-track": {
-    backgroundColor: "#e2e8f0",
+    backgroundColor: "var(--surface-4)",
   },
 
   "&::-webkit-scrollbar-thumb": {
@@ -1139,6 +1138,9 @@ const BalanceSheet = () => {
           ====================================================== */}
 
       <ReportToolbar
+        icon={navIcons.businessShare}
+        title="Business Share"
+        subtitle="Balance sheet as on a date."
         onRefresh={
           fetchData
         }
@@ -1168,20 +1170,7 @@ const BalanceSheet = () => {
           mt: 2,
         }}
       >
-        {/* ====================================================
-            COMPANY HEADER
-            ==================================================== */}
-
-        <ReportCompanyHeader
-          title="Balance Sheet"
-          subtitle="Assets, liabilities and the balance difference"
-          date={
-            generatedDate ||
-            toDate
-          }
-        />
-
-        <Box sx={{ mt: 2 }}>
+        <Box>
           {/* ==================================================
               DATE + GENERATE
               ================================================== */}

@@ -17,13 +17,13 @@ import { API_BASE } from "lib/config";
 import { getSession } from "src/utils/session";
 import { errorToast } from "toastify";
 import {
+  AppDatePicker,
   DataTable,
   isTotalRow,
-  
-  ReportCompanyHeader,
   ReportToolbar,
   useReportZoom,
 } from "src/components/ui";
+import { navIcons } from "src/lib/icons";
 
 // Whole rupees - no decimal point on the printed report.
 const formatAmount = (amount) =>
@@ -56,6 +56,10 @@ const Partner_Settelment = () => {
     dayjs().format("YYYY-MM-DD")
   );
   const [rows, setRows] = useState([]);
+  // What the rows on screen were generated for. It is printed on every
+  // download, so the page still says which filters produced it after one is
+  // changed on screen.
+  const [applied, setApplied] = useState(null);
 
   const zoom = useReportZoom();
 
@@ -120,6 +124,7 @@ const Partner_Settelment = () => {
           id: `${row.loanId || "row"}-${index + 1}`,
         }))
       );
+      setApplied({ partner: selectedPartner.label, targetDate });
     } catch (error) {
       console.error(error);
       errorToast("Failed to load settlement data");
@@ -274,10 +279,23 @@ const Partner_Settelment = () => {
     },
   ];
 
+  const reportMeta = useMemo(
+    () =>
+      applied
+        ? [
+            { label: "Partner", value: applied.partner },
+            { label: "Settlement As On", value: formatDate(applied.targetDate) },
+          ]
+        : [],
+    [applied]
+  );
+
   return (
-    <Box p={2}>
+    <Box>
       <ReportToolbar
-        onGenerate={getSettlementData}
+        icon={navIcons.partnerSettlement}
+        title="Partner Settlement"
+        subtitle="One partner's settlement as on a target date."
         onRefresh={getSettlementData}
         loading={loading}
         rows={rows}
@@ -299,7 +317,7 @@ const Partner_Settelment = () => {
               onChange={(e, value) => setSelectedPartner(value)}
               onInputChange={(e, value) => loadPartners(value)}
               getOptionLabel={(option) => option?.label || ""}
-              sx={{width:"220px"}}
+              className="scr-fill"
               renderInput={(params) => (
                 <TextField
                   {...params}
@@ -315,16 +333,8 @@ const Partner_Settelment = () => {
               xs: 12,
               md: 3
             }}>
-            <TextField
-              type="date"
-              label="Target Date"
-              value={targetDate}
-              onChange={(e) => setTargetDate(e.target.value)}
-              fullWidth
-              InputLabelProps={{
-                shrink: true,
-              }}
-            />
+            {/* the app's own date field, like every other report - same YYYY-MM-DD value */}
+            <AppDatePicker label="Target Date" size="medium" value={targetDate} onChange={setTargetDate} />
           </Grid>
 
           <Grid
@@ -344,8 +354,6 @@ const Partner_Settelment = () => {
       </Paper>
       {/* TABLE */}
       <Paper elevation={2} sx={{ p: 2 }}>
-        <ReportCompanyHeader title="Partner Settlement" />
-
         {loading ? (
           <Box
             height="300px"
@@ -361,9 +369,12 @@ const Partner_Settelment = () => {
               rows={rows}
               columns={columns}
               fileName="Partner-Settlement"
-              subtitle={`Settlement as on ${formatDate(targetDate)}${
-                selectedPartner?.label ? ` / ${selectedPartner.label}` : ""
-              }`}
+              subtitle={
+                applied
+                  ? `Settlement as on ${formatDate(applied.targetDate)} / ${applied.partner}`
+                  : "Choose a partner and a date, then generate."
+              }
+              reportMeta={reportMeta}
               totalFields={TOTAL_FIELDS}
               totalLabelCell={TOTAL_LABEL_CELL}
               // No autoHeight: this report is far wider than the screen, and a

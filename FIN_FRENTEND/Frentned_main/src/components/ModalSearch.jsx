@@ -120,7 +120,7 @@ function ModalSearch({ id, searchId, modalOpen, setModalOpen }) {
         />
       </Box>
 
-      <DialogContent sx={{ p: 2, bgcolor: "rgba(248,250,252,0.72)" }}>
+      <DialogContent sx={{ p: 2, bgcolor: "color-mix(in srgb, var(--surface-2) 72%, transparent)" }}>
         <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap sx={{ mb: 1.5 }}>
           {categories.map((item) => (
             <Chip key={item} size="small" label={item} variant="outlined" />

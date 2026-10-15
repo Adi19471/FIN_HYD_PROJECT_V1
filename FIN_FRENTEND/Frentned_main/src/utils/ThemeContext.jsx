@@ -5,19 +5,38 @@ import {
 } from "@mui/material/styles";
 import CssBaseline from "@mui/material/CssBaseline";
 import { BREAKPOINTS } from "./breakpoints";
-import { deriveTokens, publishThemeTokens } from "src/lib/themeTokens";
+import {
+  DARK_INK,
+  LIGHT_INK,
+  alpha,
+  contrastRatio,
+  contrastText,
+  darken,
+  deriveSurfaceTokens,
+  deriveTokens,
+  lighten,
+  mix,
+  publishSurfaceTokens,
+  publishTableHeadTokens,
+  publishThemeTokens,
+} from "src/lib/themeTokens";
+import { COLOR_THEMES, SETTING_CHOICES, SURFACE_OPTIONS, TABLE_HEADER_OPTIONS, fontStack, isHexColor } from "src/lib/themeOptions";
+import { COMPANY_ADDRESS, COMPANY_APP_NAME, COMPANY_LOGO } from "src/lib/company";
 
 const ThemeContext = createContext({
   currentTheme: "light",
   settings: {},
   changeCurrentTheme: () => {},
   updateThemeSetting: () => {},
+  applyThemeSettings: () => {},
   resetThemeSettings: () => {},
 });
 
 const defaultSettings = {
   mode: "light",
   colorTheme: "sunrise",
+  // null = the colour theme's own accent; otherwise a #rrggbb that replaces it.
+  customAccent: null,
   fontFamily: "Tahoma",
   fontScale: 1.08,
   screenScale: 1,
@@ -30,70 +49,93 @@ const defaultSettings = {
   sidebarStyle: "expanded",
   navbarStyle: "rounded",
   radius: 0,
+  // Where the menu sits, and what the menu, the top bar, the report heading
+  // band and the sign-in picture are painted in (src/lib/themeOptions.js).
+  navLayout: "static",
+  sidebarColor: "default",
+  navbarColor: "default",
+  tableHeader: "accent",
+  loginStyle: "accent",
+  // Blank = the built-in name / line / logo from src/lib/company.js.
+  brandName: "",
+  brandTagline: "",
+  brandLogo: "",
 };
 
-const colorThemes = {
-  trust: {
-    primary: "#0f62fe",
-    secondary: "#0e7490",
-    success: "#059669",
-    warning: "#d97706",
-    error: "#dc2626",
-  },
-  emerald: {
-    primary: "#047857",
-    secondary: "#0f766e",
-    success: "#16a34a",
-    warning: "#ca8a04",
-    error: "#e11d48",
-  },
-  executive: {
-    primary: "#334155",
-    secondary: "#2563eb",
-    success: "#15803d",
-    warning: "#b45309",
-    error: "#b91c1c",
-  },
-  royal: {
-    primary: "#4338ca",
-    secondary: "#0891b2",
-    success: "#0f9f6e",
-    warning: "#f59e0b",
-    error: "#ef4444",
-  },
-  sunrise: {
-    primary: "#b45309",
-    secondary: "#be123c",
-    success: "#0f766e",
-    warning: "#ea580c",
-    error: "#dc2626",
-  },
-  steel: {
-    primary: "#0f766e",
-    secondary: "#475569",
-    success: "#15803d",
-    warning: "#ca8a04",
-    error: "#be123c",
-  },
-  graphite: {
-    primary: "#18181b",
-    secondary: "#52525b",
-    success: "#16a34a",
-    warning: "#d97706",
-    error: "#dc2626",
-  },
+/** Puts a default back wherever a saved value is not one the app still offers. */
+const sanitizeSettings = (settings) => {
+  const clean = { ...settings };
+  Object.entries(SETTING_CHOICES).forEach(([key, choices]) => {
+    if (!choices.includes(clean[key])) clean[key] = defaultSettings[key];
+  });
+  clean.customAccent = isHexColor(clean.customAccent) ? clean.customAccent.toLowerCase() : null;
+  ["brandName", "brandTagline", "brandLogo"].forEach((key) => {
+    if (typeof clean[key] !== "string") clean[key] = "";
+  });
+  return clean;
 };
 
-const fontStacks = {
-  Tahoma: 'Tahoma, Verdana, Geneva, "Segoe UI", sans-serif',
-  Inter: '"Inter", system-ui, sans-serif',
-  Roboto: '"Roboto", system-ui, sans-serif',
-  Poppins: '"Poppins", Inter, system-ui, sans-serif',
-  Manrope: '"Manrope", Inter, system-ui, sans-serif',
-  "Open Sans": '"Open Sans", Inter, system-ui, sans-serif',
-  Lato: '"Lato", Inter, system-ui, sans-serif',
-  Nunito: '"Nunito", Inter, system-ui, sans-serif',
-  System: 'system-ui, -apple-system, "Segoe UI", sans-serif',
+/**
+ * The accent in force. A custom accent keeps the colour theme's success /
+ * warning / error, and takes its second colour from itself (the same hue
+ * drawn towards navy) so gradients stay in one family.
+ */
+const resolveAccent = (settings) => {
+  const named = COLOR_THEMES[settings.colorTheme] || COLOR_THEMES.trust;
+  const accent = isHexColor(settings.customAccent)
+    ? { ...named, primary: settings.customAccent, secondary: mix(settings.customAccent, "#0f172a", 0.35) }
+    : named;
+  return settings.mode === "dark" ? { ...accent, primary: readableOnDark(accent.primary) } : accent;
+};
+
+/**
+ * On the dark page a deep accent (indigo, slate, graphite) all but disappears
+ * wherever it is used as ink: outlined buttons, menu icons, the open tab. It is
+ * lifted towards white only as far as it takes to be seen (3:1 against the
+ * dark card), so accents that already read there are left exactly as chosen.
+ */
+const DARK_PAPER = "#0f172a";
+const readableOnDark = (color) => {
+  let lifted = color;
+  for (let step = 0; step < 12 && contrastRatio(lifted, DARK_PAPER) < 3; step += 1) {
+    lifted = lighten(lifted, 0.1);
+  }
+  return lifted;
+};
+
+/** Tokens for the menu or the top bar, or null to leave the Light / Dark look alone. */
+const resolveSurface = (choice, primary) => {
+  if (choice === "integrate") return { bg: "var(--canvas)", border: "transparent" };
+  if (choice === "accent") return deriveSurfaceTokens(primary);
+
+  const option = SURFACE_OPTIONS.find((item) => item.value === choice);
+  if (!option?.bg) return null;
+
+  const tokens = deriveSurfaceTokens(option.bg);
+  if (tokens.fg === LIGHT_INK) return tokens;
+  // A light plate has room for the theme colour: keep its hover and
+  // open-page highlight on the accent, as the default look has them.
+  const { accent, onAccent, accentSoft, ...neutral } = tokens;
+  return neutral;
+};
+
+/** Tokens for the report heading band, or null to leave it on the accent. */
+const resolveTableHead = (choice, primary, isDark) => {
+  let bg = null;
+  let fg = null;
+
+  if (choice === "soft") {
+    bg = mix(isDark ? "#0f172a" : "#ffffff", primary, isDark ? 0.4 : 0.16);
+    const ink = darken(primary, 0.35);
+    if (!isDark) fg = contrastRatio(ink, bg) >= 4.5 ? ink : DARK_INK;
+  } else {
+    const option = TABLE_HEADER_OPTIONS.find((item) => item.value === choice);
+    bg = (isDark && option?.bgDark) || option?.bg || null;
+  }
+  if (!bg) return null;
+
+  fg = fg || contrastText(bg);
+  return { bg, fg, hover: darken(bg, 0.08), divider: alpha(fg, 0.3), rule: darken(bg, 0.22) };
 };
 
 const readSettings = () => {
@@ -113,11 +155,16 @@ const readSettings = () => {
       persisted.radius = 0;
       localStorage.setItem("ui-radius-v1", "1");
     }
-    return {
+    // A sidebar the user had already collapsed, from before the menu layout
+    // was a setting, is the Mini layout.
+    if (!persisted.navLayout && localStorage.getItem("sidebar-expanded") === "false") {
+      persisted.navLayout = "mini";
+    }
+    return sanitizeSettings({
       ...defaultSettings,
       mode: legacyTheme || defaultSettings.mode,
       ...persisted,
-    };
+    });
   } catch {
     return defaultSettings;
   }
@@ -136,14 +183,24 @@ export default function ThemeProvider({ children }) {
     setSettings((prev) => ({ ...prev, [key]: value }));
   };
 
+  /** Several settings in one go - a preset, or a colour theme that also clears the custom accent. */
+  const applyThemeSettings = (changes) => {
+    setSettings((prev) => sanitizeSettings({ ...prev, ...changes }));
+  };
+
   const resetThemeSettings = () => {
     setSettings(defaultSettings);
     localStorage.setItem("theme", defaultSettings.mode);
   };
 
   useEffect(() => {
-    localStorage.setItem("enterprise-ui-settings", JSON.stringify(settings));
-    localStorage.setItem("theme", settings.mode);
+    try {
+      localStorage.setItem("enterprise-ui-settings", JSON.stringify(settings));
+      localStorage.setItem("theme", settings.mode);
+    } catch {
+      // Storage is full (a large logo) or unavailable: the look still applies
+      // for this visit, it just is not there on the next one.
+    }
   }, [settings]);
 
   useEffect(() => {
@@ -163,9 +220,20 @@ export default function ThemeProvider({ children }) {
     // var(--brand-*), and the report exporters via readThemeTokens(). Changing
     // the colour in Settings updates all of them on the spot, no reload.
     {
-      const accent = colorThemes[settings.colorTheme] || colorThemes.trust;
+      const accent = resolveAccent(settings);
       publishThemeTokens(deriveTokens(accent.primary, accent.secondary));
+
+      // The menu, the top bar and the report heading band each take a colour
+      // of their own from Settings > Colors. "Default" publishes nothing, and
+      // the stylesheets fall back to the look that follows Light / Dark.
+      publishSurfaceTokens("sidebar", resolveSurface(settings.sidebarColor, accent.primary));
+      publishSurfaceTokens("bar", resolveSurface(settings.navbarColor, accent.primary));
+      publishTableHeadTokens(resolveTableHead(settings.tableHeader, accent.primary, theme === "dark"));
     }
+    document.documentElement.dataset.navLayout = settings.navLayout;
+    document.documentElement.dataset.sidebarColor = settings.sidebarColor;
+    document.documentElement.dataset.navbarColor = settings.navbarColor;
+    document.documentElement.dataset.loginStyle = settings.loginStyle;
     document.documentElement.dataset.density = settings.density;
     document.documentElement.dataset.tableDensity = settings.tableDensity;
     document.documentElement.dataset.tableStyle = settings.tableStyle;
@@ -176,7 +244,7 @@ export default function ThemeProvider({ children }) {
     document.documentElement.style.setProperty("--app-font-scale", settings.fontScale);
     document.documentElement.style.setProperty("--app-screen-zoom", settings.screenScale || 1);
     document.documentElement.style.setProperty("--app-radius", `${settings.radius}px`);
-    document.documentElement.style.setProperty("--app-font-family", fontStacks[settings.fontFamily] || fontStacks.Inter);
+    document.documentElement.style.setProperty("--app-font-family", fontStack(settings.fontFamily));
 
     const transitionTimeout = setTimeout(() => {
       document.documentElement.classList.remove("notransition");
@@ -186,6 +254,12 @@ export default function ThemeProvider({ children }) {
   }, [
     theme,
     settings.colorTheme,
+    settings.customAccent,
+    settings.navLayout,
+    settings.sidebarColor,
+    settings.navbarColor,
+    settings.tableHeader,
+    settings.loginStyle,
     settings.density,
     settings.fontFamily,
     settings.fontScale,
@@ -199,7 +273,7 @@ export default function ThemeProvider({ children }) {
     settings.navbarStyle,
   ]);
 
-  const palette = colorThemes[settings.colorTheme] || colorThemes.trust;
+  const palette = useMemo(() => resolveAccent(settings), [settings.colorTheme, settings.customAccent, settings.mode]);
   const isDark = theme === "dark";
   const fontScale = Number(settings.fontScale || 1);
   const densityUnit = settings.density === "compact" ? 0.9 : settings.density === "spacious" ? 1.12 : 1;
@@ -227,8 +301,7 @@ export default function ThemeProvider({ children }) {
           divider: isDark ? "rgba(148, 163, 184, 0.18)" : "rgba(15, 23, 42, 0.1)",
         },
         typography: {
-          fontFamily:
-            fontStacks[settings.fontFamily] || fontStacks.Inter,
+          fontFamily: fontStack(settings.fontFamily),
           fontSize: 14 * fontScale,
           h1: { fontWeight: 900, letterSpacing: 0 },
           h2: { fontWeight: 900, letterSpacing: 0 },
@@ -378,16 +451,24 @@ export default function ThemeProvider({ children }) {
                 border: 0,
                 fontSize: `${0.82 * fontScale * tableScale}rem`,
                 fontWeight: 700,
+                // the strip to the right of the last heading is part of the band too
+                "--DataGrid-t-header-background-base": "var(--table-head-bg)",
               },
               columnHeaders: {
                 minHeight: settings.tableDensity === "compact" ? "40px !important" : settings.tableDensity === "spacious" ? "56px !important" : "48px !important",
               },
+              // Every grid wears the same heading band - the --table-head-*
+              // tokens (style.css; Settings > Colors > Table header) - whether
+              // it is the shared DataTable or a screen's own DataGrid. A plain
+              // grey here left those screens with a white header and the
+              // band's ink on it.
               columnHeader: {
-                backgroundColor: isDark ? "#111827" : "#f8fafc",
+                backgroundColor: "var(--table-head-bg)",
+                color: "var(--table-head-fg)",
               },
               columnHeaderTitle: {
                 fontWeight: 800,
-                color: isDark ? "#cbd5e1" : "#334155",
+                color: "var(--table-head-fg)",
               },
               cell: {
                 fontWeight: 700,
@@ -421,6 +502,7 @@ export default function ThemeProvider({ children }) {
         settings,
         changeCurrentTheme,
         updateThemeSetting,
+        applyThemeSettings,
         resetThemeSettings,
       }}
     >
@@ -433,3 +515,18 @@ export default function ThemeProvider({ children }) {
 }
 
 export const useThemeProvider = () => useContext(ThemeContext);
+
+/**
+ * The name, line and logo shown in the menu, the top bar and on the sign-in
+ * page: what Settings > Branding holds, or the built-in ones where a field is
+ * blank. Reports keep the registered company name from src/lib/company.js.
+ */
+export const useBranding = () => {
+  const { settings } = useContext(ThemeContext);
+  return {
+    appName: settings.brandName?.trim() || COMPANY_APP_NAME,
+    tagline: settings.brandTagline?.trim() || COMPANY_ADDRESS,
+    logo: settings.brandLogo || COMPANY_LOGO,
+    hasCustomLogo: Boolean(settings.brandLogo),
+  };
+};

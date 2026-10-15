@@ -1,43 +1,16 @@
 import React, { useCallback, useEffect, useMemo, useState } from "react";
-import {
-  Autocomplete,
-  Box,
-  Button,
-  Checkbox,
-  Chip,
-  CircularProgress,
-  Divider,
-  FormControlLabel,
-  Grid,
-  Paper,
-  Stack,
-  TextField,
-  Typography,
-} from "@mui/material";
-import { AccountBalanceWalletRounded, PaymentsRounded, ReceiptLongRounded } from "@mui/icons-material";
+import { Autocomplete, Button, Checkbox, CircularProgress, FormControlLabel, TextField } from "@mui/material";
+import { AccountBalanceWalletRounded, PersonSearchRounded, ReceiptLongRounded } from "@mui/icons-material";
 import dayjs from "dayjs";
 import axios from "axios";
 import { successToast, errorToast } from "toastify";
 import { API_BASE } from "lib/config";
 import { getSession } from "src/utils/session";
-import { AppDatePicker, DataTable } from "src/components/ui";
+import { AppDatePicker, DataTable, EmptyState, Fact, FactGrid, SectionCard, StatTile } from "src/components/ui";
 
 const money = (value) => Number(value || 0).toLocaleString("en-IN");
+const rupees = (value) => `Rs ${money(value)}`;
 const numericInput = (value) => String(value || "").replace(/[^0-9]/g, "");
-
-// Visually muted so read-only fields are clearly not editable, unlike Amount Paid / Late Fee / Payment Date.
-const ReadOnlyField = ({ label, value }) => (
-  <TextField
-    label={label}
-    value={value}
-    fullWidth
-    InputProps={{ readOnly: true }}
-    sx={{
-      "& .MuiOutlinedInput-root": { bgcolor: "action.hover" },
-      "& .MuiInputBase-input": { fontWeight: 700, color: "text.secondary" },
-    }}
-  />
-);
 
 const defaultForm = () => ({
   accountNo: "",
@@ -207,7 +180,6 @@ export default function BusinessFinancePayment({
       setLoading(false);
     }
   };
-  const money = (value) => Number(value || 0).toLocaleString("en-IN");
 
   const fmtDate = (value) => (value ? String(value).slice(0, 10) : "-");
 
@@ -266,26 +238,20 @@ export default function BusinessFinancePayment({
     }
   ];
 
-
+  // What the two amount fields come to, shown above the button before saving.
+  const totalToPay = (Number(form.amountPaid) || 0) + (Number(form.lateFeePaid) || 0);
 
   return (
-    <Stack spacing={2}>
-      <Paper className="enterprise-card" elevation={0} sx={{ p: 2.5 }}>
-        <Stack direction="row" spacing={1} alignItems="center" flexWrap="wrap" sx={{ mb: 2 }}>
-          <PaymentsRounded color="primary" />
-          <Typography variant="subtitle1" sx={{ fontWeight: 900 }}>
-            Customer
-          </Typography>
-          <Chip label={mode} size="small" color="primary" variant="outlined" />
-          <Box sx={{ flexGrow: 1 }} />
-          {loading && <CircularProgress size={22} />}
-        </Stack>
-        <Grid container spacing={2}>
-          <Grid
-            size={{
-              xs: 12,
-              md: 5
-            }}>
+    <div className="scr-stack">
+      <div className="scr-split">
+        {/* ---------- left: find the loan, then read it ---------- */}
+        <div className="scr-stack">
+          <SectionCard
+            icon={PersonSearchRounded}
+            title="Customer"
+            hint={`${mode} finance loans`}
+            action={loading && <CircularProgress size={20} />}
+          >
             <Autocomplete
               openOnFocus
               filterOptions={(x) => x}
@@ -320,160 +286,51 @@ export default function BusinessFinancePayment({
                 />
               )}
             />
-          </Grid>
-          <Grid
-            size={{
-              xs: 12,
-              sm: 4,
-              md: 2.1
-            }}>
-            <ReadOnlyField label="Account No" value={form.accountNo || "-"} />
-          </Grid>
-          <Grid
-            size={{
-              xs: 12,
-              sm: 4,
-              md: 2.4
-            }}>
-            <ReadOnlyField label="Partner Name" value={form.partnerName || "-"} />
-          </Grid>
-          <Grid
-            size={{
-              xs: 12,
-              sm: 4,
-              md: 2.4
-            }}>
-            <ReadOnlyField label="Guarantor" value={form.guarantorName || "-"} />
-          </Grid>
-        </Grid>
+          </SectionCard>
 
-        <Divider sx={{ my: 2.5 }} />
+          {/* The loan's details are read, not typed: label over value rather
+              than a dozen input boxes holding a dash until a loan is chosen. */}
+          {selectedLoanId ? (
+            <SectionCard icon={AccountBalanceWalletRounded} title="Loan Details" hint={form.accountNo}>
+              <FactGrid>
+                <Fact label="Account No" value={form.accountNo} />
+                <Fact label="Partner Name" value={form.partnerName} />
+                <Fact label="Guarantor" value={form.guarantorName} />
+                <Fact label="Loan Amount" value={rupees(form.loanAmount)} />
+                <Fact label="Installment" value={rupees(form.installmentAmount)} />
+                <Fact label="Interest (%)" value={form.interestRate || "-"} />
+                <Fact label="Processing Fee" value={rupees(form.processingFee)} />
+                <Fact label="Duration" value={form.duration || "-"} />
+                <Fact label="Period From" value={form.periodFrom} />
+                <Fact label="Period To" value={form.periodTo} />
+              </FactGrid>
+            </SectionCard>
+          ) : (
+            <EmptyState icon={AccountBalanceWalletRounded} title="No loan selected">
+              Search for a customer or an account number above. The loan, what has been paid so far and the
+              installment schedule appear here.
+            </EmptyState>
+          )}
+        </div>
 
-        {/* Loan Details */}
-        <Stack direction="row" spacing={1} alignItems="center" sx={{ mb: 2 }}>
-          <AccountBalanceWalletRounded color="primary" />
-          <Typography variant="subtitle1" sx={{ fontWeight: 900 }}>Loan Details</Typography>
-        </Stack>
-        <Grid container spacing={2}>
-          <Grid
-            size={{
-              xs: 6,
-              sm: 3
-            }}>
-            <ReadOnlyField label="Loan Amount" value={selectedLoanId ? `Rs ${money(form.loanAmount)}` : "-"} />
-          </Grid>
-          <Grid
-            size={{
-              xs: 6,
-              sm: 3
-            }}>
-            <ReadOnlyField label="Installment" value={selectedLoanId ? `Rs ${money(form.installmentAmount)}` : "-"} />
-          </Grid>
-          <Grid
-            size={{
-              xs: 6,
-              sm: 3
-            }}>
-            <ReadOnlyField label="Period From" value={form.periodFrom || "-"} />
-          </Grid>
-          <Grid
-            size={{
-              xs: 6,
-              sm: 3
-            }}>
-            <ReadOnlyField label="Period To" value={form.periodTo || "-"} />
-          </Grid>
+        {/* ---------- right: the payment being recorded ---------- */}
+        <SectionCard
+          icon={ReceiptLongRounded}
+          title="Record Payment"
+          hint={selectedLoanId ? form.accountNo : "Select a loan first"}
+        >
+          <div className="scr-form">
+            {selectedLoanId && (
+              <div className="scr-stats scr-stats-2">
+                <StatTile label="Paid So Far" value={rupees(form.paid)} tone="success" />
+                <StatTile label="Balance" value={rupees(form.balance)} tone="warning" />
+                <StatTile label="Paid Installments" value={form.completedInstallments || "-"} />
+                <StatTile label="Pending Installments" value={form.pendingInstallments || "-"} />
+              </div>
+            )}
 
-          <Grid
-            size={{
-              xs: 6,
-              sm: 3
-            }}>
-            <ReadOnlyField label="Interest (%)" value={form.interestRate || "-"} />
-          </Grid>
-
-          <Grid
-            size={{
-              xs: 6,
-              sm: 3
-            }}>
-            <ReadOnlyField label="Processing Fee" value={`Rs ${money(form.processingFee)}` || "-"} />
-          </Grid>
-
-          <Grid
-            size={{
-              xs: 6,
-              sm: 3
-            }}>
-            <ReadOnlyField label="Duration" value={form.duration || "-"} />
-          </Grid>
-
-
-
-
-        </Grid>
-
-        <Divider sx={{ my: 2.5 }} />
-
-        {/* Record Payment */}
-        <Stack direction="row" spacing={1} alignItems="center" sx={{ mb: 2 }}>
-          <ReceiptLongRounded color="primary" />
-          <Typography variant="subtitle1" sx={{ fontWeight: 900 }}>Record Payment</Typography>
-        </Stack>
-        <Grid container spacing={2}>
-          <Grid
-            size={{
-              xs: 12,
-              sm: 6,
-              md: 2.4
-            }}>
-            <AppDatePicker label="Payment Date" value={form.date} onChange={(value) => setForm((prev) => ({ ...prev, date: dayjs(value) }))} />
-          </Grid>
-          <Grid
-            size={{
-              xs: 6,
-              sm: 6,
-              md: 2.4
-            }}>
-            <ReadOnlyField label="Paid So Far" value={selectedLoanId ? `Rs ${money(form.paid)}` : "-"} />
-          </Grid>
-
-          <Grid
-            size={{
-              xs: 6,
-              sm: 6,
-              md: 2.4
-            }}>
-            <ReadOnlyField label="Paid Installments" value={form.completedInstallments || "-"} />
-          </Grid>
-
-
-
-          <Grid
-            size={{
-              xs: 6,
-              sm: 6,
-              md: 2.4
-            }}>
-            <ReadOnlyField label="Balance" value={selectedLoanId ? `Rs ${money(form.balance)}` : "-"} />
-          </Grid>
-
-          <Grid
-            size={{
-              xs: 6,
-              sm: 6,
-              md: 2.4
-            }}>
-            <ReadOnlyField label="Pending Installments" value={form.pendingInstallments || "-"} />
-          </Grid>
-
-
-          <Grid
-            size={{
-              xs: 6,
-              sm: 6,
-              md: 2.4
-            }}>
+            {/* medium, like the two amount fields under it */}
+            <AppDatePicker label="Payment Date" size="medium" value={form.date} onChange={(value) => setForm((prev) => ({ ...prev, date: dayjs(value) }))} />
             <TextField
               label="Late Fee"
               placeholder="0"
@@ -482,15 +339,6 @@ export default function BusinessFinancePayment({
               disabled={!selectedLoanId}
               fullWidth
             />
-          </Grid>
-
-
-          <Grid
-            size={{
-              xs: 6,
-              sm: 6,
-              md: 2.4
-            }}>
             <TextField
               label="To Be Paid Amount "
               placeholder="0"
@@ -499,34 +347,36 @@ export default function BusinessFinancePayment({
               disabled={!selectedLoanId}
               fullWidth
             />
-          </Grid>
 
+            <div className="scr-total">
+              <span>Total</span>
+              <strong>{rupees(totalToPay)}</strong>
+            </div>
 
-        </Grid>
-        <Stack direction={{ xs: "column", sm: "row" }} spacing={2} alignItems={{ xs: "stretch", sm: "center" }} justifyContent="space-between" sx={{ mt: 2.5 }}>
-          <Typography variant="caption" color="text.secondary">
-            {!selectedLoanId && "Search and select a customer above to record a payment."}
-          </Typography>
-          <Stack direction={{ xs: "column", sm: "row" }} spacing={2} alignItems={{ xs: "stretch", sm: "center" }}>
             <FormControlLabel
               control={<Checkbox checked={printReceipt} onChange={(event) => setPrintReceipt(event.target.checked)} />}
               label="Print receipt after save"
             />
-            <Button variant="contained" onClick={handlePay} disabled={loading || !selectedLoanId}>
+            <Button variant="contained" size="large" fullWidth onClick={handlePay} disabled={loading || !selectedLoanId}>
               {loading ? "Processing..." : "Record Payment"}
             </Button>
-          </Stack>
-        </Stack>
-      </Paper>
-      <DataTable
-        title={`${heading} - Installment Schedule`}
-        rows={rows}
-        columns={columns}
-        loading={loading}
-        height={520}
-        pageSize={10}
-        getRowId={(row) => row.id}
-      />
-    </Stack>
+            {!selectedLoanId && <p className="scr-hint">Search and select a customer to record a payment.</p>}
+          </div>
+        </SectionCard>
+      </div>
+
+      {/* the schedule belongs to a loan: nothing to list until one is chosen */}
+      {selectedLoanId && (
+        <DataTable
+          title={`${heading} - Installment Schedule`}
+          rows={rows}
+          columns={columns}
+          loading={loading}
+          height={520}
+          pageSize={10}
+          getRowId={(row) => row.id}
+        />
+      )}
+    </div>
   );
 }

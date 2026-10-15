@@ -118,5 +118,16 @@ public class PersonalInfoController {
 
 		return ResponseEntity.ok().body(toBeReturnedDtoList);
 	}
+	
+	
+	
+	@GetMapping("/autocompleteAllCategory")
+	public ResponseEntity<List<PersonalInfoAutoCompletePojo>> autocompleteOnCategory(@RequestParam String q) {
+
+		List<PersonalInfoAutoCompletePojo> all = personalInfoService.personalInfoAllCategoryAutoComplete(q);
+
+		return ResponseEntity.ok().body(all);
+
+	} 
 
 }

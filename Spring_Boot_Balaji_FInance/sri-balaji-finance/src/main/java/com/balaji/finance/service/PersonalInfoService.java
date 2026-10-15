@@ -397,6 +397,8 @@ public class PersonalInfoService {
 	}
 
 	public List<PersonalInfoAutoCompletePojo> autocomplete(String keyword) {
+		
+		
 		List<PersonalInfo> allPersonalInfoList = personalInfoRepository.personalInfoAutoComplete(false, keyword,
 				Arrays.asList("CUSTOMER", "PARTNER"));
 
@@ -419,6 +421,34 @@ public class PersonalInfoService {
 		return toBeReturnedDtoList;
 	}
 
+	public List<PersonalInfoAutoCompletePojo> personalInfoAllCategoryAutoComplete(String keyword) {
+
+		List<PersonalInfo> allPersonalInfoList = personalInfoRepository.personalInfoAllCategoryAutoComplete(false,
+				keyword);
+
+		List<PersonalInfoAutoCompletePojo> toBeReturnedDtoList = new ArrayList<PersonalInfoAutoCompletePojo>();
+
+		allPersonalInfoList.stream().forEach(p -> {
+
+			PersonalInfoAutoCompletePojo personalInfoAutoCompletePojo = new PersonalInfoAutoCompletePojo();
+			personalInfoAutoCompletePojo.setId(p.getPersonalInfoId());
+
+			personalInfoAutoCompletePojo.setFirstname(p.getFirstName());
+			personalInfoAutoCompletePojo.setLastname(p.getLastName());
+			personalInfoAutoCompletePojo.setGender(p.getGender());
+			personalInfoAutoCompletePojo.setMobile(p.getMobile());
+
+			toBeReturnedDtoList.add(personalInfoAutoCompletePojo);
+
+		});
+
+		return toBeReturnedDtoList;
+	}
+	
+	
+	
+	
+	
 	public List<PersonalInfoAutoCompletePojo> personInfoAutoCompleteByCodeAndMasterCode(String keyword,
 			String masterCode, String code) {
 

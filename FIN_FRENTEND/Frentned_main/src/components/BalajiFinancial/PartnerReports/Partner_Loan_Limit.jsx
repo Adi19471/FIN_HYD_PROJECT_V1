@@ -15,11 +15,10 @@ import {
 
 import {
   DataTable,
-  
-  ReportCompanyHeader,
   ReportToolbar,
   useReportZoom,
 } from "src/components/ui";
+import { navIcons } from "src/lib/icons";
 
 // Whole rupees - no decimal point on any figure in this report.
 const formatAmount = (value) =>
@@ -118,6 +117,9 @@ const Partner_Loan_Limit = () => {
     <>
 
       <ReportToolbar
+        icon={navIcons.partnerLoanLimit}
+        title="Partner Loan Limit"
+        subtitle="Loan limits, partner by partner."
         onGenerate={getPartnerLoanLimits}
         onRefresh={getPartnerLoanLimits}
         loading={loading}
@@ -128,15 +130,13 @@ const Partner_Loan_Limit = () => {
       />
 
       <Paper elevation={3} sx={{ p: 3, mt: 2 }}>
-        <ReportCompanyHeader title="Partner Loan Limit Information" />
-
         <Box ref={zoom.targetRef}>
           <DataTable
             rows={rows}
             columns={columns}
             loading={loading}
-            // The banner above the grid already names the report, so the card
-            // header carries only the download name and the record count.
+            // The screen header already names the report, so the card header
+            // carries only the download name and the record count.
             fileName="Partner-Loan-Limit"
             subtitle={`Report date: ${dayjs().format("DD-MMM-YYYY")}`}
             totalFields={TOTAL_FIELDS}

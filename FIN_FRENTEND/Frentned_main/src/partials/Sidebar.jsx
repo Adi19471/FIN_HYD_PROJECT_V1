@@ -1,13 +1,12 @@
-import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { NavLink, useLocation } from "react-router-dom";
+import React, { useCallback, useEffect, useRef, useState } from "react";
+import { NavLink } from "react-router-dom";
 import { actionIcons } from "src/lib/icons";
 
 import ThemeToggle from "../components/ThemeToggle";
-import { COMPANY_ADDRESS, COMPANY_APP_NAME, COMPANY_LOGO } from "src/lib/company";
-import { useAuth } from "src/utils/authStore";
-import { hasPermissionAccess, PATH_PERMISSION_CODES } from "src/utils/permissions";
+import { useBranding, useThemeProvider } from "src/utils/ThemeContext";
 import { BREAKPOINTS } from "src/utils/breakpoints";
-import { dashboardIcon as DashboardIcon, sidebarGroups } from "./SidebarConfig";
+import { dashboardIcon as DashboardIcon } from "./SidebarConfig";
+import useNavGroups from "./useNavGroups";
 
 // Chrome for the sidebar itself comes from the shared action set, so the
 // close / expand / collapse marks match every other screen.
@@ -18,51 +17,59 @@ import "./Sidebar.css";
 
 const tabletQuery = () => `(min-width: ${BREAKPOINTS.md}px) and (max-width: ${BREAKPOINTS.lg - 0.02}px)`;
 
-// A group's match entry ending in "/" is a section prefix ("/loans/" owns
-// /Loans/Maturity); one without is a standalone page ("/loan" owns only /Loan).
-// Without that distinction "/loan" would also swallow every /Loans/* route.
-const matchesGroupPath = (pathname, path) =>
-  path.endsWith("/") ? pathname.startsWith(path) : pathname === path;
-
 function Sidebar({ sidebarOpen, setSidebarOpen }) {
-  const { pathname } = useLocation();
-  const { user } = useAuth();
+  const { pathname, visibleGroups, activeGroup, canViewDashboard } = useNavGroups();
+  const { settings, updateThemeSetting } = useThemeProvider();
+  const { appName, tagline, logo } = useBranding();
   const trigger = useRef(null);
   const sidebar = useRef(null);
 
+  // Settings > Layout. Overlay and Horizontal take the sidebar off the page:
+  // it is then a drawer over the content (style rules in Sidebar.css), always
+  // drawn in full. Static and Mini are the sidebar expanded and collapsed.
+  const navLayout = settings.navLayout;
+  const offCanvas = navLayout === "overlay" || navLayout === "horizontal";
+
   const storedSidebarExpanded = localStorage.getItem("sidebar-expanded");
   const hasStoredPreference = storedSidebarExpanded !== null;
-  const [sidebarExpanded, setSidebarExpanded] = useState(() =>
-    hasStoredPreference
+  const [sidebarExpanded, setSidebarExpanded] = useState(() => {
+    if (navLayout === "mini") return false;
+    return hasStoredPreference
       ? storedSidebarExpanded === "true"
-      : typeof window === "undefined" || !window.matchMedia(tabletQuery()).matches
-  );
+      : typeof window === "undefined" || !window.matchMedia(tabletQuery()).matches;
+  });
   // Tracks whether the current value came from an explicit user click, so
   // viewport-driven auto-collapse (tablets) never gets mistaken for - or
-  // permanently overwrites - a real preference in localStorage.
-  const userOverrideRef = useRef(hasStoredPreference);
+  // permanently overwrites - a real preference in localStorage. Mini chosen
+  // in Settings is such a preference too.
+  const userOverrideRef = useRef(hasStoredPreference || navLayout === "mini");
   const [openGroup, setOpenGroup] = useState(null);
 
-  const pathnameLower = pathname.toLowerCase();
-
-  const visibleGroups = useMemo(
-    () =>
-      sidebarGroups
-        .filter((group) => group.key !== "auth")
-        .map((group) => ({
-          ...group,
-          items: group.items.filter((item) => hasPermissionAccess(user, PATH_PERMISSION_CODES[item.path])),
-        }))
-        .filter((group) => group.items.length > 0),
-    [user]
+  // Expanding or collapsing by hand is the same choice as Static / Mini in
+  // Settings, so the two are kept as one: the panel shows what is on screen.
+  const setExpandedByUser = useCallback(
+    (expanded) => {
+      userOverrideRef.current = true;
+      setSidebarExpanded(expanded);
+      if (!offCanvas) updateThemeSetting("navLayout", expanded ? "static" : "mini");
+    },
+    [offCanvas, updateThemeSetting]
   );
 
-  const canViewDashboard = hasPermissionAccess(user, PATH_PERMISSION_CODES["/"]);
+  // ...and picking Static or Mini in Settings moves the sidebar.
+  const lastLayoutRef = useRef(navLayout);
+  useEffect(() => {
+    if (lastLayoutRef.current === navLayout) return;
+    lastLayoutRef.current = navLayout;
+    if (navLayout !== "static" && navLayout !== "mini") return;
+    userOverrideRef.current = true;
+    setSidebarExpanded(navLayout === "static");
+  }, [navLayout]);
 
-  const activeGroup = useMemo(
-    () => visibleGroups.find((group) => group.match.some((path) => matchesGroupPath(pathnameLower, path))),
-    [pathnameLower, visibleGroups]
-  );
+  // The drawer has done its job once a page is chosen.
+  useEffect(() => {
+    setSidebarOpen(false);
+  }, [pathname, setSidebarOpen]);
 
   useEffect(() => {
     if (pathname === "/") {
@@ -114,12 +121,9 @@ function Sidebar({ sidebarOpen, setSidebarOpen }) {
   const handleGroupToggle = useCallback(
     (groupName) => {
       setOpenGroup((prev) => (prev === groupName ? null : groupName));
-      if (!sidebarExpanded) {
-        userOverrideRef.current = true;
-        setSidebarExpanded(true);
-      }
+      if (!sidebarExpanded && !offCanvas) setExpandedByUser(true);
     },
-    [sidebarExpanded]
+    [sidebarExpanded, offCanvas, setExpandedByUser]
   );
 
   const handleSidebarToggle = useCallback(() => {
@@ -127,9 +131,8 @@ function Sidebar({ sidebarOpen, setSidebarOpen }) {
   }, [sidebarOpen, setSidebarOpen]);
 
   const handleSidebarExpand = useCallback(() => {
-    userOverrideRef.current = true;
-    setSidebarExpanded(!sidebarExpanded);
-  }, [sidebarExpanded]);
+    setExpandedByUser(!sidebarExpanded);
+  }, [sidebarExpanded, setExpandedByUser]);
 
   return (
     <div className="admin-sidebar-wrap">
@@ -138,15 +141,15 @@ function Sidebar({ sidebarOpen, setSidebarOpen }) {
       <aside
         id="sidebar"
         ref={sidebar}
-        className={`admin-sidebar ${sidebarOpen ? "is-open" : ""} ${sidebarExpanded ? "is-expanded" : "is-collapsed"}`}
+        className={`admin-sidebar ${sidebarOpen ? "is-open" : ""} ${offCanvas || sidebarExpanded ? "is-expanded" : "is-collapsed"}`}
       >
         <div className="admin-sidebar-brand">
           <div className="admin-sidebar-logo">
-            <img src={COMPANY_LOGO} alt="" aria-hidden="true" />
+            <img src={logo} alt="" aria-hidden="true" />
           </div>
           <div className="admin-sidebar-brand-text">
-            <strong>{COMPANY_APP_NAME}</strong>
-            <span>{COMPANY_ADDRESS}</span>
+            <strong>{appName}</strong>
+            <span>{tagline}</span>
           </div>
           <button ref={trigger} type="button" className="admin-sidebar-close" onClick={handleSidebarToggle} aria-label="Close navigation">
             <CloseIcon />

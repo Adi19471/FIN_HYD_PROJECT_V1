@@ -26,11 +26,11 @@ import { getSession } from "src/utils/session";
 import LoadingSpinner from "src/LoadingSpinner";
 import {
   AppDatePicker,
-  ReportCompanyHeader,
   ReportToolbar,
   TableExportMenu,
   useDateRange as useDateRangeHook,
 } from "src/components/ui";
+import { navIcons } from "src/lib/icons";
 
 const REVENUE = "REVENUES";
 const EXPENSE = "EXPENSES";
@@ -196,10 +196,6 @@ const RevenueExpenseStatement = () => {
     return rows;
   }, [groupedData, orderedTypes, isLoss, netProfit]);
 
-  const reportRange = useDateRange
-    ? `Statement period: ${dayjs(fromDate).format("DD-MMM-YYYY")} to ${dayjs(toDate).format("DD-MMM-YYYY")}`
-    : "All Dates";
-
   // Period line and the summary block printed under the exported table.
   const reportOptions = useMemo(
     () => ({
@@ -216,9 +212,15 @@ const RevenueExpenseStatement = () => {
 
   return (
     <>
-      {/* Same furniture as every other report: action bar, then the company
-          banner. The breadcrumb overhead already names the screen. */}
-      <ReportToolbar onRefresh={fetchData} loading={loading}>
+      {/* The company name, address and date are printed on every download,
+          not shown on screen. */}
+      <ReportToolbar
+        icon={navIcons.revenueExpenseStatement}
+        title="Revenue & Expense Statement"
+        subtitle="Revenue and expenses, for all dates or a range."
+        onRefresh={fetchData}
+        loading={loading}
+      >
         {/* Single download entry point: Excel / PDF / Word / CSV / Print. */}
         <TableExportMenu
           rows={exportRows}
@@ -228,15 +230,8 @@ const RevenueExpenseStatement = () => {
         />
       </ReportToolbar>
 
-      <ReportCompanyHeader
-        title="Revenue & Expense Statement"
-        subtitle={reportRange}
-        date={toDate}
-        sx={{ mt: 2 }}
-      />
-
       {/* FILTER CARD */}
-      <Paper sx={{ p: 3, mb: 3 }}>
+      <Paper sx={{ p: 3, mt: 2, mb: 3 }}>
         <Grid container spacing={2} alignItems="center">
 
           <Grid>

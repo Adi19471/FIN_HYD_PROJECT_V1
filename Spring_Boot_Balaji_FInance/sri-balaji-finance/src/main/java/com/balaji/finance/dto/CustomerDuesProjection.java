@@ -1,5 +1,6 @@
 package com.balaji.finance.dto;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 public interface CustomerDuesProjection {
@@ -38,4 +39,6 @@ public interface CustomerDuesProjection {
 	Integer getNoOfEmisPaid();
 
 	String getLoanType();
+	
+	BigDecimal getInterest();
 }

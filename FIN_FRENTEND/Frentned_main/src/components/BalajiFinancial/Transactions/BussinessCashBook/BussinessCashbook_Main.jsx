@@ -1,6 +1,8 @@
 import React, { useState } from "react";
-import { alpha, Box, Paper, Stack, Tab, Tabs, Typography, useTheme } from "@mui/material";
-import { CalendarMonthRounded, PointOfSaleRounded, TodayRounded } from "@mui/icons-material";
+import { Tab, Tabs } from "@mui/material";
+import { CalendarMonthRounded, TodayRounded } from "@mui/icons-material";
+import { navIcons } from "src/lib/icons";
+import { ScreenHeader } from "src/components/ui";
 
 import BussinessDailyFinance from "./Bussiness_DailyFinance/BussinessDailyFinance";
 import BussinessMonthlyFinance from "./Bussiness_MonthlyFinance/Bussiness_MonthlyFinance";
@@ -11,81 +13,26 @@ const tabs = [
 ];
 
 const BussinessCashbook_Main = () => {
-  const theme = useTheme();
   const [value, setValue] = useState(0);
 
-  const handleChange = (event, newValue) => {
-    setValue(newValue);
-  };
-
   return (
-    <Box >
-      <Paper
-        className="enterprise-card"
-        elevation={0}
-        sx={{
-          p: 2,
-          display: "flex",
-          flexDirection: { xs: "column", sm: "row" },
-          justifyContent: "space-between",
-          alignItems: { xs: "stretch", sm: "center" },
-          gap: 2,
-        }}
+    <div className="scr-page">
+      <ScreenHeader
+        icon={navIcons.businessCashBook}
+        title="Business Cash Book"
+        subtitle="Collect an instalment against a daily or a monthly finance loan."
       >
-        <Stack direction="row" alignItems="center" spacing={1.25} flexWrap="wrap">
-          <PointOfSaleRounded color="primary" />
-          <Box>
-            <Typography variant="h5">Transactions</Typography>
-          </Box>
-        </Stack>
-
-        <Tabs
-          value={value}
-          onChange={handleChange}
-          sx={{
-            minHeight: 40,
-            "& .MuiTabs-indicator": {
-              height: 3,
-              borderRadius: 2,
-              background: theme.palette.primary.main,
-            },
-          }}
-        >
+        {/* which kind of loan the payment is for */}
+        <Tabs value={value} onChange={(_, newValue) => setValue(newValue)} className="scr-switch" aria-label="Loan type">
           {tabs.map((tab) => (
-            <Tab
-              key={tab.label}
-              icon={tab.icon}
-              iconPosition="start"
-              label={
-                <Typography
-                  sx={{
-                    fontSize: "0.9rem",
-                    fontWeight: 850,
-                    textTransform: "capitalize",
-                  }}
-                >
-                  {tab.label}
-                </Typography>
-              }
-              sx={{
-                minHeight: 40,
-                px: 3,
-                borderRadius: 2,
-                transition: "0.25s",
-                "&:hover": {
-                  bgcolor: alpha(theme.palette.primary.main, 0.08),
-                },
-              }}
-            />
+            <Tab key={tab.label} icon={tab.icon} iconPosition="start" label={tab.label} />
           ))}
         </Tabs>
-      </Paper>
+      </ScreenHeader>
 
-      <Box sx={{ minHeight: 400, position: "relative" }}>
-        {value === 0 && <BussinessDailyFinance />}
-        {value === 1 && <BussinessMonthlyFinance />}
-      </Box>
-    </Box>
+      {value === 0 && <BussinessDailyFinance />}
+      {value === 1 && <BussinessMonthlyFinance />}
+    </div>
   );
 };
 

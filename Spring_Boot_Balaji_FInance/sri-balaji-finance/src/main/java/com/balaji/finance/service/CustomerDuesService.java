@@ -50,7 +50,7 @@ public class CustomerDuesService {
 			// Loan Details
 			res.setStartDate(p.getStartDate().toLocalDate());
 			res.setEndDate(p.getEndDate().toLocalDate());
-			res.setAmount(p.getAmount());
+			
 			res.setDuration(p.getDuration());
 			res.setInstallmentPerMonth(p.getInstallmentPerMonth());
 
@@ -61,7 +61,15 @@ public class CustomerDuesService {
 			res.setTotalInstallmentAmountPaid(paid);
 			res.setNoOfEmisPaid(p.getNoOfEmisPaid());
 
-			BigDecimal totalAmount = p.getAmount() != null ? p.getAmount() : BigDecimal.ZERO;
+			
+			BigDecimal amount = p.getAmount() != null ? p.getAmount() : BigDecimal.ZERO;
+			BigDecimal interest = p.getInterest() != null ? p.getInterest() : BigDecimal.ZERO;
+
+			BigDecimal totalAmount = amount.add(interest);
+			res.setAmount(totalAmount);
+			
+			
+			
 			BigDecimal pendingAmount = totalAmount.subtract(paid);
 
 			res.setInstallmentAmountPending(pendingAmount);

@@ -122,7 +122,7 @@ const DailyFinance = () => {
             "& .MuiOutlinedInput-root": {
               height: 28,
               fontSize: "12px",
-              bgcolor: "#fff",
+              bgcolor: "var(--surface-1)",
             },
             "& .MuiOutlinedInput-input": {
               padding: "4px 8px",
@@ -740,7 +740,7 @@ const DailyFinance = () => {
               sx={{
                 height: "100%",
                 border: "none",
-                bgcolor: "#fff",
+                bgcolor: "var(--surface-1)",
                 "& .MuiDataGrid-cell": { fontWeight: 700 },
                 "& .MuiDataGrid-columnHeaderTitle": { fontWeight: 900 },
                 "& .MuiDataGrid-virtualScroller": { overflowAnchor: "none" },

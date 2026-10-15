@@ -34,11 +34,25 @@ public interface PersonalInfoRepository extends JpaRepository<PersonalInfo, Stri
 			         OR u.mobile LIKE CONCAT('%', :keyword, '%')
 			         OR u.phone LIKE CONCAT('%', :keyword, '%')
 			      )
+			""")
+	public List<PersonalInfo> personalInfoAllCategoryAutoComplete(@Param("status") boolean status,
+			@Param("keyword") String keyWord);
+
+	@Query("""
+			    SELECT u FROM PersonalInfo u
+			    WHERE u.disable = :status
+			      AND (
+			            u.personalInfoId LIKE CONCAT('%', :keyword, '%')
+			         OR u.firstName LIKE CONCAT('%', :keyword, '%')
+			         OR u.lastName LIKE CONCAT('%', :keyword, '%')
+			         OR u.mobile LIKE CONCAT('%', :keyword, '%')
+			         OR u.phone LIKE CONCAT('%', :keyword, '%')
+			      )
 			      AND u.category IN (:categoryList)
 			""")
 	public List<PersonalInfo> personalInfoAutoComplete(@Param("status") boolean status,
 			@Param("keyword") String keyWord, @Param("categoryList") List<String> categoryList);
-
+	
 	@Query(value = """
 			    SELECT
 			        m.PERSONAL_INFO_ID AS managerId,
@@ -61,7 +75,7 @@ public interface PersonalInfoRepository extends JpaRepository<PersonalInfo, Stri
 			    m.personal_info_id AS id,
 			    m.first_name AS firstName,
 			    m.last_name AS lastName,
-			    NULL AS shares
+			    m.shares AS shares
 			FROM personal_info m
 			WHERE m.personal_info_id = :personalInfoId
 

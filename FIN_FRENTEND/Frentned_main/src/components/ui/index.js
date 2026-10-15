@@ -16,6 +16,7 @@ export { default as GlobalSearch } from "./GlobalSearch";
 export { default as ZoomControls } from "./ZoomControls";
 export { default as useReportZoom } from "./useReportZoom";
 export { default as FormGrid, FormRow, FormSection } from "./FormGrid";
+export { ScreenHeader, SectionCard, FactGrid, Fact, StatTile, EmptyState } from "./ScreenParts";
 export {
   default as ActionButtonGroup,
   FormButtons,

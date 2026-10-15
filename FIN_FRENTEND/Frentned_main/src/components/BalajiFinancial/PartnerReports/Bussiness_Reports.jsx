@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useMemo, useState } from "react";
 import {
   Box,
   Button,
@@ -20,12 +20,11 @@ import {
   AppDatePicker,
   DataTable,
   isTotalRow,
-  
-  ReportCompanyHeader,
   ReportToolbar,
   useReportZoom,
   useDateRange,
 } from "src/components/ui";
+import { navIcons } from "src/lib/icons";
 
 // The figures the legacy report adds up on its last line: the loan counts, the
 // money columns and the target / excess split. Anything else (S.No, Partner ID,
@@ -54,6 +53,10 @@ const Bussiness_Reports = () => {
     dayjs()
   );
   const [percentage, setPercentage] = useState(10);
+  // What the rows on screen were generated for. It is printed on every
+  // download, so the page still says which filters produced it after one is
+  // changed on screen.
+  const [applied, setApplied] = useState(null);
 
   const zoom = useReportZoom();
 
@@ -93,6 +96,12 @@ const Bussiness_Reports = () => {
         }))
       );
 
+      setApplied({
+        fromDate: dayjs(fromDate).format("YYYY-MM-DD"),
+        toDate: dayjs(toDate).format("YYYY-MM-DD"),
+        percentage,
+      });
+
       successToast("Business Report Generated Successfully");
     } catch (error) {
       console.error(error);
@@ -105,6 +114,18 @@ const Bussiness_Reports = () => {
       setLoading(false);
     }
   };
+
+  const period = useMemo(
+    () =>
+      applied
+        ? { label: "Business Period", fromDate: applied.fromDate, toDate: applied.toDate }
+        : undefined,
+    [applied]
+  );
+  const reportMeta = useMemo(
+    () => (applied ? [{ label: "Percentage", value: `${applied.percentage}%` }] : []),
+    [applied]
+  );
 
   const columns = [
     {
@@ -131,10 +152,8 @@ const Bussiness_Reports = () => {
       field: "bussinessExemption",
       headerName: "Exempt",
       width: 100,
-      renderCell: ({ row }) => {
-        if (isTotalRow(row)) return row.bussinessExemption;
-        return row.bussinessExemption === "Y" ? "Yes" : "No";
-      },
+      // the TOTAL row carries its caption in this cell
+      valueGetter: (value, row) => (isTotalRow(row) ? value : value === "Y" ? "Yes" : "No"),
     },
     {
       field: "noOfMonthlyLoans",
@@ -145,8 +164,9 @@ const Bussiness_Reports = () => {
       field: "monthlyLoanAmount",
       headerName: "MF Loan Amount",
       width: 160,
-      renderCell: ({ row }) =>
-        formatAmount(row.monthlyLoanAmount),
+      align: "right",
+      headerAlign: "right",
+      valueFormatter: (value) => formatAmount(value),
     },
     {
       field: "noOfDailyLoans",
@@ -157,36 +177,41 @@ const Bussiness_Reports = () => {
       field: "dailyLoanAmount",
       headerName: "DF Loan Amount",
       width: 160,
-      renderCell: ({ row }) =>
-        formatAmount(row.dailyLoanAmount),
+      align: "right",
+      headerAlign: "right",
+      valueFormatter: (value) => formatAmount(value),
     },
     {
       field: "totalLoanAmount",
       headerName: "Total Loan Amount",
       width: 170,
-      renderCell: ({ row }) =>
-        formatAmount(row.totalLoanAmount),
+      align: "right",
+      headerAlign: "right",
+      valueFormatter: (value) => formatAmount(value),
     },
     {
       field: "targetAmount",
       headerName: "Target Amount",
       width: 150,
-      renderCell: ({ row }) =>
-        formatAmount(row.targetAmount),
+      align: "right",
+      headerAlign: "right",
+      valueFormatter: (value) => formatAmount(value),
     },
     {
       field: "excess_or_deficit",
       headerName: "Excess / Deficit",
       width: 160,
-      renderCell: ({ row }) =>
-        formatAmount(row.excess_or_deficit),
+      align: "right",
+      headerAlign: "right",
+      valueFormatter: (value) => formatAmount(value),
     },
     {
       field: "amount",
       headerName: "Amount",
       width: 150,
-      renderCell: ({ row }) =>
-        formatAmount(row.amount),
+      align: "right",
+      headerAlign: "right",
+      valueFormatter: (value) => formatAmount(value),
     },
   ];
 
@@ -194,6 +219,9 @@ const Bussiness_Reports = () => {
     <>
       {/* Generate lives in the filter card, next to the dates it acts on. */}
       <ReportToolbar
+        icon={navIcons.partnerBusinessReports}
+        title="Business Reports"
+        subtitle="Each partner's business for a period."
         onRefresh={generateReport}
         loading={loading}
         rows={rows}
@@ -202,9 +230,7 @@ const Bussiness_Reports = () => {
         zoom={zoom}
       />
       <Paper sx={{ p: 3, mt: 2 }}>
-        <ReportCompanyHeader title="Business Report" />
-
-        <Grid container spacing={2} mb={3}>
+        <Grid container spacing={2} mb={2} alignItems="center">
           <Grid
             size={{
               xs: 12,
@@ -236,8 +262,10 @@ const Bussiness_Reports = () => {
               xs: 12,
               md: 2
             }}>
+            {/* small, like the two date fields beside it */}
             <TextField
               fullWidth
+              size="small"
               label="Percentage"
               value={percentage}
               onChange={(e) =>
@@ -268,10 +296,12 @@ const Bussiness_Reports = () => {
             rows={rows}
             columns={columns}
             loading={loading}
-            // The banner above the grid already names the report, so the card
-            // header carries only the download name and the record count.
+            // The screen header already names the report, so the card header
+            // carries only the download name and the record count.
             fileName="Business-Report"
             subtitle={`Report date: ${dayjs().format("DD-MMM-YYYY")}`}
+            period={period}
+            reportMeta={reportMeta}
             totalFields={TOTAL_FIELDS}
             totalLabelCell={TOTAL_LABEL_CELL}
             // No autoHeight: the report is wider than the screen, and a grid

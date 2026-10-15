@@ -1,32 +1,38 @@
-import React, { useState, useEffect, useRef } from "react";
-import {
-  Box,
-  Button,
-  Typography,
-  Paper,
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableRow,
-  TableHead,
-  TextField,
-  Grid,
-  Autocomplete,
-  CircularProgress,
-  Divider,
-  FormControlLabel,
-  Radio,
-  RadioGroup,
-  TablePagination,
-} from "@mui/material";
+import React, { useState, useEffect, useMemo } from "react";
+import { Autocomplete, Button, CircularProgress, FormControlLabel, Radio, RadioGroup, TextField } from "@mui/material";
 import dayjs from "dayjs";
 import axios from "axios";
+import { errorToast, warningToast } from "toastify";
 import { API_BASE } from "lib/config";
 import { getSession } from "src/utils/session";
-import { AppDatePicker, ReportCompanyHeader, TableExportMenu, useDateRange } from "src/components/ui";
+import { actionIcons, navIcons } from "src/lib/icons";
+import { AppDatePicker, DataTable, EmptyState, ScreenHeader, useDateRange } from "src/components/ui";
 
-const token = getSession()?.token || getSession("token") || "";
+const GenerateIcon = actionIcons.generate;
+
+// read at call time: a token read once when the file loads goes stale after a new sign-in
+const authHeader = () => ({ Authorization: `Bearer ${getSession()?.token || getSession("token") || ""}` });
+
+const formatAmount = (value) =>
+  value === null || value === undefined || value === "" ? "" : Number(value || 0).toLocaleString("en-IN");
+
+const customerLabel = (opt) =>
+  `${opt.id ? opt.id + " - " : ""}${opt.firstname} ${opt.lastname} ${opt.mobile ? "- " + opt.mobile : ""}`;
+
+// One definition drives the grid on screen and every download / print of it.
+const columns = [
+  { field: "sno", headerName: "S.No", width: 80, align: "right", headerAlign: "right" },
+  { field: "transactionId", headerName: "Trans ID", width: 120 },
+  { field: "transactionDate", headerName: "Date", width: 130, valueGetter: (value) => (value ? dayjs(value).format("DD-MMM-YYYY") : "") },
+  { field: "accountNumber", headerName: "Account No", width: 150 },
+  { field: "transactionName", headerName: "Transaction Name", minWidth: 190, flex: 1 },
+  { field: "particulars", headerName: "Particulars", minWidth: 200, flex: 1.2 },
+  { field: "credit", headerName: "Credit", width: 150, align: "right", headerAlign: "right", cellClassName: "cell-credit", valueFormatter: (value) => formatAmount(value) },
+  { field: "debit", headerName: "Debit", width: 150, align: "right", headerAlign: "right", cellClassName: "cell-debit", valueFormatter: (value) => formatAmount(value) },
+];
+
+const TOTAL_FIELDS = ["credit", "debit"];
+const TOTAL_LABEL_CELL = { particulars: "TOTAL" };
 
 const CustomerTransactions = () => {
   const [masterCodes, setMasterCodes] = useState([]);
@@ -38,20 +44,15 @@ const CustomerTransactions = () => {
   const [transactions, setTransactions] = useState([]);
   const [loading, setLoading] = useState(false);
   const [searchLoading, setSearchLoading] = useState(false);
-  const [reportDate] = useState(dayjs().format("DD-MMM-YYYY"));
-  const [page, setPage] = useState(0);
-  const [rowsPerPage, setRowsPerPage] = useState(10);
-
-  const printRef = useRef(null);
+  // What the rows on screen were generated for - the ledger's heading and the
+  // lines printed on a download describe that, not a filter changed since.
+  const [generated, setGenerated] = useState(null);
 
   // Fetch Master Codes (Account Names)
   const fetchMasterCodes = async () => {
     try {
-      const res = await axios.get(
-        `${API_BASE}/account-master-droddown/findAllMasterCodes`,
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
-      setMasterCodes(res.data || []);
+      const res = await axios.get(`${API_BASE}/account-master-droddown/findAllMasterCodes`, { headers: authHeader() });
+      setMasterCodes(Array.isArray(res.data) ? res.data : []);
     } catch (err) {
       console.error("Error fetching master codes:", err);
     }
@@ -63,11 +64,10 @@ const CustomerTransactions = () => {
     if (searchText.length === 1) return;
     setSearchLoading(true);
     try {
-      const res = await axios.get(
-        `${API_BASE}/PersonalInfo/autocomplete?q=${encodeURIComponent(searchText)}`,
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
-      setCustomers(res.data || []);
+      const res = await axios.get(`${API_BASE}/PersonalInfo/autocompleteAllCategory?q=${encodeURIComponent(searchText)}`, {
+        headers: authHeader(),
+      });
+      setCustomers(Array.isArray(res.data) ? res.data : []);
     } catch (err) {
       console.error("Error fetching customers:", err);
     } finally {
@@ -78,12 +78,12 @@ const CustomerTransactions = () => {
   // Fetch Transactions
   const fetchTransactions = async () => {
     if (!selectedAccountCode || !selectedCustomer?.id) {
-      alert("Please select both Account Name and Customer");
+      warningToast("Please select both Account Name and Customer");
       return;
     }
 
     if (dateMode === "range" && (!fromDate || !toDate)) {
-      alert("Please select both From and To dates");
+      warningToast("Please select both From and To dates");
       return;
     }
 
@@ -97,18 +97,17 @@ const CustomerTransactions = () => {
           fromDate: dateMode === "range" ? fromDate : null,
           toDate: dateMode === "range" ? toDate : null,
         },
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-            "Content-Type": "application/json",
-          },
-        }
+        { headers: { ...authHeader(), "Content-Type": "application/json" } }
       );
-      setTransactions(res.data || []);
-      setPage(0);
+      setTransactions(Array.isArray(res.data) ? res.data : []);
+      setGenerated({
+        account: selectedAccountCode,
+        customer: customerLabel(selectedCustomer),
+        period: dateMode === "range" ? { fromDate, toDate } : null,
+      });
     } catch (err) {
       console.error("Error fetching transactions:", err);
-      alert("Failed to load transactions. Please try again.");
+      errorToast("Failed to load transactions. Please try again.");
     } finally {
       setLoading(false);
     }
@@ -119,264 +118,131 @@ const CustomerTransactions = () => {
   }, []);
 
   // Calculate Totals
-  const totals = React.useMemo(() => {
+  const totals = useMemo(() => {
     const credit = transactions.reduce((sum, t) => sum + (parseFloat(t.credit) || 0), 0);
     const debit = transactions.reduce((sum, t) => sum + (parseFloat(t.debit) || 0), 0);
     return { credit, debit, balance: credit - debit };
   }, [transactions]);
 
-  const formatAmount = (value, decimals = 0) =>
-    Number(value || 0).toLocaleString("en-IN", {
-      minimumFractionDigits: decimals,
-      maximumFractionDigits: decimals,
-    });
-  const paginatedTransactions = React.useMemo(
-    () => transactions.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage),
-    [page, rowsPerPage, transactions]
+  const rows = useMemo(
+    // the grid needs a unique id per row; the position in the list is always one
+    () => transactions.map((row, index) => ({ ...row, id: index + 1, sno: row.sno || index + 1 })),
+    [transactions]
   );
-  const exportColumns = ["sno", "transactionId", "transactionDate", "accountNumber", "transactionName", "particulars", "credit", "debit"];
+
+  // Credits / Debits / Balance under the grid, and on every download.
+  const summary = useMemo(
+    () => [
+      { label: "Credits", value: totals.credit },
+      { label: "Debits", value: totals.debit },
+      { label: "Balance", value: totals.balance },
+    ],
+    [totals]
+  );
+
+  const reportMeta = useMemo(
+    () =>
+      generated
+        ? [
+            { label: "Account", value: generated.account },
+            { label: "Customer", value: generated.customer },
+          ]
+        : [],
+    [generated]
+  );
+
+  const period = useMemo(
+    () => (generated?.period ? { label: "Transactions From", ...generated.period } : undefined),
+    [generated]
+  );
 
   return (
-    <Box sx={{ p: 3, backgroundColor: "#f8f9fa", minHeight: "calc(100 * var(--app-vh))" }}>
-      <Typography variant="h5" gutterBottom>
-        Customer Transactions / Ledger
-      </Typography>
-      {/* Search Panel - Matching Screenshot Style */}
-      <Paper sx={{ p: 3, mb: 4 }}>
-        <Grid container spacing={2} alignItems="center">
-          <Grid
-            size={{
-              xs: 12,
-              sm: 4
-            }}>
-            <Autocomplete
-              openOnFocus
-              options={masterCodes}
-              value={selectedAccountCode}
-              onChange={(e, val) => setSelectedAccountCode(val)}
-              renderInput={(params) => <TextField {...params} label="Account Name" size="small" fullWidth />}
-            />
-          </Grid>
+    <div className="scr-page">
+      <ScreenHeader
+        icon={navIcons.customerTransactions}
+        title="Customer Transactions"
+        subtitle="One customer's ledger under one account, for all dates or a range."
+      />
 
-          <Grid
-            size={{
-              xs: 12,
-              sm: 5
-            }}>
-            <Autocomplete
-              openOnFocus
-              filterOptions={(x) => x}
-              options={customers}
-              getOptionLabel={(opt) => `${opt.id ? opt.id + " - " : ""}${opt.firstname} ${opt.lastname} ${opt.mobile ? "- " + opt.mobile : ""}`}
-              value={selectedCustomer}
-              onChange={(e, val) => setSelectedCustomer(val)}
-              onOpen={() => fetchCustomers("")}
-              onInputChange={(e, value) => fetchCustomers(value || "")}
-              loading={searchLoading}
-              renderInput={(params) => (
-                <TextField
-                  {...params}
-                  label="Customer Name"
-                  size="small"
-                  fullWidth
-                  InputProps={{
-                    ...params.InputProps,
-                    endAdornment: searchLoading ? <CircularProgress size={20} /> : params.InputProps.endAdornment,
-                  }}
-                />
-              )}
-            />
-          </Grid>
-
-          <Grid
-            size={{
-              xs: 12,
-              sm: 3
-            }}>
-            <RadioGroup row value={dateMode} onChange={(event) => setDateMode(event.target.value)}>
-              <FormControlLabel value="all" control={<Radio />} label="All" />
-              <FormControlLabel value="range" control={<Radio />} label="Date Range" />
-            </RadioGroup>
-          </Grid>
-
-          <Grid
-            size={{
-              xs: 12,
-              sm: 3
-            }}>
-            <AppDatePicker
-              label="From"
-              value={fromDate}
-              onChange={setFromDate}
-              disabled={dateMode === "all"}
-            />
-          </Grid>
-
-          <Grid
-            size={{
-              xs: 12,
-              sm: 3
-            }}>
-            <AppDatePicker
-              label="To"
-              value={toDate}
-              onChange={setToDate}
-              disabled={dateMode === "all"}
-              minDate={toDateMin}
-              maxDate={toDateMax}
-            />
-          </Grid>
-
-          <Grid
-            size={{
-              xs: 12,
-              sm: 3
-            }}>
-            <Button
-              variant="contained"
-              color="primary"
-              fullWidth
-              onClick={fetchTransactions}
-              disabled={loading || !selectedAccountCode || !selectedCustomer}
-              startIcon={loading && <CircularProgress size={20} color="inherit" />}
-            >
-              Generate
-            </Button>
-          </Grid>
-
-          {transactions.length > 0 && (
-            <Grid
-              size={{
-                xs: 12,
-                sm: 3
-              }}>
-              <TableExportMenu rows={transactions} columns={exportColumns} fileName="Customer_Transactions" />
-            </Grid>
-          )}
-        </Grid>
-      </Paper>
-      {/* Printable Ledger Area */}
-      {transactions.length > 0 && (
-        <Paper ref={printRef} sx={{ p: 4, backgroundColor: "white" }}>
-          <ReportCompanyHeader
-            title={selectedCustomer
-              ? `${selectedCustomer.id ? selectedCustomer.id + " - " : ""}${selectedCustomer.firstname} ${selectedCustomer.lastname} ${selectedCustomer.mobile ? "- " + selectedCustomer.mobile : ""} ${selectedAccountCode || ""} Ledger`
-              : "Customer Ledger"}
-            subtitle={dateMode === "range" && (fromDate || toDate) ? `From ${fromDate ? dayjs(fromDate).format("DD-MMM-YYYY") : "All"} To ${toDate ? dayjs(toDate).format("DD-MMM-YYYY") : "All"}` : "All Transactions"}
-            date={reportDate}
+      <section className="scr-card">
+        <div className="scr-filters">
+          <Autocomplete
+            openOnFocus
+            options={masterCodes}
+            value={selectedAccountCode}
+            onChange={(e, val) => setSelectedAccountCode(val)}
+            renderInput={(params) => <TextField {...params} label="Account Name" size="small" fullWidth />}
           />
-
-          <TableContainer
-            sx={{
-              overflow: "auto",
-              maxHeight: { xs: "min(calc(70 * var(--app-vh)), 460px)", sm: "min(calc(66 * var(--app-vh)), 520px)", md: "min(calc(62 * var(--app-vh)), 560px)", lg: "calc(100 * var(--app-vh) - 320px)" },
-            }}
+          <Autocomplete
+            // a customer reads as "id - name - mobile": twice the room of the other filters
+            className="scr-span-2"
+            openOnFocus
+            filterOptions={(x) => x}
+            options={customers}
+            getOptionLabel={customerLabel}
+            value={selectedCustomer}
+            onChange={(e, val) => setSelectedCustomer(val)}
+            onOpen={() => fetchCustomers("")}
+            onInputChange={(e, value) => fetchCustomers(value || "")}
+            loading={searchLoading}
+            renderInput={(params) => (
+              <TextField
+                {...params}
+                label="Customer Name"
+                size="small"
+                fullWidth
+                InputProps={{
+                  ...params.InputProps,
+                  endAdornment: searchLoading ? <CircularProgress size={20} /> : params.InputProps.endAdornment,
+                }}
+              />
+            )}
+          />
+          <RadioGroup row value={dateMode} onChange={(event) => setDateMode(event.target.value)}>
+            <FormControlLabel value="all" control={<Radio />} label="All" />
+            <FormControlLabel value="range" control={<Radio />} label="Date Range" />
+          </RadioGroup>
+          <AppDatePicker label="From" value={fromDate} onChange={setFromDate} disabled={dateMode === "all"} />
+          <AppDatePicker
+            label="To"
+            value={toDate}
+            onChange={setToDate}
+            disabled={dateMode === "all"}
+            minDate={toDateMin}
+            maxDate={toDateMax}
+          />
+          <Button
+            variant="contained"
+            onClick={fetchTransactions}
+            disabled={loading || !selectedAccountCode || !selectedCustomer}
+            startIcon={loading ? <CircularProgress size={18} color="inherit" /> : <GenerateIcon />}
           >
-            <Table
-              stickyHeader
-              sx={{
-                borderCollapse: "collapse",
-                minWidth: 900,
-                "& .MuiTableCell-stickyHeader": { backgroundColor: "#1976d2" },
-              }}
-            >
-              <TableHead>
-                <TableRow sx={{ backgroundColor: "#1976d2" }}>
-                  <TableCell sx={{ color: "white", border: "1px solid #aaa", fontWeight: "bold" }}>S.No</TableCell>
-                  <TableCell sx={{ color: "white", border: "1px solid #aaa", fontWeight: "bold" }}>Trans ID</TableCell>
-                  <TableCell sx={{ color: "white", border: "1px solid #aaa", fontWeight: "bold" }}>Date</TableCell>
-                  <TableCell sx={{ color: "white", border: "1px solid #aaa", fontWeight: "bold" }}>Account No</TableCell>
-                  <TableCell sx={{ color: "white", border: "1px solid #aaa", fontWeight: "bold" }}>Transaction Name</TableCell>
-                  <TableCell sx={{ color: "white", border: "1px solid #aaa", fontWeight: "bold" }}>Particulars</TableCell>
-                  <TableCell align="right" sx={{ color: "white", border: "1px solid #aaa", fontWeight: "bold" }}>Credit</TableCell>
-                  <TableCell align="right" sx={{ color: "white", border: "1px solid #aaa", fontWeight: "bold" }}>Debit</TableCell>
-                </TableRow>
-              </TableHead>
-              <TableBody>
-                {paginatedTransactions.map((row, index) => (
-                  <TableRow key={row.transactionId || index}>
-                    <TableCell sx={{ border: "1px solid #ddd" }}>{row.sno || page * rowsPerPage + index + 1}</TableCell>
-                    <TableCell sx={{ border: "1px solid #ddd" }}>{row.transactionId}</TableCell>
-                    <TableCell sx={{ border: "1px solid #ddd" }}>
-                      {dayjs(row.transactionDate).format("DD-MMM-YYYY")}
-                    </TableCell>
-                    <TableCell sx={{ border: "1px solid #ddd" }}>{row.accountNumber}</TableCell>
-                    <TableCell sx={{ border: "1px solid #ddd" }}>{row.transactionName}</TableCell>
-                    <TableCell sx={{ border: "1px solid #ddd" }}>{row.particulars || "-"}</TableCell>
-                    <TableCell align="right" sx={{ border: "1px solid #ddd", color: "green" }}>
-                      {formatAmount(row.credit)}
-                    </TableCell>
-                    <TableCell align="right" sx={{ border: "1px solid #ddd", color: "red" }}>
-                      {formatAmount(row.debit)}
-                    </TableCell>
-                  </TableRow>
-                ))}
+            Generate
+          </Button>
+        </div>
+      </section>
 
-                {/* Total Row */}
-                <TableRow sx={{ backgroundColor: "#e3f2fd" }}>
-                  <TableCell colSpan={6} align="right" sx={{ border: "1px solid #ddd", fontWeight: "bold" }}>
-                    Total
-                  </TableCell>
-                  <TableCell align="right" sx={{ border: "1px solid #ddd", fontWeight: "bold", color: "green" }}>
-                    {formatAmount(totals.credit)}
-                  </TableCell>
-                  <TableCell align="right" sx={{ border: "1px solid #ddd", fontWeight: "bold", color: "red" }}>
-                    {formatAmount(totals.debit)}
-                  </TableCell>
-                </TableRow>
-              </TableBody>
-            </Table>
-          </TableContainer>
-
-          {/* Credits / Debits / Balance Summary */}
-          <Box sx={{ display: "flex", justifyContent: "flex-end", mt: 2 }}>
-            <Box sx={{ minWidth: 280 }}>
-              <Box sx={{ display: "flex", justifyContent: "space-between", py: 0.5 }}>
-                <Typography sx={{ fontWeight: "bold" }}>Credits :</Typography>
-                <Typography sx={{ fontWeight: "bold", color: "green" }}>
-                  {formatAmount(totals.credit, 2)}
-                </Typography>
-              </Box>
-              <Box sx={{ display: "flex", justifyContent: "space-between", py: 0.5 }}>
-                <Typography sx={{ fontWeight: "bold" }}>Debits :</Typography>
-                <Typography sx={{ fontWeight: "bold", color: "red" }}>
-                  {formatAmount(totals.debit, 2)}
-                </Typography>
-              </Box>
-              <Divider sx={{ my: 0.5 }} />
-              <Box sx={{ display: "flex", justifyContent: "space-between", py: 0.5 }}>
-                <Typography sx={{ fontWeight: "bold" }}>Balance :</Typography>
-                <Typography sx={{ fontWeight: "bold", color: totals.balance < 0 ? "red" : "green" }}>
-                  {formatAmount(totals.balance, 2)}
-                </Typography>
-              </Box>
-            </Box>
-          </Box>
-
-          <TablePagination
-            component="div"
-            count={transactions.length}
-            page={page}
-            rowsPerPage={rowsPerPage}
-            onPageChange={(_, newPage) => setPage(newPage)}
-            onRowsPerPageChange={(event) => {
-              setRowsPerPage(parseInt(event.target.value, 10));
-              setPage(0);
-            }}
-            rowsPerPageOptions={[10, 25, 50, 100]}
-          />
-
-          <Typography variant="body2" align="center" sx={{ mt: 4, color: "#555" }}>
-            Page {page + 1} of {Math.max(1, Math.ceil(transactions.length / rowsPerPage))}
-          </Typography>
-        </Paper>
+      {generated ? (
+        <DataTable
+          title={generated.customer}
+          subtitle={`Account: ${generated.account}`}
+          fileName="Customer_Transactions"
+          rows={rows}
+          columns={columns}
+          loading={loading}
+          pageSize={10}
+          totalFields={TOTAL_FIELDS}
+          totalLabelCell={TOTAL_LABEL_CELL}
+          summary={rows.length ? summary : undefined}
+          reportMeta={reportMeta}
+          period={period}
+        />
+      ) : (
+        <EmptyState icon={navIcons.customerTransactions} title="No ledger generated yet">
+          Choose an account and a customer above, then press Generate.
+        </EmptyState>
       )}
-      {transactions.length === 0 && !loading && selectedCustomer && (
-        <Paper sx={{ p: 4, textAlign: "center" }}>
-          <Typography>No transactions found for the selected criteria.</Typography>
-        </Paper>
-      )}
-    </Box>
+    </div>
   );
 };
 

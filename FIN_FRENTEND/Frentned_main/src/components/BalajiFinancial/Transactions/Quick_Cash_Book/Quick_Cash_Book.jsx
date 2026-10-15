@@ -7,18 +7,14 @@ import autoTable from "jspdf-autotable";
 import { successToast, errorToast, warningToast, infoToast } from "toastify";
 import { API_BASE } from "lib/config";
 import { getSession } from "src/utils/session";
-import { AppDatePicker, TableExportMenu } from "src/components/ui";
+import { AppDatePicker, ScreenHeader, StatTile, TableExportMenu } from "src/components/ui";
 import { COMPANY_ADDRESS, COMPANY_NAME } from "src/lib/company";
 import { reportPalette } from "src/lib/reportTheme";
 
 import {
-  Box,
   Button,
-  Divider,
-  Grid,
+  CircularProgress,
   IconButton,
-  Paper,
-  Stack,
   Table,
   TableBody,
   TableCell,
@@ -26,9 +22,8 @@ import {
   TableHead,
   TableRow,
   TextField,
-  Typography,
 } from "@mui/material";
-import { actionIcons } from "src/lib/icons";
+import { actionIcons, navIcons } from "src/lib/icons";
 
 const SaveIcon = actionIcons.save;
 const AddIcon = actionIcons.add;
@@ -339,101 +334,44 @@ const QuickCashBook = () => {
     printWindow.print();
   };
 
+  const rupees = (value) => `Rs ${Number(value || 0).toLocaleString("en-IN")}`;
+
   return (
-    <Box >
-      <Paper className="enterprise-card" elevation={0} sx={{ p: { xs: 2, md: 2.5 } }}>
-        {/* Header */}
-        <Stack
-          direction={{ xs: "column", md: "row" }}
-          justifyContent="space-between"
-          alignItems={{ xs: "stretch", md: "center" }}
-          spacing={2}
-        >
-          <Typography variant="h5">Quick Cash Book</Typography>
-          <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap justifyContent="flex-end">
-            <TableExportMenu rows={exportRows} columns={Object.keys(exportRows[0] || {})} fileName={exportFileName} />
-            <Button variant="contained" startIcon={<SaveIcon />} onClick={handleSaveAll} disabled={loading}>
-              {loading ? "Saving..." : "Save All"}
-            </Button>
-          </Stack>
-        </Stack>
+    <div className="scr-page">
+      <ScreenHeader
+        icon={navIcons.quickCashBook}
+        title="Quick Cash Book"
+        subtitle="Post several collections in one go. Enter moves along the row; Enter on Paid Late Fee starts the next row."
+      >
+        <TableExportMenu rows={exportRows} columns={Object.keys(exportRows[0] || {})} fileName={exportFileName} />
+        <Button variant="contained" startIcon={<SaveIcon />} onClick={handleSaveAll} disabled={loading}>
+          {loading ? "Saving..." : "Save All"}
+        </Button>
+      </ScreenHeader>
 
-        <Divider sx={{ my: 2 }} />
+      <section className="scr-card">
+        {/* the day being posted, and what has been entered so far */}
+        <div className="scr-toolbar">
+          <div className="scr-toolbar-date">
+            <AppDatePicker label="Date" value={transactionDate} onChange={(value) => setTransactionDate(dayjs(value))} />
+          </div>
+          <div className="scr-stats">
+            <StatTile label="Records" value={filledRows.length} />
+            <StatTile label="Paid Total" value={rupees(totalCollected)} tone="success" />
+            <StatTile label="Late Fee Total" value={rupees(totalLateFeeCollected)} tone="warning" />
+          </div>
+        </div>
 
-        {/* Summary */}
-        <Grid container spacing={2} alignItems="center">
-            <Grid
-              size={{
-                xs: 12,
-                sm: 6,
-                md: 3
-              }}>
-              <AppDatePicker label="Date" value={transactionDate} onChange={(value) => setTransactionDate(dayjs(value))} />
-            </Grid>
-            <Grid
-              size={{
-                xs: 12,
-                sm: 6,
-                md: 3
-              }}>
-              <TextField label="Records" size="small" value={filledRows.length} InputProps={{ readOnly: true }} fullWidth />
-            </Grid>
-            <Grid
-              size={{
-                xs: 12,
-                sm: 6,
-                md: 3
-              }}>
-              <TextField
-                label="Paid Total"
-                size="small"
-                value={`Rs ${totalCollected.toLocaleString("en-IN")}`}
-                InputProps={{ readOnly: true }}
-                fullWidth
-              />
-            </Grid>
-            <Grid
-              size={{
-                xs: 12,
-                sm: 6,
-                md: 3
-              }}>
-              <TextField
-                label="Late Fee Total"
-                size="small"
-                value={`Rs ${totalLateFeeCollected.toLocaleString("en-IN")}`}
-                InputProps={{ readOnly: true }}
-                fullWidth
-              />
-            </Grid>
-        </Grid>
-
-        <Divider sx={{ my: 2 }} />
-
-        {/* Table */}
-        <TableContainer sx={{ overflow: "auto" }}>
-          <Table
-            size="small"
-            sx={{
-              minWidth: 960,
-              "& .MuiTableCell-root": {
-                border: "1px solid",
-                borderColor: "divider",
-              },
-              "& .MuiTableCell-head": {
-                backgroundColor: "#f8fafc",
-                fontWeight: 800,
-              },
-            }}
-          >
+        <TableContainer sx={{ overflow: "auto", mt: 2 }}>
+          <Table size="small" className="scr-table" sx={{ minWidth: 960 }}>
             <TableHead>
               <TableRow>
                 <TableCell align="center">Action</TableCell>
                 <TableCell>Loan / A/c</TableCell>
                 <TableCell>Customer</TableCell>
-                <TableCell>Installment</TableCell>
-                <TableCell>Due</TableCell>
-                <TableCell>LateFee</TableCell>
+                <TableCell align="right">Installment</TableCell>
+                <TableCell align="right">Due</TableCell>
+                <TableCell align="right">LateFee</TableCell>
                 <TableCell>Paid Amount</TableCell>
                 <TableCell>Paid Late Fee</TableCell>
               </TableRow>
@@ -442,8 +380,8 @@ const QuickCashBook = () => {
               {rows.map((row) => (
                 <TableRow key={row.id}>
                   <TableCell align="center">
-                    <IconButton color="error" onClick={() => deleteRow(row.id)}>
-                      <DeleteIcon />
+                    <IconButton size="small" color="error" onClick={() => deleteRow(row.id)} aria-label="Remove this row">
+                      <DeleteIcon fontSize="small" />
                     </IconButton>
                   </TableCell>
                   <TableCell sx={{ minWidth: 290 }}>
@@ -480,15 +418,27 @@ const QuickCashBook = () => {
                           placeholder="Enter Account No"
                           inputRef={setFieldRef(row.id, "accountNo")}
                           size="small"
-                          helperText={fetchingAccount === row.accountNo ? "Loading..." : " "}
+                          // A spinner inside the field while the account loads. A line
+                          // of helper text under it kept a blank row of space below
+                          // every account box, which pushed it out of line with the
+                          // rest of its table row.
+                          InputProps={{
+                            ...params.InputProps,
+                            endAdornment: (
+                              <>
+                                {fetchingAccount === row.accountNo && <CircularProgress size={16} />}
+                                {params.InputProps.endAdornment}
+                              </>
+                            ),
+                          }}
                         />
                       )}
                     />
                   </TableCell>
                   <TableCell sx={{ minWidth: 170 }}>{row.name || "-"}</TableCell>
-                  <TableCell>{formatNumber(row.installment)}</TableCell>
-                  <TableCell>{formatNumber(row.dueAmount)}</TableCell>
-                  <TableCell>{formatNumber(row.lateFee)}</TableCell>
+                  <TableCell align="right">{formatNumber(row.installment)}</TableCell>
+                  <TableCell align="right">{formatNumber(row.dueAmount)}</TableCell>
+                  <TableCell align="right">{formatNumber(row.lateFee)}</TableCell>
                   <TableCell sx={{ minWidth: 150 }}>
                     <TextField
                       size="small"
@@ -535,19 +485,16 @@ const QuickCashBook = () => {
           </Table>
         </TableContainer>
 
-        <Divider sx={{ my: 2 }} />
-
-        {/* Footer */}
-        <Stack direction="row" spacing={2} alignItems="center" flexWrap="wrap" useFlexGap>
+        <div className="scr-bar">
           <Button variant="outlined" startIcon={<AddIcon />} onClick={() => addNewRowWithPrefix(defaultAccountPrefix())}>
             Add New Row
           </Button>
-          <Typography fontWeight={900}>
-            Total Collected: Rs {totalCollected.toLocaleString("en-IN")} | Late Fee: Rs {totalLateFeeCollected.toLocaleString("en-IN")}
-          </Typography>
-        </Stack>
-      </Paper>
-    </Box>
+          <span className="scr-bar-total">
+            Total Collected <strong>{rupees(totalCollected)}</strong> · Late Fee <strong>{rupees(totalLateFeeCollected)}</strong>
+          </span>
+        </div>
+      </section>
+    </div>
   );
 };
 

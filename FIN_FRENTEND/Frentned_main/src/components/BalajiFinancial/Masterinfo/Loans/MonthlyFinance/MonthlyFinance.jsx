@@ -118,7 +118,7 @@ const MonthlyFinance = () => {
             "& .MuiOutlinedInput-root": {
               height: 28,
               fontSize: "12px",
-              bgcolor: "#fff",
+              bgcolor: "var(--surface-1)",
             },
             "& .MuiOutlinedInput-input": {
               padding: "4px 8px",
@@ -751,7 +751,7 @@ const MonthlyFinance = () => {
               sx={{
                 height: "100%",
                 border: "none",
-                bgcolor: "#fff",
+                bgcolor: "var(--surface-1)",
                 "& .MuiDataGrid-cell": { fontWeight: 700 },
                 "& .MuiDataGrid-columnHeaderTitle": { fontWeight: 900 },
                 "& .MuiDataGrid-virtualScroller": { overflowAnchor: "none" },
@@ -792,7 +792,7 @@ const MonthlyFinance = () => {
           </Toolbar>
         </AppBar>
 
-        <DialogContent dividers sx={{ bgcolor: "#f8fafc" }}>
+        <DialogContent dividers sx={{ bgcolor: "var(--surface-2)" }}>
           <Typography variant="subtitle2" color="text.secondary" gutterBottom>
             {`Account No: ${currentLoanId}`}
           </Typography>
@@ -1106,7 +1106,7 @@ const MonthlyFinance = () => {
           </Grid>
         </DialogContent>
 
-        <DialogActions sx={{ p: 3, bgcolor: "#f1f5f9" }}>
+        <DialogActions sx={{ p: 3, bgcolor: "var(--surface-3)" }}>
           <Button onClick={handleClose} variant="outlined">
             Cancel
           </Button>

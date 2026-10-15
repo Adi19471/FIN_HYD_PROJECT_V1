@@ -16,7 +16,7 @@ import {
   Typography,
   alpha,
 } from "@mui/material";
-import { actionIcons } from "src/lib/icons";
+import { actionIcons, navIcons } from "src/lib/icons";
 import dayjs from "dayjs";
 import axios from "axios";
 import { API_BASE } from "lib/config";
@@ -25,7 +25,6 @@ import LoadingSpinner from "src/LoadingSpinner";
 import {
   AppDatePicker,
   DataTable,
-  ReportCompanyHeader,
   ReportToolbar,
   TableExportMenu,
 } from "src/components/ui";
@@ -53,7 +52,7 @@ const scrollTableSx = {
     height: 12,
   },
   "&::-webkit-scrollbar-track": {
-    backgroundColor: "#e2e8f0",
+    backgroundColor: "var(--surface-4)",
   },
   "&::-webkit-scrollbar-thumb": {
     backgroundColor: "#64748b",
@@ -408,9 +407,15 @@ const BalanceSheet = () => {
 
   return (
     <>
-      {/* Same furniture as every other report: an action bar, then the company
-          banner. The breadcrumb overhead already names the screen. */}
-      <ReportToolbar onRefresh={fetchData} loading={loading}>
+      {/* The company name, address and date are printed on every download,
+          not shown on screen. */}
+      <ReportToolbar
+        icon={navIcons.balanceSheet}
+        title="Balance Sheet"
+        subtitle="Assets, liabilities and the balance difference as on a date."
+        onRefresh={fetchData}
+        loading={loading}
+      >
         <TableExportMenu
           rows={exportRows}
           columns={exportColumns}
@@ -420,12 +425,7 @@ const BalanceSheet = () => {
       </ReportToolbar>
 
       <Paper sx={{ p: { xs: 1.5, md: 3 }, mt: 2 }}>
-        <ReportCompanyHeader
-          title="Balance Sheet"
-          subtitle="Assets, liabilities and the balance difference"
-          date={generatedDate || toDate}
-        />
-        <Box sx={{ mt: 2 }}>
+        <Box>
           <Stack
             direction={{ xs: "column", md: "row" }}
             spacing={1.5}
@@ -552,7 +552,6 @@ const BalanceSheet = () => {
                 height={{ xs: 520, md: 620, xl: 760 }}
                 pageSize={25}
                 getRowId={(row) => row.id}
-                showCompany={false}
                 period={reportOptions.period}
                 summary={reportOptions.summary}
               />

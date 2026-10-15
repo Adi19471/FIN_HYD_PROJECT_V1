@@ -32,8 +32,11 @@ import { FiUserPlus, FiSearch, FiCopy, FiSave, FiEdit, FiXCircle, FiEye, FiUser,
 import { successToast, errorToast } from "toastify";
 import { API_BASE } from "lib/config";
 import LoadingSpinner from "src/LoadingSpinner";
-import { ProfilePhotoBox, DEFAULT_TABLE_HEIGHT } from "src/components/ui";
+import { ProfilePhotoBox, DEFAULT_TABLE_HEIGHT, TableExportMenu, printReport } from "src/components/ui";
+import { actionIcons } from "src/lib/icons";
 import { FormControlLabel, Checkbox } from "@mui/material";
+
+const PrintIcon = actionIcons.print;
 
 /* ─── Constants ─────────────────────────────────────────────── */
 const TYPE_LABELS = {
@@ -540,6 +543,66 @@ const Partner = ({ personType = "CUSTOMER" }) => {
 
   const label = TYPE_LABELS[personType] || personType;
 
+  /* ── Print / Download ──
+     The grid shows a summary; the printed sheet and the downloads carry every
+     field of the record. Exports never see renderCell, so anything that must
+     read as words goes through valueGetter. */
+  const exportColumns = useMemo(() => {
+    const nameOf = (r) => [r?.firstname, r?.lastname].filter(Boolean).join(" ");
+    const byId = new Map(rows.map((r) => [r.id, r]));
+    return [
+      { field: "id", headerName: "ID", width: 130 },
+      { field: "fullname", headerName: "Name", width: 150, valueGetter: (_, r) => nameOf(r) },
+      { field: "fathername", headerName: "Father's Name", width: 130 },
+      { field: "spouse", headerName: "Spouse Name", width: 120 },
+      { field: "gender", headerName: "Gender", width: 70 },
+      { field: "age", headerName: "Age", width: 50 },
+      { field: "occupation", headerName: "Occupation", width: 110 },
+      { field: "mobile", headerName: "Mobile No", width: 100 },
+      { field: "mobile2", headerName: "Mobile No 2", width: 100 },
+      { field: "phone", headerName: "Office Phone", width: 100 },
+      { field: "address", headerName: "Residential Address", width: 200 },
+      { field: "address2", headerName: "Office Address", width: 200 },
+      { field: "idprooftype", headerName: "ID Proof Type", width: 110 },
+      { field: "idproof", headerName: "ID Number", width: 120 },
+      { field: "reference", headerName: "Reference", width: 110 },
+      {
+        field: "personalInfoManagerId",
+        headerName: "Manager",
+        width: 160,
+        valueGetter: (id) => {
+          if (!id) return "";
+          const name = nameOf(byId.get(id));
+          return name ? `${name} (${id})` : id;
+        },
+      },
+      { field: "shares", headerName: "Shares", width: 70, align: "right" },
+      {
+        field: "loanlimit",
+        headerName: "Loan Limit",
+        width: 100,
+        align: "right",
+        valueGetter: (v) => (v != null && v !== "" ? Number(v).toLocaleString("en-IN") : ""),
+      },
+      {
+        field: "bussinessexemption",
+        headerName: "Business Exemption",
+        width: 90,
+        valueGetter: (v) => (v ? "Yes" : "No"),
+      },
+    ];
+  }, [rows]);
+
+  const exportOptions = useMemo(() => ({
+    title: `${label} List`,
+    meta: [
+      { label: "Records", value: String(filteredRows.length) },
+      search.trim() ? { label: "Search", value: search.trim() } : null,
+    ],
+  }), [label, filteredRows.length, search]);
+
+  const exportFileName = `${label}_List`;
+
   return (
     <Box sx={{ mt: 2 }}>
       {/* ── Header bar ── */}
@@ -579,6 +642,22 @@ const Partner = ({ personType = "CUSTOMER" }) => {
               ),
             }}
           />
+
+          <TableExportMenu
+            rows={filteredRows}
+            columns={exportColumns}
+            fileName={exportFileName}
+            reportOptions={exportOptions}
+          />
+          <Button
+            size="small"
+            variant="outlined"
+            startIcon={<PrintIcon />}
+            onClick={() => printReport(filteredRows, exportColumns, exportFileName, exportOptions)}
+            disabled={!filteredRows.length}
+          >
+            Print
+          </Button>
 
           <Button
             variant="contained"

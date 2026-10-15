@@ -138,7 +138,7 @@ public interface BusinessMemberRepository extends JpaRepository<BusinessMember, 
 			        customer.personalInfoId AS personInfoId,
 			        customer.firstName AS personName,
 			        COUNT(bm.businessMemberId) AS noOfLoans,
-			        SUM(bm.amount) AS totalLoansAmount,
+			        SUM(bm.amount+bm.interest) AS totalLoansAmount,
 			        COALESCE((
 			            SELECT SUM(e.paidAmount)
 			            FROM EMI e
@@ -171,6 +171,7 @@ public interface BusinessMemberRepository extends JpaRepository<BusinessMember, 
 			    bm.amount as amount,
 			    bm.duration as duration,
 			    bm.installment as installmentPerMonth,
+			    bm.interest as interest,
 
 			    COALESCE((
 			        SELECT SUM(e.paidAmount)

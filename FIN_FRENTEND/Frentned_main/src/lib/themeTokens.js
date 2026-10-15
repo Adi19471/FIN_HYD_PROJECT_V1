@@ -152,6 +152,112 @@ export const publishThemeTokens = (tokens, root) => {
   });
 };
 
+/* ------------------------------------------------------------------ */
+/* menu and top bar surfaces                                           */
+/* ------------------------------------------------------------------ */
+
+/**
+ * Colours for a menu or top bar drawn on a solid `bg` of its own (Settings >
+ * Colors). Everything is worked out from that one colour, so the text stays
+ * readable on any of them: the ink is white or near-black by contrast, and the
+ * hover / open-page highlight is that same ink rather than the accent, which
+ * could be the very colour the surface is painted in.
+ */
+export const deriveSurfaceTokens = (bg) => {
+  const fg = contrastText(bg);
+  const onDark = fg === LIGHT_INK;
+  return {
+    bg,
+    fg,
+    muted: mix(fg, bg, 0.32),
+    border: alpha(fg, 0.14),
+    // Icon plates and other quiet fills.
+    tile: alpha(fg, onDark ? 0.1 : 0.06),
+    accent: fg,
+    onAccent: bg,
+    accentSoft: alpha(fg, onDark ? 0.12 : 0.08),
+    danger: onDark ? "#fca5a5" : "#b91c1c",
+  };
+};
+
+/** Suffix of each surface token; the full name is --<prefix>-<suffix>. */
+export const SURFACE_VARS = {
+  bg: "bg",
+  fg: "fg",
+  muted: "muted",
+  border: "border",
+  tile: "tile",
+  accent: "accent",
+  onAccent: "on-accent",
+  accentSoft: "accent-soft",
+  danger: "danger",
+};
+
+/**
+ * Publish (or, for a missing token, take away) one surface's variables.
+ * `prefix` is "sidebar" or "bar". A variable that is not set leaves the
+ * stylesheet's own fallback in charge, which is the look that follows
+ * Light / Dark - so `tokens = null` means "default".
+ */
+export const publishSurfaceTokens = (prefix, tokens, root) => {
+  const element = root || (typeof document !== "undefined" ? document.documentElement : null);
+  if (!element) return;
+  Object.entries(SURFACE_VARS).forEach(([key, suffix]) => {
+    const name = `--${prefix}-${suffix}`;
+    if (tokens && tokens[key]) element.style.setProperty(name, tokens[key]);
+    else element.style.removeProperty(name);
+  });
+};
+
+/* ------------------------------------------------------------------ */
+/* report heading band                                                 */
+/* ------------------------------------------------------------------ */
+
+export const TABLE_HEAD_VARS = {
+  bg: "--table-head-bg",
+  hover: "--table-head-bg-hover",
+  fg: "--table-head-fg",
+  divider: "--table-head-divider",
+  rule: "--table-head-rule",
+};
+
+/** `tokens = null` puts the band back on the accent (style.css's own values). */
+export const publishTableHeadTokens = (tokens, root) => {
+  const element = root || (typeof document !== "undefined" ? document.documentElement : null);
+  if (!element) return;
+  Object.entries(TABLE_HEAD_VARS).forEach(([key, cssVar]) => {
+    if (tokens && tokens[key]) element.style.setProperty(cssVar, tokens[key]);
+    else element.style.removeProperty(cssVar);
+  });
+};
+
+/**
+ * The heading band a report should print with: the one chosen in Settings >
+ * Colors if there is one, otherwise the accent's.
+ */
+export const readTableHeadTokens = (tokens = readThemeTokens()) => {
+  const accentBand = {
+    bg: tokens.primary,
+    hover: tokens.primaryHover,
+    fg: tokens.onPrimary,
+    divider: tokens.divider,
+    rule: tokens.primaryDark,
+  };
+  if (typeof document === "undefined") return accentBand;
+
+  // Only an explicit choice is written inline on <html>.
+  const inline = document.documentElement.style;
+  const read = (cssVar) => inline.getPropertyValue(cssVar).trim();
+  if (!read(TABLE_HEAD_VARS.bg)) return accentBand;
+
+  const band = { ...accentBand };
+  Object.entries(TABLE_HEAD_VARS).forEach(([key, cssVar]) => {
+    const value = read(cssVar);
+    if (value) band[key] = value;
+  });
+  return band;
+};
+
 /**
  * Read the live tokens back. Used by code that runs outside React — the report
  * exporters build their HTML/PDF long after render, and must pick up whichever

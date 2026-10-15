@@ -14,10 +14,10 @@ import {
   DataTable,
   isTotalRow,
   
-  ReportCompanyHeader,
   ReportToolbar,
   useReportZoom,
 } from "src/components/ui";
+import { navIcons } from "src/lib/icons";
 
 // Whole rupees - no decimal point on the printed report.
 const formatAmount = (amount) =>
@@ -165,9 +165,12 @@ const Partner_Infoamtion = () => {
   ];
 
   return (
-    <Box p={2}>
+    <Box>
 
       <ReportToolbar
+        icon={navIcons.partnerInformation}
+        title="Partner Information"
+        subtitle="Every partner with shares, investment and status."
         onGenerate={getPartnerInformation}
         onRefresh={getPartnerInformation}
         loading={loading}
@@ -178,8 +181,6 @@ const Partner_Infoamtion = () => {
       />
 
       <Paper elevation={2} sx={{ mt: 2, p: 2 }}>
-        <ReportCompanyHeader title="Partner Information" />
-
         {loading ? (
           <Box
             display="flex"

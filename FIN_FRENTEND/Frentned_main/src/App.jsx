@@ -9,11 +9,13 @@ import PrivateRoute from "./components/PrivateRoute";
 import Layout from "./components/Layout";
 import LoadingSpinner from "./LoadingSpinner";
 import { useAuth } from "./utils/authStore";
-import { COMPANY_APP_NAME } from "src/lib/company";
+import { useBranding } from "./utils/ThemeContext";
 
 function App() {
   const location = useLocation();
   const { isAuthenticated } = useAuth();
+  // The name from Settings > Branding, or the built-in one.
+  const { appName } = useBranding();
 
   /* =========================
      Scroll to Top on Route Change
@@ -30,9 +32,9 @@ function App() {
   useEffect(() => {
     const currentRoute = routes.find((route) => route.path === location.pathname);
     document.title = currentRoute?.title
-      ? `${currentRoute.title} - ${COMPANY_APP_NAME}`
-      : COMPANY_APP_NAME;
-  }, [location.pathname]);
+      ? `${currentRoute.title} - ${appName}`
+      : appName;
+  }, [location.pathname, appName]);
 
   /* =========================
      Route Conditions

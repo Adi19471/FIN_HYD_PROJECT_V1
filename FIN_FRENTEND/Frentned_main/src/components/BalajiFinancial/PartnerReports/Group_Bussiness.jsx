@@ -16,12 +16,11 @@ import { getSession } from "src/utils/session";
 import {
   AppDatePicker,
   DataTable,
-  
-  ReportCompanyHeader,
   ReportToolbar,
   useReportZoom,
   useDateRange,
 } from "src/components/ui";
+import { navIcons } from "src/lib/icons";
 
 // Whole rupees - no decimal point on any figure in this report.
 const formatAmount = (amount) =>
@@ -64,6 +63,10 @@ const Group_Bussiness = () => {
   const [rows, setRows] = useState([]);
   const [dateFilter, setDateFilter] = useState(false);
   const [balancesOnly, setBalancesOnly] = useState(false);
+  // What the rows on screen were generated for. It is printed on every
+  // download, so the page still says which filters produced it after one is
+  // changed on screen.
+  const [applied, setApplied] = useState(null);
   const { fromDate, toDate, setFromDate, setToDate, toDateMin, toDateMax } = useDateRange(
     dayjs().startOf("year").format("YYYY-MM-DD"),
     dayjs().format("YYYY-MM-DD")
@@ -90,6 +93,7 @@ const Group_Bussiness = () => {
           ...row,
         }))
       );
+      setApplied({ ...(dateFilter ? { fromDate, toDate } : {}), balancesOnly });
     } catch (error) {
       console.log(error);
     } finally {
@@ -144,6 +148,24 @@ const Group_Bussiness = () => {
     { field: "installmentDuesOutStanding", headerName: "Installment Dues O/S", width: 200, align: "right", headerAlign: "right", valueFormatter: (value) => formatAmount(value) },
   ];
 
+  const period = useMemo(
+    () =>
+      applied?.fromDate
+        ? { label: "Group Business Period", fromDate: applied.fromDate, toDate: applied.toDate }
+        : undefined,
+    [applied]
+  );
+  const reportMeta = useMemo(
+    () =>
+      applied
+        ? [
+            ...(applied.fromDate ? [] : [{ label: "Period", value: "All Dates" }]),
+            ...(applied.balancesOnly ? [{ label: "Showing", value: "Partners with a balance only" }] : []),
+          ]
+        : [],
+    [applied]
+  );
+
   const totalRows = [
     { label: "Shares", value: formatDecimal(totals.noOfShares) },
     { label: "Capital", value: formatAmount(totals.capital) },
@@ -159,7 +181,9 @@ const Group_Bussiness = () => {
   return (
     <Stack spacing={2.5}>
       <ReportToolbar
-        onGenerate={fetchReport}
+        icon={navIcons.groupBusiness}
+        title="Group Business"
+        subtitle="Business of every partner group, for all dates or a range."
         onRefresh={fetchReport}
         loading={loading}
         rows={rows}
@@ -213,16 +237,14 @@ const Group_Bussiness = () => {
         </Grid>
       </Paper>
       <Box ref={zoom.targetRef} sx={{ display: "flex", flexDirection: "column", gap: 2.5 }}>
-        <Paper className="enterprise-card" elevation={0} sx={{ p: 2 }}>
-          <ReportCompanyHeader title="Group Business Report" />
-        </Paper>
-
       <DataTable
         rows={rows}
         columns={columns}
         loading={loading}
         fileName="Group-Business"
         subtitle={`Report date: ${dayjs().format("DD-MMM-YYYY")}`}
+        period={period}
+        reportMeta={reportMeta}
         totalFields={TOTAL_FIELDS}
         totalLabelCell={TOTAL_LABEL_CELL}
         height={640}

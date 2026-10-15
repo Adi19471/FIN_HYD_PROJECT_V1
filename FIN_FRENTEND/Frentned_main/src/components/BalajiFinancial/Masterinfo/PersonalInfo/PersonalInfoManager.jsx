@@ -193,7 +193,10 @@ const PersonalInfoManager = ({ personType = "CUSTOMER" }) => {
     {
       field: "actions",
       headerName: "Actions",
-      width: 170,
+      // room for View and Edit side by side at the larger text sizes too;
+      // at 170 the Edit button was cut off after its first letter
+      width: 230,
+      minWidth: 230,
       sortable: false,
       filterable: false,
       renderCell: (params) => (

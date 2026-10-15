@@ -2,20 +2,17 @@ import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import dayjs from "dayjs";
+import { Alert, Box, Button, Grid, IconButton, LinearProgress, Skeleton, Tooltip as MuiTooltip, Typography } from "@mui/material";
 import {
-  Alert,
-  Box,
-  Button,
-  Chip,
-  Grid,
-  LinearProgress,
-  Paper,
-  Skeleton,
-  Stack,
-  Typography,
-} from "@mui/material";
-import { ApprovalRounded, ArrowForwardRounded, AssessmentRounded, ContactsRounded, PointOfSaleRounded, LaunchRounded, PaymentsRounded, ReceiptLongRounded, RequestQuoteRounded, TrendingUpRounded } from "@mui/icons-material";
-import { actionIcons } from "src/lib/icons";
+  ArrowForwardRounded,
+  FlagRounded,
+  GroupsRounded,
+  LaunchRounded,
+  PendingActionsRounded,
+  PointOfSaleRounded,
+  SavingsRounded,
+} from "@mui/icons-material";
+import { actionIcons, navIcons } from "src/lib/icons";
 import {
   Bar,
   BarChart,
@@ -31,6 +28,8 @@ import { DataTable } from "src/components/ui";
 import { useTheme } from "@mui/material/styles";
 import { API_BASE } from "lib/config";
 import { getSession } from "src/utils/session";
+import { useAuth } from "src/utils/authStore";
+import { hasPermissionAccess, PATH_PERMISSION_CODES } from "src/utils/permissions";
 
 const RefreshRounded = actionIcons.refresh;
 
@@ -46,41 +45,51 @@ const isUserIdle = () => {
   return Date.now() - lastActivity > IDLE_THRESHOLD_MS;
 };
 
-const modules = [
-  { title: "Customer Master", path: "/customer", icon: ContactsRounded },
-  { title: "Daily Finance", path: "/Daily-Finace", icon: PaymentsRounded },
-  { title: "Monthly Finance", path: "/Monthly-Finance", icon: RequestQuoteRounded },
-  { title: "Quick Cash Book", path: "/Transactions/Quick_Cash_Book", icon: PointOfSaleRounded },
-  { title: "Daily Book", path: "/AccountsModules/DailyBook", icon: ReceiptLongRounded },
-  { title: "Collection Report", path: "/Bussiness/BussinessCollectionReportsimport", icon: AssessmentRounded },
+// Shortcuts into the screens people open from here most. Icons are the ones
+// the menu gives each screen (src/lib/icons.js); a shortcut the signed-in user
+// has no permission for is left out, the same way the menu leaves it out.
+const shortcuts = [
+  { title: "Quick Cash Book", path: "/Transactions/Quick_Cash_Book", icon: navIcons.quickCashBook },
+  { title: "Daily Book", path: "/AccountsModules/DailyBook", icon: navIcons.dailyBook },
+  { title: "Instalment Dues", path: "/Loans/InstalmentDues", icon: navIcons.instalmentDues },
+  { title: "Daily Finance", path: "/Daily-Finace", icon: navIcons.loan },
+  { title: "Monthly Finance", path: "/Monthly-Finance", icon: navIcons.masterLoans },
+  { title: "Customer Master", path: "/customer", icon: navIcons.personalInformation },
+  { title: "Collection Report", path: "/Bussiness/BussinessCollectionReportsimport", icon: navIcons.collectionReports },
 ];
 
-function MetricStrip({ title, value, note, tone = "primary" }) {
+const greetingFor = (hour) => (hour < 12 ? "Good morning" : hour < 17 ? "Good afternoon" : "Good evening");
+
+/** One headline figure: icon, label, the number, and a line of context under it. */
+function Kpi({ icon: Icon, tone, label, value, note, loading, children }) {
   return (
-    <Box className={`dashboard-strip dashboard-strip-${tone}`}>
-      <Typography variant="caption">{title}</Typography>
-      <Typography variant="h6">{value}</Typography>
-      <Typography variant="caption">{note}</Typography>
-    </Box>
+    <div className={`dash-kpi dash-tone-${tone}`}>
+      <div className="dash-kpi-top">
+        <span className="dash-kpi-icon" aria-hidden="true">
+          <Icon />
+        </span>
+        <span className="dash-kpi-label">{label}</span>
+      </div>
+      <div className="dash-kpi-value">{loading ? <Skeleton width="68%" /> : value}</div>
+      <div className="dash-kpi-note">{loading ? <Skeleton width="45%" /> : note}</div>
+      {children}
+    </div>
   );
 }
 
-function Panel({ title, subtitle, action, children }) {
+/** A titled card: every block under the headline figures is one of these. */
+function Panel({ title, subtitle, action, children, className = "" }) {
   return (
-    <Paper className="enterprise-card dashboard-panel" elevation={0}>
-      <Stack direction="row" justifyContent="space-between" alignItems="flex-start" spacing={2} sx={{ mb: 2 }}>
-        <Box>
-          <Typography variant="h6">{title}</Typography>
-          {subtitle && (
-            <Typography variant="body2" color="text.secondary">
-              {subtitle}
-            </Typography>
-          )}
-        </Box>
+    <section className={`dash-card ${className}`}>
+      <div className="dash-card-head">
+        <div className="dash-card-heading">
+          <h2>{title}</h2>
+          {subtitle && <p>{subtitle}</p>}
+        </div>
         {action}
-      </Stack>
+      </div>
       {children}
-    </Paper>
+    </section>
   );
 }
 
@@ -94,20 +103,9 @@ function ChartCard({ height = 260, loading, empty, emptyLabel, children }) {
   if (loading) return <Skeleton variant="rounded" height={height} />;
   if (empty) {
     return (
-      <Box
-        sx={{
-          height,
-          display: "grid",
-          placeItems: "center",
-          border: "1px dashed",
-          borderColor: "divider",
-          borderRadius: 1,
-        }}
-      >
-        <Typography variant="body2" color="text.secondary">
-          {emptyLabel}
-        </Typography>
-      </Box>
+      <div className="dash-empty" style={{ height }}>
+        {emptyLabel}
+      </div>
     );
   }
   return (
@@ -122,6 +120,7 @@ function ChartCard({ height = 260, loading, empty, emptyLabel, children }) {
 export default function Dashboard() {
   const navigate = useNavigate();
   const theme = useTheme();
+  const { user } = useAuth();
   // No "noopener" here on purpose: this is same-origin, trusted navigation, and dropping
   // the opener reference would break sessionStorage inheritance into the new tab, forcing
   // an unwanted re-login there.
@@ -302,79 +301,108 @@ export default function Dashboard() {
     },
   ];
 
-  return (
-    <Stack spacing={2.5}>
-      <Paper className="enterprise-card dashboard-hero dashboard-hero-redesign" elevation={0}>
-        <Stack direction={{ xs: "column", lg: "row" }} spacing={3} justifyContent="space-between" alignItems={{ lg: "stretch" }}>
-          <Box className="dashboard-hero-copy">
-            <Stack direction="row" spacing={1} alignItems="center" flexWrap="wrap">
-              <Chip size="small" label={COMPANY_ADDRESS} color="primary" />
-              <Chip size="small" label={loading ? "Refreshing..." : "Live dashboard"} variant="outlined" />
-              {lastUpdated && <Chip size="small" label={`Updated ${lastUpdated.format("hh:mm A")}`} variant="outlined" />}
-            </Stack>
-            <Typography variant="h3" sx={{ mt: 2 }}>{COMPANY_NAME}</Typography>
-            <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap sx={{ mt: 2.5 }}>
-              <Button
-                startIcon={<RefreshRounded />}
-                variant="contained"
-                onClick={() => {
-                  fetchLiveMetrics();
-                  fetchMemberCount();
-                }}
-                disabled={loading}
-              >
-                Refresh Counts
-              </Button>
-              <Button startIcon={<PointOfSaleRounded />} variant="outlined" onClick={() => navigate("/Transactions/Quick_Cash_Book")}>
-                Quick Entry
-              </Button>
-              <Button startIcon={<ReceiptLongRounded />} variant="outlined" onClick={() => navigate("/AccountsModules/DailyBook")}>
-                Daily Book
-              </Button>
-              <Button startIcon={<ApprovalRounded />} variant="outlined" onClick={() => navigate("/Loans/InstalmentDues")}>
-                Dues Review
-              </Button>
-            </Stack>
-          </Box>
+  // Skeletons only before the first answer; the 30-second refresh after that
+  // swaps the numbers in place instead of blanking the screen each time.
+  const firstLoad = loading && !lastUpdated;
+  const firstName = String(user?.name || "").trim().split(/\s+/)[0];
+  const visibleShortcuts = shortcuts.filter((item) => hasPermissionAccess(user, PATH_PERMISSION_CODES[item.path]));
+  const canOpen = (path) => hasPermissionAccess(user, PATH_PERMISSION_CODES[path]);
 
-          <Box className="dashboard-operator-card">
-            <Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 2 }}>
-              <Box>
-                <Typography variant="caption" color="text.secondary">Today Operating View</Typography>
-                <Typography variant="subtitle1">Admin workspace</Typography>
-              </Box>
-              <Box className="dashboard-operator-icon">
-                <TrendingUpRounded />
-              </Box>
-            </Stack>
-            <Grid container spacing={1.25}>
-              <Grid size={6}>
-                <MetricStrip title="Collection" value={formatINR(metrics.todayCollection)} note="today" tone="success" />
-              </Grid>
-              <Grid size={6}>
-                <MetricStrip title="Pending" value={formatINR(metrics.pendingDues)} note={`${metrics.dueCases} cases`} tone="warning" />
-              </Grid>
-              <Grid size={6}>
-                <MetricStrip title="Members" value={metrics.activeMembers} note="active" tone="primary" />
-              </Grid>
-              <Grid size={6}>
-                <MetricStrip title="Completion" value={`${completionRate}%`} note="against target" tone="info" />
-              </Grid>
-            </Grid>
-          </Box>
-        </Stack>
-        {loading && <LinearProgress sx={{ mt: 2, borderRadius: 99 }} />}
-      </Paper>
+  const refresh = () => {
+    fetchLiveMetrics();
+    fetchMemberCount();
+  };
+
+  return (
+    <div className="dash">
+      {/* ---------- who, when, and the two things done from here most ---------- */}
+      <header className="dash-head">
+        <div className="dash-head-text">
+          <p className="dash-eyebrow">{dayjs().format("dddd, DD MMM YYYY")}</p>
+          <h1 className="dash-title">
+            {greetingFor(dayjs().hour())}
+            {firstName ? `, ${firstName}` : ""}
+          </h1>
+          <p className="dash-sub">
+            {COMPANY_NAME} · {COMPANY_ADDRESS}
+          </p>
+        </div>
+
+        <div className="dash-head-actions">
+          <span className={`dash-live ${loading ? "is-loading" : ""}`} role="status">
+            <span className="dash-live-dot" aria-hidden="true" />
+            {loading ? "Refreshing…" : lastUpdated ? `Updated ${lastUpdated.format("hh:mm A")}` : "Live"}
+          </span>
+          <Button variant="outlined" startIcon={<RefreshRounded />} onClick={refresh} disabled={loading}>
+            Refresh
+          </Button>
+          {canOpen("/Transactions/Quick_Cash_Book") && (
+            <Button variant="contained" startIcon={<PointOfSaleRounded />} onClick={() => navigate("/Transactions/Quick_Cash_Book")}>
+              Quick Entry
+            </Button>
+          )}
+        </div>
+        {loading && <LinearProgress className="dash-head-progress" />}
+      </header>
+
       {error && <Alert severity="warning">{error}</Alert>}
+
+      {/* ---------- the four figures ---------- */}
+      <div className="dash-kpis">
+        <Kpi icon={SavingsRounded} tone="success" label="Collection" value={formatINR(metrics.todayCollection)} note="today" loading={firstLoad} />
+        <Kpi
+          icon={PendingActionsRounded}
+          tone="warning"
+          label="Pending dues"
+          value={formatINR(metrics.pendingDues)}
+          note={`${metrics.dueCases} ${metrics.dueCases === 1 ? "case" : "cases"} this month`}
+          loading={firstLoad}
+        />
+        <Kpi
+          icon={FlagRounded}
+          tone="primary"
+          label="Completion"
+          value={`${completionRate}%`}
+          note={`against ${formatINR(metrics.portfolioValue)} target`}
+          loading={firstLoad}
+        >
+          <div className="dash-meter" role="progressbar" aria-valuemin={0} aria-valuemax={100} aria-valuenow={completionRate} aria-label="Collection against target">
+            <span style={{ width: `${completionRate}%` }} />
+          </div>
+        </Kpi>
+        <Kpi icon={GroupsRounded} tone="info" label="Members" value={Number(metrics.activeMembers || 0).toLocaleString("en-IN")} note="active" loading={firstLoad} />
+      </div>
+
+      {/* ---------- today's cash position: opening + credits - debits = closing ---------- */}
+      <section className="dash-card dash-position" aria-label="Today's cash position">
+        <div className="dash-position-item">
+          <span>Opening balance</span>
+          <strong>{firstLoad ? <Skeleton width={110} /> : formatINR(metrics.dailyTotals.openingBalance)}</strong>
+        </div>
+        <span className="dash-op" aria-hidden="true">+</span>
+        <div className="dash-position-item is-credit">
+          <span>Credits today</span>
+          <strong>{firstLoad ? <Skeleton width={110} /> : formatINR(metrics.dailyTotals.credits)}</strong>
+        </div>
+        <span className="dash-op" aria-hidden="true">−</span>
+        <div className="dash-position-item is-debit">
+          <span>Debits today</span>
+          <strong>{firstLoad ? <Skeleton width={110} /> : formatINR(metrics.dailyTotals.debits)}</strong>
+        </div>
+        <span className="dash-op" aria-hidden="true">=</span>
+        <div className="dash-position-item is-closing">
+          <span>Closing balance</span>
+          <strong>{firstLoad ? <Skeleton width={110} /> : formatINR(metrics.dailyTotals.closingBalance)}</strong>
+        </div>
+      </section>
+
       <Grid container spacing={2}>
-        {/* Collections this month, and today's credit/debit - the two series
-            the live-metrics fetch already computes but never used to render
-            anything. Credit/debit keep the same green-in / red-out convention
-            as every status chip elsewhere in the app; the collections bars
-            take the theme accent since they carry no win/loss meaning of
-            their own. */}
+        {/* Collections this month, and today's credit/debit. Credit/debit keep
+            the same green-in / red-out convention as every status chip elsewhere
+            in the app; the collections bars take the theme accent since they
+            carry no win/loss meaning of their own. */}
         <Grid size={{ xs: 12, lg: 7 }}>
-          <Panel title="Collections This Month" subtitle="By loan type and status">
+          <Panel title="Collections this month" subtitle="By loan type and status">
             <ChartCard height={260} loading={loading && !collections.length} empty={!hasCollections} emptyLabel="No collections recorded for this month yet.">
               <BarChart data={collections} margin={{ top: 8, right: 12, left: 0, bottom: 8 }}>
                 <CartesianGrid strokeDasharray="3 3" stroke={theme.palette.divider} vertical={false} />
@@ -388,7 +416,7 @@ export default function Dashboard() {
         </Grid>
 
         <Grid size={{ xs: 12, lg: 5 }}>
-          <Panel title="Today's Cash Flow" subtitle={dayjs().format("DD-MMM-YYYY")}>
+          <Panel title="Today's cash flow" subtitle={dayjs().format("DD-MMM-YYYY")}>
             <ChartCard height={260} loading={loading && !hasDailyFlow} empty={!hasDailyFlow} emptyLabel="No credit or debit posted for today yet.">
               <BarChart data={dailyFlowRows} margin={{ top: 8, right: 12, left: 0, bottom: 8 }}>
                 <CartesianGrid strokeDasharray="3 3" stroke={theme.palette.divider} vertical={false} />
@@ -405,16 +433,23 @@ export default function Dashboard() {
           </Panel>
         </Grid>
 
-        <Grid size={12}>
+        <Grid size={{ xs: 12, lg: 8 }}>
           <Panel
-            title="Recent Transactions"
+            title="Recent transactions"
             subtitle="Today's postings from the daily book"
-            action={<Button size="small" endIcon={<ArrowForwardRounded />} onClick={() => navigate("/AccountsModules/DailyBook")}>Daily Book</Button>}
+            className="dash-card-flush"
+            action={
+              canOpen("/AccountsModules/DailyBook") && (
+                <Button size="small" endIcon={<ArrowForwardRounded />} onClick={() => navigate("/AccountsModules/DailyBook")}>
+                  Daily Book
+                </Button>
+              )
+            }
           >
             {metrics.transactionRows.length === 0 && !loading ? (
-              <Box sx={{ height: 160, display: "grid", placeItems: "center" }}>
-                <Typography variant="body2" color="text.secondary">No transactions posted today yet.</Typography>
-              </Box>
+              <div className="dash-empty" style={{ height: 200 }}>
+                No transactions posted today yet.
+              </div>
             ) : (
               <DataTable
                 rows={metrics.transactionRows}
@@ -428,43 +463,37 @@ export default function Dashboard() {
           </Panel>
         </Grid>
 
-        <Grid size={12}>
-          <Panel
-            title="Finance Workspace"
-            action={<Button size="small" endIcon={<ArrowForwardRounded />} onClick={() => navigate("/Bussiness/BussinessCollectionReportsimport")}>Reports</Button>}
-          >
-            <Grid container spacing={2}>
-              {modules.map((module) => {
-                const Icon = module.icon;
+        <Grid size={{ xs: 12, lg: 4 }}>
+          <Panel title="Shortcuts" subtitle="Open a screen here, or in a new tab">
+            <ul className="dash-links">
+              {visibleShortcuts.map((item) => {
+                const Icon = item.icon;
                 return (
-                  <Grid
-                    key={module.path}
-                    size={{
-                      xs: 12,
-                      sm: 6,
-                      xl: 4
-                    }}>
-                    <Paper className="enterprise-card dashboard-module" elevation={0} sx={{ boxShadow: "none" }}>
-                      <Stack direction="row" spacing={1.5} alignItems="flex-start">
-                        <Box className="dashboard-module-icon"><Icon /></Box>
-                        <Box sx={{ minWidth: 0, flex: 1 }}>
-                          <Typography variant="subtitle1">{module.title}</Typography>
-                          <Stack direction="row" spacing={1} sx={{ mt: 1 }}>
-                            <Button size="small" variant="contained" onClick={() => navigate(module.path)}>Open</Button>
-                            <Button size="small" variant="outlined" startIcon={<LaunchRounded />} onClick={() => openInNewTab(module.path)}>
-                              New Tab
-                            </Button>
-                          </Stack>
-                        </Box>
-                      </Stack>
-                    </Paper>
-                  </Grid>
+                  <li key={item.path} className="dash-link">
+                    <button type="button" className="dash-link-main" onClick={() => navigate(item.path)}>
+                      <span className="dash-link-icon" aria-hidden="true">
+                        <Icon />
+                      </span>
+                      <span className="dash-link-title">{item.title}</span>
+                      <ArrowForwardRounded className="dash-link-arrow" aria-hidden="true" />
+                    </button>
+                    <MuiTooltip title="Open in a new tab" arrow>
+                      <IconButton size="small" onClick={() => openInNewTab(item.path)} aria-label={`Open ${item.title} in a new tab`}>
+                        <LaunchRounded fontSize="small" />
+                      </IconButton>
+                    </MuiTooltip>
+                  </li>
                 );
               })}
-            </Grid>
+            </ul>
+            {visibleShortcuts.length === 0 && (
+              <Typography variant="body2" color="text.secondary">
+                No shortcuts are available for your account.
+              </Typography>
+            )}
           </Panel>
         </Grid>
       </Grid>
-    </Stack>
+    </div>
   );
 }

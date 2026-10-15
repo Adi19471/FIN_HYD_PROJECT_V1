@@ -46,7 +46,7 @@ const FinanceTabs = () => {
     <Box
       sx={{
         minHeight: "calc(100 * var(--app-vh))",
-        bgcolor: "#f1f5f9",
+        bgcolor: "var(--surface-3)",
         p: { xs: 0, md: 0 },
       }}
     >

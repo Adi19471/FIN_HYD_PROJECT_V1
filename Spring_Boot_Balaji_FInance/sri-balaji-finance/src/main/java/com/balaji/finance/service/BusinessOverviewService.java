@@ -125,14 +125,26 @@ public class BusinessOverviewService {
 			if ("DAILY_FINANCE".equalsIgnoreCase(loanSummary.getLoanType())) {
 
 				businessSharePojo.setLoansPaid(loanCollectionData.getDailyLoanInstallmentsReceived());
-
 				businessSharePojo.setInterestPaid(loanCollectionData.getDailyLoanInterestReceived());
+
+				BigDecimal installments = loanCollectionData.getMonthlyLoanInstallmentsReceived();
+				BigDecimal interest = loanCollectionData.getMonthlyLoanInterestReceived();
+
+				businessSharePojo
+						.setSumOfloansPaidAndInterestPaid((installments != null ? installments : BigDecimal.ZERO)
+								.add(interest != null ? interest : BigDecimal.ZERO));
 
 			} else if ("MONTHLY_FINANCE".equalsIgnoreCase(loanSummary.getLoanType())) {
 
 				businessSharePojo.setLoansPaid(loanCollectionData.getMonthlyLoanInstallmentsReceived());
-
 				businessSharePojo.setInterestPaid(loanCollectionData.getMonthlyLoanInterestReceived()); // FIXED HERE
+
+				BigDecimal installments = loanCollectionData.getMonthlyLoanInstallmentsReceived();
+				BigDecimal interest = loanCollectionData.getMonthlyLoanInterestReceived();
+
+				businessSharePojo
+						.setSumOfloansPaidAndInterestPaid((installments != null ? installments : BigDecimal.ZERO)
+								.add(interest != null ? interest : BigDecimal.ZERO));
 
 			}
 

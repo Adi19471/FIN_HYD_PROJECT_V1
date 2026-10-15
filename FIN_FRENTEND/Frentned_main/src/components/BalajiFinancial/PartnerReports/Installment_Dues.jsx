@@ -11,7 +11,7 @@ import {
   Stack,
   TextField,
 } from "@mui/material";
-import { actionIcons } from "src/lib/icons";
+import { actionIcons, navIcons } from "src/lib/icons";
 import axios from "axios";
 import dayjs from "dayjs";
 import { API_BASE } from "lib/config";
@@ -22,7 +22,6 @@ import {
   isTotalRow,
   
   printReport,
-  ReportCompanyHeader,
   ReportToolbar,
   TableExportMenu,
   useReportZoom,
@@ -294,7 +293,9 @@ const Installment_Dues = () => {
   return (
     <Stack spacing={1.5}>
       <ReportToolbar
-        onGenerate={generateReport}
+        icon={navIcons.partnerInstallmentDues}
+        title="Installment Dues"
+        subtitle="Installments due, for all partners or one."
         onRefresh={generateReport}
         loading={loading}
         zoom={zoom}
@@ -374,10 +375,6 @@ const Installment_Dues = () => {
         </Grid>
       </Paper>
       <Box ref={zoom.targetRef} sx={{ display: "flex", flexDirection: "column", gap: 1.5 }}>
-        <Paper className="enterprise-card" elevation={0} sx={{ px: 2, py: 1.25 }}>
-          <ReportCompanyHeader title="Installment Dues Report" />
-        </Paper>
-
         {(sections.length
           ? sections
           : [{ key: "empty", title: "Installment Dues Ledger", subtitle: "Generate the report to load dues.", rows: [] }]

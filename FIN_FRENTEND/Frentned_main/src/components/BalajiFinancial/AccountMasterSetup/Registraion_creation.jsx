@@ -27,16 +27,20 @@ import {
 } from "@mui/material";
 import AdminPanelSettingsIcon from "@mui/icons-material/AdminPanelSettings";
 import BadgeIcon from "@mui/icons-material/Badge";
-import CloseIcon from "@mui/icons-material/Close";
-import DeleteIcon from "@mui/icons-material/Delete";
-import EditIcon from "@mui/icons-material/Edit";
 import LockIcon from "@mui/icons-material/Lock";
 import PersonIcon from "@mui/icons-material/Person";
-import SaveIcon from "@mui/icons-material/Save";
 import { toast } from "react-toastify";
-import { DataTable, PageHeader } from "src/components/ui";
+import { actionIcons, navIcons } from "src/lib/icons";
+import { DataTable, ScreenHeader } from "src/components/ui";
 import registrationService from "src/services/registrationService";
-import ReportToolbar from "../ReportsAll/ReportToolbar";
+
+// Action marks, from the shared icon language.
+const AddIcon = actionIcons.add;
+const CloseIcon = actionIcons.close;
+const DeleteIcon = actionIcons.delete;
+const EditIcon = actionIcons.edit;
+const SaveIcon = actionIcons.save;
+const SearchIcon = actionIcons.search;
 
 const emptyForm = {
   id: "",
@@ -56,6 +60,8 @@ const Registration_creation = () => {
   const [modalOpen, setModalOpen] = useState(false);
   const [permissionsOpen, setPermissionsOpen] = useState(false);
   const [search, setSearch] = useState("");
+  // narrows the long menu list inside the permissions dialog
+  const [permissionSearch, setPermissionSearch] = useState("");
   const [form, setForm] = useState(emptyForm);
 
   const loadUsers = async () => {
@@ -121,6 +127,7 @@ const Registration_creation = () => {
       role: normalizeRole(row.role),
       permissionIds: row.permissionIds || [],
     });
+    setPermissionSearch("");
     setPermissionsOpen(true);
   };
 
@@ -135,6 +142,29 @@ const Registration_creation = () => {
       permissionIds: current.permissionIds.includes(permissionId)
         ? current.permissionIds.filter((id) => id !== permissionId)
         : [...current.permissionIds, permissionId],
+    }));
+  };
+
+  const visiblePermissions = useMemo(() => {
+    const term = permissionSearch.trim().toLowerCase();
+    if (!term) return permissions;
+    return permissions.filter((permission) =>
+      String(permission.rolePath || "").toLowerCase().includes(term)
+    );
+  }, [permissions, permissionSearch]);
+
+  const allVisibleAssigned =
+    visiblePermissions.length > 0 &&
+    visiblePermissions.every((permission) => form.permissionIds.includes(permission.id));
+
+  // Tick or clear everything in the list as it is filtered right now.
+  const toggleVisiblePermissions = () => {
+    const visibleIds = visiblePermissions.map((permission) => permission.id);
+    setForm((current) => ({
+      ...current,
+      permissionIds: allVisibleAssigned
+        ? current.permissionIds.filter((id) => !visibleIds.includes(id))
+        : [...new Set([...current.permissionIds, ...visibleIds])],
     }));
   };
 
@@ -208,6 +238,9 @@ const Registration_creation = () => {
       headerName: "Actions",
       width: 170,
       sortable: false,
+      filterable: false,
+      // buttons, not data: left out of every download / print
+      disableExport: true,
       align: "center",
       headerAlign: "center",
       headerClassName: "header-cell",
@@ -279,6 +312,8 @@ const Registration_creation = () => {
       align: "center",
       headerAlign: "center",
       headerClassName: "header-cell",
+      // what a download / print shows in place of the chip
+      valueFormatter: (value) => `${value?.length || 0} assigned`,
       renderCell: (params) => (
         <Chip
           size="small"
@@ -291,55 +326,51 @@ const Registration_creation = () => {
   ];
 
   return (
-    <Box>
-      <PageHeader
-        searchPlaceholder="Search user, role, or ID..."
-        searchValue={search}
-        onSearchChange={setSearch}
-        onAddClick={() => handleOpen()}
-        addButtonLabel="Add New User"
-        loading={loading || saving}
-      />
-      <ReportToolbar
-        data={filteredRows}
-        columns={["id", "name", "role"]}
-        fileName="User_Management_Report"
-        tableId="userManagementTable"
-      />
+    <div className="scr-page">
+      <ScreenHeader
+        icon={navIcons.userRegistration}
+        title="User Registration"
+        subtitle="Who can sign in, their role and the menus they may open."
+      >
+        <TextField
+          className="scr-head-search"
+          size="small"
+          placeholder="Search user, role or ID..."
+          value={search}
+          onChange={(event) => setSearch(event.target.value)}
+          InputProps={{
+            startAdornment: (
+              <InputAdornment position="start">
+                <SearchIcon color="action" fontSize="small" />
+              </InputAdornment>
+            ),
+          }}
+        />
+        <Button
+          variant="contained"
+          startIcon={<AddIcon />}
+          onClick={() => handleOpen()}
+          disabled={loading || saving}
+        >
+          Add User
+        </Button>
+      </ScreenHeader>
+
+      {/* Download / Print live on the grid's own toolbar, as on every screen. */}
       <DataTable
         rows={filteredRows}
         columns={columns}
         getRowId={(row) => row.id}
         loading={loading}
-        height="calc(100 * var(--app-vh) - 310px)"
-        title="User register"
-        subtitle="Use the shield action to assign API menu permissions to a user."
+        title="Users"
+        subtitle="Use the shield action to choose the menus a user may open."
+        fileName="User_Management_Report"
+        pageSize={25}
+        disableRowSelectionOnClick
       />
-      <Box sx={{ display: "none" }}>
-        <table id="userManagementTable">
-          <thead>
-            <tr>
-              <th>ID</th>
-              <th>Name</th>
-              <th>Role</th>
-              <th>Permissions</th>
-            </tr>
-          </thead>
-          <tbody>
-            {filteredRows.map((row) => (
-              <tr key={row.id}>
-                <td>{row.id}</td>
-                <td>{row.name}</td>
-                <td>{row.role}</td>
-                <td>{row.permissionIds?.length || 0}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </Box>
       <Dialog open={modalOpen} onClose={handleClose} maxWidth="sm" fullWidth>
         <DialogTitle sx={{ pb: 1, display: "flex", alignItems: "center", gap: 1 }}>
-          <Typography variant="h6" sx={{ fontWeight: 600, flex: 1 }}>
+          <Typography component="span" variant="h6" sx={{ fontWeight: 600, flex: 1 }}>
             {form.id ? "Edit User" : "Create New User"}
           </Typography>
           <IconButton onClick={handleClose} sx={{ color: "text.secondary" }}>
@@ -425,7 +456,7 @@ const Registration_creation = () => {
       <Dialog open={permissionsOpen} onClose={handlePermissionsClose} maxWidth="md" fullWidth>
         <DialogTitle sx={{ pb: 1, display: "flex", alignItems: "center", gap: 1 }}>
           <AdminPanelSettingsIcon color="primary" />
-          <Typography variant="h6" sx={{ fontWeight: 600, flex: 1 }}>
+          <Typography component="span" variant="h6" sx={{ fontWeight: 600, flex: 1 }}>
             {selectedRoleTitle}
           </Typography>
           <IconButton onClick={handlePermissionsClose} sx={{ color: "text.secondary" }}>
@@ -434,11 +465,39 @@ const Registration_creation = () => {
         </DialogTitle>
         <Divider />
         <DialogContent sx={{ pt: 2 }}>
-          <Stack direction="row" spacing={1} alignItems="center" sx={{ mb: 1.5 }}>
-            <Typography variant="body2" sx={{ fontWeight: 700 }}>
-              Roles:
-            </Typography>
-            <Chip size="small" label={`${form.permissionIds.length} assigned`} color="primary" />
+          <Stack
+            direction={{ xs: "column", sm: "row" }}
+            spacing={1.5}
+            alignItems={{ xs: "stretch", sm: "center" }}
+            sx={{ mb: 1.5 }}
+          >
+            <TextField
+              size="small"
+              placeholder="Search menus..."
+              value={permissionSearch}
+              onChange={(event) => setPermissionSearch(event.target.value)}
+              sx={{ flex: 1 }}
+              InputProps={{
+                startAdornment: (
+                  <InputAdornment position="start">
+                    <SearchIcon color="action" fontSize="small" />
+                  </InputAdornment>
+                ),
+              }}
+            />
+            <Chip
+              size="small"
+              color="primary"
+              label={`${form.permissionIds.length} of ${permissions.length} assigned`}
+            />
+            <Button
+              size="small"
+              variant="outlined"
+              onClick={toggleVisiblePermissions}
+              disabled={!visiblePermissions.length}
+            >
+              {allVisibleAssigned ? "Clear all" : "Select all"}
+            </Button>
           </Stack>
 
           <TableContainer component={Paper} variant="outlined" sx={{ maxHeight: { xs: 300, sm: 380, md: 470 }, overflow: "auto" }}>
@@ -453,7 +512,7 @@ const Registration_creation = () => {
                 </TableRow>
               </TableHead>
               <TableBody>
-                {permissions.map((permission, index) => (
+                {visiblePermissions.map((permission, index) => (
                   <TableRow key={permission.id} hover>
                     <TableCell>{index + 1}</TableCell>
                     <TableCell>{permission.rolePath}</TableCell>
@@ -466,11 +525,11 @@ const Registration_creation = () => {
                     </TableCell>
                   </TableRow>
                 ))}
-                {!permissions.length && (
+                {!visiblePermissions.length && (
                   <TableRow>
                     <TableCell colSpan={3}>
                       <Typography color="text.secondary" align="center" sx={{ py: 3 }}>
-                        No permissions found from API.
+                        {permissions.length ? "No menu matches the search." : "No permissions found from API."}
                       </Typography>
                     </TableCell>
                   </TableRow>
@@ -493,7 +552,7 @@ const Registration_creation = () => {
           </Button>
         </DialogActions>
       </Dialog>
-    </Box>
+    </div>
   );
 };
 

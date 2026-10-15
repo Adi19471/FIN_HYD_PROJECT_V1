@@ -193,9 +193,11 @@ export const printFontSize = (columnCount = 0) => {
  * Heading printed over the grid. Defaults to the download file name, which is
  * how every screen has always driven it, but `options.title` lets a screen
  * print "Customer Dues" while the file still downloads as Customer_Dues.xlsx.
+ * File names are written both ways (Customer_Dues, Partner-Performance), and a
+ * heading reads as words either way.
  */
 export const reportTitle = (fileName = "", options = {}) =>
-  options.title || String(fileName).replace(/_/g, " ");
+  options.title || String(fileName).replace(/[_-]+/g, " ").trim();
 
 /**
  * The application band that sits above the company banner: the product name

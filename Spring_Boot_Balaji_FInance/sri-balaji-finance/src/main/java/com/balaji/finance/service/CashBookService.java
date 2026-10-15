@@ -7,6 +7,7 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -367,6 +368,13 @@ public class CashBookService {
 
 		BigDecimal openingBalanceForToday = Optional.ofNullable(cashBookRepo.findOpeningBalanceForDate(transactionDate))
 				.orElse(BigDecimal.ZERO);
+		
+		Collections.sort(cashBookViewPojoList,
+		        Comparator.comparing(
+		        		CashBookSumaryViewPojo::getTransactionId,
+		                Comparator.nullsLast(Comparator.naturalOrder())
+		        )
+		);
 
 		DayWiseTransactionsSummary dayWiseTransactionsSummary = new DayWiseTransactionsSummary();
 		dayWiseTransactionsSummary.setCashBookSumaryViewPojoList(cashBookViewPojoList);
@@ -384,17 +392,31 @@ public class CashBookService {
 	}
 
 	public List<CashBookLedgerPojo> getCashBookLedger(LocalDate fromDate, LocalDate toDate) {
-		LocalDateTime from = fromDate.atStartOfDay();
-		LocalDateTime to = toDate.atTime(23, 59, 59);
 
-		List<DateWiseCashBookProjection> rows = cashBookRepo.getDateWiseCashBook(from, to);
+		List<DateWiseCashBookProjection> rows;
+		BigDecimal runningBalance;
+
+		if (fromDate == null && toDate == null) {
+
+			rows = cashBookRepo.getDateWiseCashBook();
+
+			// Whole ledger: nothing comes before the first entry, so it opens at zero.
+			runningBalance = BigDecimal.ZERO;
+
+		} else {
+
+			LocalDateTime from = fromDate.atStartOfDay();
+			LocalDateTime to = toDate.atTime(23, 59, 59);
+
+			rows = cashBookRepo.getDateWiseCashBook(from, to);
+
+			runningBalance = Optional.ofNullable(cashBookRepo.findOpeningBalanceForDate(fromDate))
+					.orElse(BigDecimal.ZERO);
+		}
 
 		List<CashBookLedgerPojo> result = new ArrayList<>();
 
 		long i = 0;
-
-		BigDecimal runningBalance = Optional.ofNullable(cashBookRepo.findOpeningBalanceForDate(fromDate))
-				.orElse(BigDecimal.ZERO);
 
 		for (DateWiseCashBookProjection r : rows) {
 
@@ -420,10 +442,19 @@ public class CashBookService {
 
 	public List<CashBookLedgerCollectionsPojo> getCollectionsOnlyCBLedgerData(LocalDate fromDate, LocalDate toDate) {
 
-		LocalDateTime from = fromDate.atStartOfDay();
-		LocalDateTime to = toDate.atTime(23, 59, 59);
+		List<DateWiseCollectionsProjection> rows;
 
-		List<DateWiseCollectionsProjection> rows = cashBookRepo.getDateWiseCashBookCollectionsOnly(from, to);
+		if (fromDate == null && toDate == null) {
+
+			rows = cashBookRepo.getDateWiseCashBookCollectionsOnly();
+
+		} else {
+
+			LocalDateTime from = fromDate.atStartOfDay();
+			LocalDateTime to = toDate.atTime(23, 59, 59);
+
+			rows = cashBookRepo.getDateWiseCashBookCollectionsOnly(from, to);
+		}
 
 		List<CashBookLedgerCollectionsPojo> result = new ArrayList<>();
 

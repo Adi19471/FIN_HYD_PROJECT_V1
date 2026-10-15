@@ -18,8 +18,7 @@ import Help from "../components/DropdownHelp";
 import UserMenu from "../components/DropdownProfile";
 import EnterpriseThemePanel from "../components/EnterpriseThemePanel";
 import ThemeToggle from "../components/ThemeToggle";
-import { useThemeProvider } from "../utils/ThemeContext";
-import { COMPANY_ADDRESS, COMPANY_APP_NAME, COMPANY_LOGO } from "src/lib/company";
+import { useBranding, useThemeProvider } from "../utils/ThemeContext";
 import { breadcrumbsFor } from "src/lib/breadcrumbs";
 
 const MenuRounded = actionIcons.menu;
@@ -29,6 +28,7 @@ const SettingsRounded = actionIcons.settings;
 function Header({ sidebarOpen, setSidebarOpen }) {
   const location = useLocation();
   const { settings } = useThemeProvider();
+  const { appName, tagline, logo } = useBranding();
   const [searchModalOpen, setSearchModalOpen] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
 
@@ -50,10 +50,10 @@ function Header({ sidebarOpen, setSidebarOpen }) {
         }`}
       >
         <Stack direction="row" alignItems="center" spacing={2} sx={{ minWidth: 0 }}>
+          {/* Shown on a phone, and on a desktop in the Overlay layout (style.css). */}
           <IconButton
             onClick={() => setSidebarOpen(!sidebarOpen)}
-            className="enterprise-header-icon"
-            sx={{ display: { md: "none" } }}
+            className="enterprise-header-icon enterprise-header-menu"
             aria-label="Open navigation"
           >
             <MenuRounded />
@@ -62,29 +62,31 @@ function Header({ sidebarOpen, setSidebarOpen }) {
           <Link
             to="/"
             className="enterprise-brand enterprise-header-brand"
-            aria-label="Sri Balaji Finance dashboard"
+            aria-label={`${appName} dashboard`}
           >
             <Box className="enterprise-brand-mark">
-              <img src={COMPANY_LOGO} alt="" aria-hidden="true" />
+              <img src={logo} alt="" aria-hidden="true" />
             </Box>
             <Box sx={{ display: { xs: "none", sm: "block" }, minWidth: 0 }}>
-              <Typography variant="subtitle1" sx={{ lineHeight: 1, fontWeight: 850 }}>
-                {COMPANY_APP_NAME}
+              <Typography variant="subtitle1" className="enterprise-header-brand-name" sx={{ lineHeight: 1, fontWeight: 850 }}>
+                {appName}
               </Typography>
-              <Typography variant="caption" color="text.secondary">
-                {COMPANY_ADDRESS}
+              <Typography variant="caption" className="enterprise-header-brand-line">
+                {tagline}
               </Typography>
             </Box>
           </Link>
 
+          {/* Colours come from the top bar's own tokens (style.css), so the
+              trail stays readable on whichever colour the bar is given. */}
           <Box sx={{ display: { xs: "none", md: "block" }, minWidth: 0 }}>
             <Stack direction="row" alignItems="center" spacing={0.75}>
               {breadcrumbs.map((crumb, index) => (
                 <React.Fragment key={`${crumb}-${index}`}>
-                  {index > 0 && <Typography color="text.disabled">/</Typography>}
+                  {index > 0 && <Typography className="enterprise-crumb-sep">/</Typography>}
                   <Typography
                     variant="body2"
-                    color={index === breadcrumbs.length - 1 ? "text.primary" : "text.secondary"}
+                    className={`enterprise-crumb ${index === breadcrumbs.length - 1 ? "is-current" : ""}`}
                     sx={{ textTransform: "capitalize", fontWeight: index === breadcrumbs.length - 1 ? 700 : 500 }}
                   >
                     {crumb}

@@ -17,12 +17,11 @@ import { errorToast } from "toastify";
 import {
   AppDatePicker,
   DataTable,
-  
-  ReportCompanyHeader,
   ReportToolbar,
   useReportZoom,
   useDateRange,
 } from "src/components/ui";
+import { navIcons } from "src/lib/icons";
 
 // Whole rupees - no decimal point on any figure in this report.
 const formatAmount = (amount) =>
@@ -48,6 +47,10 @@ const Performance = () => {
   const [loading, setLoading] = useState(false);
   const [rows, setRows] = useState([]);
   const [dateFilter, setDateFilter] = useState(false);
+  // What the rows on screen were generated for. It is printed on every
+  // download, so the page still says which filters produced it after one is
+  // changed on screen.
+  const [applied, setApplied] = useState(null);
   const { fromDate, toDate, setFromDate, setToDate, toDateMin, toDateMax } = useDateRange(
     dayjs().startOf("year").format("YYYY-MM-DD"),
     dayjs().format("YYYY-MM-DD")
@@ -68,6 +71,7 @@ const Performance = () => {
           ...row,
         }))
       );
+      setApplied(dateFilter ? { fromDate, toDate } : {});
     } catch (error) {
       console.log(error);
       errorToast("Failed to fetch performance report");
@@ -114,6 +118,18 @@ const Performance = () => {
     { field: "income", headerName: "Income", width: 150, align: "right", headerAlign: "right", valueFormatter: (value) => formatAmount(value) },
   ];
 
+  const period = useMemo(
+    () =>
+      applied?.fromDate
+        ? { label: "Performance Period", fromDate: applied.fromDate, toDate: applied.toDate }
+        : undefined,
+    [applied]
+  );
+  const reportMeta = useMemo(
+    () => (applied && !applied.fromDate ? [{ label: "Period", value: "All Dates" }] : []),
+    [applied]
+  );
+
   const totalRows = [
     { label: "Loans Disbursed", value: formatAmount(totals.loansDisbursed) },
     { label: "Loans Payments", value: formatAmount(totals.loansPayment) },
@@ -126,7 +142,9 @@ const Performance = () => {
   return (
     <Stack spacing={2.5}>
       <ReportToolbar
-        onGenerate={fetchPerformance}
+        icon={navIcons.partnerPerformance}
+        title="Partner Performance"
+        subtitle="Loans, payments, interest and income by partner."
         onRefresh={fetchPerformance}
         loading={loading}
         rows={rows}
@@ -172,16 +190,14 @@ const Performance = () => {
         </Grid>
       </Paper>
       <Box ref={zoom.targetRef} sx={{ display: "flex", flexDirection: "column", gap: 2.5 }}>
-        <Paper className="enterprise-card" elevation={0} sx={{ p: 2 }}>
-          <ReportCompanyHeader title="Partner Performance Report" />
-        </Paper>
-
       <DataTable
         rows={rows}
         columns={columns}
         loading={loading}
         fileName="Partner-Performance"
         subtitle={`Report date: ${dayjs().format("DD-MMM-YYYY")}`}
+        period={period}
+        reportMeta={reportMeta}
         totalFields={TOTAL_FIELDS}
         totalLabelCell={TOTAL_LABEL_CELL}
         height={640}

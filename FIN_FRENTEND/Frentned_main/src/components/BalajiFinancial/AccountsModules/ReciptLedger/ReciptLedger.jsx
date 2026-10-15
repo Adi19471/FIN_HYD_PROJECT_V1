@@ -1,5 +1,5 @@
 import React, { useMemo, useState } from "react";
-import { Button, Grid, Paper, Stack } from "@mui/material";
+import { Button, FormControlLabel, Grid, Paper, Radio, RadioGroup, Stack } from "@mui/material";
 import axios from "axios";
 import { API_BASE } from "lib/config";
 import { getSession } from "src/utils/session";
@@ -14,6 +14,7 @@ const TOTAL_LABEL_CELL = { customerName: "TOTAL" };
 const sumOf = (rows, field) => roundAmount(rows.reduce((sum, row) => sum + Number(row[field] || 0), 0));
 
 const ReceiptLedger = () => {
+  const [dateMode, setDateMode] = useState("range");
   const { fromDate, toDate, setFromDate, setToDate, toDateMin, toDateMax } = useDateRange("", "");
   const [ledgerData, setLedgerData] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -25,15 +26,21 @@ const ReceiptLedger = () => {
     },
   });
 
-  const fetchLedger = async () => {
-    if (!fromDate || !toDate) {
-      errorToast("Please select From and To Date");
-      return;
+  // mode is passed in by the radio handler, where the dateMode state has not updated yet.
+  const fetchLedger = async (mode = dateMode) => {
+    let url = `${API_BASE}/ReceiptsLedger`;
+
+    if (mode === "range") {
+      if (!fromDate || !toDate) {
+        errorToast("Please select From and To Date");
+        return;
+      }
+      url = `${API_BASE}/ReceiptsLedger/${fromDate}/${toDate}`;
     }
 
     try {
       setLoading(true);
-      const res = await axios.get(`${API_BASE}/ReceiptsLedger/${fromDate}/${toDate}`, getHeaders());
+      const res = await axios.get(url, getHeaders());
       setLedgerData((res.data || []).map((item, index) => ({ id: index + 1, sno: index + 1, ...item })));
       successToast("Ledger loaded successfully");
     } catch (error) {
@@ -42,6 +49,13 @@ const ReceiptLedger = () => {
     } finally {
       setLoading(false);
     }
+  };
+
+  // Picking "All" loads every receipt straight away; "Date Range" waits for the dates and Generate.
+  const handleDateModeChange = (event) => {
+    const mode = event.target.value;
+    setDateMode(mode);
+    if (mode === "all") fetchLedger(mode);
   };
 
   // Grand total under the TOTAL row (and on every export). TA = Amount + Total + Total Paid + Balance.
@@ -71,7 +85,7 @@ const ReceiptLedger = () => {
   return (
     <Stack spacing={2.5}>
       <PageHeader
-        onRefresh={fetchLedger}
+        onRefresh={() => fetchLedger()}
         loading={loading}
       />
       <Paper className="enterprise-card" elevation={0} sx={{ p: 2 }}>
@@ -79,23 +93,33 @@ const ReceiptLedger = () => {
           <Grid
             size={{
               xs: 12,
-              md: 4
+              md: 3
             }}>
-            <AppDatePicker label="From Date" value={fromDate} onChange={setFromDate} />
+            <RadioGroup row value={dateMode} onChange={handleDateModeChange}>
+              <FormControlLabel value="all" control={<Radio />} label="All" disabled={loading} />
+              <FormControlLabel value="range" control={<Radio />} label="Date Range" disabled={loading} />
+            </RadioGroup>
           </Grid>
           <Grid
             size={{
               xs: 12,
-              md: 4
+              md: 3
             }}>
-            <AppDatePicker label="To Date" value={toDate} onChange={setToDate} minDate={toDateMin} maxDate={toDateMax} />
+            <AppDatePicker label="From Date" value={fromDate} onChange={setFromDate} disabled={dateMode === "all"} />
           </Grid>
           <Grid
             size={{
               xs: 12,
-              md: 4
+              md: 3
             }}>
-            <Button fullWidth variant="contained" onClick={fetchLedger} disabled={loading}>
+            <AppDatePicker label="To Date" value={toDate} onChange={setToDate} disabled={dateMode === "all"} minDate={toDateMin} maxDate={toDateMax} />
+          </Grid>
+          <Grid
+            size={{
+              xs: 12,
+              md: 3
+            }}>
+            <Button fullWidth variant="contained" onClick={() => fetchLedger()} disabled={loading}>
               Generate
             </Button>
           </Grid>

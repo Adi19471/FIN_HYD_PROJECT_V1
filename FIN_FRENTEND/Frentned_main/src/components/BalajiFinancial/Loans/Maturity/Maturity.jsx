@@ -117,7 +117,7 @@ const Maturity = () => {
   const selectedLoanLabel = loanTypes.find((type) => type.value === loanType)?.label || loanType;
 
   return (
-    <Stack spacing={2.5} sx={{ p: { xs: 1.5, md: 2.5 } }}>
+    <Stack spacing={2.5}>
       <Paper className="enterprise-card" elevation={0} sx={{ p: 2.5 }}>
         <Stack direction={{ xs: "column", lg: "row" }} justifyContent="space-between" spacing={2}>
           <Box>

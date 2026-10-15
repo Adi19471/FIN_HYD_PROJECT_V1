@@ -30,11 +30,11 @@ import { getSession } from "src/utils/session";
 import dayjs from "dayjs";
 import {
   AppDatePicker,
-  ReportCompanyHeader,
   ReportToolbar,
   TableExportMenu,
   useDateRange as useDateRangeHook,
 } from "src/components/ui";
+import { navIcons } from "src/lib/icons";
 
 const token = getSession()?.token || getSession("token") || "";
 
@@ -186,10 +186,6 @@ const BusinessOverview = () => {
     { field: "amount", headerName: "Amount / Total (X+Y)", width: 180, align: "right", valueFormatter: (value) => money(value) },
   ];
 
-  const reportRange = useDateRange
-    ? `From ${dayjs(fromDate).format("DD-MMM-YYYY")} To ${dayjs(toDate).format("DD-MMM-YYYY")}`
-    : "All Dates";
-
   // Filter lines and the totals block printed on every export.
   const reportOptions = {
     period: useDateRange ? { fromDate, toDate, label: "Business Overview Period" } : undefined,
@@ -211,7 +207,13 @@ const BusinessOverview = () => {
     <>
       {/* Action bar, as on every other report. Generate stays down in the
           filter card, next to the dates and switches it acts on. */}
-      <ReportToolbar onRefresh={fetchReport} loading={loading}>
+      <ReportToolbar
+        icon={navIcons.businessOverview}
+        title="Business Overview"
+        subtitle="Loans disbursed, revenues and expenses in one view."
+        onRefresh={fetchReport}
+        loading={loading}
+      >
         <TableExportMenu
           rows={exportRows}
           columns={exportColumns}
@@ -293,12 +295,6 @@ const BusinessOverview = () => {
         <Alert severity="error" sx={{ mb: 3 }}>{error}</Alert>
       ) : (
         <Paper sx={{ p: { xs: 2, md: 4 }, bgcolor: "background.paper", boxShadow: 2 }}>
-          <ReportCompanyHeader
-            title="Business Overview"
-            subtitle={reportRange}
-            date={dayjs()}
-          />
-
           {/* Loans Disbursed Information */}
           <Typography variant="subtitle1" sx={{ fontWeight: "bold", mb: 1 }}>
             Loans Disbursed Information :

@@ -1,7 +1,11 @@
 package com.balaji.finance.service;
 
+import java.math.BigDecimal;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -16,10 +20,22 @@ public class CustomerReportService {
 	@Autowired
 	private CashBookRepo cashBookRepo;
 
-	public List<CustomerReportResponse> getCustomerReportOnAccountCode(String accountCode) {
+	public List<CustomerReportResponse> getCustomerReportOnAccountCode(String accountCode, LocalDate fromLocalDate, LocalDate toLocalDate) {
 
-		List<CustomerReportProjection> customerReportOnAccountCode = cashBookRepo
-				.getCustomerReportOnAccountCode(accountCode);
+		List<CustomerReportProjection> customerReportOnAccountCode = new ArrayList<CustomerReportProjection>();
+
+		if (fromLocalDate == null && toLocalDate == null) {
+
+			customerReportOnAccountCode = cashBookRepo.getCustomerReportOnAccountCode(accountCode);
+
+		} else {
+
+			LocalDateTime from = fromLocalDate.atStartOfDay();
+			LocalDateTime to = toLocalDate.atTime(23, 59, 59);
+
+			customerReportOnAccountCode = cashBookRepo.getCustomerReportOnAccountCodeDateRange(accountCode, from, to);
+		}
+		
 
 		List<CustomerReportResponse> returnList = new ArrayList<CustomerReportResponse>();
 

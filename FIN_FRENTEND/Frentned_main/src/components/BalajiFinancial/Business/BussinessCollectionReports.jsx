@@ -10,7 +10,7 @@ import {
   Typography,
 } from "@mui/material";
 import { AssessmentRounded, CalendarMonthRounded, TrendingUpRounded } from "@mui/icons-material";
-import { actionIcons } from "src/lib/icons";
+import { actionIcons, navIcons } from "src/lib/icons";
 import axios from "axios";
 import dayjs from "dayjs";
 import { API_BASE } from "lib/config";
@@ -18,7 +18,6 @@ import { getSession } from "src/utils/session";
 import {
   AppDatePicker,
   DataTable,
-  ReportCompanyHeader,
   ReportToolbar,
   TableExportMenu,
   useDateRange,
@@ -240,10 +239,19 @@ const BussinessCollectionReports = () => {
 
   return (
     <>
-      {/* Action bar, then the company banner - the same order every report
-          uses. The screen is already named by the breadcrumb and the banner,
-          and the grid below carries its own record count. */}
-      <ReportToolbar onRefresh={fetchReport} loading={loading}>
+      {/* The company name, address and date are printed on every download;
+          on screen the header names the report and says how fresh it is. */}
+      <ReportToolbar
+        icon={navIcons.collectionReports}
+        title="Collection Reports"
+        subtitle={
+          lastUpdated
+            ? `Collection targets, receipts and balances. Last updated ${lastUpdated.format("DD-MMM-YYYY hh:mm A")}`
+            : "Collection targets, receipts and balances."
+        }
+        onRefresh={fetchReport}
+        loading={loading}
+      >
         {/* Whole-screen download / print. */}
         <TableExportMenu
           rows={screenExportRows}
@@ -254,27 +262,20 @@ const BussinessCollectionReports = () => {
       </ReportToolbar>
 
       <Stack spacing={2.5} sx={{ mt: 2 }}>
-        <ReportCompanyHeader
-          title="Business Collections Report"
-          subtitle={
-            lastUpdated
-              ? `Last updated ${lastUpdated.format("DD-MMM-YYYY hh:mm A")}`
-              : "Collection targets, receipts and balances"
-          }
-          date={toDate}
-        />
-
         <Paper className="enterprise-card" elevation={0} sx={{ p: 2.5 }}>
           <Stack direction="row" spacing={1.25} flexWrap="wrap" useFlexGap alignItems="center" justifyContent="flex-end">
+            {/* not full width: side by side with the button, not one per line */}
             <AppDatePicker
               label="From Date"
               size="small"
+              fullWidth={false}
               value={fromDate}
               onChange={setFromDate}
             />
             <AppDatePicker
               label="To Date"
               size="small"
+              fullWidth={false}
               value={toDate}
               onChange={setToDate}
               minDate={toDateMin}

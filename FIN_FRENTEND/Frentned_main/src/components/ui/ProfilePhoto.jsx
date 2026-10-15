@@ -100,7 +100,7 @@ export default function ProfilePhotoBox({
           alignItems: "center",
           justifyContent: "center",
           overflow: "hidden",
-          bgcolor: "#f8fafc",
+          bgcolor: "var(--surface-2)",
         }}
       >
         {photoUrl ? (

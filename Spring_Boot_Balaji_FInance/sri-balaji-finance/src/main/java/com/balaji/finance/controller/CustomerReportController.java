@@ -1,5 +1,7 @@
 package com.balaji.finance.controller;
 
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -17,11 +19,18 @@ public class CustomerReportController {
 	@Autowired
 	private CustomerReportService customerReportService;
 
-	@GetMapping("/customerReportController/{accountCode}")
-	public ResponseEntity<List<CustomerReportResponse>> loadCustomerReport(@PathVariable String accountCode) {
+	@GetMapping("/customerReportController/{accountCode}/{fromDate}/{toDate}")
+	public ResponseEntity<List<CustomerReportResponse>> loadCustomerReport(@PathVariable String accountCode,
+			@PathVariable String fromDate, @PathVariable String toDate) {
+		
+		
+		DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+
+		LocalDate fromLocalDate = LocalDate.parse(fromDate, formatter);
+		LocalDate toLocalDate = LocalDate.parse(toDate, formatter);
 
 		List<CustomerReportResponse> customerReportOnAccountCode = customerReportService
-				.getCustomerReportOnAccountCode(accountCode);
+				.getCustomerReportOnAccountCode(accountCode,fromLocalDate,toLocalDate);
 
 		return ResponseEntity.ok().body(customerReportOnAccountCode);
 

@@ -9,7 +9,7 @@
  * light/dark mode is — only the header band and accents follow the theme.
  */
 
-import { readThemeTokens, rgb } from "./themeTokens";
+import { readTableHeadTokens, readThemeTokens, rgb } from "./themeTokens";
 
 export { rgb };
 
@@ -32,18 +32,20 @@ export const REPORT_ZEBRA = "#f9fafb";
  */
 export const reportPalette = () => {
   const tokens = readThemeTokens();
+  // The band is the accent's unless Settings > Colors > Table header moved it.
+  const head = readTableHeadTokens(tokens);
   return {
-    headerBg: tokens.primary,
-    headerBgHover: tokens.primaryHover,
-    headerRule: tokens.primaryDark,
-    headerText: tokens.onPrimary,
-    divider: tokens.divider,
+    headerBg: head.bg,
+    headerBgHover: head.hover,
+    headerRule: head.rule,
+    headerText: head.fg,
+    divider: head.divider,
     soft: tokens.primarySoft,
     totalBg: REPORT_TOTAL_BG,
     // jsPDF takes [r, g, b].
-    headerBgRgb: rgb(tokens.primary),
-    headerRuleRgb: rgb(tokens.primaryDark),
-    headerTextRgb: rgb(tokens.onPrimary),
+    headerBgRgb: rgb(head.bg),
+    headerRuleRgb: rgb(head.rule),
+    headerTextRgb: rgb(head.fg),
     totalBgRgb: rgb(REPORT_TOTAL_BG),
   };
 };

@@ -1,18 +1,18 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import {
-  Box, Paper, TextField, Button, Checkbox, FormControlLabel,
+  TextField, Button, Checkbox,
   Table, TableBody, TableCell, TableContainer, TableHead, TableRow,
-  TablePagination, InputAdornment, Alert, CircularProgress, Chip, Stack,
+  TablePagination, InputAdornment, Alert, Chip, LinearProgress,
 } from '@mui/material';
 import { DeleteForever as DeleteIcon } from "@mui/icons-material";
-import { actionIcons } from "src/lib/icons";
+import { actionIcons, navIcons } from "src/lib/icons";
 import axios from 'axios';
 import { API_BASE } from 'lib/config';
 import { getSession } from 'src/utils/session';
-import { AppDatePicker } from 'src/components/ui';
+import { AppDatePicker, EmptyState, ScreenHeader } from 'src/components/ui';
 
 const SearchIcon = actionIcons.search;
-const ViewIcon = actionIcons.view;
+const RefreshIcon = actionIcons.refresh;
 
 const DeleteTransactions = () => {
   const [date, setDate] = useState('2026-01-07');
@@ -151,168 +151,184 @@ const DeleteTransactions = () => {
     }
   };
 
+  const selectedCount = getAllSelectedTransactionIds().length;
+  const groupCount = new Set(filteredRows.map(r => r.groupKey)).size;
+
   return (
-    <Box >
-      <Paper className="enterprise-card" elevation={0} sx={{ overflow: "hidden" }}>
-        {/* Toolbar */}
-        <Box sx={{ p: 2, borderBottom: "1px solid", borderColor: "divider" }}>
-          <Stack
-            direction={{ xs: "column", md: "row" }}
-            spacing={1.5}
-            alignItems={{ xs: "stretch", md: "center" }}
-            flexWrap="wrap"
-            useFlexGap
-          >
-            <Box sx={{ width: { xs: "100%", sm: 210 } }}>
-              <AppDatePicker label="Transaction Date" value={date} onChange={setDate} />
-            </Box>
-            <FormControlLabel
-              control={<Checkbox checked={showDeleted} onChange={(e) => setShowDeleted(e.target.checked)} />}
-              label="Show Deleted Transactions"
-            />
-            <Box sx={{ flexGrow: 1 }} />
-            <Button variant="outlined" startIcon={<ViewIcon />} onClick={fetchTransactions} disabled={loading}>
-              Refresh
-            </Button>
-            {!showDeleted && (
-              <Button
-                variant="contained"
-                color="error"
-                startIcon={<DeleteIcon />}
-                onClick={handleDelete}
-                disabled={selectedGroups.size === 0 || loading}
-              >
-                Delete ({getAllSelectedTransactionIds().length})
-              </Button>
-            )}
-          </Stack>
+    <div className="scr-page">
+      <ScreenHeader
+        icon={navIcons.deleteTransaction}
+        tone="danger"
+        title="Delete Transaction"
+        subtitle="Pick the day, tick the entries and give a reason. Entries posted together are deleted together."
+      >
+        <Button variant="outlined" startIcon={<RefreshIcon />} onClick={fetchTransactions} disabled={loading}>
+          Refresh
+        </Button>
+      </ScreenHeader>
 
-          <Stack direction={{ xs: "column", md: "row" }} spacing={1.5} sx={{ mt: 1.5 }}>
-            <TextField
-              fullWidth
-              size="small"
-              label="Search"
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              placeholder="Search..."
-              InputProps={{ startAdornment: <InputAdornment position="start"><SearchIcon fontSize="small" /></InputAdornment> }}
-            />
-            {!showDeleted && (
-              <TextField
-                fullWidth
-                size="small"
-                label="Comments (Required)"
-                value={comments}
-                onChange={(e) => setComments(e.target.value)}
-                placeholder="Reason for deletion"
-              />
-            )}
-          </Stack>
-
-          {success && <Alert severity="success" sx={{ mt: 1.5 }}>{success}</Alert>}
-          {error && <Alert severity="error" sx={{ mt: 1.5 }}>{error}</Alert>}
-        </Box>
-
-        <TableContainer sx={{ maxHeight: { xs: 420, sm: 520, md: 620, lg: 700 }, overflow: "auto" }}>
-          <Table
-            stickyHeader
+      <section className="scr-card scr-card-flush">
+        {/* which day, live entries or already-deleted ones, and a search */}
+        <div className="scr-toolbar scr-pad">
+          <div className="scr-toolbar-date">
+            <AppDatePicker label="Transaction Date" value={date} onChange={setDate} />
+          </div>
+          <div className="scr-seg" role="group" aria-label="Which transactions to show">
+            <button type="button" aria-pressed={!showDeleted} onClick={() => setShowDeleted(false)}>
+              Active
+            </button>
+            <button type="button" aria-pressed={showDeleted} onClick={() => setShowDeleted(true)}>
+              Deleted
+            </button>
+          </div>
+          <TextField
+            className="scr-grow"
             size="small"
-            sx={{
-              "& .MuiTableCell-root": {
-                border: "1px solid",
-                borderColor: "divider",
-              },
-              "& .MuiTableCell-head": {
-                backgroundColor: "#f8fafc",
-                fontWeight: 800,
-              },
-            }}
-          >
-            <TableHead>
-              <TableRow>
-                {!showDeleted && (
-                  <TableCell padding="checkbox">
-                    <Checkbox
-                      indeterminate={selectedGroups.size > 0 && selectedGroups.size < new Set(filteredRows.map(r => r.groupKey)).size}
-                      checked={selectedGroups.size === new Set(filteredRows.map(r => r.groupKey)).size && selectedGroups.size > 0}
-                      onChange={handleSelectAll}
-                    />
-                  </TableCell>
-                )}
-                <TableCell><strong>Trans ID</strong></TableCell>
-                <TableCell><strong>Payment Ref ID</strong></TableCell>
-                <TableCell><strong>Account No</strong></TableCell>
-                <TableCell><strong>Name</strong></TableCell>
-                <TableCell><strong>Trans Type</strong></TableCell>
-                <TableCell><strong>Particulars</strong></TableCell>
-                <TableCell align="right"><strong>Credit</strong></TableCell>
-                <TableCell align="right"><strong>Debit</strong></TableCell>
-                <TableCell><strong>Status</strong></TableCell>
-                {showDeleted && (
-                  <>
-                    <TableCell>Deleted On</TableCell>
-                    <TableCell>Deleted By</TableCell>
-                  </>
-                )}
-              </TableRow>
-            </TableHead>
-            <TableBody>
-              {filteredRows.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage).map((row) => {
-                const groupSelected = isGroupSelected(row.groupKey);   // ← Fixed here
-                const isDeleted = !!row.deleted;
-                const showCheckbox = row.isFirstInGroup;
+            label="Search"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            placeholder="Name, account, type, particulars..."
+            InputProps={{ startAdornment: <InputAdornment position="start"><SearchIcon fontSize="small" /></InputAdornment> }}
+          />
+        </div>
 
-                return (
-                  <TableRow
-                    key={row.transactionId}
-                    hover={!isDeleted}
-                    sx={{
-                      bgcolor: groupSelected ? 'action.selected' : (isDeleted ? 'action.disabledBackground' : 'inherit'),
-                      borderLeft: row.isFirstInGroup ? '4px solid #1976d2' : 'none',
-                    }}
-                  >
-                    {!showDeleted && (
-                      <TableCell padding="checkbox">
-                        {showCheckbox && (
-                          <Checkbox
-                            checked={groupSelected}
-                            onChange={() => handleGroupSelect(row.groupKey)}
-                            disabled={isDeleted}
-                          />
-                        )}
+        {/* the reason and the button sit together: one cannot be used without the other */}
+        {!showDeleted && (
+          <div className="scr-danger-bar scr-pad">
+            <TextField
+              className="scr-grow"
+              size="small"
+              label="Comments (Required)"
+              value={comments}
+              onChange={(e) => setComments(e.target.value)}
+              placeholder="Reason for deletion"
+            />
+            <span className="scr-selected">
+              {selectedCount
+                ? `${selectedCount} transaction${selectedCount === 1 ? "" : "s"} in ${selectedGroups.size} group${selectedGroups.size === 1 ? "" : "s"} selected`
+                : "Nothing selected"}
+            </span>
+            <Button
+              variant="contained"
+              color="error"
+              startIcon={<DeleteIcon />}
+              onClick={handleDelete}
+              disabled={selectedGroups.size === 0 || loading}
+            >
+              Delete ({selectedCount})
+            </Button>
+          </div>
+        )}
+
+        {(success || error) && (
+          <div className="scr-pad" style={{ paddingTop: 0 }}>
+            {success && <Alert severity="success">{success}</Alert>}
+            {error && <Alert severity="error" sx={{ mt: success ? 1 : 0 }}>{error}</Alert>}
+          </div>
+        )}
+
+        {loading && <LinearProgress />}
+
+        {!loading && filteredRows.length === 0 ? (
+          <div className="scr-pad">
+            <EmptyState icon={navIcons.deleteTransaction} title={showDeleted ? "No deleted transactions" : "No transactions"}>
+              {search
+                ? "Nothing on this day matches the search."
+                : showDeleted
+                ? "Nothing has been deleted on this day."
+                : "Nothing was posted on this day. Pick another date above."}
+            </EmptyState>
+          </div>
+        ) : (
+          <TableContainer sx={{ maxHeight: { xs: 420, sm: 520, md: 620, lg: 700 }, overflow: "auto" }}>
+            <Table stickyHeader size="small" className="scr-table">
+              <TableHead>
+                <TableRow>
+                  {!showDeleted && (
+                    <TableCell padding="checkbox">
+                      <Checkbox
+                        indeterminate={selectedGroups.size > 0 && selectedGroups.size < groupCount}
+                        checked={selectedGroups.size === groupCount && selectedGroups.size > 0}
+                        onChange={handleSelectAll}
+                        inputProps={{ "aria-label": "Select every entry" }}
+                      />
+                    </TableCell>
+                  )}
+                  <TableCell>Trans ID</TableCell>
+                  <TableCell>Payment Ref ID</TableCell>
+                  <TableCell>Account No</TableCell>
+                  <TableCell>Name</TableCell>
+                  <TableCell>Trans Type</TableCell>
+                  <TableCell>Particulars</TableCell>
+                  <TableCell align="right">Credit</TableCell>
+                  <TableCell align="right">Debit</TableCell>
+                  <TableCell>Status</TableCell>
+                  {showDeleted && (
+                    <>
+                      <TableCell>Deleted On</TableCell>
+                      <TableCell>Deleted By</TableCell>
+                    </>
+                  )}
+                </TableRow>
+              </TableHead>
+              <TableBody>
+                {filteredRows.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage).map((row) => {
+                  const groupSelected = isGroupSelected(row.groupKey);
+                  const isDeleted = !!row.deleted;
+                  const showCheckbox = row.isFirstInGroup;
+
+                  return (
+                    <TableRow
+                      key={row.transactionId}
+                      hover={!isDeleted}
+                      className={row.isFirstInGroup ? "scr-group-start" : ""}
+                      sx={{
+                        bgcolor: groupSelected ? 'action.selected' : (isDeleted ? 'action.disabledBackground' : 'inherit'),
+                      }}
+                    >
+                      {!showDeleted && (
+                        <TableCell padding="checkbox">
+                          {showCheckbox && (
+                            <Checkbox
+                              checked={groupSelected}
+                              onChange={() => handleGroupSelect(row.groupKey)}
+                              disabled={isDeleted}
+                            />
+                          )}
+                        </TableCell>
+                      )}
+
+                      <TableCell>{row.transactionId}</TableCell>
+                      <TableCell>
+                        {row.paymentRefId || '-'}
+                        {row.groupSize > 1 && <Chip size="small" label={row.groupSize} sx={{ ml: 1 }} />}
                       </TableCell>
-                    )}
-
-                    <TableCell>{row.transactionId}</TableCell>
-                    <TableCell>
-                      {row.paymentRefId || '-'}
-                      {row.groupSize > 1 && <Chip size="small" label={row.groupSize} sx={{ ml: 1 }} />}
-                    </TableCell>
-                    <TableCell>{row.accountNumber}</TableCell>
-                    <TableCell>{row.name}</TableCell>
-                    <TableCell>{row.transactionType}</TableCell>
-                    <TableCell>{row.particulars}</TableCell>
-                    <TableCell align="right" sx={{ color: 'success.main' }}>
-                      {row.credit > 0 ? `₹${Number(row.credit).toLocaleString('en-IN')}` : '-'}
-                    </TableCell>
-                    <TableCell align="right" sx={{ color: 'error.main' }}>
-                      {row.debit > 0 ? `₹${Number(row.debit).toLocaleString('en-IN')}` : '-'}
-                    </TableCell>
-                    <TableCell>
-                      <Chip label={isDeleted ? 'Deleted' : 'Active'} color={isDeleted ? 'error' : 'success'} size="small" />
-                    </TableCell>
-                    {showDeleted && (
-                      <>
-                        <TableCell>{row.deletedDate || '-'}</TableCell>
-                        <TableCell>{row.deletedByUser || '-'}</TableCell>
-                      </>
-                    )}
-                  </TableRow>
-                );
-              })}
-            </TableBody>
-          </Table>
-        </TableContainer>
+                      <TableCell>{row.accountNumber}</TableCell>
+                      <TableCell>{row.name}</TableCell>
+                      <TableCell>{row.transactionType}</TableCell>
+                      <TableCell>{row.particulars}</TableCell>
+                      <TableCell align="right" sx={{ color: 'success.main' }}>
+                        {row.credit > 0 ? `₹${Number(row.credit).toLocaleString('en-IN')}` : '-'}
+                      </TableCell>
+                      <TableCell align="right" sx={{ color: 'error.main' }}>
+                        {row.debit > 0 ? `₹${Number(row.debit).toLocaleString('en-IN')}` : '-'}
+                      </TableCell>
+                      <TableCell>
+                        <Chip label={isDeleted ? 'Deleted' : 'Active'} color={isDeleted ? 'error' : 'success'} size="small" />
+                      </TableCell>
+                      {showDeleted && (
+                        <>
+                          <TableCell>{row.deletedDate || '-'}</TableCell>
+                          <TableCell>{row.deletedByUser || '-'}</TableCell>
+                        </>
+                      )}
+                    </TableRow>
+                  );
+                })}
+              </TableBody>
+            </Table>
+          </TableContainer>
+        )}
 
         <TablePagination
           rowsPerPageOptions={[10, 15, 25, 50]}
@@ -323,8 +339,8 @@ const DeleteTransactions = () => {
           onPageChange={(_, newPage) => setPage(newPage)}
           onRowsPerPageChange={(e) => { setRowsPerPage(parseInt(e.target.value, 10)); setPage(0); }}
         />
-      </Paper>
-    </Box>
+      </section>
+    </div>
   );
 };
 

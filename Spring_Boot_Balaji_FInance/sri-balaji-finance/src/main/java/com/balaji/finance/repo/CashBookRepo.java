@@ -110,6 +110,18 @@ public interface CashBookRepo extends JpaRepository<CashBook, Long> {
 	@Query(value = """
 			SELECT
 			    DATE(TRANS_DATE) AS txnDate,
+			    COALESCE(SUM(CREDIT), 0) AS credit,
+			    COALESCE(SUM(DEBIT), 0) AS debit,
+			    COALESCE(SUM(CREDIT), 0) - COALESCE(SUM(DEBIT), 0) AS balance
+			FROM cash_book
+			GROUP BY DATE(TRANS_DATE)
+			ORDER BY DATE(TRANS_DATE)
+			""", nativeQuery = true)
+	List<DateWiseCashBookProjection> getDateWiseCashBook();
+
+	@Query(value = """
+			SELECT
+			    DATE(TRANS_DATE) AS txnDate,
 			    SUM(CASE WHEN ACCOUNT_MASTER_CODE IN
 			        ('DF LOAN INSTALLMENT','DF LATE FEE','DF INTEREST')
 			        THEN CREDIT ELSE 0 END) AS dailyTotal,
@@ -123,6 +135,21 @@ public interface CashBookRepo extends JpaRepository<CashBook, Long> {
 			""", nativeQuery = true)
 	List<DateWiseCollectionsProjection> getDateWiseCashBookCollectionsOnly(@Param("fromDate") LocalDateTime fromDate,
 			@Param("toDate") LocalDateTime toDate);
+
+	@Query(value = """
+			SELECT
+			    DATE(TRANS_DATE) AS txnDate,
+			    SUM(CASE WHEN ACCOUNT_MASTER_CODE IN
+			        ('DF LOAN INSTALLMENT','DF LATE FEE','DF INTEREST')
+			        THEN CREDIT ELSE 0 END) AS dailyTotal,
+			    SUM(CASE WHEN ACCOUNT_MASTER_CODE IN
+			        ('MF LOAN INSTALLMENT','MF INTEREST','MF LATE FEE')
+			        THEN CREDIT ELSE 0 END) AS monthlyTotal
+			FROM cash_book
+			GROUP BY DATE(TRANS_DATE)
+			ORDER BY DATE(TRANS_DATE)
+			""", nativeQuery = true)
+	List<DateWiseCollectionsProjection> getDateWiseCashBookCollectionsOnly();
 
 	@Query(value = """
 			SELECT
@@ -394,6 +421,23 @@ public interface CashBookRepo extends JpaRepository<CashBook, Long> {
 			    ORDER BY customer.firstName
 			""")
 	List<CustomerReportProjection> getCustomerReportOnAccountCode(@Param("accountMasterCode") String accountMasterCode);
+	
+	
+	@Query("""
+		    SELECT
+		         customer.personalInfoId AS personalInfoId,
+		         customer.firstName AS customerName,
+		         COALESCE(SUM(cb.credit), 0) AS credits,
+		         COALESCE(SUM(cb.debit), 0) AS debits
+		    FROM CashBook cb
+		    LEFT JOIN cb.personalInfo customer
+		    WHERE cb.accountMasterCode = :accountMasterCode
+		      AND cb.transDate BETWEEN :fromDate AND :toDate
+			    GROUP BY customer.personalInfoId, customer.firstName
+			    ORDER BY customer.firstName
+			""")
+	List<CustomerReportProjection> getCustomerReportOnAccountCodeDateRange(@Param("accountMasterCode") String accountMasterCode,
+			@Param("fromDate") LocalDateTime fromDate, @Param("toDate") LocalDateTime toDate);
 
 	@Query("""
 			    SELECT

@@ -7,13 +7,15 @@ import { errorToast, successToast } from "toastify";
 import { AppDatePicker, creditDebitSummary, DataTable, PageHeader, useDateRange } from "src/components/ui";
 
 const Cbledger = () => {
+  const [allDates, setAllDates] = useState(false);
   const { fromDate, toDate, setFromDate, setToDate, toDateMin, toDateMax } = useDateRange("", "");
   const [collectionOnly, setCollectionOnly] = useState(false);
   const [ledgerData, setLedgerData] = useState([]);
   const [loading, setLoading] = useState(false);
 
-  const fetchLedgerData = async () => {
-    if (!fromDate || !toDate) {
+  // all is passed in by the checkbox handler, where the allDates state has not updated yet.
+  const fetchLedgerData = async (all = allDates) => {
+    if (!all && (!fromDate || !toDate)) {
       errorToast("Please select From Date and To Date");
       return;
     }
@@ -21,9 +23,11 @@ const Cbledger = () => {
     setLoading(true);
     try {
       const token = getSession()?.token || getSession("token") || "";
+      // No dates in the path = the whole ledger.
+      const range = all ? "" : `/${fromDate}/${toDate}`;
       const url = collectionOnly
-        ? `${API_BASE}/getCollectionsCBLedgerData/${fromDate}/${toDate}`
-        : `${API_BASE}/getAllCBLedgerData/${fromDate}/${toDate}`;
+        ? `${API_BASE}/getCollectionsCBLedgerData${range}`
+        : `${API_BASE}/getAllCBLedgerData${range}`;
 
       const response = await axios.get(url, {
         headers: { Authorization: `Bearer ${token}` },
@@ -37,6 +41,13 @@ const Cbledger = () => {
     } finally {
       setLoading(false);
     }
+  };
+
+  // Ticking "All" loads the whole ledger straight away; unticked waits for the dates and Generate.
+  const handleAllDatesChange = (event) => {
+    const all = event.target.checked;
+    setAllDates(all);
+    if (all) fetchLedgerData(all);
   };
 
   const rows = useMemo(() => {
@@ -80,7 +91,7 @@ const Cbledger = () => {
   return (
     <Stack spacing={2.5}>
       <PageHeader
-        onRefresh={fetchLedgerData}
+        onRefresh={() => fetchLedgerData()}
         loading={loading}
       />
       <Paper className="enterprise-card" elevation={0} sx={{ p: 2 }}>
@@ -88,21 +99,31 @@ const Cbledger = () => {
           <Grid
             size={{
               xs: 12,
-              md: 3
+              md: 2
             }}>
-            <AppDatePicker label="From Date" value={fromDate} onChange={setFromDate} />
+            <FormControlLabel
+              control={<Checkbox checked={allDates} onChange={handleAllDatesChange} disabled={loading} />}
+              label="All"
+            />
           </Grid>
           <Grid
             size={{
               xs: 12,
               md: 3
             }}>
-            <AppDatePicker label="To Date" value={toDate} onChange={setToDate} minDate={toDateMin} maxDate={toDateMax} />
+            <AppDatePicker label="From Date" value={fromDate} onChange={setFromDate} disabled={allDates} />
           </Grid>
           <Grid
             size={{
               xs: 12,
               md: 3
+            }}>
+            <AppDatePicker label="To Date" value={toDate} onChange={setToDate} disabled={allDates} minDate={toDateMin} maxDate={toDateMax} />
+          </Grid>
+          <Grid
+            size={{
+              xs: 12,
+              md: 2
             }}>
             <FormControlLabel
               control={<Checkbox checked={collectionOnly} onChange={(event) => setCollectionOnly(event.target.checked)} />}
@@ -112,9 +133,9 @@ const Cbledger = () => {
           <Grid
             size={{
               xs: 12,
-              md: 3
+              md: 2
             }}>
-            <Button fullWidth variant="contained" onClick={fetchLedgerData} disabled={loading}>
+            <Button fullWidth variant="contained" onClick={() => fetchLedgerData()} disabled={loading}>
               Generate
             </Button>
           </Grid>

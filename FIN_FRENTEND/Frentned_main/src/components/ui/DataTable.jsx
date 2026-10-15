@@ -25,10 +25,7 @@ import {
   useGridApiContext,
 } from "@mui/x-data-grid";
 import { actionIcons, formatIconColors, formatIcons } from "src/lib/icons";
-import { COMPANY_ADDRESS, COMPANY_NAME } from "src/lib/company";
 import { useThemeProvider } from "src/utils/ThemeContext";
-import { useTheme } from "@mui/material/styles";
-import { alpha, darken } from "src/lib/themeTokens";
 import {
   exportCsv,
   exportExcel,
@@ -36,7 +33,6 @@ import {
   exportWord,
   isTotalRow,
   printReport,
-  reportDateLabel,
   roundAmount,
   summaryValue,
 } from "./reportExport";
@@ -312,7 +308,6 @@ const DataTable = ({
   fileName,
   pageSize = 25,
   initialState,
-  showCompany = false,
   showExport = true,
   actions,
   period,
@@ -323,13 +318,15 @@ const DataTable = ({
   ...otherProps
 }) => {
   const { settings } = useThemeProvider();
-  // Heading band follows the accent chosen in Settings. getContrastText picks
-  // white or dark ink automatically, so a light accent stays readable.
-  const theme = useTheme();
-  const headBg = theme.palette.primary.main;
-  const headFg = theme.palette.getContrastText(headBg);
-  const headHover = darken(headBg, 0.12);
-  const headDivider = alpha(headFg, 0.34);
+  // Heading band: the --table-head-* tokens. They are the accent and its
+  // readable ink by default, or whatever Settings > Colors > Table header
+  // chose - band and ink always move together. (This used to read the accent
+  // straight from the MUI theme while the ink came from the tokens, so a
+  // "Soft accent" header put dark blue type on a solid blue band.)
+  const headBg = "var(--table-head-bg)";
+  const headFg = "var(--table-head-fg)";
+  const headHover = "var(--table-head-bg-hover)";
+  const headDivider = "var(--table-head-divider)";
   const tableTitle = fileName || title || "finance-export";
 
   // A screen either hands us a totals row itself (the older screens do) or asks
@@ -380,7 +377,10 @@ const DataTable = ({
         flexDirection: "column",
       }}
     >
-      {(title || subtitle || showCompany || actions) && (
+      {/* No company line here: the name, address and date are printed on every
+          download / print (reportExport), where they belong, and cost a row of
+          screen above each grid. */}
+      {(title || subtitle || actions) && (
         <Stack
           direction={{ xs: "column", sm: "row" }}
           justifyContent="space-between"
@@ -391,16 +391,11 @@ const DataTable = ({
             py: 2,
             borderBottom: 1,
             borderColor: "divider",
-            background: "linear-gradient(180deg, rgba(255,255,255,0.96), rgba(248,250,252,0.88))",
+            background: "linear-gradient(180deg, color-mix(in srgb, var(--surface-1) 96%, transparent), color-mix(in srgb, var(--surface-2) 88%, transparent))",
           }}
         >
           <Box sx={{ minWidth: 0 }}>
-            {showCompany && (
-              <Typography variant="caption" color="primary" sx={{ fontWeight: 900 }}>
-                {COMPANY_NAME} / {COMPANY_ADDRESS} / Date: {reportDateLabel()}
-              </Typography>
-            )}
-            {title && <Typography variant="subtitle1" sx={{ mt: showCompany ? 0.25 : 0 }}>{title}</Typography>}
+            {title && <Typography variant="subtitle1">{title}</Typography>}
             {subtitle && (
               <Typography variant="caption" color="text.secondary" sx={{ display: "block" }}>
                 {subtitle}
@@ -475,10 +470,10 @@ const DataTable = ({
             // the bar has to look like one: brand thumb on a tinted track.
             "& .MuiDataGrid-scrollbar": {
               "&::-webkit-scrollbar": { width: 14, height: 14 },
-              "&::-webkit-scrollbar-track": { backgroundColor: "#e2e8f0", borderRadius: 999 },
+              "&::-webkit-scrollbar-track": { backgroundColor: "var(--surface-4)", borderRadius: 999 },
               "&::-webkit-scrollbar-thumb": {
                 backgroundColor: "color-mix(in srgb, var(--brand-primary) 62%, transparent)",
-                border: "3px solid #e2e8f0",
+                border: "3px solid var(--surface-4)",
                 borderRadius: 999,
               },
               "&::-webkit-scrollbar-thumb:hover": {
@@ -486,7 +481,7 @@ const DataTable = ({
               },
             },
             "& .MuiDataGrid-scrollbar--horizontal": {
-              backgroundColor: "#e2e8f0",
+              backgroundColor: "var(--surface-4)",
             },
             "& .MuiDataGrid-toolbarContainer": {
               px: 2,
@@ -497,7 +492,7 @@ const DataTable = ({
               borderBottom: "1px solid",
               borderColor: "divider",
               background:
-                "linear-gradient(180deg, rgba(248,250,252,0.9), rgba(255,255,255,0.78))",
+                "linear-gradient(180deg, color-mix(in srgb, var(--surface-2) 90%, transparent), color-mix(in srgb, var(--surface-1) 78%, transparent))",
             },
             "& .MuiDataGrid-toolbarContainer .MuiButton-root": {
               minHeight: 34,
@@ -546,12 +541,12 @@ const DataTable = ({
             },
             ...(settings.tableStyle === "striped" && {
               "& .MuiDataGrid-row:nth-of-type(even)": {
-                backgroundColor: "rgba(248,250,252,0.58)",
+                backgroundColor: "color-mix(in srgb, var(--surface-2) 58%, transparent)",
               },
             }),
             // The TOTAL row reads as a summary band, not another data row.
             "& .MuiDataGrid-row.datatable-total-row": {
-              backgroundColor: "#e2e8f0",
+              backgroundColor: "var(--surface-4)",
               borderTop: "2px solid var(--brand-primary)",
             },
             "& .MuiDataGrid-row.datatable-total-row .MuiDataGrid-cell": {
@@ -579,7 +574,7 @@ const DataTable = ({
               minHeight: 54,
               borderTop: "1px solid",
               borderColor: "divider",
-              backgroundColor: "#fff",
+              backgroundColor: "var(--surface-1)",
               justifyContent: "center",
               px: 2,
             },
@@ -647,7 +642,7 @@ const DataTable = ({
             py: 1.5,
             borderTop: 1,
             borderColor: "divider",
-            backgroundColor: "#f8fafc",
+            backgroundColor: "var(--surface-2)",
           }}
         >
           <Box sx={{ minWidth: 260 }}>
