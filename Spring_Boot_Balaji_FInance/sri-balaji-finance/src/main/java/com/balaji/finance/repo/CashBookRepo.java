@@ -191,11 +191,11 @@ public interface CashBookRepo extends JpaRepository<CashBook, Long> {
 			    COALESCE(SUM(CREDIT), 0) AS credit,
 			    COALESCE(SUM(DEBIT), 0) AS debit,
 			    COALESCE(SUM(CREDIT), 0) - COALESCE(SUM(DEBIT), 0) AS balance,
-			    ACCOUNT_MASTER_CODE AS particulars
+			    ACCOUNT_MASTER_MASTER_CODE AS particulars
 			FROM cash_book
 			WHERE TRANS_DATE BETWEEN :fromDate AND :toDate
-			GROUP BY ACCOUNT_MASTER_CODE
-			ORDER BY ACCOUNT_MASTER_CODE
+			GROUP BY ACCOUNT_MASTER_MASTER_CODE
+			ORDER BY ACCOUNT_MASTER_MASTER_CODE
 			""", nativeQuery = true)
 	List<SummaryByParticularsProjection> getSummaryByParticulars(@Param("fromDate") LocalDateTime fromDate,
 			@Param("toDate") LocalDateTime toDate);
@@ -205,10 +205,10 @@ public interface CashBookRepo extends JpaRepository<CashBook, Long> {
 			    COALESCE(SUM(CREDIT), 0) AS credit,
 			    COALESCE(SUM(DEBIT), 0) AS debit,
 			    COALESCE(SUM(CREDIT), 0) - COALESCE(SUM(DEBIT), 0) AS balance,
-			    ACCOUNT_MASTER_CODE AS particulars
+			    ACCOUNT_MASTER_MASTER_CODE AS particulars
 			FROM cash_book
-			GROUP BY ACCOUNT_MASTER_CODE
-			ORDER BY ACCOUNT_MASTER_CODE
+			GROUP BY ACCOUNT_MASTER_MASTER_CODE
+			ORDER BY ACCOUNT_MASTER_MASTER_CODE
 			""", nativeQuery = true)
 	List<SummaryByParticularsProjection> getSummaryByParticulars();
 

@@ -8,9 +8,11 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
+import com.balaji.finance.dto.GuarantorDuesProjection;
 import com.balaji.finance.dto.InstallmentDueProjection;
 import com.balaji.finance.dto.LoanTypeInterestProjection;
 import com.balaji.finance.dto.PartnerDueAmountProjection;
+import com.balaji.finance.dto.TargetCollections;
 import com.balaji.finance.entity.BusinessMember;
 import com.balaji.finance.entity.EMI;
 
@@ -94,105 +96,99 @@ public interface EmiRepo extends JpaRepository<EMI, Integer> {
 			    WHERE e.businessMember.businessMemberId = :businessMemberId
 			""")
 	BigDecimal getTotalPaidOfLoan(@Param("businessMemberId") String businessMemberId);
-	
-	
-	
-	
+
 	@Query("""
-		    SELECT
-		        bm.businessMemberId AS loanId,
-		        bm.customerId.firstName AS customerName,
-		        bm.customerId.mobile AS customerMobile,
-		        bm.partnerId.firstName AS partnerName,
-		        bm.guarantor1.firstName AS guarantorName,
-		        bm.startDate AS startDate,
-		        bm.endDate AS endDate,
-		        bm.amount AS loanAmount,
-		        bm.installment AS installmentAmount,
+			SELECT
+			    bm.businessMemberId AS loanId,
+			    bm.customerId.firstName AS customerName,
+			    bm.customerId.mobile AS customerMobile,
+			    bm.partnerId.firstName AS partnerName,
+			    bm.guarantor1.firstName AS guarantorName,
+			    bm.startDate AS startDate,
+			    bm.endDate AS endDate,
+			    bm.amount AS loanAmount,
+			    bm.installment AS installmentAmount,
 
-		        MIN(e.dueDate) AS dueDate,
+			    MIN(e.dueDate) AS dueDate,
 
-		        COALESCE(
-		            (
-		                SELECT SUM(e3.paidAmount)
-		                FROM EMI e3
-		                WHERE e3.businessMember = bm
-		                  AND e3.status NOT IN ('PENDING')
-		            ),
-		            0
-		        ) AS paidAmount,
-		        
-		         COALESCE(
-		            (
-		                SELECT COUNT(e4.emiId)
-		                FROM EMI e4
-		                WHERE e4.businessMember = bm
-		                  AND e4.status NOT IN ('PENDING', 'PARTIAL')
-		            ),
-		            0
-		        ) AS paidInstallments,
+			    COALESCE(
+			        (
+			            SELECT SUM(e3.paidAmount)
+			            FROM EMI e3
+			            WHERE e3.businessMember = bm
+			              AND e3.status NOT IN ('PENDING')
+			        ),
+			        0
+			    ) AS paidAmount,
+
+			     COALESCE(
+			        (
+			            SELECT COUNT(e4.emiId)
+			            FROM EMI e4
+			            WHERE e4.businessMember = bm
+			              AND e4.status NOT IN ('PENDING', 'PARTIAL')
+			        ),
+			        0
+			    ) AS paidInstallments,
 
 
-		        COALESCE(
-		            SUM(
-		                CASE
-		                    WHEN e.status IN ('PENDING', 'PARTIAL')
-		                    THEN e.totalAmount - e.paidAmount
-		                    ELSE 0
-		                END
-		            ),
-		            0
-		        ) AS dueAmount,
+			    COALESCE(
+			        SUM(
+			            CASE
+			                WHEN e.status IN ('PENDING', 'PARTIAL')
+			                THEN e.totalAmount - e.paidAmount
+			                ELSE 0
+			            END
+			        ),
+			        0
+			    ) AS dueAmount,
 
-		        (
-		            SELECT COUNT(e5.emiId)
-		            FROM EMI e5
-		            WHERE e5.businessMember = bm
-		              AND e5.status IN ('PENDING', 'PARTIAL')
-		              AND e5.dueDate <= :toDate
-		        ) AS pendingCount,
+			    (
+			        SELECT COUNT(e5.emiId)
+			        FROM EMI e5
+			        WHERE e5.businessMember = bm
+			          AND e5.status IN ('PENDING', 'PARTIAL')
+			          AND e5.dueDate <= :toDate
+			    ) AS pendingCount,
 
-		        bm.duration AS totalNoOfInstallments
+			    bm.duration AS totalNoOfInstallments
 
-		    FROM EMI e
-		    JOIN e.businessMember bm
+			FROM EMI e
+			JOIN e.businessMember bm
 
-		    WHERE bm.businessMemberId LIKE CONCAT(:startsWithString, '%')
-		      AND e.dueDate <= :toDate
+			WHERE bm.businessMemberId LIKE CONCAT(:startsWithString, '%')
+			  AND e.dueDate <= :toDate
 
-		      AND (
-		            (:showInstReceivedRecords = true AND e.status NOT IN ('PENDING', 'PARTIAL'))
-		            OR
-		            (:showInstReceivedRecords = false AND e.status IN ('PENDING', 'PARTIAL'))
-		          )
+			  AND (
+			        (:showInstReceivedRecords = true AND e.status NOT IN ('PENDING', 'PARTIAL'))
+			        OR
+			        (:showInstReceivedRecords = false AND e.status IN ('PENDING', 'PARTIAL'))
+			      )
 
-		      AND (
-		            (:activeLoans = true AND bm.loanStatus = 'ACTIVE')
-		            OR
-		            (:activeLoans = false AND bm.loanStatus <> 'ACTIVE')
-		          )
+			  AND (
+			        (:activeLoans = true AND bm.loanStatus = 'ACTIVE')
+			        OR
+			        (:activeLoans = false AND bm.loanStatus <> 'ACTIVE')
+			      )
 
-		    GROUP BY
-		        bm.businessMemberId,
-		        bm.customerId.firstName,
-		        bm.customerId.mobile,
-		        bm.partnerId.firstName,
-		        bm.guarantor1.firstName,
-		        bm.startDate,
-		        bm.endDate,
-		        bm.amount,
-		        bm.installment,
-		        bm.duration
+			GROUP BY
+			    bm.businessMemberId,
+			    bm.customerId.firstName,
+			    bm.customerId.mobile,
+			    bm.partnerId.firstName,
+			    bm.guarantor1.firstName,
+			    bm.startDate,
+			    bm.endDate,
+			    bm.amount,
+			    bm.installment,
+			    bm.duration
 
-		    ORDER BY bm.businessMemberId
-		    """)
-		List<InstallmentDueProjection> getInstallmentDues(
-		        @Param("startsWithString") String startsWithString,
-		        @Param("toDate") LocalDateTime toDate,
-		        @Param("activeLoans") Boolean activeLoans,
-		        @Param("showInstReceivedRecords") Boolean showInstReceivedRecords
-		);
-	
+			ORDER BY bm.businessMemberId
+			""")
+	List<InstallmentDueProjection> getInstallmentDues(@Param("startsWithString") String startsWithString,
+			@Param("toDate") LocalDateTime toDate, @Param("activeLoans") Boolean activeLoans,
+			@Param("showInstReceivedRecords") Boolean showInstReceivedRecords);
+
 	@Query("""
 			SELECT COUNT(e)
 			FROM EMI e
@@ -214,4 +210,214 @@ public interface EmiRepo extends JpaRepository<EMI, Integer> {
 	List<LoanTypeInterestProjection> getExpectedInterest(@Param("fromDate") LocalDateTime fromDate,
 			@Param("toDate") LocalDateTime toDate);
 
+	@Query("""
+			SELECT
+			    bm.businessMemberId AS loanId,
+			    customer.firstName AS customerName,
+			    guarantor.firstName AS guarantorName,
+			    bm.startDate AS startDate,
+			    bm.endDate AS endDate,
+			    bm.amount AS loanAmount,
+			    bm.duration AS duration,
+			    bm.installment AS installmentAmount,
+
+			    (
+			        SELECT COUNT(e4.emiId)
+			        FROM EMI e4
+			        WHERE e4.businessMember = bm
+			          AND e4.status NOT IN ('PENDING', 'PARTIAL')
+			    ) AS noOfInstallmentsPaid,
+
+			    COALESCE(
+			        (
+			            SELECT SUM(e3.paidAmount)
+			            FROM EMI e3
+			            WHERE e3.businessMember = bm
+			              AND e3.status <> 'PENDING'
+			        ),
+			        0
+			    ) AS totalAmountPaid,
+
+			    (
+			        SELECT COUNT(e5.emiId)
+			        FROM EMI e5
+			        WHERE e5.businessMember = bm
+			          AND e5.status IN ('PENDING', 'PARTIAL')
+			    ) AS noOfInstallmentsPending,
+
+			    COALESCE(
+			        SUM(
+			            CASE
+			                WHEN e.status IN ('PENDING', 'PARTIAL')
+			                THEN e.totalAmount - COALESCE(e.paidAmount, 0)
+			                ELSE 0
+			            END
+			        ),
+			        0
+			    ) AS dueAmount,
+
+			   customer.mobile AS customerMobile,
+			   partner.firstName AS partnerName,
+
+			    MIN(
+			        CASE
+			            WHEN e.status IN ('PENDING', 'PARTIAL')
+			            THEN e.dueDate
+			            ELSE NULL
+			        END
+			    ) AS dueDate,
+
+			    bm.loanType AS loanType
+
+			FROM EMI e
+			JOIN e.businessMember bm
+			LEFT JOIN bm.guarantor1 guarantor
+			LEFT JOIN bm.customerId customer
+			LEFT JOIN bm.partnerId partner
+			
+			
+			WHERE guarantor.personalInfoId = :personInfoId
+			  AND (
+			        (:activeLoans = true AND bm.loanStatus = 'ACTIVE')
+			        OR
+			        (:activeLoans = false AND bm.loanStatus <> 'ACTIVE')
+			      )
+
+			GROUP BY
+			    bm.businessMemberId,
+			    bm.customerId.firstName,
+			    bm.customerId.mobile,
+			    bm.partnerId.firstName,
+			    bm.guarantor1.firstName,
+			    bm.startDate,
+			    bm.endDate,
+			    bm.amount,
+			    bm.installment,
+			    bm.duration,
+			    bm.loanType
+
+			ORDER BY bm.businessMemberId
+			""")
+	List<GuarantorDuesProjection> getInstallmentDuesByGuranter(@Param("activeLoans") Boolean activeLoans,
+			@Param("personInfoId") String personInfoId);
+
+	@Query("""
+			SELECT
+			    bm.businessMemberId AS loanId,
+			    customer.firstName AS customerName,
+			    guarantor.firstName AS guarantorName,
+			    bm.startDate AS startDate,
+			    bm.endDate AS endDate,
+			    bm.amount AS loanAmount,
+			    bm.duration AS duration,
+			    bm.installment AS installmentAmount,
+
+			    (
+			        SELECT COUNT(e4.emiId)
+			        FROM EMI e4
+			        WHERE e4.businessMember = bm
+			          AND e4.status NOT IN ('PENDING', 'PARTIAL')
+			    ) AS noOfInstallmentsPaid,
+
+			    COALESCE(
+			        (
+			            SELECT SUM(e3.paidAmount)
+			            FROM EMI e3
+			            WHERE e3.businessMember = bm
+			              AND e3.status <> 'PENDING'
+			        ),
+			        0
+			    ) AS totalAmountPaid,
+
+			    (
+			        SELECT COUNT(e5.emiId)
+			        FROM EMI e5
+			        WHERE e5.businessMember = bm
+			          AND e5.status IN ('PENDING', 'PARTIAL')
+			    ) AS noOfInstallmentsPending,
+
+			    COALESCE(
+			        SUM(
+			            CASE
+			                WHEN e.status IN ('PENDING', 'PARTIAL')
+			                THEN e.totalAmount - COALESCE(e.paidAmount, 0)
+			                ELSE 0
+			            END
+			        ),
+			        0
+			    ) AS dueAmount,
+
+			   customer.mobile AS customerMobile,
+			   partner.firstName AS partnerName,
+
+			    MIN(
+			        CASE
+			            WHEN e.status IN ('PENDING', 'PARTIAL')
+			            THEN e.dueDate
+			            ELSE NULL
+			        END
+			    ) AS dueDate,
+
+			    bm.loanType AS loanType
+
+			FROM EMI e
+			JOIN e.businessMember bm
+			LEFT JOIN bm.guarantor1 guarantor
+			LEFT JOIN bm.customerId customer
+			LEFT JOIN bm.partnerId partner
+			
+			WHERE (
+			        (:activeLoans = true AND bm.loanStatus = 'ACTIVE')
+			        OR
+			        (:activeLoans = false AND bm.loanStatus <> 'ACTIVE')
+			      )
+
+			GROUP BY
+			    bm.businessMemberId,
+			    bm.customerId.firstName,
+			    bm.customerId.mobile,
+			    bm.partnerId.firstName,
+			    bm.guarantor1.firstName,
+			    bm.startDate,
+			    bm.endDate,
+			    bm.amount,
+			    bm.installment,
+			    bm.duration,
+			    bm.loanType
+
+			ORDER BY bm.businessMemberId
+			""")
+	List<GuarantorDuesProjection> getInstallmentDuesAllGuarenter(@Param("activeLoans") Boolean activeLoans);
+	
+	@Query("""
+		    SELECT
+		        bm.loanType AS loanType,
+		        COALESCE(SUM(e.totalAmount), 0) AS loansDisbursed
+		    FROM EMI e
+		    JOIN e.businessMember bm
+		    WHERE e.dueDate BETWEEN :fromDate AND :toDate
+		      AND bm.loanStatus = 'ACTIVE'
+		    GROUP BY bm.loanType
+		    """)
+		List<TargetCollections> getTargetCollectionOfActiveLoans(
+		        @Param("fromDate") LocalDateTime fromDate,
+		        @Param("toDate") LocalDateTime toDate
+		);
+	
+	@Query("""
+		    SELECT
+		        bm.loanType AS loanType,
+		        COALESCE(SUM(e.totalAmount), 0) AS loansDisbursed
+		    FROM EMI e
+		    JOIN e.businessMember bm
+		    WHERE e.dueDate BETWEEN :fromDate AND :toDate
+		      AND bm.loanStatus = 'COMPLETED'
+		    GROUP BY bm.loanType
+		    """)
+		List<TargetCollections> getTargetCollectionOfMaturedLoans(
+		        @Param("fromDate") LocalDateTime fromDate,
+		        @Param("toDate") LocalDateTime toDate
+		);
+	
+	
 }

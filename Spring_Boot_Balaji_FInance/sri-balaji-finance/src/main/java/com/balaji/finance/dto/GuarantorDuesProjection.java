@@ -1,42 +1,38 @@
 package com.balaji.finance.dto;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 public interface GuarantorDuesProjection {
-	
-	String getBusinessMemberId();
+	String getLoanId();
 
-	String getCustomerId();
+	String getCustomerName();
 
-	String getCustomerFirstName();
-
-	String getCustomerPhoneNumber();
-
-	String getGuarentorId();
-
-	String getGuarentorFirstName();
-
-	String getGuarentorPhoneNumber();
-
-	String getPartnerId();
-
-	String getPartnerFirstName();
-
-	String getPartnerPhoneNumber();
+	String getGuarantorName();
 
 	LocalDateTime getStartDate();
 
 	LocalDateTime getEndDate();
 
-	java.math.BigDecimal getAmount();
+	BigDecimal getLoanAmount();
 
 	Integer getDuration();
 
-	java.math.BigDecimal getInstallmentPerMonth();
+	BigDecimal getInstallmentAmount();
 
-	java.math.BigDecimal getTotalInstallmentAmountPaid();
+	Long getNoOfInstallmentsPaid();
 
-	Integer getNoOfEmisPaid();
+	BigDecimal getTotalAmountPaid();
+
+	Long getNoOfInstallmentsPending();
+
+	BigDecimal getDueAmount();
+
+	String getCustomerMobile();
+
+	String getPartnerName();
+
+	LocalDateTime getDueDate();
 
 	String getLoanType();
 }

@@ -193,26 +193,29 @@ public interface BusinessMemberRepository extends JpaRepository<BusinessMember, 
 	List<CustomerDuesProjection> getAllLoansOnCustomer(@Param("personInfoId") String personInfoId);
 
 	@Query("""
-			  SELECT
-			    loanType as loanType,
-			    SUM(amount) AS loansDisbursed
-			FROM BusinessMember
-			WHERE startDate BETWEEN :fromDate AND :toDate
-			AND loanStatus='ACTIVE'
-			GROUP BY loanType
-						  """)
-	List<LoansGranted> findSumOfActiveLoansInDateRange(@Param("fromDate") LocalDateTime fromDate,
-			@Param("toDate") LocalDateTime toDate);
-
+		    SELECT
+		        bm.loanType AS loanType,
+		        SUM(COALESCE(bm.amount, 0) + COALESCE(bm.interest, 0))
+		            AS loansDisbursed
+		    FROM BusinessMember bm
+		    WHERE bm.startDate BETWEEN :fromDate AND :toDate
+		      AND bm.loanStatus = 'ACTIVE'
+		    GROUP BY bm.loanType
+		    """)
+		List<LoansGranted> findSumOfActiveLoansInDateRange(
+		        @Param("fromDate") LocalDateTime fromDate,
+		        @Param("toDate") LocalDateTime toDate
+		);
 	@Query("""
-			  SELECT
-			    loanType as loanType,
-			    SUM(amount) AS loansDisbursed
-			FROM BusinessMember
-			WHERE endDate BETWEEN :fromDate AND :toDate
-			AND loanStatus='COMPLETED'
-			GROUP BY loanType
-						  """)
+		    SELECT
+		        bm.loanType AS loanType,
+		        SUM(COALESCE(bm.amount, 0) + COALESCE(bm.interest, 0))
+		            AS loansDisbursed
+		    FROM BusinessMember bm
+		    WHERE bm.startDate BETWEEN :fromDate AND :toDate
+		      AND bm.loanStatus = 'COMPLETED'
+		    GROUP BY bm.loanType
+		    """)
 	List<LoansGranted> findSumOfMatureLoansInDateRange(@Param("fromDate") LocalDateTime fromDate,
 			@Param("toDate") LocalDateTime toDate);
 	

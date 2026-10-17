@@ -12,9 +12,11 @@ import org.springframework.stereotype.Service;
 
 import com.balaji.finance.dto.CashBookProjection;
 import com.balaji.finance.dto.LoansGranted;
+import com.balaji.finance.dto.TargetCollections;
 import com.balaji.finance.pojo.BusinessCollectionsReportResponse;
 import com.balaji.finance.repo.BusinessMemberRepository;
 import com.balaji.finance.repo.CashBookRepo;
+import com.balaji.finance.repo.EmiRepo;
 
 @Service
 public class BusinessCollectionsReportService {
@@ -22,6 +24,10 @@ public class BusinessCollectionsReportService {
 	@Autowired
 	private BusinessMemberRepository businessMemberRepository;
 
+	@Autowired
+	private EmiRepo emiRepo;
+
+	
 	@Autowired
 	private CashBookRepo cashBookRepo;
 
@@ -31,19 +37,21 @@ public class BusinessCollectionsReportService {
 		LocalDateTime from = fromDate.atStartOfDay();
 		LocalDateTime to = toDate.atTime(23, 59, 59);
 
-		List<LoansGranted> allTargetCollections = businessMemberRepository.findSumOfActiveLoansInDateRange(from, to);
-		List<CashBookProjection> allreceivedCollections = cashBookRepo
-				.getCreditSummary(Arrays.asList("MF LOAN INSTALLMENT", "DF LOAN INSTALLMENT"), from, to, "ACTIVE");
+		List<TargetCollections> allTargetCollections = emiRepo.getTargetCollectionOfActiveLoans(from, to);
 
-		List<LoansGranted> allMaturedLoansTargetCollections = businessMemberRepository
-				.findSumOfMatureLoansInDateRange(from, to);
-		List<CashBookProjection> allMaturedreceivedCollections = cashBookRepo
-				.getCreditSummary(Arrays.asList("MF LOAN INSTALLMENT", "DF LOAN INSTALLMENT"), from, to, "COMPLETED");
+		List<CashBookProjection> allreceivedCollections = cashBookRepo.getCreditSummary(
+				Arrays.asList("MF LOAN INSTALLMENT", "DF LOAN INSTALLMENT", "MF INTEREST", "DF INTEREST"), from, to,
+				"ACTIVE");
 
+		List<TargetCollections> allMaturedLoansTargetCollections = emiRepo.getTargetCollectionOfMaturedLoans(from, to);
+
+		List<CashBookProjection> allMaturedreceivedCollections = cashBookRepo.getCreditSummary(
+				Arrays.asList("MF LOAN INSTALLMENT", "DF LOAN INSTALLMENT", "MF INTEREST", "DF INTEREST"), from, to,
+				"COMPLETED");
 
 		List<BusinessCollectionsReportResponse> responseList = new ArrayList<>();
 
-		for (LoansGranted loan : allTargetCollections) {
+		for (TargetCollections loan : allTargetCollections) {
 
 			String loanType = loan.getLoanType();
 			BigDecimal target = loan.getLoansDisbursed();
@@ -53,12 +61,14 @@ public class BusinessCollectionsReportService {
 
 			for (CashBookProjection cb : allreceivedCollections) {
 
+				if (("MONTHLY_FINANCE".equalsIgnoreCase(loanType)
+				        && ("MF LOAN INSTALLMENT".equalsIgnoreCase(cb.getAccountMasterCode())
+				            || "MF INTEREST".equalsIgnoreCase(cb.getAccountMasterCode())))
+				    || ("DAILY_FINANCE".equalsIgnoreCase(loanType)
+				        && ("DF LOAN INSTALLMENT".equalsIgnoreCase(cb.getAccountMasterCode())
+				            || "DF INTEREST".equalsIgnoreCase(cb.getAccountMasterCode())))) {
 
-				if (("MONTHLY_FINANCE".equals(loanType) && "MF LOAN INSTALLMENT".equals(cb.getAccountMasterCode()))
-						|| ("DAILY_FINANCE".equals(loanType)
-								&& "DF LOAN INSTALLMENT".equals(cb.getAccountMasterCode()))) {
-
-					received = received.add(cb.getCredit());
+				    received = received.add(cb.getCredit());
 				}
 			}
 
@@ -74,7 +84,7 @@ public class BusinessCollectionsReportService {
 			responseList.add(dto);
 		}
 
-		for (LoansGranted loan : allMaturedLoansTargetCollections) {
+		for (TargetCollections loan : allMaturedLoansTargetCollections) {
 
 			String loanType = loan.getLoanType();
 			BigDecimal target = loan.getLoansDisbursed();

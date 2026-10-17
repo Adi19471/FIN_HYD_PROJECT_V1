@@ -335,7 +335,7 @@ public class CashBookService {
 
 				cashBookViewPojo.setUser(sampleRecord.getUser());
 				cashBookViewPojo.setAccountMastercode(sampleRecord.getAccountMasterCode());
-				
+
 				BigDecimal sumOfSingleReferenceCredit = BigDecimal.ZERO;
 				BigDecimal sumOfSingleReferenceDebit = BigDecimal.ZERO;
 
@@ -345,14 +345,11 @@ public class CashBookService {
 					sumOfSingleReferenceDebit = sumOfSingleReferenceDebit.add(cashBook.getDebit());
 
 				}
-				
-				
-				
+
 				cashBookViewPojo.setCredit(sumOfSingleReferenceCredit);
 				cashBookViewPojo.setDebit(sumOfSingleReferenceDebit);
-				
-				cashBookViewPojoList.add(cashBookViewPojo);
 
+				cashBookViewPojoList.add(cashBookViewPojo);
 
 				if (sumOfSingleReferenceCredit != null) {
 					sumOfCredits = sumOfCredits.add(sumOfSingleReferenceCredit);
@@ -368,13 +365,9 @@ public class CashBookService {
 
 		BigDecimal openingBalanceForToday = Optional.ofNullable(cashBookRepo.findOpeningBalanceForDate(transactionDate))
 				.orElse(BigDecimal.ZERO);
-		
-		Collections.sort(cashBookViewPojoList,
-		        Comparator.comparing(
-		        		CashBookSumaryViewPojo::getTransactionId,
-		                Comparator.nullsLast(Comparator.naturalOrder())
-		        )
-		);
+
+		Collections.sort(cashBookViewPojoList, Comparator.comparing(CashBookSumaryViewPojo::getTransactionId,
+				Comparator.nullsLast(Comparator.naturalOrder())));
 
 		DayWiseTransactionsSummary dayWiseTransactionsSummary = new DayWiseTransactionsSummary();
 		dayWiseTransactionsSummary.setCashBookSumaryViewPojoList(cashBookViewPojoList);
@@ -482,8 +475,7 @@ public class CashBookService {
 	}
 
 	public List<AccountsLedgerPojo> getAccountsLedgerData(LocalDate fromDate, LocalDate toDate) {
-
-		List<SummaryByParticularsProjection> rows = new ArrayList<SummaryByParticularsProjection>();
+		List<SummaryByParticularsProjection> rows = new ArrayList<>();
 
 		if (fromDate == null && toDate == null) {
 
@@ -495,21 +487,54 @@ public class CashBookService {
 			LocalDateTime to = toDate.atTime(23, 59, 59);
 
 			rows = cashBookRepo.getSummaryByParticulars(from, to);
-
 		}
 
 		List<AccountsLedgerPojo> result = new ArrayList<>();
+
+		BigDecimal installmentCredit = BigDecimal.ZERO;
+
+
+		for (SummaryByParticularsProjection r : rows) {
+
+			String particulars = r.getParticulars();
+
+			if ("MF LOAN INSTALLMENT".equalsIgnoreCase(particulars)
+					|| "DF LOAN INSTALLMENT".equalsIgnoreCase(particulars)) {
+
+				installmentCredit = installmentCredit.add(r.getCredit() != null ? r.getCredit() : BigDecimal.ZERO);
+			}
+		}
+
 
 		long i = 0;
 
 		for (SummaryByParticularsProjection r : rows) {
 
+			String particulars = r.getParticulars();
+
+			// Skip separate installment rows
+			if ("MF LOAN INSTALLMENT".equalsIgnoreCase(particulars)
+					|| "DF LOAN INSTALLMENT".equalsIgnoreCase(particulars)) {
+				continue;
+			}
+
 			AccountsLedgerPojo accountsLedger = new AccountsLedgerPojo();
+
 			accountsLedger.setSno(++i);
-			accountsLedger.setCredit(r.getCredit());
-			accountsLedger.setDebit(r.getDebit());
-			accountsLedger.setBalance(r.getBalance());
-			accountsLedger.setAccountMaster(r.getParticulars());
+
+			BigDecimal credit = r.getCredit() != null ? r.getCredit() : BigDecimal.ZERO;
+
+			BigDecimal debit = r.getDebit() != null ? r.getDebit() : BigDecimal.ZERO;
+
+			// Add installment credits to LOANS
+			if ("LOANS".equalsIgnoreCase(particulars)) {
+				credit = credit.add(installmentCredit);
+			}
+
+			accountsLedger.setCredit(credit);
+			accountsLedger.setDebit(debit);
+			accountsLedger.setBalance(credit.subtract(debit));
+			accountsLedger.setAccountMaster(particulars);
 
 			result.add(accountsLedger);
 		}
@@ -598,10 +623,7 @@ public class CashBookService {
 		return result;
 	}
 
-	public List<ReceiptsLedgerPojo> getReceiptsLedger(
-	        LocalDate fromDate,
-			LocalDate toDate) {
-
+	public List<ReceiptsLedgerPojo> getReceiptsLedger(LocalDate fromDate, LocalDate toDate) {
 
 		List<CashBook> reportRows;
 
@@ -617,36 +639,24 @@ public class CashBookService {
 			reportRows = cashBookRepo.findByDateRangeAndBusinessNotNull(from, to);
 		}
 
-
 		List<CashBook> allReceiptRows = cashBookRepo.findByDateRangeAndBusinessNotNull();
 
+		Map<String, List<CashBook>> paymentGroups = reportRows.stream().collect(Collectors.groupingBy(c -> {
+			String paymentRefId = c.getPaymentRefId();
 
-		Map<String, List<CashBook>> paymentGroups = reportRows.stream()
-		        .collect(Collectors.groupingBy(
-		                c -> {
-		                    String paymentRefId = c.getPaymentRefId();
+			if (paymentRefId != null && !paymentRefId.trim().isEmpty()) {
+				return paymentRefId.trim();
+			}
 
-		                    if (paymentRefId != null && !paymentRefId.trim().isEmpty()) {
-		                        return paymentRefId.trim();
-		                    }
+			return "CASHBOOK_" + c.getCashBookId();
+		}, LinkedHashMap::new, Collectors.toList()));
 
-		                    return "CASHBOOK_" + c.getCashBookId();
-		                },
-		                LinkedHashMap::new,
-		                Collectors.toList()
-		        ));
-		
-		
-		
-		Map<String, List<CashBook>> memberCashBooks = allReceiptRows.stream()
-				.filter(c -> c.getBusinessMember() != null)
+		Map<String, List<CashBook>> memberCashBooks = allReceiptRows.stream().filter(c -> c.getBusinessMember() != null)
 				.collect(Collectors.groupingBy(c -> c.getBusinessMember().getBusinessMemberId()));
-
 
 		List<ReceiptsLedgerPojo> result = new ArrayList<>();
 
 		int sno = 1;
-
 
 		for (Map.Entry<String, List<CashBook>> entry : paymentGroups.entrySet()) {
 
@@ -677,7 +687,6 @@ public class CashBookService {
 					.filter(c -> !c.getTransDate().isAfter(transactionDate)).map(CashBook::getCredit)
 					.filter(Objects::nonNull).reduce(BigDecimal.ZERO, BigDecimal::add);
 
-
 			BigDecimal totalPayable = businessMember.getAmount().add(businessMember.getInterest());
 			BigDecimal balance = totalPayable.subtract(totalPaid);
 
@@ -687,7 +696,6 @@ public class CashBookService {
 
 			BigDecimal installmentAmount = businessMember.getInstallment();
 
-
 			int paidInstallments = 0;
 
 			if (installmentAmount != null && installmentAmount.compareTo(BigDecimal.ZERO) > 0) {
@@ -695,10 +703,8 @@ public class CashBookService {
 				paidInstallments = totalPaid.divide(installmentAmount, 0, RoundingMode.FLOOR).intValue();
 			}
 
-
 			int totalInstallments = businessMember.getDuration();
 			int pendingInstallments = Math.max(totalInstallments - paidInstallments, 0);
-
 
 			ReceiptsLedgerPojo cashBookLedger = new ReceiptsLedgerPojo();
 
@@ -717,8 +723,7 @@ public class CashBookService {
 			cashBookLedger.setBalance(balance);
 			cashBookLedger.setCurrentInstallmentNumber(paidInstallments);
 			cashBookLedger.setBalanceInstallmentNumber(pendingInstallments);
-			//cashBookLedger.setParticulars(firstRow.getAccountMasterCode());
-
+			// cashBookLedger.setParticulars(firstRow.getAccountMasterCode());
 
 			result.add(cashBookLedger);
 		}

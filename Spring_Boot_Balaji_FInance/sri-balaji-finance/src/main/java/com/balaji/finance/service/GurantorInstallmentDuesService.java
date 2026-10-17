@@ -2,6 +2,7 @@ package com.balaji.finance.service;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.YearMonth;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
@@ -13,226 +14,73 @@ import org.springframework.stereotype.Service;
 import com.balaji.finance.dto.GuarantorDuesProjection;
 import com.balaji.finance.pojo.GuarantorInstallmentDuesResponse;
 import com.balaji.finance.repo.BusinessMemberRepository;
+import com.balaji.finance.repo.EmiRepo;
 
 @Service
 public class GurantorInstallmentDuesService {
 
 	@Autowired
-	private BusinessMemberRepository businessMemberRepository;
+	private EmiRepo emiRepo;
 
 	public List<GuarantorInstallmentDuesResponse> getGuarantorInstallmentDuesList(String guarantorId,
 			boolean activeLoans, boolean lateFee) {
 
-		List<GuarantorInstallmentDuesResponse> returnList = new ArrayList<>();
 
-		String status = activeLoans ? "ACTIVE" : "COMPLETED";
-
-		List<GuarantorDuesProjection> allLoansOnGuarantor;
+		List<GuarantorDuesProjection> projections;
 
 		if (guarantorId == null || guarantorId.isEmpty()) {
-			allLoansOnGuarantor = businessMemberRepository.getAllLoansOnGuarantor(status);
+			projections = emiRepo.getInstallmentDuesAllGuarenter(activeLoans);
+
 		} else {
-			allLoansOnGuarantor = businessMemberRepository.getAllLoansOnGuarantor(guarantorId, status);
+
+			projections = emiRepo.getInstallmentDuesByGuranter(activeLoans, guarantorId);
 		}
 
-		int sno = 0;
+		List<GuarantorInstallmentDuesResponse> responseList = new ArrayList<>();
 
-		LocalDate today = LocalDate.now();
+		int sno = 1;
 
-		for (GuarantorDuesProjection projection : allLoansOnGuarantor) {
+		System.err.println(projections.size());
+		
+		for (GuarantorDuesProjection projection : projections) {
 
 			GuarantorInstallmentDuesResponse response = new GuarantorInstallmentDuesResponse();
 
-			response.setSno(++sno);
+			response.setSno(sno++);
+			response.setLoanId(projection.getLoanId());
+			response.setCustomerName(projection.getCustomerName());
+			response.setGuarantorName(projection.getGuarantorName());
+			response.setStartDate(projection.getStartDate().toLocalDate());
+			response.setEndDate(projection.getEndDate().toLocalDate());
+			response.setAmount(projection.getLoanAmount());
+			response.setDuration(projection.getDuration());
+			response.setInstallmentAmount(projection.getInstallmentAmount());
 
-			response.setLoanId(projection.getBusinessMemberId());
+			response.setNoOfInstallmentsPaid(
+					projection.getNoOfInstallmentsPaid() != null ? projection.getNoOfInstallmentsPaid().intValue() : 0);
 
-			// ---------------------------------------------------------
-			// Customer
-			// ---------------------------------------------------------
+			response.setTotalAmountPaid(
+					projection.getTotalAmountPaid() != null ? projection.getTotalAmountPaid() : BigDecimal.ZERO);
 
-			response.setCustomerName(String.format("%s %s %s", safe(projection.getCustomerId()),
-					safe(projection.getCustomerFirstName()), safe(projection.getCustomerPhoneNumber())));
+			response.setNoOfInstallmentsPending(
+					projection.getNoOfInstallmentsPending() != null ? projection.getNoOfInstallmentsPending().intValue()
+							: 0);
 
-			// ---------------------------------------------------------
-			// Guarantor
-			// ---------------------------------------------------------
+			response.setBalanceAmount(projection.getDueAmount() != null ? projection.getDueAmount() : BigDecimal.ZERO);
 
-			response.setGuarantorName(String.format("%s %s %s", safe(projection.getGuarentorId()),
-					safe(projection.getGuarentorFirstName()), safe(projection.getGuarentorPhoneNumber())));
+			response.setInstallmentDue(projection.getDueAmount() != null ? projection.getDueAmount() : BigDecimal.ZERO);
 
-			// ---------------------------------------------------------
-			// Dates
-			// ---------------------------------------------------------
-
-			LocalDate startDate = null;
-			LocalDate endDate = null;
-
-			if (projection.getStartDate() != null) {
-
-				startDate = projection.getStartDate().toLocalDate();
-
-				response.setStartDate(startDate);
-			}
-
-			if (projection.getEndDate() != null) {
-
-				endDate = projection.getEndDate().toLocalDate();
-
-				response.setEndDate(endDate);
-			}
-
-			// ---------------------------------------------------------
-			// Financials
-			// ---------------------------------------------------------
-
-			BigDecimal loanAmount = projection.getAmount();
-
-			BigDecimal installmentAmount = projection.getInstallmentPerMonth();
-
-			BigDecimal totalPaid = projection.getTotalInstallmentAmountPaid() == null ? BigDecimal.ZERO
-					: projection.getTotalInstallmentAmountPaid();
-
-			int duration = projection.getDuration() == null ? 0 : projection.getDuration();
-
-			int paidInstallments = projection.getNoOfEmisPaid() == null ? 0 : projection.getNoOfEmisPaid();
-
-			response.setAmount(loanAmount);
-
-			response.setDuration(duration);
-
-			response.setInstallmentAmount(installmentAmount);
-
-			response.setTotalAmountPaid(totalPaid);
-
-			response.setNoOfInstallmentsPaid(paidInstallments);
-
-			// ---------------------------------------------------------
-			// Calculate EMI due
-			// ---------------------------------------------------------
-
-			int installmentsDue = 0;
-
-			int installmentsPending = 0;
-
-			BigDecimal installmentDueAmount = BigDecimal.ZERO;
-
-			LocalDate nextDueDate = null;
-
-			if (startDate != null && duration > 0) {
-
-				/*
-				 * EMI starts one month after the loan start date.
-				 *
-				 * Example:
-				 *
-				 * Start Date = 10-Jan
-				 *
-				 * EMI 1 = 10-Feb EMI 2 = 10-Mar EMI 3 = 10-Apr
-				 *
-				 */
-
-				LocalDate firstDueDate = startDate.plusMonths(1);
-
-				// -----------------------------------------------------
-				// Calculate number of EMIs whose due date has arrived
-				// -----------------------------------------------------
-
-				if (!today.isBefore(firstDueDate)) {
-
-					int months = (int) ChronoUnit.MONTHS.between(YearMonth.from(firstDueDate), YearMonth.from(today));
-
-					LocalDate dueDateThisMonth = firstDueDate.plusMonths(months);
-
-					/*
-					 * Exact day-wise check.
-					 *
-					 * Example:
-					 *
-					 * EMI date = 20th Today = 19th
-					 *
-					 * This month's EMI is NOT due yet.
-					 *
-					 * EMI date = 20th Today = 20th
-					 *
-					 * This month's EMI IS due.
-					 */
-
-					if (today.isBefore(dueDateThisMonth)) {
-						months--;
-					}
-
-					installmentsDue = months + 1;
-
-					// Never exceed loan duration
-					installmentsDue = Math.min(installmentsDue, duration);
-				}
-
-				// -----------------------------------------------------
-				// Unpaid installments which are currently due
-				// -----------------------------------------------------
-
-				installmentsPending = Math.max(0, installmentsDue - paidInstallments);
-
-				// -----------------------------------------------------
-				// Due amount
-				// -----------------------------------------------------
-
-				if (installmentAmount != null) {
-
-					installmentDueAmount = installmentAmount.multiply(BigDecimal.valueOf(installmentsPending));
-				}
-
-				// -----------------------------------------------------
-				// Next unpaid EMI date
-				// -----------------------------------------------------
-
-				nextDueDate = startDate.plusMonths(paidInstallments + 1);
-
-				/*
-				 * If loan is completed, there is no next due date.
-				 */
-
-				if (paidInstallments >= duration) {
-					nextDueDate = null;
-				}
-
-				response.setDueDate(nextDueDate);
-			}
-
-			// ---------------------------------------------------------
-			// Set EMI due information
-			// ---------------------------------------------------------
-
-			response.setNoOfInstallmentsPending(installmentsPending);
-
-			response.setInstallmentDue(installmentDueAmount);
-
-			// ---------------------------------------------------------
-			// Balance amount
-			// ---------------------------------------------------------
-
-			if (loanAmount != null) {
-
-				BigDecimal balanceAmount = loanAmount.subtract(totalPaid);
-
-				response.setBalanceAmount(balanceAmount);
-			}
-
-			// ---------------------------------------------------------
-			// Loan type
-			// ---------------------------------------------------------
+			response.setDueDate(projection.getDueDate() != null ? projection.getDueDate().toLocalDate() : null);
 
 			response.setLoanType(projection.getLoanType());
 
-			returnList.add(response);
+			// Populate this using your existing late-fee calculation.
+			response.setLateFee(BigDecimal.ZERO);
+
+			responseList.add(response);
 		}
 
-		return returnList;
-	}
-
-	private String safe(Object value) {
-		return value == null ? "" : value.toString();
+		return responseList;
 	}
 
 }
