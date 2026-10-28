@@ -50,8 +50,20 @@ public class CustomerOutstandingService {
 			customerOutstandingView.setNoOfLoans(customerOutstandingProjection.getNoOfLoans());
 			customerOutstandingView.setTotalLoansAmount(customerOutstandingProjection.getTotalLoansAmount());
 			customerOutstandingView.setTotalPaidAmount(customerOutstandingProjection.getTotalPaidAmount());
-			customerOutstandingView.setBalanceOutstanding(customerOutstandingProjection.getTotalLoansAmount()
-					.subtract(customerOutstandingProjection.getTotalPaidAmount()));
+			
+			
+			BigDecimal totalLoans = customerOutstandingProjection.getTotalLoansAmount() != null
+			        ? customerOutstandingProjection.getTotalLoansAmount()
+			        : BigDecimal.ZERO;
+
+			BigDecimal totalPaid = customerOutstandingProjection.getTotalPaidAmount() != null
+			        ? customerOutstandingProjection.getTotalPaidAmount()
+			        : BigDecimal.ZERO;
+
+			customerOutstandingView.setBalanceOutstanding(
+			        totalLoans.subtract(totalPaid)
+			);
+			
 			customerOutstandingView.setDueDateOutstanding(BigDecimal.ZERO);
 
 			customerOutstandingViewList.add(customerOutstandingView);
