@@ -58,7 +58,7 @@ public interface PersonalInfoRepository extends JpaRepository<PersonalInfo, Stri
 			        m.PERSONAL_INFO_ID AS managerId,
 			        m.FIRST_NAME AS managerName,
 			        m.LAST_NAME AS managerLastName,
-			        COALESCE(SUM(p.SHARES), 0) AS noOfSharesUnderManager,
+			        COALESCE(SUM(p.SHARES), 0) + COALESCE(m.SHARES, 0) AS noOfSharesUnderManager,
 			        GROUP_CONCAT(p.PERSONAL_INFO_ID ORDER BY p.PERSONAL_INFO_ID SEPARATOR ',') AS partnerIds
 			    FROM personal_info p
 			    JOIN personal_info m
