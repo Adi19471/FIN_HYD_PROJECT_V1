@@ -509,7 +509,10 @@ public interface CashBookRepo extends JpaRepository<CashBook, Long> {
 			    SELECT
 			        COALESCE(SUM(cb.credit), 0)
 			    FROM CashBook cb
-			         JOIN cb.personalInfo personalInfo
+			         
+			         JOIN cb.businessMember as businessMember
+			         JOIN cb.personalInfo 02
+			         
 			    WHERE cb.accountMasterCode IN :accountMasterCode
 			      AND cb.transDate BETWEEN :fromDate AND :toDate
 			      AND personalInfo.personalInfoId IN :personalInfoId
