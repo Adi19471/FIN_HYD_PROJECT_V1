@@ -149,6 +149,7 @@ public interface BusinessMemberRepository extends JpaRepository<BusinessMember, 
 			    LEFT JOIN bm.customerId customer
 			    WHERE bm.loanType IN :loanType
 			      AND bm.sysDate <= :selectedDate
+			      AND bm.customerId IS NOT NULL
 			    GROUP BY customer.personalInfoId, customer.firstName
 			""")
 	List<CustomerOutstandingProjection> customerLoansOverview(@Param("loanType") List<String> loanTypes,

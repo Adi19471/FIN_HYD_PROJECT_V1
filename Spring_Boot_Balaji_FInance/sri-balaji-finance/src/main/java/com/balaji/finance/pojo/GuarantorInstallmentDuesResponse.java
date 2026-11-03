@@ -22,7 +22,9 @@ public class GuarantorInstallmentDuesResponse {
 	private LocalDate dueDate;
 	private BigDecimal lateFee;
 	private String loanType;
-
+	private String partnerName;
+	
+	
 	public Integer getSno() {
 		return sno;
 	}
@@ -159,4 +161,13 @@ public class GuarantorInstallmentDuesResponse {
 		this.loanType = loanType;
 	}
 
+	public String getPartnerName() {
+		return partnerName;
+	}
+
+	public void setPartnerName(String partnerName) {
+		this.partnerName = partnerName;
+	}
+
+	
 }

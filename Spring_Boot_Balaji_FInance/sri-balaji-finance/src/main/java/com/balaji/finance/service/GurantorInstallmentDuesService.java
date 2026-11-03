@@ -76,6 +76,7 @@ public class GurantorInstallmentDuesService {
 
 			// Populate this using your existing late-fee calculation.
 			response.setLateFee(BigDecimal.ZERO);
+			response.setPartnerName(projection.getPartnerName());
 
 			responseList.add(response);
 		}

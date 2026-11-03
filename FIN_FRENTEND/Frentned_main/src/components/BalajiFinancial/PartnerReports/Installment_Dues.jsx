@@ -196,6 +196,8 @@ const Installment_Dues = () => {
     { field: "loanId", headerName: "Loan ID", width: 110 },
     { field: "customerName", headerName: "Customer Name", minWidth: 200, flex: 1 },
     { field: "guarantorName", headerName: "Guarantor Name", minWidth: 200, flex: 1 },
+    { field: "partnerName", headerName: "Partner Name", minWidth: 200, flex: 1 },
+
     pairedColumn({
       field: "startDate",
       headerName: "Start/End Date",
