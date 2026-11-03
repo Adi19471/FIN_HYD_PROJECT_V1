@@ -287,6 +287,8 @@ function CustomGridToolbar({ rows, columns, fileName, showExport, reportOptions 
  * @param {boolean} loading - Loading state
  * @param {function} getRowId - Function to get row ID
  * @param {number|object} height - Table height (default: responsive DEFAULT_TABLE_HEIGHT)
+ * @param {number} minHeight - Floor under `height` (default 420). Screens that stack
+ *   several short tables lower it so a two-row table is not mostly blank.
  * @param {object} period - { fromDate, toDate, label } printed on every export
  * @param {Array} reportMeta - [{ label, value }] filter lines printed on every export
  * @param {Array} totalFields - numeric fields to sum into a TOTAL row
@@ -301,6 +303,7 @@ const DataTable = ({
   loading = false,
   getRowId = (row) => row.id,
   height = DEFAULT_TABLE_HEIGHT,
+  minHeight = 420,
   title,
   subtitle,
   // Download name. Screens whose report title is already shown above the grid
@@ -370,8 +373,8 @@ const DataTable = ({
       elevation={0}
       sx={{
         ...(isAutoHeight
-          ? { minHeight: 420 }
-          : { height, minHeight: 420, overflow: "hidden" }),
+          ? { minHeight }
+          : { height, minHeight, overflow: "hidden" }),
         width: "100%",
         display: "flex",
         flexDirection: "column",

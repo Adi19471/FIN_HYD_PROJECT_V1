@@ -115,7 +115,7 @@ public interface PersonalInfoRepository extends JpaRepository<PersonalInfo, Stri
 	@Query("""
 			FROM PersonalInfo p
 			WHERE p.category = 'PARTNER'
-			ORDER BY p.personalInfoId
+			ORDER BY p.sequence asc
 			""")
 	List<PersonalInfo> findAllPartners();
 	

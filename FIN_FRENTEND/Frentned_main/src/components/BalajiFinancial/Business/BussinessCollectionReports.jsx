@@ -2,14 +2,12 @@ import React, { useEffect, useMemo, useState } from "react";
 import {
   Box,
   Button,
-  Chip,
   CircularProgress,
-  Grid,
+  LinearProgress,
   Paper,
   Stack,
   Typography,
 } from "@mui/material";
-import { AssessmentRounded, CalendarMonthRounded, TrendingUpRounded } from "@mui/icons-material";
 import { actionIcons, navIcons } from "src/lib/icons";
 import axios from "axios";
 import dayjs from "dayjs";
@@ -17,7 +15,6 @@ import { API_BASE } from "lib/config";
 import { getSession } from "src/utils/session";
 import {
   AppDatePicker,
-  DataTable,
   ReportToolbar,
   TableExportMenu,
   useDateRange,
@@ -33,6 +30,116 @@ const emptyStatus = {
   balanceCollections: 0,
 };
 
+// The old report prints one block per loan type, DF first, then MF - both
+// always, even when a type has nothing in the period.
+const LOAN_TYPES = [
+  { key: "DAILY_FINANCE", code: "DF", name: "Daily Finance" },
+  { key: "MONTHLY_FINANCE", code: "MF", name: "Monthly Finance" },
+];
+
+// The service reports matured loans as COMPLETED; MATURED is accepted too.
+const statusKey = (status) => {
+  const value = String(status || "").toUpperCase();
+  return value === "COMPLETED" || value === "MATURED" ? "MATURED" : value;
+};
+
+const FIGURES = [
+  { field: "targetCollections", label: "Target Collections" },
+  { field: "receivedCollections", label: "Received Collections" },
+  { field: "balanceCollections", label: "Collections Balance" },
+];
+
+const sumOf = (a, b) =>
+  FIGURES.reduce((acc, { field }) => {
+    acc[field] = Number(a[field] || 0) + Number(b[field] || 0);
+    return acc;
+  }, {});
+
+const displayDate = (value) => dayjs(value).format("DD-MMM-YYYY");
+
+/**
+ * One "Active Loans :" style group of the old report: a caption over Target
+ * and Received, a rule, then the Balance - the figures in a fixed right-hand
+ * column so they line up down the block.
+ */
+const FigureGroup = ({ title, figures }) => (
+  <Box>
+    <Typography variant="subtitle2" sx={{ fontWeight: 800, mb: 0.5 }}>
+      {title} :
+    </Typography>
+    {FIGURES.map(({ field, label }) => {
+      const isBalance = field === "balanceCollections";
+      return (
+        <Stack
+          key={field}
+          direction="row"
+          justifyContent="space-between"
+          alignItems="baseline"
+          spacing={2}
+          sx={{ pl: { xs: 1.5, sm: 4 }, py: 0.4 }}
+        >
+          <Typography variant="body2" color="text.secondary">
+            {label}
+          </Typography>
+          <Typography
+            variant="body2"
+            sx={{
+              minWidth: { xs: 90, sm: 150 },
+              flexShrink: 0,
+              textAlign: "right",
+              fontVariantNumeric: "tabular-nums",
+              fontWeight: isBalance ? 800 : 600,
+              ...(isBalance && { borderTop: "1px solid", borderColor: "text.secondary", pt: 0.4 }),
+            }}
+          >
+            {money(figures[field])}
+          </Typography>
+        </Stack>
+      );
+    })}
+  </Box>
+);
+
+// A loan type's block: the DF / MF band, Active and Matured on the left,
+// their Total on the right.
+const LoanTypeBlock = ({ type, active, matured }) => (
+  <Box>
+    <Box
+      sx={{
+        px: 2,
+        py: 0.9,
+        backgroundColor: "var(--surface-4)",
+        borderLeft: "4px solid var(--brand-primary)",
+        borderRadius: 1,
+      }}
+    >
+      <Typography variant="subtitle1" component="span" sx={{ fontWeight: 800 }}>
+        {type.code}
+      </Typography>
+      <Typography variant="body2" component="span" color="text.secondary" sx={{ ml: 1.25 }}>
+        {type.name}
+      </Typography>
+    </Box>
+    <Box
+      sx={{
+        display: "grid",
+        gridTemplateColumns: { xs: "1fr", md: "1fr 1fr" },
+        columnGap: 6,
+        rowGap: 2,
+        px: { xs: 1, sm: 2 },
+        pt: 1.5,
+        pb: 1,
+      }}
+    >
+      <Stack spacing={1.5}>
+        <FigureGroup title="Active Loans" figures={active} />
+        <FigureGroup title="Matured Loans" figures={matured} />
+      </Stack>
+      <FigureGroup title="Total Loans" figures={sumOf(active, matured)} />
+    </Box>
+  </Box>
+);
+
 const BussinessCollectionReports = () => {
   const { fromDate, toDate, setFromDate, setToDate, toDateMin, toDateMax } = useDateRange(
     dayjs().startOf("month").format("YYYY-MM-DD"),
@@ -41,6 +148,9 @@ const BussinessCollectionReports = () => {
   const [loading, setLoading] = useState(false);
   const [reportData, setReportData] = useState([]);
   const [lastUpdated, setLastUpdated] = useState(null);
+  // The range the figures on screen were generated for - the caption and the
+  // downloads state it, not whatever the pickers have been changed to since.
+  const [generatedRange, setGeneratedRange] = useState({ fromDate, toDate });
 
   const token = getSession("token") || "";
   const headers = useMemo(() => ({ Authorization: `Bearer ${token}` }), [token]);
@@ -55,6 +165,7 @@ const BussinessCollectionReports = () => {
       setReportData([]);
       console.error("Business Collection Report Error:", error);
     } finally {
+      setGeneratedRange({ fromDate, toDate });
       setLoading(false);
     }
   };
@@ -71,171 +182,54 @@ const BussinessCollectionReports = () => {
 
     reportData.forEach((item) => {
       if (!result[item.loanType]) result[item.loanType] = {};
-      result[item.loanType][item.loanStatus] = item;
+      result[item.loanType][statusKey(item.loanStatus)] = item;
     });
 
     return result;
   }, [reportData]);
 
-  const totals = useMemo(
-    () =>
-      reportData.reduce(
-        (acc, item) => ({
-          target: acc.target + Number(item.targetCollections || 0),
-          received: acc.received + Number(item.receivedCollections || 0),
-          balance: acc.balance + Number(item.balanceCollections || 0),
-        }),
-        { target: 0, received: 0, balance: 0 }
-      ),
-    [reportData]
-  );
-
-  const rows = useMemo(
-    () =>
-      reportData.map((item, index) => ({
-        id: `${item.loanType}-${item.loanStatus}-${index}`,
-        sno: index + 1,
-        loanType: item.loanType?.replace("_", " ") || "-",
-        loanStatus: item.loanStatus || "-",
-        targetCollections: item.targetCollections || 0,
-        receivedCollections: item.receivedCollections || 0,
-        balanceCollections: item.balanceCollections || 0,
-      })),
-    [reportData]
-  );
-
-  const columns = [
-    { field: "sno", headerName: "S No", width: 80, align: "right", headerAlign: "right" },
-    { field: "loanType", headerName: "Loan Type", flex: 1, minWidth: 180 },
-    { field: "loanStatus", headerName: "Status", width: 130 },
-    { field: "targetCollections", headerName: "Target", width: 150, align: "right", headerAlign: "right", valueFormatter: (value) => money(value) },
-    { field: "receivedCollections", headerName: "Received", width: 150, align: "right", headerAlign: "right", valueFormatter: (value) => money(value) },
-    { field: "balanceCollections", headerName: "Balance", width: 150, align: "right", headerAlign: "right", valueFormatter: (value) => money(value) },
-  ];
-
-  // Whole-screen export for the Download button at the top: both finance blocks
-  // with their active / matured split and per-block totals, then the overall
-  // collections total - i.e. everything the page shows, not just the grid.
+  // Download / print in the same order as the screen: per loan type a band,
+  // Active Loans, Matured Loans and their Total Loans.
   const screenExportRows = useMemo(() => {
     if (!reportData.length) return [];
 
-    const out = [];
+    return LOAN_TYPES.flatMap((type) => {
+      const active = groupedData[type.key]?.ACTIVE || emptyStatus;
+      const matured = groupedData[type.key]?.MATURED || emptyStatus;
+      const figures = (item) =>
+        FIGURES.reduce((acc, { field }) => ({ ...acc, [field]: Number(item[field] || 0) }), {});
 
-    const addBlock = (label, group) => {
-      const active = group?.ACTIVE || emptyStatus;
-      const matured = group?.MATURED || emptyStatus;
-      const sumOf = (field) => Number(active[field] || 0) + Number(matured[field] || 0);
-
-      out.push({
-        id: `${label}-section`,
-        section: label,
-        status: "",
-        targetCollections: sumOf("targetCollections"),
-        receivedCollections: sumOf("receivedCollections"),
-        balanceCollections: sumOf("balanceCollections"),
-        __isTotal: true,
-      });
-
-      [["Active", active], ["Matured", matured]].forEach(([statusLabel, item]) => {
-        out.push({
-          id: `${label}-${statusLabel}`,
-          section: label,
-          status: statusLabel,
-          targetCollections: Number(item.targetCollections || 0),
-          receivedCollections: Number(item.receivedCollections || 0),
-          balanceCollections: Number(item.balanceCollections || 0),
-        });
-      });
-    };
-
-    addBlock("Daily Finance", groupedData.DAILY_FINANCE);
-    addBlock("Monthly Finance", groupedData.MONTHLY_FINANCE);
-
-    out.push({
-      id: "total",
-      section: "Total Collections",
-      status: "",
-      targetCollections: totals.target,
-      receivedCollections: totals.received,
-      balanceCollections: totals.balance,
-      __isTotal: true,
+      return [
+        { id: `${type.code}-band`, section: `${type.code} - ${type.name}`, __isTotal: true, __band: true },
+        { id: `${type.code}-active`, section: "Active Loans", ...figures(active) },
+        { id: `${type.code}-matured`, section: "Matured Loans", ...figures(matured) },
+        { id: `${type.code}-total`, section: "Total Loans", __isTotal: true, ...sumOf(active, matured) },
+      ];
     });
+  }, [reportData, groupedData]);
 
-    return out;
-  }, [reportData, groupedData, totals]);
+  // The DF / MF band rows carry no figures - blank, not 0.
+  const amountColumn = (field, headerName) => ({
+    field,
+    headerName,
+    width: 170,
+    align: "right",
+    valueFormatter: (value, row) => (row?.__band ? "" : money(value)),
+  });
 
   const screenExportColumns = [
-    { field: "section", headerName: "Loan Type", width: 200 },
-    { field: "status", headerName: "Status", width: 130 },
-    { field: "targetCollections", headerName: "Target", width: 150, align: "right", valueFormatter: (value) => money(value) },
-    { field: "receivedCollections", headerName: "Received", width: 150, align: "right", valueFormatter: (value) => money(value) },
-    { field: "balanceCollections", headerName: "Balance", width: 150, align: "right", valueFormatter: (value) => money(value) },
+    { field: "section", headerName: "Particulars", width: 220 },
+    amountColumn("targetCollections", "Target Collections"),
+    amountColumn("receivedCollections", "Received Collections"),
+    amountColumn("balanceCollections", "Collections Balance"),
   ];
 
   const reportOptions = useMemo(
     () => ({
-      period: { fromDate, toDate, label: "Business Collections Period" },
-      summary: [
-        { label: "Target Collections", value: totals.target },
-        { label: "Received Collections", value: totals.received },
-        { label: "Collection Balance", value: totals.balance },
-      ],
+      period: { ...generatedRange, label: "Business Collections From" },
     }),
-    [fromDate, toDate, totals]
+    [generatedRange]
   );
-
-  const SummaryCard = ({ title, value, note, color = "primary", icon: Icon = AssessmentRounded }) => (
-    <Paper className="enterprise-card" elevation={0} sx={{ p: 2, height: "100%" }}>
-      <Stack direction="row" justifyContent="space-between" alignItems="flex-start">
-        <Box>
-          <Typography variant="body2" color="text.secondary">{title}</Typography>
-          <Typography variant="h5" sx={{ mt: 0.5 }}>Rs {money(value)}</Typography>
-          <Typography variant="caption" color="text.secondary">{note}</Typography>
-        </Box>
-        <Box className="dashboard-kpi-icon" color={`${color}.main`}>
-          <Icon />
-        </Box>
-      </Stack>
-    </Paper>
-  );
-
-  const FinanceBlock = ({ title, data }) => {
-    const active = data.ACTIVE || emptyStatus;
-    const matured = data.MATURED || emptyStatus;
-    return (
-      <Paper className="enterprise-card" elevation={0} sx={{ p: 2.5, height: "100%" }}>
-        <Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 2 }}>
-          <Box>
-            <Typography variant="h6">{title}</Typography>
-            <Typography variant="body2" color="text.secondary">Active and matured collection status</Typography>
-          </Box>
-          <Chip label={`${money(Number(active.receivedCollections || 0) + Number(matured.receivedCollections || 0))} received`} color="primary" variant="outlined" />
-        </Stack>
-        <Grid container spacing={2}>
-          {[
-            { label: "Active Target", value: active.targetCollections },
-            { label: "Active Received", value: active.receivedCollections },
-            { label: "Active Balance", value: active.balanceCollections },
-            { label: "Matured Target", value: matured.targetCollections },
-            { label: "Matured Received", value: matured.receivedCollections },
-            { label: "Matured Balance", value: matured.balanceCollections },
-          ].map((item) => (
-            <Grid
-              key={item.label}
-              size={{
-                xs: 12,
-                sm: 6
-              }}>
-              <Box sx={{ p: 1.5, border: 1, borderColor: "divider", borderRadius: 1, bgcolor: "background.paper" }}>
-                <Typography variant="caption" color="text.secondary">{item.label}</Typography>
-                <Typography fontWeight={900}>Rs {money(item.value)}</Typography>
-              </Box>
-            </Grid>
-          ))}
-        </Grid>
-      </Paper>
-    );
-  };
 
   return (
     <>
@@ -291,56 +285,25 @@ const BussinessCollectionReports = () => {
             </Button>
           </Stack>
         </Paper>
-        <Grid container spacing={2}>
-          <Grid
-            size={{
-              xs: 12,
-              md: 4
-            }}>
-            <SummaryCard title="Target Collections" value={totals.target} note="Total expected collection" icon={CalendarMonthRounded} />
-          </Grid>
-          <Grid
-            size={{
-              xs: 12,
-              md: 4
-            }}>
-            <SummaryCard title="Received Collections" value={totals.received} note="Total amount received" color="success" icon={TrendingUpRounded} />
-          </Grid>
-          <Grid
-            size={{
-              xs: 12,
-              md: 4
-            }}>
-            <SummaryCard title="Collection Balance" value={totals.balance} note="Pending collection balance" color="warning" icon={AssessmentRounded} />
-          </Grid>
-        </Grid>
-        <Grid container spacing={2}>
-          <Grid
-            size={{
-              xs: 12,
-              lg: 6
-            }}>
-            <FinanceBlock title="Daily Finance" data={groupedData.DAILY_FINANCE} />
-          </Grid>
-          <Grid
-            size={{
-              xs: 12,
-              lg: 6
-            }}>
-            <FinanceBlock title="Monthly Finance" data={groupedData.MONTHLY_FINANCE} />
-          </Grid>
-        </Grid>
-        <DataTable
-          rows={rows}
-          columns={columns}
-          loading={loading}
-          height={520}
-          fileName="Business_Collections"
-          subtitle={`Collections ${dayjs(fromDate).format("DD-MMM-YYYY")} to ${dayjs(toDate).format("DD-MMM-YYYY")}`}
-          pageSize={10}
-          period={reportOptions.period}
-          summary={reportOptions.summary}
-        />
+
+        {/* The old Business Collections report, laid out as it prints: the
+            period line, then a DF and an MF block. */}
+        <Paper className="enterprise-card" elevation={0} sx={{ p: { xs: 2, sm: 3 }, position: "relative" }}>
+          {loading && <LinearProgress sx={{ position: "absolute", top: 0, left: 0, right: 0 }} />}
+          <Typography variant="subtitle1" align="center" sx={{ fontWeight: 700, mb: 2.5 }}>
+            Business Collections Report From {displayDate(generatedRange.fromDate)} To {displayDate(generatedRange.toDate)}
+          </Typography>
+          <Stack spacing={2.5}>
+            {LOAN_TYPES.map((type) => (
+              <LoanTypeBlock
+                key={type.key}
+                type={type}
+                active={groupedData[type.key]?.ACTIVE || emptyStatus}
+                matured={groupedData[type.key]?.MATURED || emptyStatus}
+              />
+            ))}
+          </Stack>
+        </Paper>
       </Stack>
     </>
   );

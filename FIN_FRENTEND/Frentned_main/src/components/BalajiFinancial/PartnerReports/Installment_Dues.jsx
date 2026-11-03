@@ -1,21 +1,27 @@
 import React, { useEffect, useMemo, useState } from "react";
 import {
+  Accordion,
+  AccordionDetails,
+  AccordionSummary,
   Autocomplete,
   Box,
   Button,
   Checkbox,
+  Chip,
   FormControlLabel,
   Grid,
   MenuItem,
   Paper,
   Stack,
   TextField,
+  Typography,
 } from "@mui/material";
 import { actionIcons, navIcons } from "src/lib/icons";
 import axios from "axios";
 import dayjs from "dayjs";
 import { API_BASE } from "lib/config";
 import { getSession } from "src/utils/session";
+import { useThemeProvider } from "src/utils/ThemeContext";
 import { errorToast } from "toastify";
 import {
   DataTable,
@@ -28,6 +34,7 @@ import {
 } from "src/components/ui";
 
 const PrintRounded = actionIcons.print;
+const ExpandMoreRounded = actionIcons.expand;
 
 // Whole rupees - no decimal point on the printed report.
 const formatAmount = (amount) =>
@@ -70,6 +77,47 @@ const SECTIONS = [
   { key: "DF", title: "DF - Installment Dues", subtitle: "Daily Finance" },
   { key: "MF", title: "MF - Installment Dues", subtitle: "Monthly Finance" },
 ];
+
+const sumTotals = (rows) =>
+  TOTAL_FIELDS.reduce((acc, field) => {
+    acc[field] = rows.reduce((sum, row) => sum + Number(row[field] || 0), 0);
+    return acc;
+  }, {});
+
+// One table per loan type, each with its own S.No sequence starting at 1 -
+// for the whole report, or for one partner's loans when grouped.
+const splitByLoanType = (rows) => {
+  const grouped = { DF: [], MF: [] };
+  rows.forEach((row) => grouped[sectionOf(row)].push(row));
+
+  return SECTIONS.map((section) => ({
+    ...section,
+    rows: grouped[section.key].map((row, index) => ({ ...row, sno: index + 1 })),
+  })).filter((section) => section.rows.length > 0);
+};
+
+// The partner a loan is booked under. The dues query returns the partner's
+// first name only, so that is what the old ledger's partner heading groups on.
+const partnerOf = (row) => String(row.partnerName || "").trim() || "No Partner";
+
+// A section as the download prints it: a DF / MF band, the loans, and that
+// section's TOTAL. `prefix` keeps the band ids unique across partners.
+const sectionExportRows = (section, prefix = "") => [
+  { id: `${prefix}${section.key}-band`, __isTotal: true, __band: true, loanId: section.key, customerName: section.subtitle },
+  ...section.rows,
+  { id: `${prefix}${section.key}-total`, __isTotal: true, startDate: `${section.key} TOTAL`, ...sumTotals(section.rows) },
+];
+
+// Rendered sizes per Settings > Table density, at this screen's rowHeight of
+// 58 - used to size each partner's tables to their rows. `chrome` is the
+// title, toolbar, column heading, pager and scrollbar around the rows (the
+// heading grows with density), with a few px of headroom.
+const TABLE_PX = {
+  compact: { row: 40, chrome: 264 },
+  standard: { row: 58, chrome: 275 },
+  spacious: { row: 75, chrome: 298 },
+};
+const GROUP_PAGE_SIZE = 25;
 
 // Days the installment is past due, floored at 0 - the "(3)" under Due Date.
 const daysOverdue = (value) => {
@@ -135,6 +183,12 @@ const Installment_Dues = () => {
   const [reportType, setReportType] = useState("all");
   const [activeLoans, setActiveLoans] = useState(true);
   const [lateFee, setLateFee] = useState(false);
+  // The report type the rows on screen were generated for. Switching the
+  // dropdown does not regroup a report until it is generated again.
+  const [generatedType, setGeneratedType] = useState(null);
+  // Partners whose band is folded shut; every partner opens expanded.
+  const [collapsed, setCollapsed] = useState(() => new Set());
+  const { settings } = useThemeProvider();
 
   const token = getSession()?.token || getSession("token") || "";
   const headers = useMemo(() => ({ Authorization: `Bearer ${token}` }), [token]);
@@ -181,6 +235,8 @@ const Installment_Dues = () => {
 
       const res = await axios.get(url, { headers });
       setRows((res.data || []).map((row, index) => ({ id: row.loanId || index + 1, sno: index + 1, ...row })));
+      setGeneratedType(reportType);
+      setCollapsed(new Set());
     } catch (error) {
       console.error("Generate Report Error : ", error);
       errorToast("Failed to generate report");
@@ -242,41 +298,77 @@ const Installment_Dues = () => {
       top: (row) => formatDate(row.dueDate),
       bottom: (row) => `(${daysOverdue(row.dueDate)})`,
     }),
-    { field: "lateFee", headerName: "Late Fee", width: 110, align: "right", headerAlign: "right", valueFormatter: (value) => formatAmount(value) },
+    {
+      field: "lateFee",
+      headerName: "Late Fee",
+      width: 110,
+      align: "right",
+      headerAlign: "right",
+      // Partner and DF / MF bands in the download carry no late fee - blank, not 0.
+      valueFormatter: (value, row) => (row?.__band ? "" : formatAmount(value)),
+    },
   ];
 
   // One table per loan type, each with its own S.No sequence starting at 1 and
   // its own TOTAL row, exactly as the old report lays it out.
-  const sections = useMemo(() => {
-    const grouped = { DF: [], MF: [] };
-    rows.forEach((row) => grouped[sectionOf(row)].push(row));
+  const sections = useMemo(() => splitByLoanType(rows), [rows]);
 
-    return SECTIONS.map((section) => ({
-      ...section,
-      rows: grouped[section.key].map((row, index) => ({ ...row, sno: index + 1 })),
-    })).filter((section) => section.rows.length > 0);
-  }, [rows]);
+  // All Partners groups the way the old dues ledger does: a heading per
+  // partner, then that partner's DF and MF tables, each with its own TOTAL.
+  // Partners run A-Z so one is easy to find.
+  const partnerGroups = useMemo(() => {
+    if (generatedType !== "all") return [];
+    const byPartner = new Map();
+    rows.forEach((row) => {
+      const name = partnerOf(row);
+      const key = name.toUpperCase();
+      if (!byPartner.has(key)) byPartner.set(key, { key, name, rows: [] });
+      byPartner.get(key).rows.push(row);
+    });
 
-  // The screen shows DF and MF as two grids, but the report downloads as one
-  // document: each section banded and totalled, the way the old report prints
-  // it. That keeps a single Download for the whole screen instead of one menu
-  // per table.
+    return [...byPartner.values()]
+      .sort((a, b) => a.name.localeCompare(b.name))
+      .map((group) => ({ ...group, sections: splitByLoanType(group.rows), totals: sumTotals(group.rows) }));
+  }, [rows, generatedType]);
+  const grouped = partnerGroups.length > 0;
+
+  // The partner heading already names the partner, so its column comes off the
+  // download and starts hidden on screen (Columns brings it back).
+  const exportColumns = grouped ? columns.filter((column) => column.field !== "partnerName") : columns;
+
+  // The screen shows several grids, but the report downloads as one document:
+  // each section banded and totalled - under its partner's band when grouped -
+  // the way the old report prints it. That keeps a single Download for the
+  // whole screen instead of one menu per table.
   const exportRows = useMemo(
     () =>
-      sections.flatMap((section) => {
-        const totals = TOTAL_FIELDS.reduce((acc, field) => {
-          acc[field] = section.rows.reduce((sum, row) => sum + Number(row[field] || 0), 0);
-          return acc;
-        }, {});
-
-        return [
-          { id: `${section.key}-band`, __isTotal: true, loanId: section.key, customerName: section.subtitle },
-          ...section.rows,
-          { id: `${section.key}-total`, __isTotal: true, startDate: `${section.key} TOTAL`, ...totals },
-        ];
-      }),
-    [sections]
+      grouped
+        ? partnerGroups.flatMap((group) => [
+            { id: `${group.key}-partner`, __isTotal: true, __band: true, loanId: "Partner", customerName: group.name },
+            ...group.sections.flatMap((section) => sectionExportRows(section, `${group.key}-`)),
+          ])
+        : sections.flatMap((section) => sectionExportRows(section)),
+    [grouped, partnerGroups, sections]
   );
+
+  // Sized to one page of the table's own rows (TOTAL included) so a partner
+  // with two loans is not a mostly blank grid, and a long one reads down the
+  // page like the old ledger instead of scrolling inside a box.
+  const groupTableHeight = (count) => {
+    const size = TABLE_PX[settings.tableDensity] || TABLE_PX.compact;
+    return size.chrome + Math.min(count + 1, GROUP_PAGE_SIZE) * size.row;
+  };
+
+  const allExpanded = collapsed.size === 0;
+  const toggleAll = () =>
+    setCollapsed(allExpanded ? new Set(partnerGroups.map((group) => group.key)) : new Set());
+  const togglePartner = (key) =>
+    setCollapsed((current) => {
+      const next = new Set(current);
+      if (next.has(key)) next.delete(key);
+      else next.add(key);
+      return next;
+    });
 
   // Filter lines printed under the company banner on every download.
   const reportOptions = useMemo(
@@ -305,7 +397,7 @@ const Installment_Dues = () => {
         {/* One download for the whole report - DF and MF in a single document. */}
         <TableExportMenu
           rows={exportRows}
-          columns={columns}
+          columns={exportColumns}
           fileName="Installment-Dues"
           reportOptions={reportOptions}
         />
@@ -315,7 +407,7 @@ const Installment_Dues = () => {
           size="small"
           variant="outlined"
           startIcon={<PrintRounded />}
-          onClick={() => printReport(exportRows, columns, "Installment-Dues", reportOptions)}
+          onClick={() => printReport(exportRows, exportColumns, "Installment-Dues", reportOptions)}
           disabled={!exportRows.length}
         >
           Print
@@ -377,7 +469,87 @@ const Installment_Dues = () => {
         </Grid>
       </Paper>
       <Box ref={zoom.targetRef} sx={{ display: "flex", flexDirection: "column", gap: 1.5 }}>
-        {(sections.length
+        {grouped ? (
+          <>
+            <Stack direction="row" alignItems="center" justifyContent="space-between" sx={{ px: 0.5 }}>
+              <Typography variant="body2" color="text.secondary" sx={{ fontWeight: 700 }}>
+                {partnerGroups.length} partners · {rows.length} loans
+              </Typography>
+              <Button size="small" onClick={toggleAll}>
+                {allExpanded ? "Collapse all" : "Expand all"}
+              </Button>
+            </Stack>
+
+            {partnerGroups.map((group) => (
+              <Accordion
+                key={group.key}
+                className="enterprise-card"
+                elevation={0}
+                disableGutters
+                expanded={!collapsed.has(group.key)}
+                onChange={() => togglePartner(group.key)}
+                // A folded partner's grids leave the page instead of rendering hidden.
+                slotProps={{ transition: { unmountOnExit: true } }}
+                sx={{ "&::before": { display: "none" }, overflow: "hidden" }}
+              >
+                {/* The old ledger's partner heading, with the partner's figures
+                    across DF and MF so a folded band still reads. */}
+                <AccordionSummary
+                  expandIcon={<ExpandMoreRounded />}
+                  sx={{
+                    px: 2.5,
+                    minHeight: 56,
+                    backgroundColor: "var(--surface-2)",
+                    borderLeft: "4px solid var(--brand-primary)",
+                    "& .MuiAccordionSummary-content": { my: 1.25, minWidth: 0 },
+                  }}
+                >
+                  <Stack
+                    direction={{ xs: "column", md: "row" }}
+                    alignItems={{ xs: "flex-start", md: "center" }}
+                    spacing={{ xs: 0.75, md: 2 }}
+                    sx={{ width: "100%", minWidth: 0, pr: 1 }}
+                  >
+                    <Typography variant="subtitle1" sx={{ fontWeight: 800, textTransform: "uppercase", flex: 1, minWidth: 0 }} noWrap>
+                      {group.name}
+                    </Typography>
+                    <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
+                      <Chip size="small" variant="outlined" color="primary" label={`${group.rows.length} ${group.rows.length === 1 ? "loan" : "loans"}`} />
+                      <Chip size="small" variant="outlined" label={`Amount ${formatAmount(group.totals.amount)}`} />
+                      <Chip size="small" variant="outlined" label={`Inst. Bal ${formatAmount(group.totals.balanceAmount)}`} />
+                      <Chip
+                        size="small"
+                        variant="outlined"
+                        color={group.totals.installmentDue > 0 ? "error" : "default"}
+                        label={`Inst. Dues ${formatAmount(group.totals.installmentDue)}`}
+                      />
+                    </Stack>
+                  </Stack>
+                </AccordionSummary>
+                <AccordionDetails sx={{ p: 1.5, display: "flex", flexDirection: "column", gap: 1.5 }}>
+                  {group.sections.map((section) => (
+                    <DataTable
+                      key={section.key}
+                      rows={section.rows}
+                      columns={columns}
+                      loading={loading}
+                      title={section.key}
+                      subtitle={section.subtitle}
+                      height={groupTableHeight(section.rows.length)}
+                      minHeight={0}
+                      pageSize={GROUP_PAGE_SIZE}
+                      rowHeight={58}
+                      totalFields={TOTAL_FIELDS}
+                      totalLabelCell={TOTAL_LABEL_CELL}
+                      initialState={{ columns: { columnVisibilityModel: { partnerName: false } } }}
+                      showExport={false}
+                    />
+                  ))}
+                </AccordionDetails>
+              </Accordion>
+            ))}
+          </>
+        ) : (sections.length
           ? sections
           : [{ key: "empty", title: "Installment Dues Ledger", subtitle: "Generate the report to load dues.", rows: [] }]
         ).map((section) => (
