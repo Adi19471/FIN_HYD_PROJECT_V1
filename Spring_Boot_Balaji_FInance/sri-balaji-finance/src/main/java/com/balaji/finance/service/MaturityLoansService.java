@@ -18,6 +18,7 @@ import com.balaji.finance.pojo.MaturedLoansPojo;
 import com.balaji.finance.repo.BusinessMemberRepository;
 import com.balaji.finance.repo.CashBookRepo;
 import com.balaji.finance.repo.EmiRepo;
+import com.balaji.finance.util.PersonNames;
 
 @Service
 public class MaturityLoansService {
@@ -66,9 +67,9 @@ public class MaturityLoansService {
 				MaturedLoansPojo dto = new MaturedLoansPojo();
 				dto.setSno(++i);
 				dto.setLoanId(bm.getBusinessMemberId());
-				dto.setCustomerName(bm.getCustomerId() != null ? bm.getCustomerId().getFirstName() : "");
-				dto.setGuarentorName(bm.getGuarantor1() != null ? bm.getGuarantor1().getFirstName() : "");
-				dto.setPartnerName(bm.getPartnerId() != null ? bm.getPartnerId().getFirstName() : "");
+				dto.setCustomerName(PersonNames.fullName(bm.getCustomerId()));
+				dto.setGuarentorName(PersonNames.fullName(bm.getGuarantor1()));
+				dto.setPartnerName(PersonNames.fullName(bm.getPartnerId()));
 
 				dto.setStartDate(bm.getStartDate() != null ? bm.getStartDate().format(fmt) : "");
 				dto.setEndDate(bm.getEndDate() != null ? bm.getEndDate().format(fmt) : "");

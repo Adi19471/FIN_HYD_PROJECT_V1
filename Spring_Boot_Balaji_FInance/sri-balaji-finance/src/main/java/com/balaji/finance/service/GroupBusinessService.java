@@ -17,6 +17,7 @@ import com.balaji.finance.repo.BusinessMemberRepository;
 import com.balaji.finance.repo.CashBookRepo;
 import com.balaji.finance.repo.EmiRepo;
 import com.balaji.finance.repo.PersonalInfoRepository;
+import com.balaji.finance.util.PersonNames;
 
 @Service
 public class GroupBusinessService {
@@ -108,7 +109,7 @@ public class GroupBusinessService {
 			GroupBusinessResponsePojo response = new GroupBusinessResponsePojo();
 
 			response.setPartnerId(manager.getManagerId());
-			response.setName(manager.getManagerName() + " " + manager.getManagerLastName());
+			response.setName(PersonNames.fullName(manager.getManagerName(), manager.getManagerLastName()));
 
 			response.setNoOfShares(manager.getNoOfSharesUnderManager());
 

@@ -18,6 +18,7 @@ import com.balaji.finance.pojo.LoanReportDTO;
 import com.balaji.finance.repo.BusinessMemberRepository;
 import com.balaji.finance.repo.CashBookRepo;
 import com.balaji.finance.repo.EmiRepo;
+import com.balaji.finance.util.PersonNames;
 
 @Service
 public class LoanReportService {
@@ -58,9 +59,9 @@ public class LoanReportService {
 	        dto.setSno(++i);
 	        dto.setLoanId(bm.getBusinessMemberId());
 
-	        dto.setCustomerName(bm.getCustomerId() != null ? bm.getCustomerId().getFirstName() : "");
-	        dto.setGuarentorName(bm.getGuarantor1() != null ? bm.getGuarantor1().getFirstName() : "");
-	        dto.setPartnerName(bm.getPartnerId() != null ? bm.getPartnerId().getFirstName() : "");
+	        dto.setCustomerName(PersonNames.fullName(bm.getCustomerId()));
+	        dto.setGuarentorName(PersonNames.fullName(bm.getGuarantor1()));
+	        dto.setPartnerName(PersonNames.fullName(bm.getPartnerId()));
 
 	        dto.setStartDate(bm.getStartDate() != null ? bm.getStartDate().format(fmt) : "");
 	        dto.setEndDate(bm.getEndDate() != null ? bm.getEndDate().format(fmt) : "");

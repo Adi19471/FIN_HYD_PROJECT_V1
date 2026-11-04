@@ -100,10 +100,10 @@ public interface EmiRepo extends JpaRepository<EMI, Integer> {
 	@Query("""
 			SELECT
 			    bm.businessMemberId AS loanId,
-			    bm.customerId.firstName AS customerName,
+			    TRIM(CONCAT(COALESCE(bm.customerId.firstName, ''), ' ', COALESCE(bm.customerId.lastName, ''))) AS customerName,
 			    bm.customerId.mobile AS customerMobile,
-			    bm.partnerId.firstName AS partnerName,
-			    bm.guarantor1.firstName AS guarantorName,
+			    TRIM(CONCAT(COALESCE(bm.partnerId.firstName, ''), ' ', COALESCE(bm.partnerId.lastName, ''))) AS partnerName,
+			    TRIM(CONCAT(COALESCE(bm.guarantor1.firstName, ''), ' ', COALESCE(bm.guarantor1.lastName, ''))) AS guarantorName,
 			    bm.startDate AS startDate,
 			    bm.endDate AS endDate,
 			    bm.amount AS loanAmount,
@@ -174,9 +174,12 @@ public interface EmiRepo extends JpaRepository<EMI, Integer> {
 			GROUP BY
 			    bm.businessMemberId,
 			    bm.customerId.firstName,
+			    bm.customerId.lastName,
 			    bm.customerId.mobile,
 			    bm.partnerId.firstName,
+			    bm.partnerId.lastName,
 			    bm.guarantor1.firstName,
+			    bm.guarantor1.lastName,
 			    bm.startDate,
 			    bm.endDate,
 			    bm.amount,
@@ -213,8 +216,8 @@ public interface EmiRepo extends JpaRepository<EMI, Integer> {
 	@Query("""
 			SELECT
 			    bm.businessMemberId AS loanId,
-			    customer.firstName AS customerName,
-			    guarantor.firstName AS guarantorName,
+			    TRIM(CONCAT(COALESCE(customer.firstName, ''), ' ', COALESCE(customer.lastName, ''))) AS customerName,
+			    TRIM(CONCAT(COALESCE(guarantor.firstName, ''), ' ', COALESCE(guarantor.lastName, ''))) AS guarantorName,
 			    bm.startDate AS startDate,
 			    bm.endDate AS endDate,
 			    bm.amount AS loanAmount,
@@ -257,7 +260,7 @@ public interface EmiRepo extends JpaRepository<EMI, Integer> {
 			    ) AS dueAmount,
 
 			   customer.mobile AS customerMobile,
-			   partner.firstName AS partnerName,
+			   TRIM(CONCAT(COALESCE(partner.firstName, ''), ' ', COALESCE(partner.lastName, ''))) AS partnerName,
 
 			    MIN(
 			        CASE
@@ -286,9 +289,12 @@ public interface EmiRepo extends JpaRepository<EMI, Integer> {
 			GROUP BY
 			    bm.businessMemberId,
 			    bm.customerId.firstName,
+			    bm.customerId.lastName,
 			    bm.customerId.mobile,
 			    bm.partnerId.firstName,
+			    bm.partnerId.lastName,
 			    bm.guarantor1.firstName,
+			    bm.guarantor1.lastName,
 			    bm.startDate,
 			    bm.endDate,
 			    bm.amount,
@@ -304,8 +310,8 @@ public interface EmiRepo extends JpaRepository<EMI, Integer> {
 	@Query("""
 			SELECT
 			    bm.businessMemberId AS loanId,
-			    customer.firstName AS customerName,
-			    guarantor.firstName AS guarantorName,
+			    TRIM(CONCAT(COALESCE(customer.firstName, ''), ' ', COALESCE(customer.lastName, ''))) AS customerName,
+			    TRIM(CONCAT(COALESCE(guarantor.firstName, ''), ' ', COALESCE(guarantor.lastName, ''))) AS guarantorName,
 			    bm.startDate AS startDate,
 			    bm.endDate AS endDate,
 			    bm.amount AS loanAmount,
@@ -348,7 +354,7 @@ public interface EmiRepo extends JpaRepository<EMI, Integer> {
 			    ) AS dueAmount,
 
 			   customer.mobile AS customerMobile,
-			   partner.firstName AS partnerName,
+			   TRIM(CONCAT(COALESCE(partner.firstName, ''), ' ', COALESCE(partner.lastName, ''))) AS partnerName,
 
 			    MIN(
 			        CASE
@@ -375,17 +381,21 @@ public interface EmiRepo extends JpaRepository<EMI, Integer> {
 			GROUP BY
 			    bm.businessMemberId,
 			    bm.customerId.firstName,
+			    bm.customerId.lastName,
 			    bm.customerId.mobile,
 			    bm.partnerId.firstName,
+			    bm.partnerId.lastName,
 			    bm.guarantor1.firstName,
+			    bm.guarantor1.lastName,
 			    bm.startDate,
 			    bm.endDate,
 			    bm.amount,
 			    bm.installment,
 			    bm.duration,
-			    bm.loanType
+			    bm.loanType,
+			    partner.sequence
 
-			ORDER BY bm.businessMemberId
+			ORDER BY partner.sequence ASC, bm.businessMemberId
 			""")
 	List<GuarantorDuesProjection> getInstallmentDuesAllGuarenter(@Param("activeLoans") Boolean activeLoans);
 	

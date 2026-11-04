@@ -4,6 +4,7 @@ public interface PartnerLoanDetailsProjection {
     // Partner Details
     String getPartnerId();
     String getPartnerFirstName();
+    String getPartnerLastName();
     String getPartnerPhoneNumber();
 
     // Loan Details
@@ -13,11 +14,13 @@ public interface PartnerLoanDetailsProjection {
     // Customer Details
     String getCustomerId();
     String getCustomerFirstName();
+    String getCustomerLastName();
     String getCustomerPhoneNumber();
 
     // Guarantor Details
     String getGuarentorId();
     String getGuarentorFirstName();
+    String getGuarentorLastName();
     String getGuarentorPhoneNumber();
 
     // Loan Dates

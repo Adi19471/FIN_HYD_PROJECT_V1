@@ -15,6 +15,7 @@ import com.balaji.finance.pojo.QuickCashBookSaveRequest;
 import com.balaji.finance.repo.BusinessMemberRepository;
 
 import jakarta.transaction.Transactional;
+import com.balaji.finance.util.PersonNames;
 
 @Service
 public class QuickCashBookService {
@@ -47,7 +48,7 @@ public class QuickCashBookService {
 
 		QuickCashBookRow quickCashBookRow = new QuickCashBookRow();
 		quickCashBookRow.setAccountNo(bm.getBusinessMemberId());
-		quickCashBookRow.setName(bm.getCustomerId().getPersonalInfoId() + "-" + bm.getCustomerId().getFirstName());
+		quickCashBookRow.setName(bm.getCustomerId().getPersonalInfoId() + "-" + PersonNames.fullName(bm.getCustomerId()));
 		quickCashBookRow.setInstallment(bm.getInstallment());
 
 		quickCashBookRow.setDueAmount(null);

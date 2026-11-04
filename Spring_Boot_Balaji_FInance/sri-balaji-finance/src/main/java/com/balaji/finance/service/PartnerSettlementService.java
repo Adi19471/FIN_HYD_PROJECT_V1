@@ -11,6 +11,7 @@ import org.springframework.stereotype.Service;
 import com.balaji.finance.dto.PartnerLoanDetailsProjection;
 import com.balaji.finance.pojo.PartnerSettlementResponse;
 import com.balaji.finance.repo.BusinessMemberRepository;
+import com.balaji.finance.util.PersonNames;
 
 @Service
 public class PartnerSettlementService {
@@ -31,17 +32,20 @@ public class PartnerSettlementService {
 
 			PartnerSettlementResponse response = new PartnerSettlementResponse();
 
-			response.setPartnerName(projection.getPartnerId() + " " + projection.getPartnerFirstName() + " "
-					+ projection.getPartnerPhoneNumber());
+			response.setPartnerName(label(projection.getPartnerId(),
+					PersonNames.fullName(projection.getPartnerFirstName(), projection.getPartnerLastName()),
+					projection.getPartnerPhoneNumber()));
 
 			response.setLoanType(projection.getLoanType());
 			response.setLoanId(projection.getBusinessMemberId());
 
-			response.setCustomerName(projection.getCustomerId() + " " + projection.getCustomerFirstName() + " "
-					+ projection.getCustomerPhoneNumber());
+			response.setCustomerName(label(projection.getCustomerId(),
+					PersonNames.fullName(projection.getCustomerFirstName(), projection.getCustomerLastName()),
+					projection.getCustomerPhoneNumber()));
 
-			response.setGuarantorName(projection.getGuarentorId() + " " + projection.getGuarentorFirstName() + " "
-					+ projection.getGuarentorPhoneNumber());
+			response.setGuarantorName(label(projection.getGuarentorId(),
+					PersonNames.fullName(projection.getGuarentorFirstName(), projection.getGuarentorLastName()),
+					projection.getGuarentorPhoneNumber()));
 
 			response.setStartDate(projection.getStartDate().toLocalDate());
 			response.setEndDate(projection.getEndDate().toLocalDate());
@@ -63,5 +67,11 @@ public class PartnerSettlementService {
 		}
 
 		return returnList;
+	}
+
+	/** "ID Name Phone", leaving out whatever is missing (no "null" in the cell). */
+	private static String label(String id, String name, String phone) {
+		return java.util.stream.Stream.of(id, name, phone).filter(part -> part != null && !part.isBlank())
+				.collect(java.util.stream.Collectors.joining(" "));
 	}
 }

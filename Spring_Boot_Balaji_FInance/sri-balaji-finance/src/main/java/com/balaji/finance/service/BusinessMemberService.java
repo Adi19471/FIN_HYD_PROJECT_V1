@@ -41,6 +41,7 @@ import com.balaji.finance.util.DfNumberService;
 import com.balaji.finance.util.MfNumberService;
 
 import jakarta.transaction.Transactional;
+import com.balaji.finance.util.PersonNames;
 
 @Service
 public class BusinessMemberService {
@@ -783,7 +784,7 @@ public class BusinessMemberService {
 			BusinessMemberAutoCompletePojo pojo = new BusinessMemberAutoCompletePojo();
 			pojo.setLoanId(bm.getBusinessMemberId());
 			pojo.setCustomerId(bm.getCustomerId().getPersonalInfoId());
-			pojo.setCustomerName(bm.getCustomerId().getFirstName());
+			pojo.setCustomerName(PersonNames.fullName(bm.getCustomerId()));
 
 			pojoList.add(pojo);
 		}
@@ -802,7 +803,7 @@ public class BusinessMemberService {
 			BusinessMemberAutoCompletePojo pojo = new BusinessMemberAutoCompletePojo();
 			pojo.setLoanId(bm.getBusinessMemberId());
 			pojo.setCustomerId(bm.getCustomerId() != null ? bm.getCustomerId().getPersonalInfoId() : null);
-			pojo.setCustomerName(bm.getCustomerId() != null ? bm.getCustomerId().getFirstName() : null);
+			pojo.setCustomerName(bm.getCustomerId() != null ? PersonNames.fullName(bm.getCustomerId()) : null);
 
 			pojoList.add(pojo);
 		}

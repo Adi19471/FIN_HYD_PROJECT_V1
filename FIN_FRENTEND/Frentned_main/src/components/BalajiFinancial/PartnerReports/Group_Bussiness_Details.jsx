@@ -39,6 +39,10 @@ const formatDecimal = (amount) =>
 const TOTAL_FIELDS = [
   "noOfShares",
   "capital",
+  "noOfLoans",
+  "disbursedAmount",
+  "disbursedAmountWithInterest",
+  "paidAmount",
   "balanceOutStandingWithInterest",
   "balanceOutStandingWithOutInterest",
   "installmentDuesOutStanding",
@@ -157,6 +161,10 @@ const GroupBusinessDetails = () => {
       (acc, item) => {
         acc.shares += Number(item.noOfShares || 0);
         acc.capital += Number(item.capital || 0);
+        acc.loans += Number(item.noOfLoans || 0);
+        acc.disbursed += Number(item.disbursedAmount || 0);
+        acc.disbursedWithInterest += Number(item.disbursedAmountWithInterest || 0);
+        acc.paid += Number(item.paidAmount || 0);
         acc.balanceWithInterest += Number(item.balanceOutStandingWithInterest || 0);
         acc.balanceWithoutInterest += Number(item.balanceOutStandingWithOutInterest || 0);
         acc.installmentDues += Number(item.installmentDuesOutStanding || 0);
@@ -165,6 +173,10 @@ const GroupBusinessDetails = () => {
       {
         shares: 0,
         capital: 0,
+        loans: 0,
+        disbursed: 0,
+        disbursedWithInterest: 0,
+        paid: 0,
         balanceWithInterest: 0,
         balanceWithoutInterest: 0,
         installmentDues: 0,
@@ -178,6 +190,10 @@ const GroupBusinessDetails = () => {
     { field: "name", headerName: "Name", minWidth: 240, flex: 1 },
     { field: "noOfShares", headerName: "Shares", width: 120, align: "right", headerAlign: "right", valueFormatter: (value) => formatDecimal(value) },
     { field: "capital", headerName: "Capital", width: 150, align: "right", headerAlign: "right", valueFormatter: (value) => formatAmount(value) },
+    { field: "noOfLoans", headerName: "Loans", width: 110, align: "right", headerAlign: "right", valueFormatter: (value) => formatAmount(value) },
+    { field: "disbursedAmount", headerName: "Disbursed Amount", width: 170, align: "right", headerAlign: "right", valueFormatter: (value) => formatAmount(value) },
+    { field: "disbursedAmountWithInterest", headerName: "Disb. Amt With Interest", width: 210, align: "right", headerAlign: "right", valueFormatter: (value) => formatAmount(value) },
+    { field: "paidAmount", headerName: "Paid Amount", width: 150, align: "right", headerAlign: "right", valueFormatter: (value) => formatAmount(value) },
     { field: "balanceOutStandingWithInterest", headerName: "Balance O/S With Int.", width: 210, align: "right", headerAlign: "right", valueFormatter: (value) => formatAmount(value) },
     { field: "balanceOutStandingWithOutInterest", headerName: "Balance O/S Without Int.", width: 230, align: "right", headerAlign: "right", valueFormatter: (value) => formatAmount(value) },
     { field: "installmentDuesOutStanding", headerName: "Installment Dues O/S", width: 210, align: "right", headerAlign: "right", valueFormatter: (value) => formatAmount(value) },
@@ -205,6 +221,10 @@ const GroupBusinessDetails = () => {
   const totalRows = [
     { label: "Shares", value: formatDecimal(totals.shares) },
     { label: "Capital", value: formatAmount(totals.capital) },
+    { label: "Loans", value: formatAmount(totals.loans) },
+    { label: "Disbursed Amount", value: formatAmount(totals.disbursed) },
+    { label: "Disb. Amt With Interest", value: formatAmount(totals.disbursedWithInterest) },
+    { label: "Paid Amount", value: formatAmount(totals.paid) },
     { label: "Balance O/S With Int.", value: formatAmount(totals.balanceWithInterest) },
     { label: "Balance O/S Without Int.", value: formatAmount(totals.balanceWithoutInterest) },
     { label: "Installment Dues O/S", value: formatAmount(totals.installmentDues) },
@@ -330,7 +350,7 @@ const GroupBusinessDetails = () => {
         ]}
         title="Total Summary"
         subtitle={`${rows.length} records included in totals`}
-        height={380}
+        height={430}
         pageSize={25}
         hideFooter
         showExport={false}

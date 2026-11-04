@@ -46,6 +46,7 @@ import com.balaji.finance.repo.EmiRepo;
 import com.balaji.finance.repo.PaymentAllocationRepo;
 
 import jakarta.transaction.Transactional;
+import com.balaji.finance.util.PersonNames;
 
 @Service
 public class CashBookService {
@@ -78,7 +79,7 @@ public class CashBookService {
 			cashBookViewPojo.setAccountNumber(
 					cashBook.getBusinessMember() != null ? cashBook.getBusinessMember().getBusinessMemberId() : null);
 			cashBookViewPojo.setName(cashBook.getPersonalInfo() != null
-					? cashBook.getPersonalInfo().getPersonalInfoId() + " - " + cashBook.getPersonalInfo().getFirstName()
+					? cashBook.getPersonalInfo().getPersonalInfoId() + " - " + PersonNames.fullName(cashBook.getPersonalInfo())
 					: "");
 			cashBookViewPojo.setParticulars(cashBook.getAccountMasterCode());
 			cashBookViewPojo.setTransactionType(cashBook.getAccountMasterMasterCode());
@@ -110,7 +111,7 @@ public class CashBookService {
 			cashBookDeletedViewPojo.setAccountNumber(
 					cashBook.getBusinessMember() != null ? cashBook.getBusinessMember().getBusinessMemberId() : null);
 			cashBookDeletedViewPojo.setName(cashBook.getPersonalInfo() != null
-					? cashBook.getPersonalInfo().getPersonalInfoId() + " - " + cashBook.getPersonalInfo().getFirstName()
+					? cashBook.getPersonalInfo().getPersonalInfoId() + " - " + PersonNames.fullName(cashBook.getPersonalInfo())
 					: "");
 			cashBookDeletedViewPojo.setParticulars(cashBook.getAccountMasterCode());
 			cashBookDeletedViewPojo.setTransactionType(cashBook.getAccountMasterMasterCode());
@@ -285,7 +286,7 @@ public class CashBookService {
 			cashBookViewPojo.setAccountNumber(
 					cashBook.getBusinessMember() != null ? cashBook.getBusinessMember().getBusinessMemberId() : "");
 			cashBookViewPojo.setName(cashBook.getPersonalInfo() != null ? cashBook.getPersonalInfo().getPersonalInfoId()
-					+ " - " + cashBook.getPersonalInfo().getFirstName() + " - "
+					+ " - " + PersonNames.fullName(cashBook.getPersonalInfo()) + " - "
 					+ (cashBook.getPersonalInfo().getMobile() != null ? cashBook.getPersonalInfo().getMobile() : "")
 					: "");
 			cashBookViewPojo.setParticulars(cashBook.getBmRemarks());
@@ -325,7 +326,7 @@ public class CashBookService {
 						: "");
 				cashBookViewPojo.setName(
 						sampleRecord.getPersonalInfo() != null ? sampleRecord.getPersonalInfo().getPersonalInfoId()
-								+ " - " + sampleRecord.getPersonalInfo().getFirstName() + " - "
+								+ " - " + PersonNames.fullName(sampleRecord.getPersonalInfo()) + " - "
 								+ (sampleRecord.getPersonalInfo().getMobile() != null
 										? sampleRecord.getPersonalInfo().getMobile()
 										: "")
@@ -568,7 +569,7 @@ public class CashBookService {
 			AccountsMasterLedgerPojo accountsMasterLedgerPojo = new AccountsMasterLedgerPojo();
 			accountsMasterLedgerPojo.setSno(++i);
 			accountsMasterLedgerPojo.setName(r.getPersonalInfo() != null
-					? r.getPersonalInfo().getPersonalInfoId() + " - " + r.getPersonalInfo().getFirstName()
+					? r.getPersonalInfo().getPersonalInfoId() + " - " + PersonNames.fullName(r.getPersonalInfo())
 					: "");
 			accountsMasterLedgerPojo.setParticulars(r.getAccountMasterCode());
 			accountsMasterLedgerPojo.setTransCode(r.getAccountMasterMasterCode());
@@ -715,7 +716,7 @@ public class CashBookService {
 			cashBookLedger.setLoanDate(
 					businessMember.getStartDate() != null ? businessMember.getStartDate().toLocalDate() : null);
 			cashBookLedger.setCustomerName(
-					firstRow.getPersonalInfo() != null ? firstRow.getPersonalInfo().getFirstName() : null);
+					firstRow.getPersonalInfo() != null ? PersonNames.fullName(firstRow.getPersonalInfo()) : null);
 			cashBookLedger.setAmountPaid(currentPaymentAmount);
 			cashBookLedger.setLateFee(BigDecimal.ZERO);
 			cashBookLedger.setTotal(currentPaymentAmount);

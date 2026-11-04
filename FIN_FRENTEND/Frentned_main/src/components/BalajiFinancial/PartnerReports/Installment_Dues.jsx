@@ -315,7 +315,7 @@ const Installment_Dues = () => {
 
   // All Partners groups the way the old dues ledger does: a heading per
   // partner, then that partner's DF and MF tables, each with its own TOTAL.
-  // Partners run A-Z so one is easy to find.
+  // Partners keep the order the API sends them in - their sequence, ascending.
   const partnerGroups = useMemo(() => {
     if (generatedType !== "all") return [];
     const byPartner = new Map();
@@ -327,7 +327,6 @@ const Installment_Dues = () => {
     });
 
     return [...byPartner.values()]
-      .sort((a, b) => a.name.localeCompare(b.name))
       .map((group) => ({ ...group, sections: splitByLoanType(group.rows), totals: sumTotals(group.rows) }));
   }, [rows, generatedType]);
   const grouped = partnerGroups.length > 0;

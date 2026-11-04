@@ -12,6 +12,7 @@ import org.springframework.stereotype.Service;
 import com.balaji.finance.dto.PartnerPerformanceReport;
 import com.balaji.finance.pojo.PerformanceResponsePojo;
 import com.balaji.finance.repo.CashBookRepo;
+import com.balaji.finance.util.PersonNames;
 
 @Service
 public class PerformanceService {
@@ -57,8 +58,7 @@ public class PerformanceService {
 			response.setSno(++sno);
 			response.setPartnerId(report.getId());
 
-			response.setName((report.getFirstName() != null ? report.getFirstName() : "") + " "
-					+ (report.getLastName() != null ? report.getLastName() : ""));
+			response.setName(PersonNames.fullName(report.getFirstName(), report.getLastName()));
 
 			response.setLoansDisbursed(disbursedAmount);
 			response.setLoansPayment(installments);

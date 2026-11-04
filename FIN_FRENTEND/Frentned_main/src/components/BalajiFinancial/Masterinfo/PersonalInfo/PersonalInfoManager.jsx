@@ -217,8 +217,15 @@ const PersonalInfoManager = ({ personType = "CUSTOMER" }) => {
       ),
     },
     { field: "id", headerName: "ID", width: 100 },
-    { field: "firstname", headerName: "First Name", minWidth: 140, flex: 1 },
-    { field: "lastname", headerName: "Last Name", minWidth: 140, flex: 1 },
+    {
+      field: "fullname",
+      headerName: "Name",
+      minWidth: 200,
+      flex: 1.4,
+      // "First Last", as the name reads everywhere else - and what the grid
+      // searches, sorts and downloads.
+      valueGetter: (_, row) => [row.firstname, row.lastname].filter(Boolean).join(" "),
+    },
     { field: "mobile", headerName: "Mobile", width: 120 },
     { field: "occupation", headerName: "Occupation", minWidth: 130, flex: 0.8 },
     { field: "address", headerName: "Address", minWidth: 220, flex: 1.6 },

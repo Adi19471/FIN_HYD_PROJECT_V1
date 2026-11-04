@@ -34,6 +34,7 @@ public interface PersonalInfoRepository extends JpaRepository<PersonalInfo, Stri
 			         OR u.mobile LIKE CONCAT('%', :keyword, '%')
 			         OR u.phone LIKE CONCAT('%', :keyword, '%')
 			      )
+			    ORDER BY u.sequence ASC
 			""")
 	public List<PersonalInfo> personalInfoAllCategoryAutoComplete(@Param("status") boolean status,
 			@Param("keyword") String keyWord);
@@ -49,6 +50,7 @@ public interface PersonalInfoRepository extends JpaRepository<PersonalInfo, Stri
 			         OR u.phone LIKE CONCAT('%', :keyword, '%')
 			      )
 			      AND u.category IN (:categoryList)
+			    ORDER BY u.sequence ASC
 			""")
 	public List<PersonalInfo> personalInfoAutoComplete(@Param("status") boolean status,
 			@Param("keyword") String keyWord, @Param("categoryList") List<String> categoryList);
@@ -59,14 +61,16 @@ public interface PersonalInfoRepository extends JpaRepository<PersonalInfo, Stri
 			        m.FIRST_NAME AS managerName,
 			        m.LAST_NAME AS managerLastName,
 			        COALESCE(SUM(p.SHARES), 0) + COALESCE(m.SHARES, 0) AS noOfSharesUnderManager,
-			        GROUP_CONCAT(p.PERSONAL_INFO_ID ORDER BY p.PERSONAL_INFO_ID SEPARATOR ',') AS partnerIds
+			        GROUP_CONCAT(p.PERSONAL_INFO_ID ORDER BY p.SEQUENCE, p.PERSONAL_INFO_ID SEPARATOR ',') AS partnerIds
 			    FROM personal_info p
 			    JOIN personal_info m
 			        ON p.PERSONAL_INFO_MANAGER_ID = m.PERSONAL_INFO_ID
 			    GROUP BY
 			        m.PERSONAL_INFO_ID,
 			        m.FIRST_NAME,
-			        m.LAST_NAME
+			        m.LAST_NAME,
+			        m.SEQUENCE
+			    ORDER BY m.SEQUENCE ASC, m.PERSONAL_INFO_ID ASC
 			""", nativeQuery = true)
 	List<ManagerDetailsProjection> findManagerDetails();
 
@@ -75,7 +79,8 @@ public interface PersonalInfoRepository extends JpaRepository<PersonalInfo, Stri
 			    m.personal_info_id AS id,
 			    m.first_name AS firstName,
 			    m.last_name AS lastName,
-			    m.shares AS shares
+			    m.shares AS shares,
+			    m.sequence AS sequence
 			FROM personal_info m
 			WHERE m.personal_info_id = :personalInfoId
 
@@ -85,11 +90,12 @@ public interface PersonalInfoRepository extends JpaRepository<PersonalInfo, Stri
 			    p.personal_info_id AS id,
 			    p.first_name AS firstName,
 			    p.last_name AS lastName,
-			    p.shares AS shares
+			    p.shares AS shares,
+			    p.sequence AS sequence
 			FROM personal_info p
 			WHERE p.personal_info_manager_id = :personalInfoId
 
-			ORDER BY id
+			ORDER BY sequence ASC, id ASC
 			""", nativeQuery = true)
 	List<PersonsUnderManagerProjection> findPersonsUnderManager(@Param("personalInfoId") String personalInfoId);
 
@@ -130,6 +136,7 @@ public interface PersonalInfoRepository extends JpaRepository<PersonalInfo, Stri
 			         OR u.phone LIKE CONCAT('%', :keyword, '%')
 			      )
 			      AND u.groupManager = true
+			    ORDER BY u.sequence ASC
 			""")
 	public List<PersonalInfo> findAllGroupManagers(@Param("keyword") String keyWord);
 

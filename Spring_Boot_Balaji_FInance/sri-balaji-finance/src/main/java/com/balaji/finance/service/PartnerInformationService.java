@@ -10,6 +10,7 @@ import com.balaji.finance.dto.PartnerInformationProjection;
 import com.balaji.finance.entity.PersonalInfo;
 import com.balaji.finance.pojo.ParnterInformationResponse;
 import com.balaji.finance.repo.PersonalInfoRepository;
+import com.balaji.finance.util.PersonNames;
 
 @Service
 public class PartnerInformationService {
@@ -35,7 +36,7 @@ public class PartnerInformationService {
 
 			response.setPartnerId(partner.getPersonalInfoId());
 
-			response.setPartnerName(partner.getFirstName());
+			response.setPartnerName(PersonNames.fullName(partner));
 
 			response.setFatherName(partner.getFatherName());
 

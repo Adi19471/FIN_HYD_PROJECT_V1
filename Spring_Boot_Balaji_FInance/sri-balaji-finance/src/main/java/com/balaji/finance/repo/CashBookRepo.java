@@ -411,14 +411,14 @@ public interface CashBookRepo extends JpaRepository<CashBook, Long> {
 	@Query("""
 			    SELECT
 			         customer.personalInfoId AS personalInfoId,
-			         customer.firstName AS customerName,
+			         TRIM(CONCAT(COALESCE(customer.firstName, ''), ' ', COALESCE(customer.lastName, ''))) AS customerName,
 			         COALESCE(SUM(cb.credit), 0) AS credits,
 			         COALESCE(SUM(cb.debit), 0) AS debits
 			    FROM CashBook cb
 			    LEFT JOIN cb.personalInfo customer
 			    WHERE cb.accountMasterCode = :accountMasterCode
-			    GROUP BY customer.personalInfoId, customer.firstName
-			    ORDER BY customer.firstName
+			    GROUP BY customer.personalInfoId, customer.firstName, customer.lastName, customer.sequence
+			    ORDER BY customer.sequence ASC, customer.personalInfoId ASC
 			""")
 	List<CustomerReportProjection> getCustomerReportOnAccountCode(@Param("accountMasterCode") String accountMasterCode);
 	
@@ -426,15 +426,15 @@ public interface CashBookRepo extends JpaRepository<CashBook, Long> {
 	@Query("""
 		    SELECT
 		         customer.personalInfoId AS personalInfoId,
-		         customer.firstName AS customerName,
+		         TRIM(CONCAT(COALESCE(customer.firstName, ''), ' ', COALESCE(customer.lastName, ''))) AS customerName,
 		         COALESCE(SUM(cb.credit), 0) AS credits,
 		         COALESCE(SUM(cb.debit), 0) AS debits
 		    FROM CashBook cb
 		    LEFT JOIN cb.personalInfo customer
 		    WHERE cb.accountMasterCode = :accountMasterCode
 		      AND cb.transDate BETWEEN :fromDate AND :toDate
-			    GROUP BY customer.personalInfoId, customer.firstName
-			    ORDER BY customer.firstName
+			    GROUP BY customer.personalInfoId, customer.firstName, customer.lastName, customer.sequence
+			    ORDER BY customer.sequence ASC, customer.personalInfoId ASC
 			""")
 	List<CustomerReportProjection> getCustomerReportOnAccountCodeDateRange(@Param("accountMasterCode") String accountMasterCode,
 			@Param("fromDate") LocalDateTime fromDate, @Param("toDate") LocalDateTime toDate);
@@ -509,10 +509,7 @@ public interface CashBookRepo extends JpaRepository<CashBook, Long> {
 			    SELECT
 			        COALESCE(SUM(cb.credit), 0)
 			    FROM CashBook cb
-			         
-			         JOIN cb.businessMember as businessMember
-			         JOIN cb.personalInfo 02
-			         
+			         JOIN cb.personalInfo personalInfo
 			    WHERE cb.accountMasterCode IN :accountMasterCode
 			      AND cb.transDate BETWEEN :fromDate AND :toDate
 			      AND personalInfo.personalInfoId IN :personalInfoId
@@ -613,7 +610,9 @@ public interface CashBookRepo extends JpaRepository<CashBook, Long> {
 			GROUP BY
 			    partner.PERSONAL_INFO_ID,
 			    partner.FIRST_NAME,
-			    partner.LAST_NAME
+			    partner.LAST_NAME,
+			    partner.SEQUENCE
+			ORDER BY partner.SEQUENCE ASC, partner.PERSONAL_INFO_ID ASC
 			""", nativeQuery = true)
 	List<PartnerPerformanceReport> getLoanSummaryOfPartnersOfDateRange(@Param("fromDate") LocalDateTime fromDate,
 			@Param("toDate") LocalDateTime toDate);
@@ -661,7 +660,9 @@ public interface CashBookRepo extends JpaRepository<CashBook, Long> {
 			GROUP BY
 			    partner.PERSONAL_INFO_ID,
 			    partner.FIRST_NAME,
-			    partner.LAST_NAME
+			    partner.LAST_NAME,
+			    partner.SEQUENCE
+			ORDER BY partner.SEQUENCE ASC, partner.PERSONAL_INFO_ID ASC
 			""", nativeQuery = true)
 	List<PartnerPerformanceReport> getLoanSummaryOfPartners();
 

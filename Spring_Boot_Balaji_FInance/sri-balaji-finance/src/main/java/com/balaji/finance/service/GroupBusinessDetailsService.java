@@ -6,6 +6,7 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -22,6 +23,7 @@ import com.balaji.finance.repo.BusinessMemberRepository;
 import com.balaji.finance.repo.CashBookRepo;
 import com.balaji.finance.repo.EmiRepo;
 import com.balaji.finance.repo.PersonalInfoRepository;
+import com.balaji.finance.util.PersonNames;
 
 @Service
 public class GroupBusinessDetailsService {
@@ -55,7 +57,9 @@ public class GroupBusinessDetailsService {
 			to = toDate.atTime(23, 59, 59);
 		}
 
-		Map<String, PersonsUnderManagerProjection> personIdItsDetail = new HashMap<>();
+		// Insertion order is the query's order - the group's partners by their
+		// sequence - so the report rows come out in that order too.
+		Map<String, PersonsUnderManagerProjection> personIdItsDetail = new LinkedHashMap<>();
 
 		for (PersonsUnderManagerProjection person : allPartnerDetails) {
 			personIdItsDetail.put(person.getId(), person);
@@ -181,7 +185,7 @@ public class GroupBusinessDetailsService {
 
 			response.setPartnerId(partnerId);
 
-			response.setName(partnerObject.getFirstName() + " " + partnerObject.getLastName());
+			response.setName(PersonNames.fullName(partnerObject.getFirstName(), partnerObject.getLastName()));
 
 			response.setNoOfShares(partnerObject.getShares());
 

@@ -39,6 +39,7 @@ import com.balaji.finance.repo.EmiRepo;
 import com.balaji.finance.repo.PaymentAllocationRepo;
 
 import jakarta.transaction.Transactional;
+import com.balaji.finance.util.PersonNames;
 
 @Service
 public class MonthlyLoanInstallmentPaymentService {
@@ -81,18 +82,18 @@ public class MonthlyLoanInstallmentPaymentService {
 		DateTimeFormatter fmt = DateTimeFormatter.ofPattern("dd-MM-yyyy HH:mm:ss");
 
 		// ACCOUNT DETAILS
-		String accountNo = bm.getBusinessMemberId() + "-" + bm.getCustomerId().getFirstName() + "-"
+		String accountNo = bm.getBusinessMemberId() + "-" + PersonNames.fullName(bm.getCustomerId()) + "-"
 				+ (bm.getCustomerId().getPersonalInfoId() != null ? bm.getCustomerId().getPersonalInfoId() : "");
 		info.setAccountNo(accountNo);
 
 		String partnerName = (bm.getPartnerId() != null)
-				? (bm.getPartnerId().getFirstName() != null ? bm.getPartnerId().getFirstName() : "") + "-"
+				? PersonNames.fullName(bm.getPartnerId()) + "-"
 						+ (bm.getPartnerId().getPersonalInfoId() != null ? bm.getPartnerId().getPersonalInfoId() : "")
 				: "";
 		info.setPartnerName(partnerName);
 
 		String guarantorName = (bm.getGuarantor1() != null)
-				? (bm.getGuarantor1().getFirstName() != null ? bm.getGuarantor1().getFirstName() : "") + "-"
+				? PersonNames.fullName(bm.getGuarantor1()) + "-"
 						+ (bm.getGuarantor1().getPersonalInfoId() != null ? bm.getGuarantor1().getPersonalInfoId() : "")
 				: "";
 		info.setGuarantorName(guarantorName);

@@ -17,7 +17,7 @@ const formatAmount = (value) =>
   value === null || value === undefined || value === "" ? "" : Number(value || 0).toLocaleString("en-IN");
 
 const customerLabel = (opt) =>
-  `${opt.id ? opt.id + " - " : ""}${opt.firstname} ${opt.lastname} ${opt.mobile ? "- " + opt.mobile : ""}`;
+  `${opt.id ? opt.id + " - " : ""}${[opt.firstname, opt.lastname].filter(Boolean).join(" ")} ${opt.mobile ? "- " + opt.mobile : ""}`.trim();
 
 // One definition drives the grid on screen and every download / print of it.
 const columns = [

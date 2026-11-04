@@ -10,17 +10,23 @@ public interface CustomerDuesProjection {
 
 	String getCustomerFirstName();
 
+	String getCustomerLastName();
+
 	String getCustomerPhoneNumber();
 
 	String getGuarentorId();
 
 	String getGuarentorFirstName();
 
+	String getGuarentorLastName();
+
 	String getGuarentorPhoneNumber();
 
 	String getPartnerId();
 
 	String getPartnerFirstName();
+
+	String getPartnerLastName();
 
 	String getPartnerPhoneNumber();
 

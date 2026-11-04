@@ -10,6 +10,7 @@ import org.springframework.stereotype.Service;
 import com.balaji.finance.dto.CustomerDuesProjection;
 import com.balaji.finance.pojo.CustomerDuesResponse;
 import com.balaji.finance.repo.BusinessMemberRepository;
+import com.balaji.finance.util.PersonNames;
 
 @Service
 public class CustomerDuesService {
@@ -34,17 +35,17 @@ public class CustomerDuesService {
 			// Basic Loan Info
 			res.setLoanId(p.getBusinessMemberId());
 			res.setCustomerId(p.getCustomerId());
-			res.setCustomerName(p.getCustomerFirstName());
+			res.setCustomerName(PersonNames.fullName(p.getCustomerFirstName(), p.getCustomerLastName()));
 			res.setCustomerPhoneNumber(p.getCustomerPhoneNumber());
 
 			// Guarantor
 			res.setGuarentorId(p.getGuarentorId());
-			res.setGuarentorName(p.getGuarentorFirstName());
+			res.setGuarentorName(PersonNames.fullName(p.getGuarentorFirstName(), p.getGuarentorLastName()));
 			res.setGuarentorPhoneNumber(p.getGuarentorPhoneNumber());
 
 			// Partner
 			res.setPartnerId(p.getPartnerId());
-			res.setPartnerName(p.getPartnerFirstName());
+			res.setPartnerName(PersonNames.fullName(p.getPartnerFirstName(), p.getPartnerLastName()));
 			res.setPartnerPhoneNumber(p.getPartnerPhoneNumber());
 
 			// Loan Details
