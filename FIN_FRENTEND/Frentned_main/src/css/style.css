@@ -2641,6 +2641,108 @@ body {
   text-align: right;
 }
 
+/* ---- Business Share (Business > Business Share) ----
+   The printed statement on the same ruled ledger as the Balance Sheet: the
+   Loans Disbursed and Loans Outstanding tables under their captions, headed
+   in the table-header colours, a bold Total row each, then the value block -
+   label left, figure right - down to the value of one share. */
+.bshare-caption {
+  margin: 20px 0 6px;
+  color: var(--text-heading);
+  font-size: 0.9375rem;
+  font-weight: var(--fw-semibold);
+}
+
+.bs-title + .bshare-caption {
+  margin-top: 0;
+}
+
+/* seven figure columns: scroll sideways on a phone rather than crush them */
+.bshare-scroll {
+  overflow-x: auto;
+}
+
+.bshare-disbursed {
+  min-width: 760px;
+}
+
+.bshare-outstanding {
+  min-width: 440px;
+}
+
+.bshare-col-type {
+  width: 96px;
+}
+
+.bshare-table thead th {
+  background: var(--table-head-bg);
+  color: var(--table-head-fg);
+  font-weight: var(--fw-semibold);
+  line-height: 1.25;
+  vertical-align: bottom;
+  white-space: normal;
+  overflow-wrap: normal;
+}
+
+.bshare-table tbody th {
+  font-weight: var(--fw-semibold);
+}
+
+.bshare-table .bshare-total > th,
+.bshare-table .bshare-total > td {
+  background: color-mix(in srgb, var(--table-head-bg) 55%, transparent);
+  color: var(--text-heading);
+  font-weight: var(--fw-bold);
+}
+
+.bshare-value {
+  max-width: 520px;
+  margin: 24px 0 0;
+  font-size: 0.9375rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.bshare-value > div {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 16px;
+  padding: 5px 4px;
+  border-bottom: 1px solid var(--border-soft);
+}
+
+.bshare-value dt {
+  color: var(--text-heading);
+  font-weight: var(--fw-medium);
+  overflow-wrap: anywhere;
+}
+
+.bshare-value dd {
+  min-width: 120px;
+  margin: 0;
+  color: var(--text-strong);
+  font-weight: var(--fw-semibold);
+  text-align: right;
+  white-space: nowrap;
+}
+
+/* the gap the sheet leaves before Total */
+.bshare-value > .bshare-value-total {
+  margin-top: 14px;
+  border-top: 1px solid var(--table-line-strong);
+}
+
+.bshare-value > .bshare-value-total dt,
+.bshare-value > .bshare-value-total dd,
+.bshare-value > .bshare-value-final dt,
+.bshare-value > .bshare-value-final dd {
+  font-weight: var(--fw-bold);
+}
+
+.bshare-value > .bshare-value-final {
+  background: var(--table-head-bg);
+  border-bottom-color: var(--table-line-strong);
+}
+
 /* ---- nothing here yet ---- */
 .scr-empty {
   display: grid;
