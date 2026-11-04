@@ -80,7 +80,7 @@ public interface PersonalInfoRepository extends JpaRepository<PersonalInfo, Stri
 			    m.first_name AS firstName,
 			    m.last_name AS lastName,
 			    m.shares AS shares,
-			    m.sequence AS sequence
+			    m.sequence AS sequenceNo
 			FROM personal_info m
 			WHERE m.personal_info_id = :personalInfoId
 
@@ -91,11 +91,11 @@ public interface PersonalInfoRepository extends JpaRepository<PersonalInfo, Stri
 			    p.first_name AS firstName,
 			    p.last_name AS lastName,
 			    p.shares AS shares,
-			    p.sequence AS sequence
+			    p.sequence AS sequenceNo
 			FROM personal_info p
 			WHERE p.personal_info_manager_id = :personalInfoId
 
-			ORDER BY sequence ASC, id ASC
+			ORDER BY sequenceNo ASC, id ASC
 			""", nativeQuery = true)
 	List<PersonsUnderManagerProjection> findPersonsUnderManager(@Param("personalInfoId") String personalInfoId);
 

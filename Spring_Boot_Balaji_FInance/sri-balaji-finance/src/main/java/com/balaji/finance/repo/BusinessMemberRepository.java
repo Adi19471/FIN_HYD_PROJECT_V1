@@ -134,25 +134,39 @@ public interface BusinessMemberRepository extends JpaRepository<BusinessMember, 
 	List<LoanSummaryProjection> findAllLoansDisbursed();
 
 	@Query("""
-			    SELECT
-			        customer.personalInfoId AS personInfoId,
-			        TRIM(CONCAT(COALESCE(customer.firstName, ''), ' ', COALESCE(customer.lastName, ''))) AS personName,
-			        COUNT(bm.businessMemberId) AS noOfLoans,
-			        SUM(bm.amount+bm.interest) AS totalLoansAmount,
-			        COALESCE((
-			            SELECT SUM(e.paidAmount)
-			            FROM EMI e
-			            WHERE e.businessMember.customerId = customer
-			        ), 0) AS totalPaidAmount
+		 SELECT
+			    customer.personalInfoId AS personInfoId,
+			    TRIM(CONCAT(COALESCE(customer.firstName, ''), ' ', COALESCE(customer.lastName, ''))) AS personName,
 
-			    FROM BusinessMember as bm
-			    LEFT JOIN bm.customerId customer
-			    WHERE bm.loanType IN :loanType
-			      AND bm.sysDate <= :selectedDate
-			      AND bm.customerId IS NOT NULL
-			    GROUP BY customer.personalInfoId, customer.firstName, customer.lastName, customer.sequence
-			    ORDER BY customer.sequence ASC, customer.personalInfoId ASC
-			""")
+			    COUNT(bm.businessMemberId) AS noOfLoans,
+
+			    COALESCE(SUM(bm.amount + bm.interest), 0) AS totalLoansAmount,
+
+			    COALESCE((
+			        SELECT SUM(e.paidAmount)
+			        FROM EMI e
+			        WHERE e.businessMember.businessMemberId = bm.businessMemberId
+			          AND e.businessMember.customerId = customer
+			          AND e.businessMember.loanType IN :loanType
+			          AND e.businessMember.sysDate <= :selectedDate
+			    ), 0) AS totalPaidAmount
+
+			FROM PersonalInfo customer
+
+			LEFT JOIN BusinessMember bm
+			    ON bm.customerId = customer
+			    AND bm.loanType IN :loanType
+			    
+			WHERE customer.category = 'CUSTOMER'    
+
+			GROUP BY
+			    customer.personalInfoId,
+                customer.firstName, 
+                customer.lastName, 
+                customer.sequence,
+			    bm.businessMemberId 
+			ORDER BY customer.sequence asc   
+						""")
 	List<CustomerOutstandingProjection> customerLoansOverview(@Param("loanType") List<String> loanTypes,
 			@Param("selectedDate") LocalDateTime selectedDate);
 
@@ -356,6 +370,7 @@ public interface BusinessMemberRepository extends JpaRepository<BusinessMember, 
               AND bm.startDate BETWEEN :fromDate AND :toDate
 	        GROUP BY
 	            bm.partnerId.personalInfoId
+	        ORDER BY bm.partnerId.sequence asc
 			""")
 	List<LoanSummaryOfPartnerProjection> getLoanSummaryOfPartnerDateRange(
 			@Param("personalInfoIds") List<String> personalInfoIds, @Param("fromDate") LocalDateTime from,
@@ -378,6 +393,7 @@ public interface BusinessMemberRepository extends JpaRepository<BusinessMember, 
 
 	        GROUP BY
 	            bm.partnerId.personalInfoId
+	        ORDER BY bm.partnerId.sequence asc
 	        """)
 	List<LoanSummaryOfPartnerProjection> getLoanSummaryOfPartner(
 	        @Param("personalInfoIds") List<String> personalInfoIds);

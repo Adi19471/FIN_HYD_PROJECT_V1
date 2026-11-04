@@ -8,4 +8,5 @@ public interface PersonsUnderManagerProjection {
     String getFirstName();
     String getLastName();
     BigDecimal getShares();
+    Integer getSequenceNo();
 }

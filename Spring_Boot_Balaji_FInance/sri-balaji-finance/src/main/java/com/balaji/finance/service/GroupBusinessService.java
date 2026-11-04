@@ -71,13 +71,13 @@ public class GroupBusinessService {
 
 				loanSummary = businessMemberRepository.getLoanSummaryOfManagerDaterange(personInfoIds, from, to);
 
-				capitalAmount = cashBookRepo.getCreditOfAccountCodeDateRange(Arrays.asList("CAPITAL"), personInfoIds,
+				capitalAmount = cashBookRepo.getCapitalOfParntnerDateRange(Arrays.asList("CAPITAL"), personInfoIds,
 						from, to);
 
-				paidAmount = cashBookRepo.getCreditOfAccountCodeDateRange(
+				paidAmount = cashBookRepo.getCreditOfAccountCodeDateRangeAganistPartner(
 						Arrays.asList("DF LOAN INSTALLMENT", "MF LOAN INSTALLMENT"), personInfoIds, from, to);
 
-				paidInterest = cashBookRepo.getCreditOfAccountCodeDateRange(Arrays.asList("DF INTEREST", "MF INTEREST"),
+				paidInterest = cashBookRepo.getCreditOfAccountCodeDateRangeAganistPartner(Arrays.asList("DF INTEREST", "MF INTEREST"),
 						personInfoIds, from, to);
 
 				dueAmount = emiRepo.getDueAmountOfManagerDateRange(personInfoIds, from, to);
@@ -86,12 +86,12 @@ public class GroupBusinessService {
 
 				loanSummary = businessMemberRepository.getLoanSummaryOfManager(personInfoIds);
 
-				capitalAmount = cashBookRepo.getCreditOfAccountCode(Arrays.asList("CAPITAL"), personInfoIds);
+				capitalAmount = cashBookRepo.getCapitalOfParntner(Arrays.asList("CAPITAL"), personInfoIds);
 
-				paidAmount = cashBookRepo.getCreditOfAccountCode(
+				paidAmount = cashBookRepo.getCreditOfAccountCodeAganistPartner(
 						Arrays.asList("DF LOAN INSTALLMENT", "MF LOAN INSTALLMENT"), personInfoIds);
 
-				paidInterest = cashBookRepo.getCreditOfAccountCode(Arrays.asList("DF INTEREST", "MF INTEREST"),
+				paidInterest = cashBookRepo.getCreditOfAccountCodeAganistPartner(Arrays.asList("DF INTEREST", "MF INTEREST"),
 						personInfoIds);
 
 				dueAmount = emiRepo.getDueAmountOfManager(personInfoIds);

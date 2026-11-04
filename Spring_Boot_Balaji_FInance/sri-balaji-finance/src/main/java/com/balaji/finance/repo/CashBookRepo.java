@@ -514,7 +514,7 @@ public interface CashBookRepo extends JpaRepository<CashBook, Long> {
 			      AND cb.transDate BETWEEN :fromDate AND :toDate
 			      AND personalInfo.personalInfoId IN :personalInfoId
 			""")
-	BigDecimal getCreditOfAccountCodeDateRange(@Param("accountMasterCode") List<String> accountMasterCode,
+	BigDecimal getCapitalOfParntnerDateRange(@Param("accountMasterCode") List<String> accountMasterCode,
 			@Param("personalInfoId") List<String> personalInfoId, @Param("fromDate") LocalDateTime from,
 			@Param("toDate") LocalDateTime to);
 
@@ -526,8 +526,42 @@ public interface CashBookRepo extends JpaRepository<CashBook, Long> {
 			    WHERE cb.accountMasterCode IN :accountMasterCode
 			      AND personalInfo.personalInfoId IN :personalInfoId
 			""")
-	BigDecimal getCreditOfAccountCode(@Param("accountMasterCode") List<String> accountMasterCode,
+	BigDecimal getCapitalOfParntner(@Param("accountMasterCode") List<String> accountMasterCode,
 			@Param("personalInfoId") List<String> personalInfoId);
+	
+	
+	@Query("""
+		    SELECT
+		        COALESCE(SUM(cb.credit), 0)
+		    FROM CashBook cb
+		          JOIN cb.businessMember bm
+			      JOIN bm.partnerId partnerInfo
+		    WHERE cb.accountMasterCode IN :accountMasterCode
+		      AND cb.transDate BETWEEN :fromDate AND :toDate
+		      AND partnerInfo.personalInfoId IN :personalInfoId
+		""")
+	BigDecimal getCreditOfAccountCodeDateRangeAganistPartner(@Param("accountMasterCode") List<String> accountMasterCode,
+		@Param("personalInfoId") List<String> personalInfoId, @Param("fromDate") LocalDateTime from,
+		@Param("toDate") LocalDateTime to);
+
+	
+
+	@Query("""
+			    SELECT
+			        COALESCE(SUM(cb.credit), 0)
+			    FROM CashBook cb
+			         JOIN cb.businessMember bm
+			         JOIN bm.partnerId partnerInfo
+			    WHERE cb.accountMasterCode IN :accountMasterCode
+			      AND partnerInfo.personalInfoId IN :personalInfoId
+			""")
+	BigDecimal getCreditOfAccountCodeAganistPartner(@Param("accountMasterCode") List<String> accountMasterCode,
+			@Param("personalInfoId") List<String> personalInfoId);
+	
+	
+	
+	
+	
 
 	@Query("""
 			      SELECT
@@ -544,7 +578,7 @@ public interface CashBookRepo extends JpaRepository<CashBook, Long> {
 
 			      GROUP BY personalInfo.personalInfoId
 			""")
-	List<PartnerCreditSummaryProjection> getCreditOfAccountCodeForEveryPartnerDaterange(
+	List<PartnerCreditSummaryProjection> getCapitalEveryPartnerDaterange(
 			@Param("accountMasterCodes") List<String> accountMasterCodes,
 			@Param("personalInfoIds") List<String> personalInfoIds, @Param("fromDate") LocalDateTime from,
 			@Param("toDate") LocalDateTime to);
@@ -563,107 +597,206 @@ public interface CashBookRepo extends JpaRepository<CashBook, Long> {
 
 			GROUP BY personalInfo.personalInfoId
 			""")
-	List<PartnerCreditSummaryProjection> getCreditOfAccountCodeForEveryPartner(
+	List<PartnerCreditSummaryProjection> getCapitalForEveryPartner(
 			@Param("accountMasterCodes") List<String> accountMasterCodes,
 			@Param("personalInfoIds") List<String> personalInfoIds);
 
+	
+	@Query("""
+			      SELECT
+			          partnerInfo.personalInfoId AS personalInfoId,
+
+			          COALESCE(SUM(cb.credit), 0) AS totalCredit
+
+			      FROM CashBook cb
+			            JOIN cb.businessMember bm
+			            JOIN bm.partnerId as partnerInfo
+
+
+			      WHERE cb.accountMasterCode IN :accountMasterCodes
+			        AND cb.transDate BETWEEN :fromDate AND :toDate
+			        AND partnerInfo.personalInfoId IN :personalInfoIds
+
+			      GROUP BY partnerInfo.personalInfoId
+			""")
+	List<PartnerCreditSummaryProjection> getInstallmentsPaidAganistEveryPartnerDaterange(
+			@Param("accountMasterCodes") List<String> accountMasterCodes,
+			@Param("personalInfoIds") List<String> personalInfoIds, @Param("fromDate") LocalDateTime from,
+			@Param("toDate") LocalDateTime to);
+
+	@Query("""
+			SELECT
+			    partnerInfo.personalInfoId AS personalInfoId,
+
+			    COALESCE(SUM(cb.credit), 0) AS totalCredit
+
+			FROM CashBook cb
+			
+			     JOIN cb.businessMember bm
+			     JOIN bm.partnerId as partnerInfo
+
+			WHERE cb.accountMasterCode IN :accountMasterCodes
+			  AND partnerInfo.personalInfoId IN :personalInfoIds
+
+			GROUP BY partnerInfo.personalInfoId
+			""")
+	List<PartnerCreditSummaryProjection> getInstallmentsPaidAganistEveryPartner(
+			@Param("accountMasterCodes") List<String> accountMasterCodes,
+			@Param("personalInfoIds") List<String> personalInfoIds);
+	
+	
+	
+	
+	
+	
+	
+	
+	
 	@Query(value = """
 			SELECT
 			    partner.PERSONAL_INFO_ID AS id,
 			    partner.FIRST_NAME AS firstName,
 			    partner.LAST_NAME AS lastName,
 
-			    SUM(CASE
-			        WHEN cb.ACCOUNT_MASTER_CODE IN ('DF LOAN','MF LOAN')
-			        THEN cb.CREDIT ELSE 0 END) AS disbursedAmount,
+			    -- All-time loan disbursement
+			    COALESCE(SUM(
+			        CASE
+			            WHEN cb.ACCOUNT_MASTER_CODE IN ('DF LOAN', 'MF LOAN')
+			            THEN cb.DEBIT ELSE 0
+			        END
+			    ), 0) AS disbursedAmount,
 
-			    SUM(CASE
-			        WHEN cb.ACCOUNT_MASTER_CODE IN ('DF LOAN INSTALLMENT','MF LOAN INSTALLMENT')
-			        THEN cb.CREDIT ELSE 0 END) AS loanInstallmentsReceived,
+			    -- Selected date range installments
+			    COALESCE(SUM(
+			        CASE
+			            WHEN cb.ACCOUNT_MASTER_CODE IN (
+			                'DF LOAN INSTALLMENT',
+			                'MF LOAN INSTALLMENT'
+			            )
+			            THEN cb.CREDIT ELSE 0
+			        END
+			    ), 0) AS loanInstallmentsReceived,
 
-			    SUM(CASE
-			        WHEN cb.ACCOUNT_MASTER_CODE IN ('DF INTEREST','MF INTEREST')
-			        THEN cb.CREDIT ELSE 0 END) AS interestReceived,
+			    -- Selected date range interest
+			    COALESCE(SUM(
+			        CASE
+			            WHEN cb.ACCOUNT_MASTER_CODE IN ('DF INTEREST', 'MF INTEREST')
+			            THEN cb.CREDIT ELSE 0
+			        END
+			    ), 0) AS interestReceived,
 
-			    SUM(CASE
-			        WHEN cb.ACCOUNT_MASTER_CODE IN ('DF DOC CHARGES','MF DOC CHARGES')
-			        THEN cb.CREDIT ELSE 0 END) AS documentCharges
+			    -- Selected date range document charges
+			    COALESCE(SUM(
+			        CASE
+			            WHEN cb.ACCOUNT_MASTER_CODE IN (
+			                'DF DOC CHARGES',
+			                'MF DOC CHARGES'
+			            )
+			            THEN cb.CREDIT ELSE 0
+			        END
+			    ), 0) AS documentCharges
 
-			FROM cash_book cb
+			FROM personal_info partner
+
 			LEFT JOIN business_member bm
-			    ON cb.BUSINESS_MEMBER_ID = bm.BUSINESS_MEMBER_ID
-			LEFT JOIN personal_info partner
 			    ON bm.PARTNER_ID = partner.PERSONAL_INFO_ID
 
-			WHERE cb.TRANS_DATE BETWEEN :fromDate AND :toDate
-			AND cb.ACCOUNT_MASTER_CODE IN (
-			    'DF LOAN INSTALLMENT',
-			    'DF INTEREST',
-			    'MF LOAN INSTALLMENT',
-			    'MF INTEREST',
-			    'DF DOC CHARGES',
-			    'MF DOC CHARGES',
-			    'DF LOAN',
-			    'MF LOAN'
-			) AND bm.PARTNER_ID IS NOT NULL
+			LEFT JOIN cash_book cb
+			    ON cb.BUSINESS_MEMBER_ID = bm.BUSINESS_MEMBER_ID
+			    AND (
+			        cb.ACCOUNT_MASTER_CODE IN ('DF LOAN', 'MF LOAN')
+			        OR (
+			            cb.ACCOUNT_MASTER_CODE IN (
+			                'DF LOAN INSTALLMENT',
+			                'MF LOAN INSTALLMENT',
+			                'DF INTEREST',
+			                'MF INTEREST',
+			                'DF DOC CHARGES',
+			                'MF DOC CHARGES'
+			            )
+			            AND cb.TRANS_DATE BETWEEN :fromDate AND :toDate
+			        )
+			    )
+
+			WHERE partner.CATEGORY = 'PARTNER'
 
 			GROUP BY
 			    partner.PERSONAL_INFO_ID,
 			    partner.FIRST_NAME,
-			    partner.LAST_NAME,
-			    partner.SEQUENCE
-			ORDER BY partner.SEQUENCE ASC, partner.PERSONAL_INFO_ID ASC
-			""", nativeQuery = true)
+			    partner.LAST_NAME
+
+			ORDER BY partner.SEQUENCE ASC;
+									""", nativeQuery = true)
 	List<PartnerPerformanceReport> getLoanSummaryOfPartnersOfDateRange(@Param("fromDate") LocalDateTime fromDate,
 			@Param("toDate") LocalDateTime toDate);
 
 	@Query(value = """
-			SELECT
+			   SELECT
 			    partner.PERSONAL_INFO_ID AS id,
 			    partner.FIRST_NAME AS firstName,
 			    partner.LAST_NAME AS lastName,
 
-			    SUM(CASE
-			        WHEN cb.ACCOUNT_MASTER_CODE IN ('DF LOAN','MF LOAN')
-			        THEN cb.CREDIT ELSE 0 END) AS disbursedAmount,
+			    COALESCE(SUM(
+			        CASE
+			            WHEN cb.ACCOUNT_MASTER_CODE IN ('DF LOAN', 'MF LOAN')
+			            THEN cb.DEBIT ELSE 0
+			        END
+			    ), 0) AS disbursedAmount,
 
-			    SUM(CASE
-			        WHEN cb.ACCOUNT_MASTER_CODE IN ('DF LOAN INSTALLMENT','MF LOAN INSTALLMENT')
-			        THEN cb.CREDIT ELSE 0 END) AS loanInstallmentsReceived,
+			    COALESCE(SUM(
+			        CASE
+			            WHEN cb.ACCOUNT_MASTER_CODE IN (
+			                'DF LOAN INSTALLMENT',
+			                'MF LOAN INSTALLMENT'
+			            )
+			            THEN cb.CREDIT ELSE 0
+			        END
+			    ), 0) AS loanInstallmentsReceived,
 
-			    SUM(CASE
-			        WHEN cb.ACCOUNT_MASTER_CODE IN ('DF INTEREST','MF INTEREST')
-			        THEN cb.CREDIT ELSE 0 END) AS interestReceived,
+			    COALESCE(SUM(
+			        CASE
+			            WHEN cb.ACCOUNT_MASTER_CODE IN ('DF INTEREST', 'MF INTEREST')
+			            THEN cb.CREDIT ELSE 0
+			        END
+			    ), 0) AS interestReceived,
 
-			    SUM(CASE
-			        WHEN cb.ACCOUNT_MASTER_CODE IN ('DF DOC CHARGES','MF DOC CHARGES')
-			        THEN cb.CREDIT ELSE 0 END) AS documentCharges
+			    COALESCE(SUM(
+			        CASE
+			            WHEN cb.ACCOUNT_MASTER_CODE IN (
+			                'DF DOC CHARGES',
+			                'MF DOC CHARGES'
+			            )
+			            THEN cb.CREDIT ELSE 0
+			        END
+			    ), 0) AS documentCharges
 
-			FROM cash_book cb
+			FROM personal_info partner
+
 			LEFT JOIN business_member bm
-			    ON cb.BUSINESS_MEMBER_ID = bm.BUSINESS_MEMBER_ID
-			LEFT JOIN personal_info partner
 			    ON bm.PARTNER_ID = partner.PERSONAL_INFO_ID
 
-			WHERE cb.ACCOUNT_MASTER_CODE IN (
-			    'DF LOAN INSTALLMENT',
-			    'DF INTEREST',
-			    'MF LOAN INSTALLMENT',
-			    'MF INTEREST',
-			    'DF DOC CHARGES',
-			    'MF DOC CHARGES',
-			    'DF LOAN',
-			    'MF LOAN'
-			)
-			AND bm.PARTNER_ID IS NOT NULL
+			LEFT JOIN cash_book cb
+			    ON cb.BUSINESS_MEMBER_ID = bm.BUSINESS_MEMBER_ID
+			    AND cb.ACCOUNT_MASTER_CODE IN (
+			        'DF LOAN',
+			        'MF LOAN',
+			        'DF LOAN INSTALLMENT',
+			        'MF LOAN INSTALLMENT',
+			        'DF INTEREST',
+			        'MF INTEREST',
+			        'DF DOC CHARGES',
+			        'MF DOC CHARGES'
+			    )
+
+			where partner.category =  'PARTNER'
 
 			GROUP BY
 			    partner.PERSONAL_INFO_ID,
 			    partner.FIRST_NAME,
-			    partner.LAST_NAME,
-			    partner.SEQUENCE
-			ORDER BY partner.SEQUENCE ASC, partner.PERSONAL_INFO_ID ASC
-			""", nativeQuery = true)
+			    partner.LAST_NAME
+
+			ORDER BY partner.sequence asc
+						""", nativeQuery = true)
 	List<PartnerPerformanceReport> getLoanSummaryOfPartners();
 
 	@Query(value = """
@@ -703,8 +836,7 @@ public interface CashBookRepo extends JpaRepository<CashBook, Long> {
 			AND BUSINESS_MEMBER_ID = :businessMemberId
 			""", nativeQuery = true)
 	PaidInstallmentProjection getCollectionsPaidForMonthlyLoan(@Param("businessMemberId") String businessMemberId);
-	
-	
+
 	@Query("""
 			FROM CashBook c
 			WHERE c.businessMember.businessMemberId = :memberId
@@ -712,8 +844,7 @@ public interface CashBookRepo extends JpaRepository<CashBook, Long> {
 			ORDER BY c.transDate asc
 			""")
 	List<CashBook> getAllMonthlyCollectionsByBusniesMember(@Param("memberId") String memberId);
-	
-	
+
 	@Query("""
 			FROM CashBook c
 			WHERE c.businessMember.businessMemberId = :memberId

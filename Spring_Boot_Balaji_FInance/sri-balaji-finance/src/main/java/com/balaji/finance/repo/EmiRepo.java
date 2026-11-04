@@ -34,7 +34,7 @@ public interface EmiRepo extends JpaRepository<EMI, Integer> {
 			        ) AS dueAmount
 			    FROM EMI e
 			    JOIN e.businessMember bm
-			    WHERE bm.customerId.personalInfoId IN :personalInfoId
+			    WHERE bm.partnerId.personalInfoId IN :personalInfoId
 			      AND e.dueDate BETWEEN :fromDate AND :toDate
 			""")
 	BigDecimal getDueAmountOfManagerDateRange(@Param("personalInfoId") List<String> personalInfoId,
@@ -48,13 +48,13 @@ public interface EmiRepo extends JpaRepository<EMI, Integer> {
 			        ) AS dueAmount
 			    FROM EMI e
 			    JOIN e.businessMember bm
-			    WHERE bm.customerId.personalInfoId IN :personalInfoId
+			    WHERE bm.partnerId.personalInfoId IN :personalInfoId
 			""")
 	BigDecimal getDueAmountOfManager(@Param("personalInfoId") List<String> personalInfoId);
 
 	@Query("""
 			      SELECT
-			          bm.customerId.personalInfoId AS personalInfoId,
+			          bm.partnerId.personalInfoId AS personalInfoId,
 
 			          COALESCE(
 			              SUM(e.totalAmount - COALESCE(e.paidAmount, 0)),
@@ -64,9 +64,9 @@ public interface EmiRepo extends JpaRepository<EMI, Integer> {
 			      FROM EMI e
 			      JOIN e.businessMember bm
 
-			      WHERE bm.customerId.personalInfoId IN :personalInfoIds
+			      WHERE bm.partnerId.personalInfoId IN :personalInfoIds
 			AND e.dueDate BETWEEN :fromDate AND :toDate
-			      GROUP BY bm.customerId.personalInfoId
+			      GROUP BY bm.partnerId.personalInfoId
 			      """)
 	List<PartnerDueAmountProjection> getDueAmountOfEveryPartnerDateRange(
 			@Param("personalInfoIds") List<String> personalInfoIds, @Param("fromDate") LocalDateTime from,
@@ -74,7 +74,7 @@ public interface EmiRepo extends JpaRepository<EMI, Integer> {
 
 	@Query("""
 			SELECT
-			    bm.customerId.personalInfoId AS personalInfoId,
+			    bm.partnerId.personalInfoId AS personalInfoId,
 
 			    COALESCE(
 			        SUM(e.totalAmount - COALESCE(e.paidAmount, 0)),
@@ -84,9 +84,9 @@ public interface EmiRepo extends JpaRepository<EMI, Integer> {
 			FROM EMI e
 			JOIN e.businessMember bm
 
-			WHERE bm.customerId.personalInfoId IN :personalInfoIds
+			WHERE bm.partnerId.personalInfoId IN :personalInfoIds
 
-			GROUP BY bm.customerId.personalInfoId
+			GROUP BY bm.partnerId.personalInfoId
 			""")
 	List<PartnerDueAmountProjection> getDueAmountOfEveryPartner(@Param("personalInfoIds") List<String> personalInfoIds);
 
@@ -133,13 +133,12 @@ public interface EmiRepo extends JpaRepository<EMI, Integer> {
 
 
 			    COALESCE(
-			        SUM(
-			            CASE
-			                WHEN e.status IN ('PENDING', 'PARTIAL')
-			                THEN e.totalAmount - e.paidAmount
-			                ELSE 0
-			            END
-			        ),
+			         (
+			           SELECT SUM(e4.totalAmount - e4.paidAmount)
+                       FROM EMI e4
+                       WHERE e4.businessMember = bm
+                        AND  e4.status IN ('PENDING', 'PARTIAL')
+                      ),
 			        0
 			    ) AS dueAmount,
 

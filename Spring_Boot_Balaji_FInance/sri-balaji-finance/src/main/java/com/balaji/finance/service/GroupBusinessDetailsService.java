@@ -76,14 +76,14 @@ public class GroupBusinessDetailsService {
 			loanSummaryOfPartnerLis = businessMemberRepository
 					.getLoanSummaryOfPartnerDateRange(new ArrayList<>(personIdItsDetail.keySet()), from, to);
 
-			capitalAmountOfEachPartner = cashBookRepo.getCreditOfAccountCodeForEveryPartnerDaterange(
-					Arrays.asList("CAPITAL"), new ArrayList<>(personIdItsDetail.keySet()), from, to);
+			capitalAmountOfEachPartner = cashBookRepo.getCapitalEveryPartnerDaterange(Arrays.asList("CAPITAL"),
+					new ArrayList<>(personIdItsDetail.keySet()), from, to);
 
-			paidAmountForPartnerList = cashBookRepo.getCreditOfAccountCodeForEveryPartnerDaterange(
+			paidAmountForPartnerList = cashBookRepo.getInstallmentsPaidAganistEveryPartnerDaterange(
 					Arrays.asList("DF LOAN INSTALLMENT", "MF LOAN INSTALLMENT"),
 					new ArrayList<>(personIdItsDetail.keySet()), from, to);
 
-			paidInterestForPartnerList = cashBookRepo.getCreditOfAccountCodeForEveryPartnerDaterange(
+			paidInterestForPartnerList = cashBookRepo.getInstallmentsPaidAganistEveryPartnerDaterange(
 					Arrays.asList("DF INTEREST", "MF INTEREST"), new ArrayList<>(personIdItsDetail.keySet()), from, to);
 
 			dueAmountForPartnerList = emiRepo
@@ -94,14 +94,14 @@ public class GroupBusinessDetailsService {
 			loanSummaryOfPartnerLis = businessMemberRepository
 					.getLoanSummaryOfPartner(new ArrayList<>(personIdItsDetail.keySet()));
 
-			capitalAmountOfEachPartner = cashBookRepo.getCreditOfAccountCodeForEveryPartner(Arrays.asList("CAPITAL"),
+			capitalAmountOfEachPartner = cashBookRepo.getCapitalForEveryPartner(Arrays.asList("CAPITAL"),
 					new ArrayList<>(personIdItsDetail.keySet()));
 
-			paidAmountForPartnerList = cashBookRepo.getCreditOfAccountCodeForEveryPartner(
+			paidAmountForPartnerList = cashBookRepo.getInstallmentsPaidAganistEveryPartner(
 					Arrays.asList("DF LOAN INSTALLMENT", "MF LOAN INSTALLMENT"),
 					new ArrayList<>(personIdItsDetail.keySet()));
 
-			paidInterestForPartnerList = cashBookRepo.getCreditOfAccountCodeForEveryPartner(
+			paidInterestForPartnerList = cashBookRepo.getInstallmentsPaidAganistEveryPartner(
 					Arrays.asList("DF INTEREST", "MF INTEREST"), new ArrayList<>(personIdItsDetail.keySet()));
 
 			dueAmountForPartnerList = emiRepo.getDueAmountOfEveryPartner(new ArrayList<>(personIdItsDetail.keySet()));
