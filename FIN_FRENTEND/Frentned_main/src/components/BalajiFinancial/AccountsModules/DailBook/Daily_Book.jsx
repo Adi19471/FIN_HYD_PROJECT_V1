@@ -16,7 +16,6 @@ import {
   TableRow,
   Typography,
 } from "@mui/material";
-import { actionIcons } from "src/lib/icons";
 import { useAuth } from "src/utils/authStore";
 import { API_BASE } from "lib/config";
 import { getSession } from "src/utils/session";
@@ -25,12 +24,10 @@ import {
   AppDatePicker,
   DataTable,
   PageHeader,
-  TableExportMenu,
-  printReport,
+  useScreenExport,
 } from "src/components/ui";
 import { navIcons } from "src/lib/icons";
 
-const PrintRounded = actionIcons.print;
 
 const STORAGE_KEY = "dailyBook_lastSelectedDate";
 
@@ -287,45 +284,22 @@ const DailyBook = () => {
     [reportPeriod, reportMeta, reportSummary]
   );
 
-  const handlePrint = () => {
-    if (!rows.length) {
-      errorToast("Nothing to print. Generate the daily book first.");
-      return;
-    }
-    printReport(rows, columns, exportFileName, reportOptions);
-  };
-
   const cellSx = { fontSize: 13, whiteSpace: "nowrap" };
   const totalCellSx = { ...cellSx, fontWeight: 700 };
 
+  // Download / Print for this screen sit in its header (screenExport.jsx).
+  useScreenExport({ rows, columns, fileName: exportFileName, reportOptions });
+
   return (
     <Stack spacing={2.5}>
-      {/* Download / Print sit at the top beside Refresh, so the whole book can be
-          taken away without scrolling down to the grid toolbar. */}
+      {/* Download / Print sit in the header beside Refresh (useScreenExport
+          above), so the whole book can be taken away without scrolling. */}
       <PageHeader
         icon={navIcons.dailyBook}
         title="Daily Book"
         subtitle="Cash position and every credit and debit posted on one day."
         onRefresh={fetchDailyBook}
         loading={loading}
-        actions={
-          <>
-            <TableExportMenu
-              rows={rows}
-              columns={columns}
-              fileName={exportFileName}
-              reportOptions={reportOptions}
-            />
-            <Button
-              variant="outlined"
-              startIcon={<PrintRounded />}
-              onClick={handlePrint}
-              disabled={loading || !rows.length}
-            >
-              Print
-            </Button>
-          </>
-        }
       />
       <Paper className="enterprise-card" elevation={0} sx={{ p: 2 }}>
         <Grid container spacing={2} alignItems="center">
@@ -484,6 +458,7 @@ const DailyBook = () => {
         period={reportPeriod}
         reportMeta={reportMeta}
         summary={reportSummary}
+        showExport={false}
       />
       {/* <Grid
           size={{

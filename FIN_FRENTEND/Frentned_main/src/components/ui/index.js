@@ -1,7 +1,9 @@
 // UI Components Index
 export { default as PageHeader } from "./PageHeader";
 export { default as DataTable } from "./DataTable";
-export { TableExportMenu, DEFAULT_TABLE_HEIGHT, withTotalsRow } from "./DataTable";
+export { TableExportMenu, HeaderExportButtons, DEFAULT_TABLE_HEIGHT, withTotalsRow } from "./DataTable";
+export { ScreenExportProvider, useScreenExport } from "./screenExport";
+export { default as useFitColumns } from "./useFitColumns";
 export { default as AppDatePicker } from "./AppDatePicker";
 export { default as useDateRange } from "./useDateRange";
 export { DROPDOWN_MENU_PROPS } from "./dropdownMenuProps";

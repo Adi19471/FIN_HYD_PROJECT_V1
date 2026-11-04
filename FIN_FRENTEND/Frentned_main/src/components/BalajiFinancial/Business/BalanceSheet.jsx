@@ -10,7 +10,7 @@ import {
   AppDatePicker,
   EmptyState,
   ReportToolbar,
-  TableExportMenu,
+  useScreenExport,
 } from "src/components/ui";
 
 const GenerateIcon = actionIcons.generate;
@@ -188,6 +188,9 @@ const BalanceSheet = () => {
     );
   };
 
+  // Download / Print for this screen sit in its header (screenExport.jsx).
+  useScreenExport({ rows: exportRows, columns: EXPORT_COLUMNS, fileName: "Balance_Sheet", reportOptions });
+
   return (
     <>
       {/* The company name and address are printed on every download, not
@@ -198,14 +201,7 @@ const BalanceSheet = () => {
         subtitle="Assets, liabilities and the balance difference as on a date."
         onRefresh={fetchData}
         loading={loading}
-      >
-        <TableExportMenu
-          rows={exportRows}
-          columns={EXPORT_COLUMNS}
-          fileName="Balance_Sheet"
-          reportOptions={reportOptions}
-        />
-      </ReportToolbar>
+      />
 
       <Paper className="enterprise-card" elevation={0} sx={{ p: 2, mt: 1.5 }}>
         <Stack direction={{ xs: "column", sm: "row" }} spacing={1.5} alignItems={{ xs: "stretch", sm: "center" }}>

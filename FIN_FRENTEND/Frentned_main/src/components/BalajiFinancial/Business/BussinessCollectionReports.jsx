@@ -16,7 +16,7 @@ import { getSession } from "src/utils/session";
 import {
   AppDatePicker,
   ReportToolbar,
-  TableExportMenu,
+  useScreenExport,
   useDateRange,
 } from "src/components/ui";
 
@@ -231,6 +231,9 @@ const BussinessCollectionReports = () => {
     [generatedRange]
   );
 
+  // Download / Print for this screen sit in its header (screenExport.jsx).
+  useScreenExport({ rows: screenExportRows, columns: screenExportColumns, fileName: "Business_Collections_Report", reportOptions });
+
   return (
     <>
       {/* The company name, address and date are printed on every download;
@@ -245,15 +248,7 @@ const BussinessCollectionReports = () => {
         }
         onRefresh={fetchReport}
         loading={loading}
-      >
-        {/* Whole-screen download / print. */}
-        <TableExportMenu
-          rows={screenExportRows}
-          columns={screenExportColumns}
-          fileName="Business_Collections_Report"
-          reportOptions={reportOptions}
-        />
-      </ReportToolbar>
+      />
 
       <Stack spacing={2.5} sx={{ mt: 2 }}>
         <Paper className="enterprise-card" elevation={0} sx={{ p: 2.5 }}>

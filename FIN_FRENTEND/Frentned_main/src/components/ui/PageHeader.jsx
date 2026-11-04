@@ -49,6 +49,7 @@ const PageHeader = ({
   onRefresh,
   onFilterClick,
   actions,
+  exports = true,
 }) => {
   const hasControls = Boolean(onSearchChange || onFilterClick || onRefresh || actions || onAddClick);
 
@@ -98,7 +99,7 @@ const PageHeader = ({
 
   if (title) {
     return (
-      <ScreenHeader icon={icon} title={title} subtitle={subtitle}>
+      <ScreenHeader icon={icon} title={title} subtitle={subtitle} exports={exports}>
         {controls}
       </ScreenHeader>
     );

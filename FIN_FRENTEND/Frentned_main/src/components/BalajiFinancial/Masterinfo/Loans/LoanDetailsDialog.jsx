@@ -252,6 +252,9 @@ export default function LoanDetailsDialog({ open, onClose, accountNo, loadEndpoi
               rows={rows}
               columns={columns}
               loading={loading}
+              // A dialog over the Loans screen: its statement keeps its own
+              // Download / Print rather than taking over the screen header's.
+              headerExport={false}
               height={360}
               pageSize={10}
               getRowId={(row) => row.id}

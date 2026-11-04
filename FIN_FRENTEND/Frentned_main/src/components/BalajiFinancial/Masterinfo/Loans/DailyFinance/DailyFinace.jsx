@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useCallback } from "react";
+import React, { useEffect, useState, useCallback, useRef } from "react";
 import axios from "axios";
 import { successToast, errorToast } from "toastify";
 import { API_BASE } from "lib/config";
@@ -28,7 +28,7 @@ import { RestartAltRounded } from "@mui/icons-material";
 import { actionIcons } from "src/lib/icons";
 
 import dayjs from "dayjs";
-import { AppDatePicker, TableExportMenu, ProfilePhotoBox } from "src/components/ui";
+import { AppDatePicker, TableExportMenu, ProfilePhotoBox, useScreenExport, useFitColumns } from "src/components/ui";
 import LoanDetailsDialog from "../LoanDetailsDialog";
 
 const CloseIcon = actionIcons.close;
@@ -44,6 +44,7 @@ const BASE_INTEREST_RATE = 3;
 
 
 const DailyFinance = () => {
+  const gridBoxRef = useRef(null);
   const [rows, setRows] = useState([]);
   const [loading, setLoading] = useState(false);
   const [open, setOpen] = useState(false);
@@ -658,6 +659,12 @@ const DailyFinance = () => {
     "partnerId",
   ];
 
+  // Download / Print go to the screen header (Loans) when there is one;
+  // the list keeps its own Download otherwise.
+  const exportInHeader = useScreenExport({ rows: searchedRows, columns: exportColumns, fileName: "Daily_Finance_Report" });
+  // Columns sized to the card - content widths, shared out or wrapped to fit.
+  const fit = useFitColumns({ columns, rows: searchedRows, containerRef: gridBoxRef });
+
   return (
     <>
       {/* MAIN PAGE */}
@@ -712,7 +719,9 @@ const DailyFinance = () => {
               </Typography>
             </Stack>
             <Stack direction="row" spacing={1} sx={{ alignItems: "center", ml: "auto" }}>
-              <TableExportMenu rows={searchedRows} columns={exportColumns} fileName="Daily_Finance_Report" />
+              {!exportInHeader && (
+                <TableExportMenu rows={searchedRows} columns={exportColumns} fileName="Daily_Finance_Report" />
+              )}
               <Button variant="contained" startIcon={<SaveIcon />} onClick={handleNewButton}>
                 New Loan
               </Button>
@@ -720,14 +729,13 @@ const DailyFinance = () => {
           </Box>
 
           {/* Table */}
-          <Box sx={{ flex: 1, minHeight: 0, width: "100%" }}>
+          <Box ref={gridBoxRef} sx={{ flex: 1, minHeight: 0, width: "100%" }}>
             <DataGrid
               rows={searchedRows}
-              columns={columns}
+              columns={fit.columns}
               loading={loading}
               getRowId={(r) => r.id}
-              autosizeOnMount
-              autosizeOptions={{ includeHeaders: true, includeOutliers: true, expand: true }}
+              {...(fit.wrap && { getRowHeight: () => "auto", getEstimatedRowHeight: () => 40 })}
               pageSizeOptions={[10, 25, 50, 100]}
               paginationModel={paginationModel}
               onPaginationModelChange={setPaginationModel}
@@ -740,6 +748,12 @@ const DailyFinance = () => {
                 border: "none",
                 bgcolor: "var(--surface-1)",
                 "& .MuiDataGrid-virtualScroller": { overflowAnchor: "none" },
+                // the last heading's resize handle / menu button would hang past the fitted edge
+                "& .MuiDataGrid-columnHeader--last": { overflow: "hidden" },
+                "& .MuiDataGrid-columnHeader--last .MuiDataGrid-columnSeparator": { display: "none" },
+                ...(fit.wrap && {
+                  "& .MuiDataGrid-row .MuiDataGrid-cell": { whiteSpace: "normal", wordBreak: "break-word", lineHeight: 1.35, py: 0.75 },
+                }),
               }}
             />
           </Box>

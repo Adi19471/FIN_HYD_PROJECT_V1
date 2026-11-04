@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Lato:wght@400;700;900&family=Manrope:wght@400;500;600;700;800&family=Nunito:wght@400;600;700;800;900&family=Open+Sans:wght@400;600;700;800&family=Poppins:wght@400;500;600;700;800;900&family=Roboto:wght@400;500;600;700;800&family=Source+Sans+3:wght@400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Lato:wght@400;700;900&family=Manrope:wght@400;500;600;700;800&family=Nunito:wght@400;600;700;800;900&family=Open+Sans:wght@400;600;700;800&family=Poppins:wght@400;500;600;700;800;900&family=Roboto:wght@400;500;600;700;800&family=Source+Sans+3:wght@400;500;600;700;800&display=swap');
 
 @import 'tailwindcss';
 @import './additional-styles/utility-patterns.css' layer(components);
@@ -8,6 +8,13 @@
 }
 
 :root {
+  /* Text weight per level - Settings > Font > Text weight. Normal is the CFS
+     look; Bold lifts every level (ThemeContext sets data-text-weight and the
+     MUI theme from the same table, TEXT_WEIGHT_LEVELS in themeOptions.js). */
+  --fw-regular: 400;
+  --fw-medium: 500;
+  --fw-semibold: 600;
+  --fw-bold: 700;
   --app-font-family: "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
   --app-font-scale: 1.04;
   --app-screen-zoom: 1;
@@ -128,6 +135,14 @@ body,
 /* A flat page, as in CFS: no tinted corners behind the cards. */
 body {
   background: var(--canvas);
+  font-weight: var(--fw-regular);
+}
+
+:root[data-text-weight="bold"] {
+  --fw-regular: 600;
+  --fw-medium: 700;
+  --fw-semibold: 700;
+  --fw-bold: 800;
 }
 
 #root {
@@ -167,13 +182,13 @@ body {
 .Toastify__toast.custom-toast {
   border-radius: var(--app-radius);
   font-family: var(--app-font-family);
-  font-weight: 700;
+  font-weight: var(--fw-bold);
   font-size: 0.92rem;
   padding: 12px 16px;
   box-shadow: 0 14px 34px rgba(15, 23, 42, 0.22);
 }
 .Toastify__toast.custom-toast .Toastify__toast-body {
-  font-weight: 700;
+  font-weight: var(--fw-bold);
 }
 /* Success / error / warning keep fixed semantic colors - red always means
    error, green always means success, regardless of the chosen accent theme.
@@ -198,7 +213,7 @@ body {
 
 .MuiInputBase-input {
   font-size: calc(0.94rem * var(--app-font-scale)) !important;
-  font-weight: 700;
+  font-weight: var(--fw-bold);
 }
 
 .dark body {
@@ -771,7 +786,7 @@ body {
 
 .enterprise-profile-copy .MuiTypography-caption {
   color: var(--text-muted);
-  font-weight: 700;
+  font-weight: var(--fw-bold);
   line-height: 1.1;
 }
 
@@ -973,7 +988,7 @@ body {
   color: var(--table-head-fg);
   background: var(--table-head-bg);
   border-bottom: 1px solid var(--table-line-strong);
-  font-weight: 600;
+  font-weight: var(--fw-semibold);
 }
 
 .enterprise-main .MuiTableHead-root .MuiTableCell-root .MuiTypography-root,
@@ -985,14 +1000,14 @@ body {
 
 .MuiDataGrid-columnHeaderTitle {
   font-size: calc(0.8125rem * var(--app-font-scale) * var(--app-table-scale));
-  font-weight: 600 !important;
+  font-weight: var(--fw-semibold) !important;
   letter-spacing: 0;
   text-transform: none;
 }
 
 .MuiDataGrid-cell {
   font-size: calc(0.875rem * var(--app-font-scale) * var(--app-table-scale));
-  font-weight: 400;
+  font-weight: var(--fw-regular);
   border-right: 1px solid var(--table-line) !important;
   border-bottom: 1px solid var(--table-line) !important;
 }
@@ -1013,7 +1028,7 @@ body {
   background: var(--surface-2);
   color: var(--text-strong);
   font-size: calc(0.8125rem * var(--app-font-scale) * var(--app-table-scale));
-  font-weight: 600;
+  font-weight: var(--fw-semibold);
   letter-spacing: 0;
   text-transform: none;
 }
@@ -1045,7 +1060,7 @@ body {
   margin: 0 !important;
   color: var(--text-muted);
   font-size: 0.8125rem !important;
-  font-weight: 500 !important;
+  font-weight: var(--fw-medium) !important;
 }
 
 .MuiTablePagination-actions {
@@ -1127,7 +1142,7 @@ body {
 .MuiPickersInputBase-root {
   font-family: var(--app-font-family) !important;
   font-size: calc(0.875rem * var(--app-font-scale)) !important;
-  font-weight: 400 !important;
+  font-weight: var(--fw-regular) !important;
 }
 
 .MuiAutocomplete-option {
@@ -1156,7 +1171,7 @@ body {
   padding: 14px 20px !important;
   color: var(--text-heading);
   font-size: 1.0625rem !important;
-  font-weight: 600 !important;
+  font-weight: var(--fw-semibold) !important;
   border-bottom: 1px solid var(--border-soft);
   background: var(--surface-1);
 }
@@ -1172,7 +1187,7 @@ body {
 }
 
 .MuiFormControl-root .MuiInputLabel-root {
-  font-weight: 500;
+  font-weight: var(--fw-medium);
 }
 
 /* CFS inputs: white, a grey hairline that darkens on hover, the accent only
@@ -1571,7 +1586,7 @@ body {
   margin: 6px 0 0;
   color: var(--text-muted);
   font-size: 0.86rem;
-  font-weight: 500;
+  font-weight: var(--fw-medium);
 }
 
 .dash-head-actions {
@@ -1601,7 +1616,7 @@ body {
   color: var(--text-muted);
   background: var(--surface-1);
   font-size: 0.8rem;
-  font-weight: 600;
+  font-weight: var(--fw-semibold);
   white-space: nowrap;
 }
 
@@ -1661,7 +1676,7 @@ body {
   margin: 3px 0 0;
   color: var(--text-muted);
   font-size: 0.82rem;
-  font-weight: 500;
+  font-weight: var(--fw-medium);
 }
 
 /* the table inside brings its own frame: no second border around it */
@@ -1679,7 +1694,7 @@ body {
   border-radius: calc(var(--dash-radius) - 4px);
   color: var(--text-muted);
   font-size: 0.88rem;
-  font-weight: 500;
+  font-weight: var(--fw-medium);
   text-align: center;
 }
 
@@ -1736,7 +1751,7 @@ body {
 .dash-kpi-label {
   color: var(--text-muted);
   font-size: 0.82rem;
-  font-weight: 700;
+  font-weight: var(--fw-bold);
 }
 
 .dash-kpi-value {
@@ -1751,7 +1766,7 @@ body {
 .dash-kpi-note {
   color: var(--text-muted);
   font-size: 0.8rem;
-  font-weight: 500;
+  font-weight: var(--fw-medium);
 }
 
 .dash-meter {
@@ -1789,7 +1804,7 @@ body {
 .dash-position-item span {
   color: var(--text-muted);
   font-size: 0.78rem;
-  font-weight: 700;
+  font-weight: var(--fw-bold);
 }
 
 .dash-position-item strong {
@@ -1830,7 +1845,7 @@ body {
 .dash-op {
   color: var(--text-muted);
   font-size: 1.2rem;
-  font-weight: 700;
+  font-weight: var(--fw-bold);
   line-height: 1;
 }
 
@@ -1896,7 +1911,7 @@ body {
   min-width: 0;
   overflow: hidden;
   font-size: 0.9rem;
-  font-weight: 700;
+  font-weight: var(--fw-bold);
   text-overflow: ellipsis;
   white-space: nowrap;
 }
@@ -1996,20 +2011,20 @@ body {
    owed. Used as cellClassName on DataTable columns. */
 .MuiDataGrid-cell.cell-credit {
   color: #047857;
-  font-weight: 600;
+  font-weight: var(--fw-semibold);
 }
 
 .MuiDataGrid-cell.cell-debit,
 .MuiDataGrid-cell.cell-due {
   color: #b91c1c;
-  font-weight: 600;
+  font-weight: var(--fw-semibold);
 }
 
 /* How a list dresses a cell, as in CFS: the record's own name carries
    weight, a missing value is a grey dash. */
 .cell-name {
   color: var(--text-heading);
-  font-weight: 600;
+  font-weight: var(--fw-semibold);
 }
 
 .cell-empty {
@@ -2132,7 +2147,7 @@ body {
   margin: 0;
   color: var(--text-heading);
   font-size: 1.125rem;
-  font-weight: 600;
+  font-weight: var(--fw-semibold);
   line-height: 1.3;
   letter-spacing: -0.01em;
 }
@@ -2141,7 +2156,7 @@ body {
   margin: 2px 0 0;
   color: var(--text-muted);
   font-size: 0.8125rem;
-  font-weight: 400;
+  font-weight: var(--fw-regular);
   line-height: 1.45;
 }
 
@@ -2178,7 +2193,7 @@ body {
   color: var(--text-strong);
   background: var(--surface-2);
   font-size: 0.8125rem;
-  font-weight: 500;
+  font-weight: var(--fw-medium);
   font-variant-numeric: tabular-nums;
   white-space: nowrap;
 }
@@ -2203,7 +2218,7 @@ body {
   padding: 4px 14px;
   border-radius: var(--app-radius);
   color: var(--text-muted);
-  font-weight: 500;
+  font-weight: var(--fw-medium);
 }
 
 .scr-switch .MuiTabs-scroller,
@@ -2224,7 +2239,7 @@ body {
 .scr-switch .MuiTab-root.Mui-selected {
   color: var(--surface-1);
   background: var(--text-heading);
-  font-weight: 600;
+  font-weight: var(--fw-semibold);
 }
 
 /* ---- cards ---- */
@@ -2283,7 +2298,7 @@ body {
   margin: 0;
   color: var(--text-heading);
   font-size: 0.9375rem;
-  font-weight: 600;
+  font-weight: var(--fw-semibold);
   line-height: 1.3;
 }
 
@@ -2291,7 +2306,7 @@ body {
   margin: 2px 0 0;
   color: var(--text-muted);
   font-size: 0.8125rem;
-  font-weight: 400;
+  font-weight: var(--fw-regular);
 }
 
 /* a plain sub-heading between groups of fields in one form */
@@ -2299,7 +2314,7 @@ body {
   margin: 0 0 10px;
   color: var(--text-muted);
   font-size: 0.75rem;
-  font-weight: 600;
+  font-weight: var(--fw-semibold);
   letter-spacing: 0.05em;
   text-transform: uppercase;
 }
@@ -2323,13 +2338,13 @@ body {
 .scr-fact dt {
   color: var(--text-muted);
   font-size: 0.75rem;
-  font-weight: 500;
+  font-weight: var(--fw-medium);
 }
 
 .scr-fact dd {
   margin: 3px 0 0;
   font-size: 0.9375rem;
-  font-weight: 600;
+  font-weight: var(--fw-semibold);
   line-height: 1.3;
   overflow-wrap: anywhere;
 }
@@ -2359,13 +2374,13 @@ body {
 .scr-stat span {
   color: var(--text-muted);
   font-size: 0.75rem;
-  font-weight: 500;
+  font-weight: var(--fw-medium);
 }
 
 .scr-stat strong {
   color: var(--text-heading);
   font-size: 1.0625rem;
-  font-weight: 600;
+  font-weight: var(--fw-semibold);
   line-height: 1.2;
   font-variant-numeric: tabular-nums;
   overflow-wrap: anywhere;
@@ -2408,12 +2423,12 @@ body {
 .scr-bar-total {
   color: var(--text-muted);
   font-size: 0.875rem;
-  font-weight: 500;
+  font-weight: var(--fw-medium);
 }
 
 .scr-bar-total strong {
   color: var(--text-strong);
-  font-weight: 600;
+  font-weight: var(--fw-semibold);
   font-variant-numeric: tabular-nums;
 }
 
@@ -2421,7 +2436,7 @@ body {
   margin: 0;
   color: var(--text-muted);
   font-size: 0.8125rem;
-  font-weight: 400;
+  font-weight: var(--fw-regular);
   line-height: 1.45;
 }
 
@@ -2440,13 +2455,13 @@ body {
 .scr-total span {
   color: var(--text-muted);
   font-size: 0.8125rem;
-  font-weight: 500;
+  font-weight: var(--fw-medium);
 }
 
 .scr-total strong {
   color: var(--text-heading);
   font-size: 1.25rem;
-  font-weight: 700;
+  font-weight: var(--fw-bold);
   font-variant-numeric: tabular-nums;
 }
 
@@ -2473,7 +2488,7 @@ body {
   background: transparent;
   font-family: inherit;
   font-size: 0.8125rem;
-  font-weight: 500;
+  font-weight: var(--fw-medium);
   white-space: nowrap;
   cursor: pointer;
 }
@@ -2485,7 +2500,7 @@ body {
 .scr-seg button[aria-pressed="true"] {
   color: var(--surface-1);
   background: var(--text-heading);
-  font-weight: 600;
+  font-weight: var(--fw-semibold);
 }
 
 .scr-seg button:focus-visible {
@@ -2510,7 +2525,7 @@ body {
 .scr-selected {
   color: var(--text-muted);
   font-size: 0.84rem;
-  font-weight: 600;
+  font-weight: var(--fw-semibold);
   white-space: nowrap;
 }
 
@@ -2545,7 +2560,7 @@ body {
   margin: 0 0 6px;
   color: var(--text-heading);
   font-size: 0.9375rem;
-  font-weight: 500;
+  font-weight: var(--fw-medium);
   font-variant-numeric: tabular-nums;
 }
 
@@ -2553,7 +2568,7 @@ body {
   margin: 0 0 16px;
   color: var(--text-heading);
   font-size: 1.125rem;
-  font-weight: 600;
+  font-weight: var(--fw-semibold);
   text-align: center;
 }
 
@@ -2599,7 +2614,7 @@ body {
 .bs-section > td {
   background: color-mix(in srgb, var(--table-head-fg) 26%, var(--table-head-bg));
   color: var(--table-head-fg);
-  font-weight: 700;
+  font-weight: var(--fw-bold);
   letter-spacing: 0.02em;
 }
 
@@ -2611,7 +2626,7 @@ body {
 .bs-group > td {
   background: var(--table-head-bg);
   color: var(--text-heading);
-  font-weight: 600;
+  font-weight: var(--fw-semibold);
 }
 
 .bs-none {
@@ -2657,7 +2672,7 @@ body {
 .scr-empty strong {
   color: var(--text-heading);
   font-size: 0.9375rem;
-  font-weight: 600;
+  font-weight: var(--fw-semibold);
 }
 
 .scr-empty p {
@@ -2665,7 +2680,7 @@ body {
   margin: 0;
   color: var(--text-muted);
   font-size: 0.86rem;
-  font-weight: 500;
+  font-weight: var(--fw-medium);
   line-height: 1.5;
 }
 

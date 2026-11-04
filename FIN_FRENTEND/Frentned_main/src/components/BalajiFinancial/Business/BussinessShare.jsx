@@ -28,7 +28,7 @@ import LoadingSpinner from "src/LoadingSpinner";
 import {
   AppDatePicker,
   ReportToolbar,
-  TableExportMenu,
+  useScreenExport,
 } from "src/components/ui";
 
 import { useTheme } from "@mui/material/styles";
@@ -1131,6 +1131,9 @@ const BalanceSheet = () => {
      RETURN
      ============================================================ */
 
+  // Download / Print for this screen sit in its header (screenExport.jsx).
+  useScreenExport({ rows: exportRows, columns: exportColumns, fileName: "Balance_Sheet", reportOptions });
+
   return (
     <>
       {/* ======================================================
@@ -1145,16 +1148,7 @@ const BalanceSheet = () => {
           fetchData
         }
         loading={loading}
-      >
-        <TableExportMenu
-          rows={exportRows}
-          columns={exportColumns}
-          fileName="Balance_Sheet"
-          reportOptions={
-            reportOptions
-          }
-        />
-      </ReportToolbar>
+      />
 
       {/* ======================================================
           MAIN REPORT

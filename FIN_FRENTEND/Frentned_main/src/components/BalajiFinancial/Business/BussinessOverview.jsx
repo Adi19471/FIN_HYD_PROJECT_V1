@@ -31,7 +31,7 @@ import dayjs from "dayjs";
 import {
   AppDatePicker,
   ReportToolbar,
-  TableExportMenu,
+  useScreenExport,
   useDateRange as useDateRangeHook,
 } from "src/components/ui";
 import { navIcons } from "src/lib/icons";
@@ -203,6 +203,9 @@ const BusinessOverview = () => {
     orientation: "landscape",
   };
 
+  // Download / Print for this screen sit in its header (screenExport.jsx).
+  useScreenExport({ rows: exportRows, columns: exportColumns, fileName: "Business_Overview", reportOptions });
+
   return (
     <>
       {/* Action bar, as on every other report. Generate stays down in the
@@ -213,14 +216,7 @@ const BusinessOverview = () => {
         subtitle="Loans disbursed, revenues and expenses in one view."
         onRefresh={fetchReport}
         loading={loading}
-      >
-        <TableExportMenu
-          rows={exportRows}
-          columns={exportColumns}
-          fileName="Business_Overview"
-          reportOptions={reportOptions}
-        />
-      </ReportToolbar>
+      />
 
       {/* Top Controls */}
       <Paper sx={{ p: 2, mt: 2, mb: 3 }}>

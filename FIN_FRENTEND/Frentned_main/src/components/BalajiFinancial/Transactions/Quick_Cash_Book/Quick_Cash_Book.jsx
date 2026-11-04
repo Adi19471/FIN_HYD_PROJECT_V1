@@ -7,7 +7,7 @@ import autoTable from "jspdf-autotable";
 import { successToast, errorToast, warningToast, infoToast } from "toastify";
 import { API_BASE } from "lib/config";
 import { getSession } from "src/utils/session";
-import { AppDatePicker, ScreenHeader, StatTile, TableExportMenu } from "src/components/ui";
+import { AppDatePicker, ScreenHeader, StatTile, useScreenExport } from "src/components/ui";
 import { COMPANY_ADDRESS, COMPANY_NAME } from "src/lib/company";
 import { reportPalette } from "src/lib/reportTheme";
 
@@ -336,6 +336,9 @@ const QuickCashBook = () => {
 
   const rupees = (value) => `Rs ${Number(value || 0).toLocaleString("en-IN")}`;
 
+  // Download / Print for this screen sit in its header (screenExport.jsx).
+  useScreenExport({ rows: exportRows, columns: Object.keys(exportRows[0] || {}), fileName: exportFileName });
+
   return (
     <div className="scr-page">
       <ScreenHeader
@@ -343,7 +346,6 @@ const QuickCashBook = () => {
         title="Quick Cash Book"
         subtitle="Post several collections in one go. Enter moves along the row; Enter on Paid Late Fee starts the next row."
       >
-        <TableExportMenu rows={exportRows} columns={Object.keys(exportRows[0] || {})} fileName={exportFileName} />
         <Button variant="contained" startIcon={<SaveIcon />} onClick={handleSaveAll} disabled={loading}>
           {loading ? "Saving..." : "Save All"}
         </Button>

@@ -158,6 +158,8 @@ const pairedColumn = ({ field, headerName, width, align = "right", top, bottom }
   align,
   headerAlign: align,
   sortable: false,
+  // the two stacked lines, so the column is fitted to the longer one (useFitColumns)
+  fitLines: (row) => [top(row), bottom(row)],
   // PDF / Word / CSV / print read valueGetter, so they get "top / bottom" in
   // one cell. Excel keeps the raw number from the field and stays summable.
   valueGetter: (value, row) => {

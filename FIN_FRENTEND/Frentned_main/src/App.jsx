@@ -8,6 +8,7 @@ import routes from "./routes";
 import PrivateRoute from "./components/PrivateRoute";
 import Layout from "./components/Layout";
 import LoadingSpinner from "./LoadingSpinner";
+import { ScreenExportProvider } from "./components/ui/screenExport";
 import { useAuth } from "./utils/authStore";
 import { useBranding } from "./utils/ThemeContext";
 
@@ -94,7 +95,15 @@ function App() {
   /* =========================
      Layout Handling
   ========================== */
-  return isAuthPage ? renderRoutes() : <Layout>{renderRoutes()}</Layout>;
+  // ScreenExportProvider lets each screen's header carry Download / Print for
+  // the report on that screen (src/components/ui/screenExport.jsx).
+  return isAuthPage ? (
+    renderRoutes()
+  ) : (
+    <Layout>
+      <ScreenExportProvider>{renderRoutes()}</ScreenExportProvider>
+    </Layout>
+  );
 }
 
 export default App;

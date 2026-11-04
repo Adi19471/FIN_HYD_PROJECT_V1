@@ -2,6 +2,7 @@ import React from "react";
 import { Button, Divider, Paper, Stack } from "@mui/material";
 import { actionIcons } from "src/lib/icons";
 import ZoomControls from "./ZoomControls";
+import { HeaderExportButtons } from "./DataTable";
 
 const GenerateIcon = actionIcons.generate;
 const RefreshIcon = actionIcons.refresh;
@@ -15,9 +16,9 @@ const RefreshIcon = actionIcons.refresh;
  * right - the look the entry screens get from ScreenHeader, so a report and a
  * form open the same way. Without a title it is the plain bar it always was.
  *
- * Downloads (Excel / PDF / Word / Print) are intentionally NOT here by default -
- * each table owns a single Export menu in its own toolbar. A screen whose
- * report is not a single grid passes its own download as `children`.
+ * As the screen header (with a `title`) it also carries Download and Print for
+ * the screen's report - its main table, or what the screen registered with
+ * useScreenExport (screenExport.jsx). `exports={false}` leaves them out.
  *
  * @param {Component} icon        The screen's icon (src/lib/icons.js navIcons).
  * @param {string}   title         The screen's name. Turns the bar into the screen header.
@@ -38,6 +39,7 @@ const ReportToolbar = ({
   onRefresh,
   loading = false,
   zoom,
+  exports = true,
   children,
 }) => {
   const actions = (
@@ -95,6 +97,7 @@ const ReportToolbar = ({
         </div>
         <div className="scr-head-actions">
           {actions}
+          <HeaderExportButtons enabled={exports} />
           {zoomControls}
         </div>
       </header>

@@ -22,6 +22,7 @@ import {
   QUICK_ACCENTS,
   SURFACE_OPTIONS,
   TABLE_HEADER_OPTIONS,
+  TEXT_WEIGHTS,
   THEME_PRESETS,
   isHexColor,
 } from "src/lib/themeOptions";
@@ -423,7 +424,7 @@ export default function EnterpriseThemePanel({ open, onClose }) {
 
             <Section
               title="Font"
-              hint={`${FONT_OPTIONS.find((font) => font.value === settings.fontFamily)?.label} · ${percent(settings.fontScale)}`}
+              hint={`${FONT_OPTIONS.find((font) => font.value === settings.fontFamily)?.label} · ${percent(settings.fontScale)} · ${TEXT_WEIGHTS.find((weight) => weight.value === settings.textWeight)?.label}`}
             >
               <SubHead>Family</SubHead>
               <div className="tp-font-grid">
@@ -460,6 +461,10 @@ export default function EnterpriseThemePanel({ open, onClose }) {
                   aria-label="Text size"
                 />
               </div>
+
+              {/* Every screen's text, Normal or Bold - kept on this device. */}
+              <SubHead>Text weight</SubHead>
+              <Segmented label="Text weight" options={TEXT_WEIGHTS} value={settings.textWeight} onChange={set("textWeight")} />
             </Section>
 
             <Section title="Screen">

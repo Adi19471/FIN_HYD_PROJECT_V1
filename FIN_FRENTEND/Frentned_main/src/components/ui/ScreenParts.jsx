@@ -1,4 +1,5 @@
 import React from "react";
+import { HeaderExportButtons } from "./DataTable";
 
 /**
  * Building blocks of a working screen - the entry screens under Transactions
@@ -13,7 +14,9 @@ import React from "react";
  *   EmptyState     what to do when there is nothing to show yet
  */
 
-export const ScreenHeader = ({ icon: Icon, title, subtitle, tone, children }) => (
+// Download and Print sit at the end of every header's actions, for the
+// screen's report (screenExport.jsx). `exports={false}` leaves them out.
+export const ScreenHeader = ({ icon: Icon, title, subtitle, tone, exports = true, children }) => (
   <header className={`scr-head ${tone ? `scr-tone-${tone}` : ""}`}>
     {Icon && (
       <span className="scr-head-icon" aria-hidden="true">
@@ -24,7 +27,10 @@ export const ScreenHeader = ({ icon: Icon, title, subtitle, tone, children }) =>
       <h1>{title}</h1>
       {subtitle && <p>{subtitle}</p>}
     </div>
-    {children && <div className="scr-head-actions">{children}</div>}
+    <div className="scr-head-actions">
+      {children}
+      <HeaderExportButtons enabled={exports} />
+    </div>
   </header>
 );
 

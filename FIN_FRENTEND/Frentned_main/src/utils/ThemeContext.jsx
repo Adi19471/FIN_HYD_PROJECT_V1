@@ -20,7 +20,7 @@ import {
   publishTableHeadTokens,
   publishThemeTokens,
 } from "src/lib/themeTokens";
-import { COLOR_THEMES, SETTING_CHOICES, SURFACE_OPTIONS, TABLE_HEADER_OPTIONS, fontStack, isHexColor } from "src/lib/themeOptions";
+import { COLOR_THEMES, SETTING_CHOICES, SURFACE_OPTIONS, TABLE_HEADER_OPTIONS, TEXT_WEIGHT_LEVELS, fontStack, isHexColor } from "src/lib/themeOptions";
 import { COMPANY_ADDRESS, COMPANY_APP_NAME, COMPANY_LOGO } from "src/lib/company";
 
 const ThemeContext = createContext({
@@ -42,6 +42,8 @@ const defaultSettings = {
   // own canvas, a flat top bar and near-square corners.
   fontFamily: "Source Sans 3",
   fontScale: 1,
+  // "normal" | "bold" - Settings > Font > Text weight, every screen.
+  textWeight: "normal",
   screenScale: 1,
   density: "compact",
   tableDensity: "compact",
@@ -258,6 +260,8 @@ export default function ThemeProvider({ children }) {
     document.documentElement.dataset.iconStyle = settings.iconStyle;
     document.documentElement.dataset.loadingStyle = settings.loadingStyle;
     document.documentElement.dataset.navbarStyle = settings.navbarStyle;
+    // style.css reads this for its --fw-* weight tokens.
+    document.documentElement.dataset.textWeight = settings.textWeight;
     document.documentElement.style.setProperty("--app-font-scale", settings.fontScale);
     document.documentElement.style.setProperty("--app-screen-zoom", settings.screenScale || 1);
     document.documentElement.style.setProperty("--app-radius", `${settings.radius}px`);
@@ -288,6 +292,7 @@ export default function ThemeProvider({ children }) {
     settings.iconStyle,
     settings.loadingStyle,
     settings.navbarStyle,
+    settings.textWeight,
   ]);
 
   const palette = useMemo(() => resolveAccent(settings), [settings.colorTheme, settings.customAccent, settings.mode]);
@@ -295,6 +300,8 @@ export default function ThemeProvider({ children }) {
   const fontScale = Number(settings.fontScale || 1);
   const densityUnit = settings.density === "compact" ? 0.9 : settings.density === "spacious" ? 1.12 : 1;
   const tableScale = settings.tableDensity === "compact" ? 0.92 : settings.tableDensity === "spacious" ? 1.08 : 1;
+  // Text weight per level - Normal or Bold (Settings > Font > Text weight).
+  const W = TEXT_WEIGHT_LEVELS[settings.textWeight] || TEXT_WEIGHT_LEVELS.normal;
 
   const muiTheme = useMemo(
     () =>
@@ -320,16 +327,20 @@ export default function ThemeProvider({ children }) {
         typography: {
           fontFamily: fontStack(settings.fontFamily),
           fontSize: 14 * fontScale,
-          // CFS weights: text 400, labels 500, headings and buttons 600.
-          h1: { fontWeight: 700, letterSpacing: "-0.01em" },
-          h2: { fontWeight: 700, letterSpacing: "-0.01em" },
-          h3: { fontWeight: 600, letterSpacing: "-0.01em" },
-          h4: { fontWeight: 600, letterSpacing: "-0.01em" },
-          h5: { fontWeight: 600, letterSpacing: 0 },
-          h6: { fontWeight: 600, letterSpacing: 0 },
-          subtitle1: { fontWeight: 600, letterSpacing: 0 },
-          subtitle2: { fontWeight: 600, letterSpacing: 0 },
-          button: { textTransform: "none", fontWeight: 600 },
+          // CFS weights: text 400, labels 500, headings and buttons 600 -
+          // each a level up under Text weight: Bold (TEXT_WEIGHT_LEVELS).
+          fontWeightRegular: W.regular,
+          fontWeightMedium: W.medium,
+          fontWeightBold: W.bold,
+          h1: { fontWeight: W.bold, letterSpacing: "-0.01em" },
+          h2: { fontWeight: W.bold, letterSpacing: "-0.01em" },
+          h3: { fontWeight: W.semibold, letterSpacing: "-0.01em" },
+          h4: { fontWeight: W.semibold, letterSpacing: "-0.01em" },
+          h5: { fontWeight: W.semibold, letterSpacing: 0 },
+          h6: { fontWeight: W.semibold, letterSpacing: 0 },
+          subtitle1: { fontWeight: W.semibold, letterSpacing: 0 },
+          subtitle2: { fontWeight: W.semibold, letterSpacing: 0 },
+          button: { textTransform: "none", fontWeight: W.semibold },
         },
         shape: { borderRadius: settings.radius },
         components: {
@@ -389,7 +400,7 @@ export default function ThemeProvider({ children }) {
               root: {
                 fontSize: `${0.75 * fontScale}rem`,
                 height: settings.density === "compact" ? 24 : settings.density === "spacious" ? 32 : 28,
-                fontWeight: 600,
+                fontWeight: W.semibold,
               },
             },
           },
@@ -398,8 +409,8 @@ export default function ThemeProvider({ children }) {
               root: {
                 minHeight: settings.density === "compact" ? 38 : settings.density === "spacious" ? 52 : 44,
                 fontSize: `${0.875 * fontScale}rem`,
-                fontWeight: 500,
-                "&.Mui-selected": { fontWeight: 600 },
+                fontWeight: W.medium,
+                "&.Mui-selected": { fontWeight: W.semibold },
               },
             },
           },
@@ -438,14 +449,14 @@ export default function ThemeProvider({ children }) {
           },
           MuiInputLabel: {
             styleOverrides: {
-              root: { fontWeight: 500 },
+              root: { fontWeight: W.medium },
             },
           },
           MuiInputBase: {
             styleOverrides: {
               input: {
                 fontSize: `${0.875 * fontScale}rem`,
-                fontWeight: 400,
+                fontWeight: W.regular,
               },
             },
           },
@@ -468,7 +479,7 @@ export default function ThemeProvider({ children }) {
               },
               head: {
                 fontSize: `${0.8125 * fontScale * tableScale}rem`,
-                fontWeight: 600,
+                fontWeight: W.semibold,
               },
             },
           },
@@ -485,7 +496,7 @@ export default function ThemeProvider({ children }) {
               root: {
                 border: 0,
                 fontSize: `${0.875 * fontScale * tableScale}rem`,
-                fontWeight: 400,
+                fontWeight: W.regular,
                 // the strip to the right of the last heading is part of the band too
                 "--DataGrid-t-header-background-base": "var(--table-head-bg)",
               },
@@ -502,11 +513,11 @@ export default function ThemeProvider({ children }) {
                 color: "var(--table-head-fg)",
               },
               columnHeaderTitle: {
-                fontWeight: 600,
+                fontWeight: W.semibold,
                 color: "var(--table-head-fg)",
               },
               cell: {
-                fontWeight: 400,
+                fontWeight: W.regular,
               },
               row: {
                 minHeight: settings.tableDensity === "compact" ? "40px !important" : settings.tableDensity === "spacious" ? "56px !important" : "48px !important",
@@ -521,6 +532,7 @@ export default function ThemeProvider({ children }) {
       isDark,
       settings.fontFamily,
       settings.fontScale,
+      settings.textWeight,
       settings.screenScale,
       settings.radius,
       settings.density,

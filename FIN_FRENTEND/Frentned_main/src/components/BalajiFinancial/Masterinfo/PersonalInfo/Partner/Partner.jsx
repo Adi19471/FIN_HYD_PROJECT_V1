@@ -92,7 +92,7 @@ const STYLES = {
   },
   viewValue: {
     fontSize: "0.95rem",
-    fontWeight: 500,
+    fontWeight: "var(--fw-medium)",
     color: "text.primary",
   },
   chip: (color) => ({

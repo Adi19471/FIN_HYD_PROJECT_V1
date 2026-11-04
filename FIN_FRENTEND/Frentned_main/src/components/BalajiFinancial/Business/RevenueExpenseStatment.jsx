@@ -27,7 +27,7 @@ import LoadingSpinner from "src/LoadingSpinner";
 import {
   AppDatePicker,
   ReportToolbar,
-  TableExportMenu,
+  useScreenExport,
   useDateRange as useDateRangeHook,
 } from "src/components/ui";
 import { navIcons } from "src/lib/icons";
@@ -210,6 +210,9 @@ const RevenueExpenseStatement = () => {
     [useDateRange, fromDate, toDate, totalRevenue, totalExpense, netProfit, isLoss]
   );
 
+  // Download / Print for this screen sit in its header (screenExport.jsx).
+  useScreenExport({ rows: exportRows, columns: exportColumns, fileName: "Revenue-Expense-Statement", reportOptions });
+
   return (
     <>
       {/* The company name, address and date are printed on every download,
@@ -220,15 +223,7 @@ const RevenueExpenseStatement = () => {
         subtitle="Revenue and expenses, for all dates or a range."
         onRefresh={fetchData}
         loading={loading}
-      >
-        {/* Single download entry point: Excel / PDF / Word / CSV / Print. */}
-        <TableExportMenu
-          rows={exportRows}
-          columns={exportColumns}
-          fileName="Revenue-Expense-Statement"
-          reportOptions={reportOptions}
-        />
-      </ReportToolbar>
+      />
 
       {/* FILTER CARD */}
       <Paper sx={{ p: 3, mt: 2, mb: 3 }}>

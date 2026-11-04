@@ -23,6 +23,7 @@ import {
   GridToolbarDensitySelector,
   GridToolbarQuickFilter,
   useGridApiContext,
+  useGridApiRef,
 } from "@mui/x-data-grid";
 import { actionIcons, formatIconColors, formatIcons } from "src/lib/icons";
 import { useThemeProvider } from "src/utils/ThemeContext";
@@ -36,6 +37,8 @@ import {
   roundAmount,
   summaryValue,
 } from "./reportExport";
+import useFitColumns from "./useFitColumns";
+import { useExportHeader, useScreenExport, useScreenExportSnapshot } from "./screenExport";
 
 // Action marks, pulled once from the shared icon language.
 const DownloadIcon = actionIcons.download;
@@ -161,12 +164,39 @@ export function TableExportMenu({
             <ListItemText
               primary={item.label}
               secondary={item.ext || null}
-              primaryTypographyProps={{ fontSize: 14, fontWeight: 600, lineHeight: 1.3 }}
+              primaryTypographyProps={{ fontSize: 14, fontWeight: "var(--fw-semibold)", lineHeight: 1.3 }}
               secondaryTypographyProps={{ fontSize: 11, color: "text.disabled", lineHeight: 1.2 }}
             />
           </MenuItem>
         ))}
       </Menu>
+    </>
+  );
+}
+
+/**
+ * Download + Print for the screen header. Shows the report the screen
+ * registered (see screenExport.jsx) - the main table, or a custom screen's own
+ * rows - so every screen offers both in the same place. Renders nothing when
+ * the screen has no report.
+ */
+export function HeaderExportButtons({ enabled = true }) {
+  const present = useExportHeader(enabled);
+  const { primary } = useScreenExportSnapshot();
+  if (!present || !primary) return null;
+  const { rows = [], columns = [], fileName = "report", reportOptions = {}, onPrint } = primary;
+  return (
+    <>
+      <TableExportMenu rows={rows} columns={columns} fileName={fileName} reportOptions={reportOptions} />
+      <Button
+        size="small"
+        variant="outlined"
+        startIcon={<PrintIcon />}
+        onClick={() => (onPrint ? onPrint() : printReport(rows, columns, fileName, reportOptions))}
+        disabled={!rows.length}
+      >
+        Print
+      </Button>
     </>
   );
 }
@@ -321,6 +351,13 @@ const DataTable = ({
   totalFields,
   totalLabelCell,
   summary,
+  // false keeps Download / Print in this table's own toolbar even on a screen
+  // with a header (a table inside a dialog, a second report on the screen).
+  headerExport = true,
+  // false keeps the widths the screen declared (no fitting to the card).
+  fitColumns = true,
+  apiRef: apiRefProp,
+  onColumnVisibilityModelChange,
   ...otherProps
 }) => {
   const { settings } = useThemeProvider();
@@ -351,6 +388,33 @@ const DataTable = ({
     [period, reportMeta, summary]
   );
 
+  // Download / Print go to the screen header when there is one.
+  const printColumns = exportColumns || columns;
+  const exportPayload = React.useMemo(
+    () => (showExport && headerExport ? { rows: tableRows, columns: printColumns, fileName: tableTitle, reportOptions } : null),
+    [showExport, headerExport, tableRows, printColumns, tableTitle, reportOptions]
+  );
+  const exportInHeader = useScreenExport(exportPayload, { priority: "table" });
+
+  // Columns sized to the card: content widths, shared out or wrapped to fit.
+  const cardRef = React.useRef(null);
+  const gridApiRef = useGridApiRef();
+  const apiRef = apiRefProp || gridApiRef;
+  const [hiddenColumns, setHiddenColumns] = React.useState(
+    () => otherProps.columnVisibilityModel || initialState?.columns?.columnVisibilityModel || {}
+  );
+  const visibilityModel = otherProps.columnVisibilityModel || hiddenColumns;
+  const fit = useFitColumns({
+    columns,
+    rows: tableRows,
+    containerRef: cardRef,
+    enabled: fitColumns,
+    hidden: visibilityModel,
+    headerScale: 0.8125,
+    apiRef,
+  });
+  const wrapRows = fitColumns && fit.wrap && !otherProps.getRowHeight;
+
   // Row highlight. These reports are wide enough that the eye loses the line
   // when reading across, so hovering lights the whole row and clicking pins it
   // - the row stays marked while you scroll sideways or read off a figure.
@@ -372,6 +436,7 @@ const DataTable = ({
 
   return (
     <Paper
+      ref={cardRef}
       className="enterprise-card"
       elevation={0}
       sx={{
@@ -413,7 +478,7 @@ const DataTable = ({
             )}
           </Box>
           <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap alignItems="center">
-            <Chip size="small" label={`${recordCount} records`} variant="outlined" sx={{ color: "text.secondary", borderColor: "divider", fontWeight: 500 }} />
+            <Chip size="small" label={`${recordCount} records`} variant="outlined" sx={{ color: "text.secondary", borderColor: "divider", fontWeight: "var(--fw-medium)" }} />
             {actions}
           </Stack>
         </Stack>
@@ -438,8 +503,9 @@ const DataTable = ({
         </Box>
       ) : (
         <DataGrid
+          apiRef={apiRef}
           rows={tableRows}
-          columns={columns}
+          columns={fit.columns}
           getRowId={getRowId}
           getRowClassName={(params) =>
             [
@@ -452,8 +518,16 @@ const DataTable = ({
           onRowClick={(params) =>
             setActiveRowId((current) => (current === params.id ? null : params.id))
           }
-          autosizeOnMount
+          // Fitted columns size themselves; a screen that opts out keeps the
+          // old content autosize.
+          autosizeOnMount={!fitColumns}
           autosizeOptions={{ includeHeaders: true, includeOutliers: true, expand: true }}
+          // A text column narrower than its text wraps, so the row grows.
+          {...(wrapRows && { getRowHeight: () => "auto", getEstimatedRowHeight: () => rowHeight })}
+          onColumnVisibilityModelChange={(model, details) => {
+            setHiddenColumns(model);
+            onColumnVisibilityModelChange?.(model, details);
+          }}
           showToolbar
           slots={{ toolbar: CustomGridToolbar }}
           slotProps={{
@@ -461,7 +535,7 @@ const DataTable = ({
               rows: tableRows,
               columns: exportColumns || columns,
               fileName: tableTitle,
-              showExport,
+              showExport: showExport && !exportInHeader,
               reportOptions,
             },
           }}
@@ -509,7 +583,7 @@ const DataTable = ({
             // Columns / Filters / Density are tools, not actions: grey until used.
             "& .MuiDataGrid-toolbarContainer .MuiButton-text": {
               color: "text.secondary",
-              fontWeight: 500,
+              fontWeight: "var(--fw-medium)",
               "&:hover": { color: "text.primary", backgroundColor: "var(--surface-3)" },
             },
             "& .MuiDataGrid-toolbarQuickFilter": {
@@ -531,11 +605,18 @@ const DataTable = ({
               borderColor: headDivider,
             },
             "& .MuiDataGrid-columnHeaderTitle": {
-              fontWeight: 600,
+              fontWeight: "var(--fw-semibold)",
               color: headFg,
               textTransform: "none",
               fontSize: `${0.8125 * fontScale * tableScale}rem`,
               letterSpacing: 0,
+              // A narrow column's heading takes two lines instead of "Bala...".
+              whiteSpace: "normal",
+              lineHeight: 1.15,
+              display: "-webkit-box",
+              WebkitLineClamp: 2,
+              WebkitBoxOrient: "vertical",
+              overflow: "hidden",
             },
             // Sort / filter / menu affordances have to read on the band too.
             "& .MuiDataGrid-columnHeader .MuiDataGrid-sortIcon, & .MuiDataGrid-columnHeader .MuiDataGrid-filterIcon, & .MuiDataGrid-columnHeader .MuiDataGrid-menuIconButton, & .MuiDataGrid-columnHeader .MuiDataGrid-iconButtonContainer .MuiSvgIcon-root": {
@@ -547,6 +628,15 @@ const DataTable = ({
             "& .MuiDataGrid-columnSeparator": {
               color: headDivider,
             },
+            // The last heading's resize handle and (hidden) column-menu button
+            // hang past the edge, which on a grid fitted to the card leaves a
+            // few pixels to scroll sideways. Keep them inside the heading.
+            "& .MuiDataGrid-columnHeader--last": {
+              overflow: "hidden",
+            },
+            "& .MuiDataGrid-columnHeader--last .MuiDataGrid-columnSeparator": {
+              display: "none",
+            },
             "& .MuiDataGrid-cell": {
               borderBottom: "1px solid",
               borderColor: "divider",
@@ -554,6 +644,15 @@ const DataTable = ({
               alignItems: "center",
               fontSize: `${0.875 * fontScale * tableScale}rem`,
             },
+            // Fitted text columns wrap rather than cut their text off.
+            ...(wrapRows && {
+              "& .MuiDataGrid-row .MuiDataGrid-cell": {
+                whiteSpace: "normal",
+                wordBreak: "break-word",
+                lineHeight: 1.35,
+                py: 0.75,
+              },
+            }),
             ...(settings.tableStyle === "striped" && {
               "& .MuiDataGrid-row:nth-of-type(even)": {
                 backgroundColor: "color-mix(in srgb, var(--surface-2) 58%, transparent)",
@@ -565,7 +664,7 @@ const DataTable = ({
               borderTop: "1px solid var(--table-line-strong)",
             },
             "& .MuiDataGrid-row.datatable-total-row .MuiDataGrid-cell": {
-              fontWeight: 600,
+              fontWeight: "var(--fw-semibold)",
             },
             // Hovering lights the full width of the row so the line stays
             // readable across every column. `&&` doubles the class to outrank
@@ -613,7 +712,7 @@ const DataTable = ({
             "& .MuiDataGrid-footerContainer .MuiTablePagination-selectLabel, & .MuiDataGrid-footerContainer .MuiTablePagination-displayedRows": {
               margin: 0,
               color: "text.secondary",
-              fontWeight: 500,
+              fontWeight: "var(--fw-medium)",
             },
             "& .MuiDataGrid-overlayWrapper": {
               minHeight: 260,
@@ -629,7 +728,7 @@ const DataTable = ({
               boxShadow: "inset 3px 0 0 0 var(--brand-primary)",
             },
             "& .MuiDataGrid-row.datatable-active-row .MuiDataGrid-cell": {
-              fontWeight: 500,
+              fontWeight: "var(--fw-medium)",
               backgroundColor: "transparent",
             },
           }}
@@ -682,10 +781,10 @@ const DataTable = ({
                   }),
                 }}
               >
-                <Typography variant="body2" sx={{ fontWeight: 500, color: "text.secondary" }}>
+                <Typography variant="body2" sx={{ fontWeight: "var(--fw-medium)", color: "text.secondary" }}>
                   {line.label} :
                 </Typography>
-                <Typography variant="body2" sx={{ fontWeight: 600, fontVariantNumeric: "tabular-nums" }}>
+                <Typography variant="body2" sx={{ fontWeight: "var(--fw-semibold)", fontVariantNumeric: "tabular-nums" }}>
                   {summaryValue(line.value)}
                 </Typography>
               </Stack>

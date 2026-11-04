@@ -9,7 +9,7 @@ import { actionIcons, navIcons } from "src/lib/icons";
 import axios from 'axios';
 import { API_BASE } from 'lib/config';
 import { getSession } from 'src/utils/session';
-import { AppDatePicker, EmptyState, ScreenHeader } from 'src/components/ui';
+import { AppDatePicker, EmptyState, ScreenHeader, useScreenExport } from 'src/components/ui';
 
 const SearchIcon = actionIcons.search;
 const RefreshIcon = actionIcons.refresh;
@@ -153,6 +153,32 @@ const DeleteTransactions = () => {
 
   const selectedCount = getAllSelectedTransactionIds().length;
   const groupCount = new Set(filteredRows.map(r => r.groupKey)).size;
+
+  // Download / Print the day's list (as shown, search applied) from the header.
+  const amount = (value) => (Number(value) > 0 ? Number(value).toLocaleString('en-IN') : '-');
+  const exportColumns = [
+    { field: 'transactionId', headerName: 'Trans ID' },
+    { field: 'paymentRefId', headerName: 'Payment Ref ID' },
+    { field: 'accountNumber', headerName: 'Account No' },
+    { field: 'name', headerName: 'Name' },
+    { field: 'transactionType', headerName: 'Trans Type' },
+    { field: 'particulars', headerName: 'Particulars' },
+    { field: 'credit', headerName: 'Credit', align: 'right', valueFormatter: amount },
+    { field: 'debit', headerName: 'Debit', align: 'right', valueFormatter: amount },
+    { field: 'status', headerName: 'Status', valueGetter: (_, row) => (row.deleted ? 'Deleted' : 'Active') },
+    ...(showDeleted
+      ? [
+          { field: 'deletedDate', headerName: 'Deleted On' },
+          { field: 'deletedByUser', headerName: 'Deleted By' },
+        ]
+      : []),
+  ];
+  useScreenExport({
+    rows: filteredRows,
+    columns: exportColumns,
+    fileName: showDeleted ? 'Deleted-Transactions' : 'Transactions',
+    reportOptions: { meta: [{ label: 'Transaction Date', value: String(date?.format?.('DD-MM-YYYY') ?? date ?? '') }] },
+  });
 
   return (
     <div className="scr-page">

@@ -42,6 +42,22 @@ export const fontStack = (value) => (FONT_OPTIONS.find((font) => font.value === 
  * Where the menu sits on a desktop window. On a phone it is always a drawer
  * opened from the top bar, whichever of these is chosen.
  */
+/**
+ * How heavy the text is on every screen. Normal is the CFS look (body 400,
+ * labels 500, headings 600-700); Bold lifts every level (body 600, labels and
+ * headings 700, titles 800) for people who find the normal text too light.
+ */
+export const TEXT_WEIGHTS = [
+  { value: "normal", label: "Normal" },
+  { value: "bold", label: "Bold" },
+];
+
+/** The weight of each text level, per Text weight choice (also the --fw-* CSS tokens). */
+export const TEXT_WEIGHT_LEVELS = {
+  normal: { regular: 400, medium: 500, semibold: 600, bold: 700 },
+  bold: { regular: 600, medium: 700, semibold: 700, bold: 800 },
+};
+
 export const NAV_LAYOUTS = [
   { value: "static", label: "Static" }, // full sidebar
   { value: "mini", label: "Mini" }, // icon rail
@@ -100,6 +116,7 @@ export const SETTING_CHOICES = {
   mode: ["light", "dark"],
   colorTheme: Object.keys(COLOR_THEMES),
   fontFamily: values(FONT_OPTIONS),
+  textWeight: values(TEXT_WEIGHTS),
   navLayout: values(NAV_LAYOUTS),
   sidebarColor: values(SURFACE_OPTIONS),
   navbarColor: values(SURFACE_OPTIONS),
