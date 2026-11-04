@@ -22,6 +22,9 @@ export const COLOR_THEMES = {
 export const QUICK_ACCENTS = ["#2563eb", "#4f46e5", "#7c3aed", "#0d9488", "#059669", "#d97706", "#dc2626", "#e11d48", "#0f172a"];
 
 export const FONT_OPTIONS = [
+  // The face CFS is set in: it has real 500 / 600 weights, so labels, headings
+  // and the table header can be a step heavier than the text without turning bold.
+  { value: "Source Sans 3", label: "Source Sans 3", stack: '"Source Sans 3", "Segoe UI", system-ui, sans-serif' },
   { value: "Tahoma", label: "Tahoma", stack: 'Tahoma, Verdana, Geneva, "Segoe UI", sans-serif' },
   { value: "Inter", label: "Inter", stack: '"Inter", system-ui, sans-serif' },
   { value: "Roboto", label: "Roboto", stack: '"Roboto", system-ui, sans-serif' },
@@ -33,7 +36,7 @@ export const FONT_OPTIONS = [
   { value: "System", label: "System UI", stack: 'system-ui, -apple-system, "Segoe UI", sans-serif' },
 ];
 
-export const fontStack = (value) => (FONT_OPTIONS.find((font) => font.value === value) || FONT_OPTIONS[1]).stack;
+export const fontStack = (value) => (FONT_OPTIONS.find((font) => font.value === value) || FONT_OPTIONS[0]).stack;
 
 /**
  * Where the menu sits on a desktop window. On a phone it is always a drawer
@@ -67,6 +70,8 @@ export const SURFACE_OPTIONS = [
 export const TABLE_HEADER_OPTIONS = [
   { value: "accent", label: "Accent" },
   { value: "soft", label: "Soft accent" },
+  // the CFS header: a pale blue band with deep blue ink, whatever the accent
+  { value: "softblue", label: "Soft blue", bg: "#e0f2fe", fg: "#075985", bgDark: "#12314a", fgDark: "#bae6fd" },
   { value: "slate", label: "Slate", bg: "#334155" },
   { value: "graphite", label: "Graphite", bg: "#1f2937" },
   { value: "navy", label: "Navy", bg: "#1e3a8a" },

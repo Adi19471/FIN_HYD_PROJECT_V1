@@ -28,6 +28,7 @@ import {
   TableExportMenu,
   printReport,
 } from "src/components/ui";
+import { navIcons } from "src/lib/icons";
 
 const PrintRounded = actionIcons.print;
 
@@ -302,6 +303,9 @@ const DailyBook = () => {
       {/* Download / Print sit at the top beside Refresh, so the whole book can be
           taken away without scrolling down to the grid toolbar. */}
       <PageHeader
+        icon={navIcons.dailyBook}
+        title="Daily Book"
+        subtitle="Cash position and every credit and debit posted on one day."
         onRefresh={fetchDailyBook}
         loading={loading}
         actions={
@@ -337,7 +341,7 @@ const DailyBook = () => {
               xs: 12,
               md: 4
             }}>
-            <Button fullWidth variant="contained" onClick={fetchDailyBook} disabled={loading || !transactionDate || !isAuthenticated}>
+            <Button variant="contained" onClick={fetchDailyBook} disabled={loading || !transactionDate || !isAuthenticated}>
               Generate
             </Button>
           </Grid>

@@ -6,6 +6,7 @@ import { API_BASE } from "lib/config";
 import { getSession } from "src/utils/session";
 import { infoToast, successToast, warningToast, errorToast } from "toastify";
 import { AppDatePicker, DataTable, PageHeader, formatReportDate, useDateRange } from "src/components/ui";
+import { navIcons } from "src/lib/icons";
 
 // Ledger figures read as on the printed Accounts Ledger: Indian grouping, no
 // forced decimals - 26,00,000 / -1,51,700.
@@ -123,6 +124,9 @@ const AccountLedger = () => {
   return (
     <Stack spacing={2.5}>
       <PageHeader
+        icon={navIcons.accountLedger}
+        title="Account Ledger"
+        subtitle="Credit, debit and balance of every account head, for all dates or a range."
         onRefresh={handleGenerate}
         loading={loading}
       />
@@ -149,7 +153,6 @@ const AccountLedger = () => {
         rows={rows}
         columns={columns}
         loading={loading}
-        title="Accounts Ledger"
         subtitle={subtitle}
         fileName="Accounts_Ledger"
         actions={

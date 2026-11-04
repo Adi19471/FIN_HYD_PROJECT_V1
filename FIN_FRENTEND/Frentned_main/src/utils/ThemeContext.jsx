@@ -37,30 +37,49 @@ const defaultSettings = {
   colorTheme: "sunrise",
   // null = the colour theme's own accent; otherwise a #rrggbb that replaces it.
   customAccent: null,
-  fontFamily: "Tahoma",
-  fontScale: 1.08,
+  // The look below is the CFS one: 14px Source Sans 3, 36px controls, 40px
+  // table rows on hairlines, a soft blue table header, the menu on the page's
+  // own canvas, a flat top bar and near-square corners.
+  fontFamily: "Source Sans 3",
+  fontScale: 1,
   screenScale: 1,
-  density: "comfortable",
+  density: "compact",
   tableDensity: "compact",
-  tableStyle: "striped",
+  tableStyle: "clean",
   formStyle: "outlined",
-  iconStyle: "pulse",
+  // a still, tinted plate behind icons - no pulsing glow
+  iconStyle: "soft",
   loadingStyle: "pulse",
   sidebarStyle: "expanded",
-  navbarStyle: "rounded",
-  radius: 0,
+  navbarStyle: "solid",
+  radius: 4,
   // Where the menu sits, and what the menu, the top bar, the report heading
   // band and the sign-in picture are painted in (src/lib/themeOptions.js).
   navLayout: "static",
-  sidebarColor: "default",
+  sidebarColor: "integrate",
   navbarColor: "default",
-  tableHeader: "accent",
+  tableHeader: "softblue",
   loginStyle: "accent",
   // Blank = the built-in name / line / logo from src/lib/company.js.
   brandName: "",
   brandTagline: "",
   brandLogo: "",
 };
+
+/** The settings the move to the CFS look resets (see readSettings). */
+const CFS_LOOK_KEYS = [
+  "fontFamily",
+  "fontScale",
+  "density",
+  "tableDensity",
+  "tableStyle",
+  "radius",
+  "iconStyle",
+  "navbarStyle",
+  "sidebarColor",
+  "navbarColor",
+  "tableHeader",
+];
 
 /** Puts a default back wherever a saved value is not one the app still offers. */
 const sanitizeSettings = (settings) => {
@@ -131,6 +150,7 @@ const resolveTableHead = (choice, primary, isDark) => {
   } else {
     const option = TABLE_HEADER_OPTIONS.find((item) => item.value === choice);
     bg = (isDark && option?.bgDark) || option?.bg || null;
+    fg = (isDark ? option?.fgDark : option?.fg) || null;
   }
   if (!bg) return null;
 
@@ -142,18 +162,15 @@ const readSettings = () => {
   try {
     const legacyTheme = localStorage.getItem("theme");
     const persisted = JSON.parse(localStorage.getItem("enterprise-ui-settings") || "{}");
-    // One-time migration to the new app default font (Tahoma). Upgrades the
-    // previous auto-defaults while respecting any other explicit user choice.
-    if (localStorage.getItem("ui-font-v2") !== "1") {
-      if (!persisted.fontFamily || persisted.fontFamily === "Manrope" || persisted.fontFamily === "Inter") {
-        persisted.fontFamily = "Tahoma";
-      }
-      localStorage.setItem("ui-font-v2", "1");
-    }
-    // One-time migration to square corners (radius 0) across the app.
-    if (localStorage.getItem("ui-radius-v1") !== "1") {
-      persisted.radius = 0;
-      localStorage.setItem("ui-radius-v1", "1");
+    // One-time move of every browser to the CFS look (it replaces the earlier
+    // Tahoma and square-corner moves). Only the look is reset: the accent,
+    // Light / Dark, the menu layout, screen zoom and branding stay as chosen,
+    // and any of these can be changed again in Settings afterwards.
+    if (localStorage.getItem("ui-look-cfs-v1") !== "1") {
+      CFS_LOOK_KEYS.forEach((key) => {
+        persisted[key] = defaultSettings[key];
+      });
+      localStorage.setItem("ui-look-cfs-v1", "1");
     }
     // A sidebar the user had already collapsed, from before the menu layout
     // was a setting, is the Mini layout.
@@ -291,48 +308,46 @@ export default function ThemeProvider({ children }) {
           warning: { main: palette.warning },
           error: { main: palette.error },
           background: {
-            default: isDark ? "#080f1d" : "#f5f7fb",
+            default: isDark ? "#080f1d" : "#f4f7fd",
             paper: isDark ? "#0f172a" : "#ffffff",
           },
           text: {
-            primary: isDark ? "#f8fafc" : "#0f172a",
-            secondary: isDark ? "#94a3b8" : "#475569",
+            primary: isDark ? "#f8fafc" : "#1e293b",
+            secondary: isDark ? "#94a3b8" : "#64748b",
           },
-          divider: isDark ? "rgba(148, 163, 184, 0.18)" : "rgba(15, 23, 42, 0.1)",
+          divider: isDark ? "rgba(148, 163, 184, 0.18)" : "#dde2ee",
         },
         typography: {
           fontFamily: fontStack(settings.fontFamily),
           fontSize: 14 * fontScale,
-          h1: { fontWeight: 900, letterSpacing: 0 },
-          h2: { fontWeight: 900, letterSpacing: 0 },
-          h3: { fontWeight: 900, letterSpacing: 0 },
-          h4: { fontWeight: 900, letterSpacing: 0 },
-          h5: { fontWeight: 850, letterSpacing: 0 },
-          h6: { fontWeight: 850, letterSpacing: 0 },
-          subtitle1: { fontWeight: 800, letterSpacing: 0 },
-          subtitle2: { fontWeight: 800, letterSpacing: 0 },
-          button: { textTransform: "none", fontWeight: 700 },
+          // CFS weights: text 400, labels 500, headings and buttons 600.
+          h1: { fontWeight: 700, letterSpacing: "-0.01em" },
+          h2: { fontWeight: 700, letterSpacing: "-0.01em" },
+          h3: { fontWeight: 600, letterSpacing: "-0.01em" },
+          h4: { fontWeight: 600, letterSpacing: "-0.01em" },
+          h5: { fontWeight: 600, letterSpacing: 0 },
+          h6: { fontWeight: 600, letterSpacing: 0 },
+          subtitle1: { fontWeight: 600, letterSpacing: 0 },
+          subtitle2: { fontWeight: 600, letterSpacing: 0 },
+          button: { textTransform: "none", fontWeight: 600 },
         },
         shape: { borderRadius: settings.radius },
         components: {
           MuiPaper: {
             styleOverrides: {
+              // flat cards on a hairline, as in CFS
               root: {
                 backgroundImage: "none",
-                border: `1px solid ${isDark ? "rgba(148,163,184,0.16)" : "rgba(15,23,42,0.08)"}`,
-                boxShadow: isDark
-                  ? "0 18px 40px rgba(0,0,0,0.26)"
-                  : "0 18px 45px rgba(15,23,42,0.07)",
+                border: `1px solid ${isDark ? "rgba(148,163,184,0.16)" : "#dde2ee"}`,
+                boxShadow: isDark ? "none" : "0 1px 2px rgba(15,23,42,0.05)",
               },
             },
           },
           MuiCard: {
             styleOverrides: {
               root: {
-                border: `1px solid ${isDark ? "rgba(148,163,184,0.16)" : "rgba(15,23,42,0.08)"}`,
-                boxShadow: isDark
-                  ? "0 18px 40px rgba(0,0,0,0.28)"
-                  : "0 16px 38px rgba(15,23,42,0.07)",
+                border: `1px solid ${isDark ? "rgba(148,163,184,0.16)" : "#dde2ee"}`,
+                boxShadow: isDark ? "none" : "0 1px 2px rgba(15,23,42,0.05)",
               },
             },
           },
@@ -346,6 +361,17 @@ export default function ThemeProvider({ children }) {
                 paddingRight: settings.density === "compact" ? 12 : settings.density === "spacious" ? 20 : 16,
                 fontSize: `${0.875 * fontScale}rem`,
                 lineHeight: 1.25,
+              },
+              // A secondary action is drawn in ink on a grey hairline; only the
+              // filled button carries the accent ("do this"), as in CFS.
+              outlinedPrimary: {
+                color: isDark ? "#e2e8f0" : "#334155",
+                borderColor: isDark ? "rgba(148,163,184,0.32)" : "#cbd5e1",
+                backgroundColor: isDark ? "transparent" : "#ffffff",
+                "&:hover": {
+                  borderColor: isDark ? "rgba(148,163,184,0.55)" : "#94a3b8",
+                  backgroundColor: isDark ? "rgba(148,163,184,0.08)" : "#f8f9ff",
+                },
               },
             },
           },
@@ -363,7 +389,7 @@ export default function ThemeProvider({ children }) {
               root: {
                 fontSize: `${0.75 * fontScale}rem`,
                 height: settings.density === "compact" ? 24 : settings.density === "spacious" ? 32 : 28,
-                fontWeight: 800,
+                fontWeight: 600,
               },
             },
           },
@@ -371,8 +397,9 @@ export default function ThemeProvider({ children }) {
             styleOverrides: {
               root: {
                 minHeight: settings.density === "compact" ? 38 : settings.density === "spacious" ? 52 : 44,
-                fontSize: `${0.86 * fontScale}rem`,
-                fontWeight: 800,
+                fontSize: `${0.875 * fontScale}rem`,
+                fontWeight: 500,
+                "&.Mui-selected": { fontWeight: 600 },
               },
             },
           },
@@ -402,15 +429,23 @@ export default function ThemeProvider({ children }) {
                     ? "transparent"
                     : isDark
                     ? "rgba(15,23,42,0.72)"
-                    : "rgba(255,255,255,0.9)",
+                    : "#ffffff",
               },
+              notchedOutline: {
+                borderColor: isDark ? "rgba(148,163,184,0.32)" : "#cbd5e1",
+              },
+            },
+          },
+          MuiInputLabel: {
+            styleOverrides: {
+              root: { fontWeight: 500 },
             },
           },
           MuiInputBase: {
             styleOverrides: {
               input: {
-                fontSize: `${0.94 * fontScale}rem`,
-                fontWeight: 700,
+                fontSize: `${0.875 * fontScale}rem`,
+                fontWeight: 400,
               },
             },
           },
@@ -432,8 +467,8 @@ export default function ThemeProvider({ children }) {
                 fontSize: `${0.86 * fontScale * tableScale}rem`,
               },
               head: {
-                fontSize: `${0.78 * fontScale * tableScale}rem`,
-                fontWeight: 900,
+                fontSize: `${0.8125 * fontScale * tableScale}rem`,
+                fontWeight: 600,
               },
             },
           },
@@ -449,8 +484,8 @@ export default function ThemeProvider({ children }) {
             styleOverrides: {
               root: {
                 border: 0,
-                fontSize: `${0.82 * fontScale * tableScale}rem`,
-                fontWeight: 700,
+                fontSize: `${0.875 * fontScale * tableScale}rem`,
+                fontWeight: 400,
                 // the strip to the right of the last heading is part of the band too
                 "--DataGrid-t-header-background-base": "var(--table-head-bg)",
               },
@@ -467,11 +502,11 @@ export default function ThemeProvider({ children }) {
                 color: "var(--table-head-fg)",
               },
               columnHeaderTitle: {
-                fontWeight: 800,
+                fontWeight: 600,
                 color: "var(--table-head-fg)",
               },
               cell: {
-                fontWeight: 700,
+                fontWeight: 400,
               },
               row: {
                 minHeight: settings.tableDensity === "compact" ? "40px !important" : settings.tableDensity === "spacious" ? "56px !important" : "48px !important",

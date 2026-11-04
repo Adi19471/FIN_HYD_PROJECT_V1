@@ -68,7 +68,7 @@ function Header({ sidebarOpen, setSidebarOpen }) {
               <img src={logo} alt="" aria-hidden="true" />
             </Box>
             <Box sx={{ display: { xs: "none", sm: "block" }, minWidth: 0 }}>
-              <Typography variant="subtitle1" className="enterprise-header-brand-name" sx={{ lineHeight: 1, fontWeight: 850 }}>
+              <Typography variant="subtitle1" className="enterprise-header-brand-name" sx={{ lineHeight: 1, fontWeight: 700 }}>
                 {appName}
               </Typography>
               <Typography variant="caption" className="enterprise-header-brand-line">
@@ -87,7 +87,7 @@ function Header({ sidebarOpen, setSidebarOpen }) {
                   <Typography
                     variant="body2"
                     className={`enterprise-crumb ${index === breadcrumbs.length - 1 ? "is-current" : ""}`}
-                    sx={{ textTransform: "capitalize", fontWeight: index === breadcrumbs.length - 1 ? 700 : 500 }}
+                    sx={{ textTransform: "capitalize", fontWeight: index === breadcrumbs.length - 1 ? 600 : 400 }}
                   >
                     {crumb}
                   </Typography>

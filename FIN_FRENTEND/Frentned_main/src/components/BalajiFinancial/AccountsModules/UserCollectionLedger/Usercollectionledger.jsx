@@ -17,6 +17,7 @@ import { API_BASE } from "lib/config";
 import { getSession } from "src/utils/session";
 import { successToast, errorToast } from "toastify";
 import { AppDatePicker, DataTable, PageHeader, useDateRange } from "src/components/ui";
+import { navIcons } from "src/lib/icons";
 
 const Usercollectionledger = () => {
   const [users, setUsers] = useState([]);
@@ -96,6 +97,9 @@ const Usercollectionledger = () => {
   return (
     <Stack spacing={2.5}>
       <PageHeader
+        icon={navIcons.userCollectionLedger}
+        title="User Collection Ledger"
+        subtitle="Monthly and daily collections taken by one user, date by date."
         onRefresh={fetchLedger}
         loading={loading}
       />
@@ -141,13 +145,13 @@ const Usercollectionledger = () => {
               xs: 12,
               md: 2
             }}>
-            <Button fullWidth variant="contained" onClick={fetchLedger} disabled={loading}>
+            <Button variant="contained" onClick={fetchLedger} disabled={loading}>
               {loading ? <CircularProgress size={22} color="inherit" /> : "Generate"}
             </Button>
           </Grid>
         </Grid>
       </Paper>
-      <DataTable rows={rows} columns={columns} loading={loading} title="User Collection Details" height={520} />
+      <DataTable rows={rows} columns={columns} loading={loading} fileName="User Collection Details" height={520} />
     </Stack>
   );
 };

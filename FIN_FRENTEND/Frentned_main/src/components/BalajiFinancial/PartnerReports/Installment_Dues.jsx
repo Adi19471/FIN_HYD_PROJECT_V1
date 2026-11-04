@@ -462,7 +462,7 @@ const Installment_Dues = () => {
               xs: 12,
               md: 2
             }}>
-            <Button fullWidth variant="contained" onClick={generateReport} disabled={loading}>
+            <Button variant="contained" onClick={generateReport} disabled={loading}>
               Generate
             </Button>
           </Grid>

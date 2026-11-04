@@ -1,6 +1,5 @@
 import React, { useMemo, useState } from "react";
 import {
-  Box,
   Button,
   Chip,
   CircularProgress,
@@ -11,13 +10,12 @@ import {
   TextField,
   Typography,
 } from "@mui/material";
-import { AssessmentRounded } from "@mui/icons-material";
-import { actionIcons } from "src/lib/icons";
+import { actionIcons, navIcons } from "src/lib/icons";
 import axios from "axios";
 import dayjs from "dayjs";
 import { API_BASE } from "lib/config";
 import { getSession } from "src/utils/session";
-import { AppDatePicker, DataTable, useDateRange, DROPDOWN_MENU_PROPS } from "src/components/ui";
+import { AppDatePicker, DataTable, ScreenHeader, useDateRange, DROPDOWN_MENU_PROPS } from "src/components/ui";
 
 const RefreshRounded = actionIcons.refresh;
 
@@ -118,38 +116,34 @@ const Maturity = () => {
 
   return (
     <Stack spacing={2.5}>
-      <Paper className="enterprise-card" elevation={0} sx={{ p: 2.5 }}>
-        <Stack direction={{ xs: "column", lg: "row" }} justifyContent="space-between" spacing={2}>
-          <Box>
-            <Stack direction="row" spacing={1} alignItems="center" flexWrap="wrap">
-              <AssessmentRounded color="primary" />
-              <Typography variant="h5">Maturity Ledger Report</Typography>
-              <Chip size="small" label={selectedLoanLabel} color="primary" variant="outlined" />
-              <Chip size="small" label={`${rows.length} records`} variant="outlined" />
-            </Stack>
-            <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
-              Use MUI calendar filters and select loan type directly without oversized dropdowns.
-            </Typography>
-          </Box>
+      <ScreenHeader
+        icon={navIcons.maturity}
+        title="Maturity"
+        subtitle="Loans that mature in a period, with paid, due and pending instalments."
+      >
+        <Chip size="small" label={selectedLoanLabel} variant="outlined" />
+      </ScreenHeader>
 
-          <Stack direction="row" spacing={1.25} flexWrap="wrap" useFlexGap alignItems="center">
-            <TextField
-              select
-              label="Loan Type"
-              size="small"
-              value={loanType}
-              onChange={(event) => setLoanType(event.target.value)}
-              SelectProps={{ MenuProps: DROPDOWN_MENU_PROPS }}
-              sx={{ minWidth: 220 }}
-            >
-              {loanTypes.map((type) => (
-                <MenuItem key={type.value} value={type.value}>
-                  {type.label}
-                </MenuItem>
-              ))}
-            </TextField>
-            <AppDatePicker label="From Date" value={fromDate} onChange={setFromDate} />
-            <AppDatePicker label="To Date" value={toDate} onChange={setToDate} minDate={toDateMin} maxDate={toDateMax} />
+      <Paper className="enterprise-card" elevation={0} sx={{ p: 2 }}>
+        {/* one row of filters: every control the same width, Generate beside them */}
+        <div className="scr-filters">
+          <TextField
+            select
+            label="Loan Type"
+            size="small"
+            value={loanType}
+            onChange={(event) => setLoanType(event.target.value)}
+            SelectProps={{ MenuProps: DROPDOWN_MENU_PROPS }}
+          >
+            {loanTypes.map((type) => (
+              <MenuItem key={type.value} value={type.value}>
+                {type.label}
+              </MenuItem>
+            ))}
+          </TextField>
+          <AppDatePicker label="From Date" value={fromDate} onChange={setFromDate} />
+          <AppDatePicker label="To Date" value={toDate} onChange={setToDate} minDate={toDateMin} maxDate={toDateMax} />
+          <div>
             <Button
               variant="contained"
               startIcon={loading ? <CircularProgress size={18} color="inherit" /> : <RefreshRounded />}
@@ -158,8 +152,8 @@ const Maturity = () => {
             >
               {loading ? "Loading" : "Generate"}
             </Button>
-          </Stack>
-        </Stack>
+          </div>
+        </div>
       </Paper>
       {error && (
         <Paper className="enterprise-card" elevation={0} sx={{ p: 2, borderColor: "error.light" }}>
@@ -190,8 +184,7 @@ const Maturity = () => {
         columns={columns}
         loading={loading}
         height={560}
-        title={`Maturity Ledger - ${selectedLoanLabel}`}
-        subtitle="Search, row count, PDF, Excel, Word, and print are available here."
+        fileName={`Maturity Ledger - ${selectedLoanLabel}`}
         pageSize={10}
         period={
           appliedFilters

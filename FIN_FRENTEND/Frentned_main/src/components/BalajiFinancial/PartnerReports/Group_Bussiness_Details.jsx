@@ -301,7 +301,7 @@ const GroupBusinessDetails = () => {
               xs: 12,
               md: 1
             }}>
-            <Button fullWidth variant="contained" onClick={fetchReport} disabled={loading}>
+            <Button variant="contained" onClick={fetchReport} disabled={loading}>
               Generate
             </Button>
           </Grid>

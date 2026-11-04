@@ -1,6 +1,10 @@
 /* ------------------------------------------------------------------
    Sidebar
 
+   Drawn the CFS way: plain grey icons with no plate behind them, the menu
+   text in ink, and the accent only on the page that is open (a soft wash
+   and the accent's ink) - never a solid block, never a colour per entry.
+
    Its colours are the --sidebar-* tokens. ThemeProvider publishes them when
    Settings > Colors > Menu is anything but Default (src/utils/ThemeContext.jsx,
    deriveSurfaceTokens in src/lib/themeTokens.js). With none published, the
@@ -95,10 +99,10 @@
 }
 
 .admin-sidebar-brand-text strong {
-  color: var(--sidebar-fg, var(--text-strong));
+  color: var(--sidebar-fg, var(--text-heading));
   font-size: 15px;
-  line-height: 1.15;
-  font-weight: 900;
+  line-height: 1.2;
+  font-weight: 700;
   letter-spacing: 0;
   white-space: nowrap;
   overflow: hidden;
@@ -106,10 +110,10 @@
 }
 
 .admin-sidebar-brand-text span {
-  margin-top: 3px;
+  margin-top: 2px;
   color: var(--sidebar-muted, var(--text-muted));
-  font-size: 12.5px;
-  font-weight: 650;
+  font-size: 12px;
+  font-weight: 400;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -127,11 +131,11 @@
 }
 
 .admin-sidebar-section-label {
-  padding: 12px 16px 6px;
+  padding: 14px 18px 6px;
   color: var(--sidebar-muted, var(--text-muted));
   font-size: 11px;
-  font-weight: 900;
-  letter-spacing: 0;
+  font-weight: 600;
+  letter-spacing: 0.06em;
   text-transform: uppercase;
 }
 
@@ -157,51 +161,53 @@
 
 .admin-sidebar-link,
 .admin-sidebar-group-button {
-  min-height: 40px;
-  gap: 8px;
-  padding: 8px 10px;
-  border-radius: 8px;
-  font-size: 13.5px;
-  font-weight: 800;
+  min-height: 38px;
+  gap: 10px;
+  padding: 7px 10px;
+  border-radius: calc(var(--app-radius) + 2px);
+  font-size: 14px;
+  font-weight: 500;
 }
 
 .admin-sidebar-link:hover,
-.admin-sidebar-group-button:hover,
-.admin-sidebar-group-button.is-open {
-  background: var(--sidebar-accent-soft, color-mix(in srgb, var(--brand-primary) 9%, transparent));
-  color: var(--sidebar-accent, var(--brand-primary));
+.admin-sidebar-group-button:hover {
+  background: var(--sidebar-accent-soft, color-mix(in srgb, var(--text-strong) 5%, transparent));
+  color: var(--sidebar-fg, var(--text-heading));
 }
 
-.admin-sidebar-link.is-active,
+/* the group the open page is in: its name in full ink, nothing filled */
 .admin-sidebar-group-button.is-active {
-  color: var(--sidebar-on-accent, var(--on-primary, #fff));
-  background: var(--sidebar-accent, var(--brand-primary));
+  color: var(--sidebar-fg, var(--text-heading));
+  font-weight: 600;
+}
+
+/* the open page itself */
+.admin-sidebar-link.is-active {
+  color: var(--sidebar-accent, var(--brand-primary));
+  background: var(--sidebar-accent-soft, color-mix(in srgb, var(--brand-primary) 10%, transparent));
+  font-weight: 600;
   box-shadow: none;
 }
 
 .admin-sidebar-icon {
-  width: 30px !important;
-  height: 30px !important;
-  flex: 0 0 30px;
-  display: grid !important;
-  place-items: center;
-  padding: 6px;
-  border-radius: 7px;
-  color: var(--sidebar-accent, var(--brand-primary));
-  background: var(--sidebar-tile, color-mix(in srgb, var(--brand-primary) 10%, transparent));
+  width: 20px !important;
+  height: 20px !important;
+  flex: 0 0 20px;
+  display: block !important;
+  padding: 0;
+  border-radius: 0;
+  color: var(--sidebar-muted, var(--text-muted));
+  background: transparent;
 }
 
 .admin-sidebar-link:hover .admin-sidebar-icon,
-.admin-sidebar-group-button:hover .admin-sidebar-icon,
-.admin-sidebar-group-button.is-open .admin-sidebar-icon {
-  color: var(--sidebar-on-accent, var(--on-primary, #fff));
-  background: var(--sidebar-accent, var(--brand-primary));
+.admin-sidebar-group-button:hover .admin-sidebar-icon {
+  color: var(--sidebar-fg, var(--text-strong));
 }
 
 .admin-sidebar-link.is-active .admin-sidebar-icon,
 .admin-sidebar-group-button.is-active .admin-sidebar-icon {
   color: var(--sidebar-accent, var(--brand-primary));
-  background: var(--sidebar-on-accent, #fff);
 }
 
 .admin-sidebar-chevron {
@@ -216,7 +222,7 @@
 }
 
 .admin-sidebar-subnav {
-  margin: 4px 0 6px 13px;
+  margin: 2px 0 6px 19px;
   padding-left: 10px;
   border-left: 1px solid var(--sidebar-border, rgba(15, 23, 42, 0.12));
 }
@@ -226,23 +232,24 @@
 }
 
 .admin-sidebar-sublink {
-  min-height: 34px;
+  min-height: 32px;
   gap: 8px;
-  padding: 7px 9px;
-  border-radius: 8px;
-  color: var(--sidebar-muted, var(--text-muted));
+  padding: 6px 9px;
+  border-radius: calc(var(--app-radius) + 2px);
+  color: var(--sidebar-fg, var(--text-strong));
   font-size: 13.5px;
-  font-weight: 750;
+  font-weight: 400;
 }
 
 .admin-sidebar-sublink:hover {
-  color: var(--sidebar-accent, var(--brand-primary));
-  background: var(--sidebar-accent-soft, color-mix(in srgb, var(--brand-primary) 8%, transparent));
+  color: var(--sidebar-fg, var(--text-heading));
+  background: var(--sidebar-accent-soft, color-mix(in srgb, var(--text-strong) 5%, transparent));
 }
 
 .admin-sidebar-sublink.is-active {
   color: var(--sidebar-accent, var(--brand-primary));
-  background: var(--sidebar-accent-soft, color-mix(in srgb, var(--brand-primary) 12%, transparent));
+  background: var(--sidebar-accent-soft, color-mix(in srgb, var(--brand-primary) 10%, transparent));
+  font-weight: 600;
 }
 
 .admin-sidebar-sublink.is-danger {
@@ -256,32 +263,22 @@
 }
 
 .admin-sidebar-subicon {
-  width: 24px !important;
-  height: 24px !important;
-  flex: 0 0 24px;
-  display: grid !important;
-  place-items: center;
-  padding: 5px;
-  border-radius: 6px;
+  width: 16px !important;
+  height: 16px !important;
+  flex: 0 0 16px;
+  display: block !important;
+  padding: 0;
+  border-radius: 0;
   color: var(--sidebar-muted, var(--text-muted));
-  background: var(--sidebar-tile, color-mix(in srgb, var(--surface-2) 70%, transparent));
+  background: transparent;
 }
 
-.admin-sidebar-sublink:hover .admin-sidebar-subicon,
 .admin-sidebar-sublink.is-active .admin-sidebar-subicon {
-  color: var(--sidebar-on-accent, var(--on-primary, #fff));
-  background: var(--sidebar-accent, var(--brand-primary));
+  color: var(--sidebar-accent, var(--brand-primary));
 }
 
 .admin-sidebar-sublink.is-danger .admin-sidebar-subicon {
   color: var(--sidebar-danger, #b91c1c);
-  background: rgba(239, 68, 68, 0.1);
-}
-
-.admin-sidebar-sublink.is-danger:hover .admin-sidebar-subicon,
-.admin-sidebar-sublink.is-danger.is-active .admin-sidebar-subicon {
-  color: #fff;
-  background: #b91c1c;
 }
 
 .admin-sidebar-footer {
@@ -303,9 +300,13 @@
   display: grid;
   place-items: center;
   border: 0;
-  border-radius: 8px;
+  border-radius: calc(var(--app-radius) + 2px);
   color: var(--sidebar-muted, var(--text-muted));
-  background: var(--sidebar-tile, color-mix(in srgb, var(--surface-2) 80%, transparent));
+  background: transparent;
+}
+
+.admin-sidebar-collapse:hover {
+  background: var(--sidebar-tile, color-mix(in srgb, var(--text-strong) 6%, transparent));
 }
 
 .admin-sidebar-collapse svg {
@@ -352,9 +353,9 @@
   }
 
   .admin-sidebar.is-collapsed .admin-sidebar-icon {
-    width: 38px !important;
-    height: 38px !important;
-    flex-basis: 38px;
+    width: 22px !important;
+    height: 22px !important;
+    flex-basis: 22px;
   }
 
   /* Settings > Layout > Overlay and Horizontal: the sidebar leaves the page

@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Lato:wght@400;700;900&family=Manrope:wght@400;500;600;700;800&family=Nunito:wght@400;600;700;800;900&family=Open+Sans:wght@400;600;700;800&family=Poppins:wght@400;500;600;700;800;900&family=Roboto:wght@400;500;600;700;800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Lato:wght@400;700;900&family=Manrope:wght@400;500;600;700;800&family=Nunito:wght@400;600;700;800;900&family=Open+Sans:wght@400;600;700;800&family=Poppins:wght@400;500;600;700;800;900&family=Roboto:wght@400;500;600;700;800&family=Source+Sans+3:wght@400;500;600;700&display=swap');
 
 @import 'tailwindcss';
 @import './additional-styles/utility-patterns.css' layer(components);
@@ -15,25 +15,34 @@
      element multiplies vh as well, so a plain 100vh only filled half the screen
      at 50% zoom. Use calc(N * var(--app-vh)) for any height inside #root. */
   --app-vh: calc(1vh / var(--app-screen-zoom));
-  --app-radius: 0px;
+  --app-radius: 4px;
   --app-density-scale: 1;
   --app-table-scale: 0.92;
+  /* The CFS palette (its Figma file): white cards, a pale blue-grey page,
+     #dde2ee hairlines, slate ink. Flat colours only. */
   --surface-1: #ffffff;
-  --surface-2: #f8fafc;
-  --surface-3: #eef2f7;
+  --surface-2: #f8f9ff;
+  --surface-3: #eff4ff;
   /* total rows, scrollbar tracks: one step stronger than --surface-3 */
-  --surface-4: #e2e8f0;
-  --text-strong: #0f172a;
+  --surface-4: #e1e8f7;
+  --text-strong: #1e293b;
+  --text-heading: #0f172a;
   --text-muted: #64748b;
-  --border-soft: rgba(15, 23, 42, 0.1);
+  --border-soft: #dde2ee;
+  --border-input: #cbd5e1;
+  /* a screen's own icon, an id chip: the one blue tint CFS uses for "this is" */
+  --tint-blue: #eff4ff;
+  --tint-blue-border: #c8d6f5;
+  --tint-blue-text: #1d4ed8;
+  /* every card's corners: a step rounder than the controls inside it */
+  --card-radius: calc(var(--app-radius) + 2px);
+  --card-shadow: 0 1px 2px rgba(15, 23, 42, 0.05);
   /* The page behind the cards. "Integrate" in Settings > Colors paints the
      menu or the top bar in it, so they sit flat on the page. */
-  --canvas: #eef2f7;
-  /* Report grids are read like a printed ledger, so their box lines are a
-     shade stronger than --border-soft, with a heavier frame and header rule.
-     Kept separate so ordinary panel borders stay light. */
-  --table-line: rgba(51, 65, 85, 0.32);
-  --table-line-strong: rgba(51, 65, 85, 0.62);
+  --canvas: #f4f7fd;
+  /* Grid lines: rows on a hairline, the frame one step stronger. */
+  --table-line: #dde2ee;
+  --table-line-strong: #c3c6d7;
   /* Report grid headings follow the accent chosen in Settings. ThemeProvider
      publishes --brand-primary and the shades below onto <html>, so changing
      the theme colour repaints every report header without a reload. The
@@ -42,7 +51,7 @@
   --table-head-bg-hover: var(--brand-primary-hover, var(--brand-primary));
   --table-head-fg: var(--on-primary, #ffffff);
   --table-head-divider: var(--brand-divider, rgba(255, 255, 255, 0.34));
-  --shadow-panel: 0 18px 45px rgba(15, 23, 42, 0.08);
+  --shadow-panel: var(--card-shadow);
   --brand-primary: #0f62fe;
   --brand-secondary: #0e7490;
   --brand-success: #059669;
@@ -90,12 +99,18 @@
   --surface-3: #172033;
   --surface-4: #1e293b;
   --text-strong: #f8fafc;
+  --text-heading: #f8fafc;
   --text-muted: #94a3b8;
   --border-soft: rgba(148, 163, 184, 0.18);
+  --border-input: rgba(148, 163, 184, 0.32);
+  --tint-blue: rgba(59, 130, 246, 0.14);
+  --tint-blue-border: rgba(96, 165, 250, 0.32);
+  --tint-blue-text: #93c5fd;
+  --card-shadow: none;
   --canvas: #0b1322;
-  --table-line: rgba(148, 163, 184, 0.34);
-  --table-line-strong: rgba(148, 163, 184, 0.62);
-  --shadow-panel: 0 22px 50px rgba(0, 0, 0, 0.32);
+  --table-line: rgba(148, 163, 184, 0.2);
+  --table-line-strong: rgba(148, 163, 184, 0.36);
+  --shadow-panel: none;
 }
 
 html,
@@ -110,21 +125,18 @@ body,
   color: var(--text-strong);
 }
 
-/* The two corner tints take the theme colours, not a fixed blue and green. */
+/* A flat page, as in CFS: no tinted corners behind the cards. */
 body {
-  background:
-    linear-gradient(135deg, color-mix(in srgb, var(--brand-primary) 8%, transparent), transparent 32%),
-    linear-gradient(315deg, color-mix(in srgb, var(--brand-secondary) 8%, transparent), transparent 30%),
-    #f5f7fb;
+  background: var(--canvas);
 }
 
 #root {
   zoom: var(--app-screen-zoom);
 }
 
+/* Each variant brings its own weight (ThemeContext): text 400, headings 600. */
 .MuiTypography-root {
   letter-spacing: 0 !important;
-  font-weight: 700;
 }
 
 .MuiTypography-body1 {
@@ -206,9 +218,7 @@ body {
 }
 
 .dark .enterprise-shell {
-  background:
-    radial-gradient(circle at top left, color-mix(in srgb, var(--brand-primary) 20%, transparent), transparent 34rem),
-    linear-gradient(180deg, rgba(8, 15, 29, 0.98), rgba(15, 23, 42, 0.98));
+  background: var(--canvas);
 }
 
 .enterprise-main {
@@ -381,11 +391,11 @@ body {
   position: sticky;
   top: 0;
   z-index: 35;
-  min-height: 68px;
+  min-height: 60px;
   display: flex;
   align-items: center;
   gap: 16px;
-  padding: 10px 18px;
+  padding: 8px 16px;
   color: var(--bar-fg, inherit);
   border-bottom: 1px solid var(--bar-border, var(--border-soft));
   background: var(--bar-bg, rgba(255, 255, 255, 0.78));
@@ -892,31 +902,36 @@ body {
 
 .enterprise-card,
 .MuiPaper-root.enterprise-card {
-  border-radius: var(--app-radius);
-  background: color-mix(in srgb, var(--surface-1) 92%, transparent);
+  border-radius: var(--card-radius);
+  background: var(--surface-1);
   border: 1px solid var(--border-soft);
-  box-shadow: var(--shadow-panel);
+  box-shadow: var(--card-shadow);
   background-clip: padding-box;
 }
 
+/* ------------------------------------------------------------------
+   Grids, the CFS way: a soft heading band in sentence case, 40px rows on
+   hairlines, no column rules (Settings > Table format > Bordered adds
+   them), and a footer with the page size and count on the left and the
+   page arrows on the right.
+   ------------------------------------------------------------------ */
 .MuiDataGrid-root {
-  background: color-mix(in srgb, var(--surface-1) 96%, transparent);
+  background: var(--surface-1);
   border: 1px solid var(--border-soft) !important;
-  border-radius: var(--app-radius) !important;
-  box-shadow: 0 12px 34px rgba(15, 23, 42, 0.06);
+  border-radius: var(--card-radius) !important;
+  box-shadow: none;
   overflow: hidden;
 }
 
 .MuiDataGrid-toolbarContainer {
   gap: 8px !important;
-  padding: 10px 14px !important;
+  padding: 8px 12px !important;
   border-bottom: 1px solid var(--border-soft);
-  background: color-mix(in srgb, var(--surface-2) 82%, transparent);
+  background: var(--surface-1);
 }
 
 .MuiDataGrid-columnHeader {
   background: var(--table-head-bg);
-  /* Divider has to read against the green, not the old grey. */
   border-right: 1px solid var(--table-head-divider) !important;
 }
 
@@ -924,11 +939,9 @@ body {
   background: var(--table-head-bg-hover);
 }
 
-/* Heavier rule under the headings and a frame around the data area, so the
-   grid reads as a boxed table like the printed report. */
 .MuiDataGrid-columnHeaders {
   background: var(--table-head-bg);
-  border-bottom: 2px solid var(--table-head-bg-hover) !important;
+  border-bottom: 1px solid var(--table-line-strong) !important;
 }
 
 /* Heading text and the sort / menu icons that sit beside it. */
@@ -945,9 +958,9 @@ body {
    put on it from here, so a 1px border left the columns 2px too wide: every
    grid, even one that fitted, grew a full-width horizontal scrollbar. */
 .MuiDataGrid-main {
-  outline: 1px solid var(--table-line-strong);
+  outline: 1px solid var(--border-soft);
   outline-offset: -1px;
-  border-radius: 6px;
+  border-radius: 0;
   overflow: hidden;
 }
 
@@ -959,8 +972,8 @@ body {
 .enterprise-main .MuiTableHead-root .MuiTableCell-root {
   color: var(--table-head-fg);
   background: var(--table-head-bg);
-  border-bottom: 2px solid var(--table-head-bg-hover);
-  font-weight: 800;
+  border-bottom: 1px solid var(--table-line-strong);
+  font-weight: 600;
 }
 
 .enterprise-main .MuiTableHead-root .MuiTableCell-root .MuiTypography-root,
@@ -971,15 +984,15 @@ body {
 }
 
 .MuiDataGrid-columnHeaderTitle {
-  font-size: calc(0.75rem * var(--app-font-scale) * var(--app-table-scale));
-  font-weight: 900 !important;
+  font-size: calc(0.8125rem * var(--app-font-scale) * var(--app-table-scale));
+  font-weight: 600 !important;
   letter-spacing: 0;
-  text-transform: uppercase;
+  text-transform: none;
 }
 
 .MuiDataGrid-cell {
-  font-size: calc(0.8125rem * var(--app-font-scale) * var(--app-table-scale));
-  font-weight: 700;
+  font-size: calc(0.875rem * var(--app-font-scale) * var(--app-table-scale));
+  font-weight: 400;
   border-right: 1px solid var(--table-line) !important;
   border-bottom: 1px solid var(--table-line) !important;
 }
@@ -992,17 +1005,21 @@ body {
 
 .MuiTableContainer-root {
   border: 1px solid var(--border-soft);
-  border-radius: var(--app-radius);
-  box-shadow: var(--shadow-panel);
+  border-radius: var(--card-radius);
+  box-shadow: none;
 }
 
 .MuiTableHead-root .MuiTableCell-root {
   background: var(--surface-2);
   color: var(--text-strong);
-  font-size: calc(0.75rem * var(--app-font-scale) * var(--app-table-scale));
-  font-weight: 800;
+  font-size: calc(0.8125rem * var(--app-font-scale) * var(--app-table-scale));
+  font-weight: 600;
   letter-spacing: 0;
-  text-transform: uppercase;
+  text-transform: none;
+}
+
+.MuiTableBody-root .MuiTableCell-root {
+  border-bottom-color: var(--table-line);
 }
 
 .MuiTablePagination-root {
@@ -1010,11 +1027,13 @@ body {
   background: var(--surface-1);
 }
 
+/* Rows per page and the count on the left, the page arrows on the right. */
 .MuiTablePagination-toolbar {
-  justify-content: center;
-  gap: 16px;
-  min-height: 52px !important;
-  padding-inline: 16px !important;
+  justify-content: flex-start;
+  gap: 12px;
+  width: 100%;
+  min-height: 48px !important;
+  padding-inline: 12px !important;
 }
 
 .MuiTablePagination-spacer {
@@ -1024,11 +1043,13 @@ body {
 .MuiTablePagination-selectLabel,
 .MuiTablePagination-displayedRows {
   margin: 0 !important;
-  font-weight: 800 !important;
+  color: var(--text-muted);
+  font-size: 0.8125rem !important;
+  font-weight: 500 !important;
 }
 
 .MuiTablePagination-actions {
-  margin-left: 0 !important;
+  margin-left: auto !important;
 }
 
 .MuiDataGrid-toolbarContainer {
@@ -1059,9 +1080,9 @@ body {
 
 .MuiMenu-paper {
   max-height: min(360px, 62vh) !important;
-  border-radius: var(--app-radius) !important;
-  border: 1px solid color-mix(in srgb, var(--border-soft) 82%, transparent) !important;
-  box-shadow: 0 18px 42px rgba(15, 23, 42, 0.16) !important;
+  border-radius: var(--card-radius) !important;
+  border: 1px solid var(--border-soft) !important;
+  box-shadow: 0 2px 8px rgba(15, 23, 42, 0.08), 0 12px 28px rgba(15, 23, 42, 0.1) !important;
 }
 
 .MuiMenu-list {
@@ -1088,7 +1109,7 @@ body {
 
 .MuiAutocomplete-root .MuiOutlinedInput-root,
 .MuiFormControl-root .MuiOutlinedInput-root {
-  border-radius: 8px;
+  border-radius: var(--app-radius);
   background-color: var(--surface-1);
   transition: border-color 160ms ease, box-shadow 160ms ease, background-color 160ms ease;
 }
@@ -1098,15 +1119,15 @@ body {
    stood shorter, square-cornered and in a lighter, smaller type beside the
    fields next to it. Same plate, corners, type and weight as the rest. */
 .MuiPickersOutlinedInput-root {
-  border-radius: 8px !important;
+  border-radius: var(--app-radius) !important;
   background-color: var(--surface-1);
   transition: border-color 160ms ease, box-shadow 160ms ease, background-color 160ms ease;
 }
 
 .MuiPickersInputBase-root {
   font-family: var(--app-font-family) !important;
-  font-size: calc(0.94rem * var(--app-font-scale)) !important;
-  font-weight: 700 !important;
+  font-size: calc(0.875rem * var(--app-font-scale)) !important;
+  font-weight: 400 !important;
 }
 
 .MuiAutocomplete-option {
@@ -1121,46 +1142,56 @@ body {
 .MuiMenuItem-root.Mui-selected,
 .MuiMenuItem-root.Mui-focusVisible,
 .MuiMenuItem-root:hover {
-  background-color: color-mix(in srgb, var(--brand-primary) 10%, var(--surface-1)) !important;
+  background-color: var(--surface-3) !important;
   color: var(--text-strong);
 }
 
 .MuiDialog-paper {
-  border-radius: calc(var(--app-radius) + 4px) !important;
+  border-radius: var(--card-radius) !important;
   border: 1px solid var(--border-soft) !important;
-  box-shadow: 0 28px 80px rgba(15, 23, 42, 0.22) !important;
+  box-shadow: 0 2px 8px rgba(15, 23, 42, 0.08), 0 18px 44px rgba(15, 23, 42, 0.16) !important;
 }
 
 .MuiDialogTitle-root {
-  padding: 18px 24px 14px !important;
-  color: var(--text-strong);
-  font-size: 1.1rem !important;
-  font-weight: 900 !important;
+  padding: 14px 20px !important;
+  color: var(--text-heading);
+  font-size: 1.0625rem !important;
+  font-weight: 600 !important;
   border-bottom: 1px solid var(--border-soft);
-  background: linear-gradient(180deg, rgba(248, 250, 252, 0.92), rgba(255, 255, 255, 0.94));
+  background: var(--surface-1);
 }
 
 .MuiDialogContent-root {
-  padding: 24px !important;
+  padding: 20px !important;
 }
 
 .MuiDialogActions-root {
-  padding: 14px 24px !important;
+  padding: 12px 20px !important;
   border-top: 1px solid var(--border-soft);
   background: var(--surface-2);
 }
 
 .MuiFormControl-root .MuiInputLabel-root {
-  font-weight: 750;
+  font-weight: 500;
 }
 
+/* CFS inputs: white, a grey hairline that darkens on hover, the accent only
+   while the field has focus */
 :root[data-form-style="outlined"] .MuiOutlinedInput-root {
-  background: color-mix(in srgb, var(--surface-1) 88%, transparent) !important;
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.65);
+  background: var(--surface-1) !important;
+  box-shadow: none;
 }
 
 :root[data-form-style="outlined"] .MuiOutlinedInput-notchedOutline {
-  border-color: color-mix(in srgb, var(--brand-primary) 22%, var(--border-soft)) !important;
+  border-color: var(--border-input) !important;
+}
+
+:root[data-form-style="outlined"] .MuiOutlinedInput-root:hover:not(.Mui-disabled):not(.Mui-focused) .MuiOutlinedInput-notchedOutline {
+  border-color: var(--text-muted) !important;
+}
+
+:root[data-form-style="outlined"] .MuiOutlinedInput-root.Mui-focused .MuiOutlinedInput-notchedOutline {
+  border-color: var(--brand-primary) !important;
 }
 
 :root[data-form-style="filled"] .MuiOutlinedInput-root {
@@ -1928,9 +1959,9 @@ body {
 .enterprise-page {
   /* defaults for the screen parts (ScreenHeader, the report header...) on
      screens that do not sit inside a .scr-page of their own */
-  --scr-radius: max(12px, var(--app-radius));
+  --scr-radius: var(--card-radius);
   --tone: var(--brand-primary);
-  padding: 16px clamp(12px, 1.5vw, 24px) 28px;
+  padding: 12px clamp(12px, 1.2vw, 20px) 24px;
 }
 
 /* one search-as-you-type box that should fill its layout cell (see the note
@@ -1940,12 +1971,10 @@ body {
 }
 
 .scr-page {
-  /* cards here are rounded even when the app's own corners are square;
-     a larger radius in Settings still carries over */
-  --scr-radius: max(12px, var(--app-radius));
+  --scr-radius: var(--card-radius);
   --tone: var(--brand-primary);
   display: grid;
-  gap: 16px;
+  gap: 12px;
 }
 
 /* filters of a report: as many columns as fit, every control the same width */
@@ -1966,14 +1995,49 @@ body {
 /* Money in a report grid that carries a meaning: received, paid out, still
    owed. Used as cellClassName on DataTable columns. */
 .MuiDataGrid-cell.cell-credit {
-  color: #15803d;
-  font-weight: 800;
+  color: #047857;
+  font-weight: 600;
 }
 
 .MuiDataGrid-cell.cell-debit,
 .MuiDataGrid-cell.cell-due {
-  color: #dc2626;
-  font-weight: 800;
+  color: #b91c1c;
+  font-weight: 600;
+}
+
+/* How a list dresses a cell, as in CFS: the record's own name carries
+   weight, a missing value is a grey dash. */
+.cell-name {
+  color: var(--text-heading);
+  font-weight: 600;
+}
+
+.cell-empty {
+  color: var(--text-muted);
+}
+
+/* Row actions - an icon button in a grid cell - are CFS's quiet icon
+   actions: grey until hovered, with a red Delete. Two classes deep to beat
+   the theme's IconButton size. */
+.MuiDataGrid-cell .MuiIconButton-root {
+  width: 30px;
+  height: 30px;
+  border-radius: var(--app-radius);
+  color: var(--text-muted);
+}
+
+.MuiDataGrid-cell .MuiIconButton-root:hover {
+  color: var(--tint-blue-text);
+  background: var(--tint-blue);
+}
+
+.MuiDataGrid-cell .MuiIconButton-root.MuiIconButton-colorError {
+  color: #b91c1c;
+}
+
+.MuiDataGrid-cell .MuiIconButton-root.MuiIconButton-colorError:hover {
+  color: #b91c1c;
+  background: rgba(220, 38, 38, 0.08);
 }
 
 .dark .MuiDataGrid-cell.cell-credit {
@@ -1988,7 +2052,7 @@ body {
 .scr-stack {
   min-width: 0;
   display: grid;
-  gap: 16px;
+  gap: 12px;
   align-content: start;
 }
 
@@ -2019,51 +2083,75 @@ body {
   --tone: #dc2626;
 }
 
-/* ---- header ---- */
+/* ---- header ----
+   The CFS list header card: the screen's icon on a blue tint, its name and
+   one line on what it is for, and its actions kept on the right of the same
+   row (the title side gives way first, then the actions drop under it). */
 .scr-head {
   display: flex;
   align-items: center;
-  gap: 14px;
+  gap: 12px 16px;
   flex-wrap: wrap;
+  padding: 12px 16px;
+  border: 1px solid var(--border-soft);
+  border-radius: var(--scr-radius, var(--card-radius));
+  background: var(--surface-1);
+  box-shadow: var(--card-shadow);
 }
 
 .scr-head-icon {
-  width: 44px;
-  height: 44px;
-  flex: 0 0 44px;
+  width: 40px;
+  height: 40px;
+  flex: 0 0 40px;
   display: grid;
   place-items: center;
-  border-radius: 12px;
+  border: 1px solid var(--tint-blue-border);
+  border-radius: calc(var(--app-radius) + 2px);
+  color: var(--tint-blue-text);
+  background: var(--tint-blue);
+}
+
+.scr-head-icon svg {
+  width: 20px;
+  height: 20px;
+}
+
+/* a screen whose header says "careful" (Delete Transaction) keeps its tone */
+.scr-head.scr-tone-danger .scr-head-icon {
+  border-color: color-mix(in srgb, var(--tone) 30%, transparent);
   color: var(--tone);
-  background: color-mix(in srgb, var(--tone) 13%, transparent);
+  background: color-mix(in srgb, var(--tone) 9%, transparent);
 }
 
 .scr-head-text {
-  flex: 1 1 260px;
+  flex: 1 1 20rem;
   min-width: 0;
 }
 
 .scr-head-text h1 {
   margin: 0;
-  font-size: clamp(1.3rem, 1.9vw, 1.6rem);
-  font-weight: 800;
-  line-height: 1.2;
-  letter-spacing: -0.015em;
+  color: var(--text-heading);
+  font-size: 1.125rem;
+  font-weight: 600;
+  line-height: 1.3;
+  letter-spacing: -0.01em;
 }
 
 .scr-head-text p {
-  margin: 3px 0 0;
+  margin: 2px 0 0;
   color: var(--text-muted);
-  font-size: 0.86rem;
-  font-weight: 500;
+  font-size: 0.8125rem;
+  font-weight: 400;
   line-height: 1.45;
 }
 
 .scr-head-actions {
   display: flex;
   align-items: center;
-  gap: 10px;
+  justify-content: flex-end;
+  gap: 8px;
   flex-wrap: wrap;
+  margin-left: auto;
 }
 
 /* a search box that sits with the header's actions: it stands on the page
@@ -2083,23 +2171,25 @@ body {
 .scr-date-chip {
   display: inline-flex;
   align-items: center;
-  min-height: 34px;
-  padding: 0 12px;
+  min-height: 30px;
+  padding: 0 10px;
   border: 1px solid var(--border-soft);
-  border-radius: 999px;
+  border-radius: var(--app-radius);
   color: var(--text-strong);
-  background: var(--surface-1);
-  font-size: 0.82rem;
-  font-weight: 700;
+  background: var(--surface-2);
+  font-size: 0.8125rem;
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
   white-space: nowrap;
 }
 
-/* Daily / Monthly: MUI Tabs drawn as one segmented switch */
+/* Daily / Monthly and the like: the CFS quick tabs - quiet labels, the one
+   that is on in solid ink */
 .scr-switch.MuiTabs-root {
   min-height: 0;
-  padding: 4px;
+  padding: 2px;
   border: 1px solid var(--border-soft);
-  border-radius: calc(var(--scr-radius) - 2px);
+  border-radius: calc(var(--app-radius) + 2px);
   background: var(--surface-1);
 }
 
@@ -2108,29 +2198,43 @@ body {
 }
 
 .scr-switch .MuiTab-root {
-  min-height: 34px;
-  padding: 4px 16px;
-  border-radius: calc(var(--scr-radius) - 6px);
+  min-width: 0;
+  min-height: 32px;
+  padding: 4px 14px;
+  border-radius: var(--app-radius);
   color: var(--text-muted);
+  font-weight: 500;
+}
+
+.scr-switch .MuiTabs-scroller,
+.scr-switch .MuiTabs-flexContainer {
+  min-height: 0;
+}
+
+.scr-switch .MuiTab-root .MuiTab-iconWrapper {
+  margin-right: 6px;
+  font-size: 1.05rem;
+}
+
+.scr-switch .MuiTab-root:hover {
+  color: var(--text-strong);
+  background: var(--tint-blue);
 }
 
 .scr-switch .MuiTab-root.Mui-selected {
-  color: var(--on-primary, #fff);
-  background: var(--brand-primary);
+  color: var(--surface-1);
+  background: var(--text-heading);
+  font-weight: 600;
 }
 
 /* ---- cards ---- */
 .scr-card {
   min-width: 0;
-  padding: 18px 20px 20px;
+  padding: 16px;
   border: 1px solid var(--border-soft);
   border-radius: var(--scr-radius);
   background: var(--surface-1);
-  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04), 0 8px 24px rgba(15, 23, 42, 0.05);
-}
-
-.dark .scr-card {
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.3), 0 10px 28px rgba(0, 0, 0, 0.22);
+  box-shadow: var(--card-shadow);
 }
 
 /* a card that holds a table edge to edge */
@@ -2143,27 +2247,31 @@ body {
   padding: 16px 20px;
 }
 
+/* A titled card's heading is the CFS panel title: a small icon in the
+   accent and the title in ink, on a hairline over the card's fields. */
 .scr-card-head {
   display: flex;
   align-items: center;
-  gap: 12px;
-  margin-bottom: 16px;
+  gap: 10px;
+  margin: -4px -16px 14px;
+  padding: 0 16px 12px;
+  border-bottom: 1px solid var(--border-soft);
 }
 
 .scr-card-icon {
-  width: 34px;
-  height: 34px;
-  flex: 0 0 34px;
+  width: 28px;
+  height: 28px;
+  flex: 0 0 28px;
   display: grid;
   place-items: center;
-  border-radius: 9px;
+  border-radius: var(--app-radius);
   color: var(--brand-primary);
-  background: color-mix(in srgb, var(--brand-primary) 12%, transparent);
+  background: color-mix(in srgb, var(--brand-primary) 9%, transparent);
 }
 
 .scr-card-icon svg {
-  width: 19px;
-  height: 19px;
+  width: 17px;
+  height: 17px;
 }
 
 .scr-card-heading {
@@ -2173,25 +2281,26 @@ body {
 
 .scr-card-heading h2 {
   margin: 0;
-  font-size: 1rem;
-  font-weight: 800;
-  line-height: 1.25;
+  color: var(--text-heading);
+  font-size: 0.9375rem;
+  font-weight: 600;
+  line-height: 1.3;
 }
 
 .scr-card-heading p {
   margin: 2px 0 0;
   color: var(--text-muted);
-  font-size: 0.8rem;
-  font-weight: 500;
+  font-size: 0.8125rem;
+  font-weight: 400;
 }
 
 /* a plain sub-heading between groups of fields in one form */
 .scr-group-title {
-  margin: 0 0 12px;
+  margin: 0 0 10px;
   color: var(--text-muted);
-  font-size: 0.74rem;
-  font-weight: 800;
-  letter-spacing: 0.08em;
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.05em;
   text-transform: uppercase;
 }
 
@@ -2213,14 +2322,14 @@ body {
 
 .scr-fact dt {
   color: var(--text-muted);
-  font-size: 0.76rem;
-  font-weight: 700;
+  font-size: 0.75rem;
+  font-weight: 500;
 }
 
 .scr-fact dd {
   margin: 3px 0 0;
-  font-size: 0.95rem;
-  font-weight: 700;
+  font-size: 0.9375rem;
+  font-weight: 600;
   line-height: 1.3;
   overflow-wrap: anywhere;
 }
@@ -2240,22 +2349,23 @@ body {
   min-width: 0;
   display: grid;
   gap: 2px;
-  padding: 10px 14px;
+  padding: 8px 12px;
   border: 1px solid var(--border-soft);
   border-left: 3px solid var(--tone);
-  border-radius: calc(var(--scr-radius) - 4px);
-  background: var(--surface-2);
+  border-radius: var(--app-radius);
+  background: var(--surface-1);
 }
 
 .scr-stat span {
   color: var(--text-muted);
-  font-size: 0.74rem;
-  font-weight: 700;
+  font-size: 0.75rem;
+  font-weight: 500;
 }
 
 .scr-stat strong {
-  font-size: 1.08rem;
-  font-weight: 800;
+  color: var(--text-heading);
+  font-size: 1.0625rem;
+  font-weight: 600;
   line-height: 1.2;
   font-variant-numeric: tabular-nums;
   overflow-wrap: anywhere;
@@ -2297,21 +2407,21 @@ body {
 
 .scr-bar-total {
   color: var(--text-muted);
-  font-size: 0.9rem;
-  font-weight: 600;
+  font-size: 0.875rem;
+  font-weight: 500;
 }
 
 .scr-bar-total strong {
   color: var(--text-strong);
-  font-weight: 800;
+  font-weight: 600;
   font-variant-numeric: tabular-nums;
 }
 
 .scr-hint {
   margin: 0;
   color: var(--text-muted);
-  font-size: 0.82rem;
-  font-weight: 500;
+  font-size: 0.8125rem;
+  font-weight: 400;
   line-height: 1.45;
 }
 
@@ -2322,18 +2432,21 @@ body {
   justify-content: space-between;
   gap: 12px;
   padding: 12px 14px;
-  border-radius: calc(var(--scr-radius) - 4px);
-  background: var(--brand-primary-soft, color-mix(in srgb, var(--brand-primary) 10%, transparent));
+  border: 1px solid var(--tint-blue-border);
+  border-radius: var(--app-radius);
+  background: var(--tint-blue);
 }
 
 .scr-total span {
-  font-size: 0.82rem;
-  font-weight: 700;
+  color: var(--text-muted);
+  font-size: 0.8125rem;
+  font-weight: 500;
 }
 
 .scr-total strong {
-  font-size: 1.3rem;
-  font-weight: 800;
+  color: var(--text-heading);
+  font-size: 1.25rem;
+  font-weight: 700;
   font-variant-numeric: tabular-nums;
 }
 
@@ -2345,22 +2458,22 @@ body {
 /* Active / Deleted and the like: two or three choices, one of them on */
 .scr-seg {
   display: inline-flex;
-  padding: 4px;
+  padding: 2px;
   border: 1px solid var(--border-soft);
-  border-radius: calc(var(--scr-radius) - 2px);
-  background: var(--surface-2);
+  border-radius: calc(var(--app-radius) + 2px);
+  background: var(--surface-1);
 }
 
 .scr-seg button {
-  min-height: 32px;
-  padding: 4px 14px;
+  min-height: 30px;
+  padding: 4px 12px;
   border: 0;
-  border-radius: calc(var(--scr-radius) - 6px);
+  border-radius: var(--app-radius);
   color: var(--text-muted);
   background: transparent;
   font-family: inherit;
-  font-size: 0.84rem;
-  font-weight: 700;
+  font-size: 0.8125rem;
+  font-weight: 500;
   white-space: nowrap;
   cursor: pointer;
 }
@@ -2370,8 +2483,9 @@ body {
 }
 
 .scr-seg button[aria-pressed="true"] {
-  color: var(--on-primary, #fff);
-  background: var(--brand-primary);
+  color: var(--surface-1);
+  background: var(--text-heading);
+  font-weight: 600;
 }
 
 .scr-seg button:focus-visible {
@@ -2414,6 +2528,104 @@ body {
   box-shadow: inset 3px 0 0 var(--brand-primary);
 }
 
+/* ---- Balance Sheet (Business > Balance Sheet) ----
+   Drawn as the printed sheet: a ruled ledger, each side opening on a band
+   with its total, each group on a tint with its own total, the accounts
+   numbered under it. The bands take the table-header colours, so they move
+   with Settings > Colors > Table header. */
+.bs-sheet {
+  max-width: 1040px;
+  margin: 0 auto;
+}
+
+.bs-date {
+  display: flex;
+  justify-content: flex-end;
+  gap: 24px;
+  margin: 0 0 6px;
+  color: var(--text-heading);
+  font-size: 0.9375rem;
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
+}
+
+.bs-title {
+  margin: 0 0 16px;
+  color: var(--text-heading);
+  font-size: 1.125rem;
+  font-weight: 600;
+  text-align: center;
+}
+
+.bs-table {
+  width: 100%;
+  border-collapse: collapse;
+  table-layout: fixed;
+  font-size: 0.875rem;
+}
+
+.bs-table + .bs-table {
+  margin-top: 16px;
+}
+
+.bs-col-no {
+  width: 56px;
+}
+
+.bs-col-amount {
+  width: 34%;
+}
+
+.bs-table th,
+.bs-table td {
+  padding: 6px 10px;
+  border: 1px solid var(--table-line-strong);
+  color: var(--text-strong);
+  text-align: left;
+  overflow-wrap: anywhere;
+}
+
+.bs-table .bs-amount {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.bs-table .bs-no {
+  color: var(--text-muted);
+}
+
+.bs-section > th,
+.bs-section > td {
+  background: color-mix(in srgb, var(--table-head-fg) 26%, var(--table-head-bg));
+  color: var(--table-head-fg);
+  font-weight: 700;
+  letter-spacing: 0.02em;
+}
+
+.bs-total-label {
+  margin-right: 24px;
+}
+
+.bs-group > th,
+.bs-group > td {
+  background: var(--table-head-bg);
+  color: var(--text-heading);
+  font-weight: 600;
+}
+
+.bs-none {
+  color: var(--text-muted);
+  text-align: center !important;
+}
+
+.bs-difference {
+  margin: 12px 0 0;
+  color: #b45309;
+  font-size: 0.875rem;
+  text-align: right;
+}
+
 /* ---- nothing here yet ---- */
 .scr-empty {
   display: grid;
@@ -2432,19 +2644,20 @@ body {
 }
 
 .scr-empty-icon {
-  width: 48px;
-  height: 48px;
+  width: 44px;
+  height: 44px;
   display: grid;
   place-items: center;
   margin-bottom: 4px;
   border-radius: 50%;
-  color: var(--brand-primary);
-  background: color-mix(in srgb, var(--brand-primary) 12%, transparent);
+  color: var(--text-muted);
+  background: var(--surface-3);
 }
 
 .scr-empty strong {
-  font-size: 0.98rem;
-  font-weight: 800;
+  color: var(--text-heading);
+  font-size: 0.9375rem;
+  font-weight: 600;
 }
 
 .scr-empty p {

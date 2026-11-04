@@ -102,7 +102,7 @@ const DailyFinance = () => {
 
   const getHeader = (label, field) => (
     <Box sx={{ width: "100%", pt: 0.25 }}>
-      <Box sx={{ fontWeight: 900, fontSize: 12, lineHeight: 1.2, mb: showColumnFilters ? 0.5 : 0 }}>
+      <Box sx={{ fontWeight: 600, fontSize: 13, lineHeight: 1.2, mb: showColumnFilters ? 0.5 : 0 }}>
         {label}
       </Box>
       {showColumnFilters && (
@@ -557,7 +557,7 @@ const DailyFinance = () => {
           onClick={() => handleViewLoan(params.row)}
           sx={{
             color: "primary.main",
-            fontWeight: 700,
+            fontWeight: 600,
             cursor: "pointer",
             textDecoration: "underline",
           }}
@@ -677,7 +677,7 @@ const DailyFinance = () => {
           <Box
             sx={{
               p: 2,
-              borderBottom: "1px solid #e2e8f0",
+              borderBottom: "1px solid var(--border-soft)",
               display: "flex",
               justifyContent: "space-between",
               alignItems: "center",
@@ -692,7 +692,7 @@ const DailyFinance = () => {
                 onChange={(event) => setGlobalSearch(event.target.value)}
                 placeholder="Search account, customer, amount, date..."
                 size="small"
-                sx={{ width: { xs: "100%", sm: 360, md: 460 } }}
+                sx={{ width: { xs: "100%", sm: 360, md: 420 } }}
                 InputProps={{
                   startAdornment: <SearchRounded fontSize="small" sx={{ mr: 1, color: "text.secondary" }} />,
                 }}
@@ -707,17 +707,15 @@ const DailyFinance = () => {
               <Button variant="outlined" startIcon={<RestartAltRounded />} onClick={clearFilters}>
                 Clear
               </Button>
-
-                <Typography variant="body2" color="text.secondary">
-                {searchedRows.length} of {rows.length} loans
+              <Typography variant="body2" color="text.secondary" sx={{ ml: 0.5 }}>
+                <strong>{searchedRows.length}</strong> of {rows.length} loans
               </Typography>
-              
+            </Stack>
+            <Stack direction="row" spacing={1} sx={{ alignItems: "center", ml: "auto" }}>
               <TableExportMenu rows={searchedRows} columns={exportColumns} fileName="Daily_Finance_Report" />
               <Button variant="contained" startIcon={<SaveIcon />} onClick={handleNewButton}>
                 New Loan
               </Button>
-
-             
             </Stack>
           </Box>
 
@@ -735,14 +733,12 @@ const DailyFinance = () => {
               onPaginationModelChange={setPaginationModel}
               pagination
               disableRowSelectionOnClick
-              rowHeight={52}
+              rowHeight={40}
               columnHeaderHeight={showColumnFilters ? 76 : 48}
               sx={{
                 height: "100%",
                 border: "none",
                 bgcolor: "var(--surface-1)",
-                "& .MuiDataGrid-cell": { fontWeight: 700 },
-                "& .MuiDataGrid-columnHeaderTitle": { fontWeight: 900 },
                 "& .MuiDataGrid-virtualScroller": { overflowAnchor: "none" },
               }}
             />

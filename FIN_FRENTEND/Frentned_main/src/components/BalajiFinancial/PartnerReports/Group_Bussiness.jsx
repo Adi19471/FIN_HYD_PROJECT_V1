@@ -230,7 +230,7 @@ const Group_Bussiness = () => {
               xs: 12,
               md: 2
             }}>
-            <Button fullWidth variant="contained" onClick={fetchReport} disabled={loading}>
+            <Button variant="contained" onClick={fetchReport} disabled={loading}>
               Generate
             </Button>
           </Grid>

@@ -229,8 +229,9 @@ const Bussiness_Reports = () => {
         fileName="Business-Report"
         zoom={zoom}
       />
-      <Paper sx={{ p: 3, mt: 2 }}>
-        <Grid container spacing={2} mb={2} alignItems="center">
+      {/* Filters and the grid are two cards, one under the other. */}
+      <Paper className="enterprise-card" elevation={0} sx={{ p: 2, mt: 1.5 }}>
+        <Grid container spacing={2} alignItems="center">
           <Grid
             size={{
               xs: 12,
@@ -290,8 +291,9 @@ const Bussiness_Reports = () => {
             </Button>
           </Grid>
         </Grid>
+      </Paper>
 
-        <Box ref={zoom.targetRef}>
+      <Box ref={zoom.targetRef} sx={{ mt: 1.5 }}>
           <DataTable
             rows={rows}
             columns={columns}
@@ -310,8 +312,7 @@ const Bussiness_Reports = () => {
             pageSize={25}
             disableRowSelectionOnClick
           />
-        </Box>
-      </Paper>
+      </Box>
     </>
   );
 };

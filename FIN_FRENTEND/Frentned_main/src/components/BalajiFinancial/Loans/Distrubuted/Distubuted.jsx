@@ -5,6 +5,7 @@ import { API_BASE } from "lib/config";
 import { getSession } from "src/utils/session";
 import { errorToast, successToast } from "toastify";
 import { AppDatePicker, DataTable, PageHeader, useDateRange } from "src/components/ui";
+import { navIcons } from "src/lib/icons";
 
 const formatINR = (value) => `₹ ${Number(value || 0).toLocaleString("en-IN")}`;
 
@@ -87,6 +88,9 @@ const Distubuted = () => {
   return (
     <Stack spacing={2.5}>
       <PageHeader
+        icon={navIcons.distributedLoans}
+        title="Distributed Loans"
+        subtitle="Loans given out, with amount paid and still due."
         onRefresh={() => getDisbursedList()}
         loading={loading}
       />
@@ -121,7 +125,7 @@ const Distubuted = () => {
               xs: 12,
               md: 4
             }}>
-            <Button fullWidth variant="contained" onClick={() => getDisbursedList()} disabled={loading}>
+            <Button variant="contained" onClick={() => getDisbursedList()} disabled={loading}>
               Generate
             </Button>
           </Grid>
@@ -131,7 +135,7 @@ const Distubuted = () => {
         rows={data}
         columns={columns}
         loading={loading}
-        title="Distributed Loan Details"
+        fileName="Distributed Loan Details"
         height="calc(100 * var(--app-vh) - 300px)"
         pageSize={50}
         period={reportPeriod}

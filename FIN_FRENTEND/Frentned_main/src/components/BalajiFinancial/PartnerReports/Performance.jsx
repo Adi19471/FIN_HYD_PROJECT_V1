@@ -183,7 +183,7 @@ const Performance = () => {
               xs: 12,
               md: 2
             }}>
-            <Button fullWidth variant="contained" onClick={fetchPerformance} disabled={loading}>
+            <Button variant="contained" onClick={fetchPerformance} disabled={loading}>
               Generate
             </Button>
           </Grid>

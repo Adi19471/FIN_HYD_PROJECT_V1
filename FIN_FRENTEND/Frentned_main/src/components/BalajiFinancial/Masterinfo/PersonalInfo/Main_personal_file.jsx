@@ -1,18 +1,12 @@
 import React, { useEffect, useState, useMemo, lazy, Suspense } from "react";
-import {
-  Box,
-  Tabs,
-  Tab,
-  Paper,
-  Typography,
-  alpha,
-  useTheme,
-} from "@mui/material";
+import { Box, Tabs, Tab } from "@mui/material";
 import { BadgeRounded, ContactsRounded, HandshakeRounded, StoreRounded } from "@mui/icons-material";
 
 import LoadingSpinner from "../../../../LoadingSpinner";
 import { useAuth } from "src/utils/authStore";
 import { hasPermissionAccess } from "src/utils/permissions";
+import { ScreenHeader } from "src/components/ui";
+import { navIcons } from "src/lib/icons";
 
 
 // Lazy load each tab's component for faster initial page load
@@ -22,7 +16,6 @@ const Employee = lazy(() => import("./Employe/Employe"));
 const Vendor = lazy(() => import("./Vender/Vender"));
 
 const MainPersonalFile = () => {
-  const theme = useTheme();
   const { user } = useAuth();
 
   const [value, setValue] = useState(0);
@@ -31,26 +24,13 @@ const MainPersonalFile = () => {
     setValue(newValue);
   };
 
-  // The active tab, its underline and its hover wash all follow the accent
-  // chosen in Settings, like every other "active" affordance in the app
-  // (sidebar, buttons, table headers) - this was pinned to a fixed blue.
-  const colors = useMemo(
-    () => ({
-      active: theme.palette.primary.main,
-      inactive: theme.palette.text.secondary,
-      indicator: theme.palette.primary.main,
-      hover: alpha(theme.palette.primary.main, 0.08),
-    }),
-    [theme.palette.primary.main, theme.palette.text.secondary]
-  );
-
   const tabs = useMemo(
     () =>
       [
-        { label: "CUSTOMER", icon: <ContactsRounded />, component: Customer, type: "CUSTOMER", permissionCodes: ["CUSTOMER_VIEW"] },
-        { label: "EMPLOYEE", icon: <BadgeRounded />, component: Employee, type: "EMPLOYEE", permissionCodes: ["EMPLOYEE_VIEW"] },
-        { label: "PARTNER", icon: <HandshakeRounded />, component: PartnerComponent, type: "PARTNER", permissionCodes: ["PARTNER_VIEW"] },
-        { label: "VENDOR", icon: <StoreRounded />, component: Vendor, type: "VENDOR", permissionCodes: ["VENDOR_VIEW"] },
+        { label: "Customer", icon: <ContactsRounded fontSize="small" />, component: Customer, type: "CUSTOMER", permissionCodes: ["CUSTOMER_VIEW"] },
+        { label: "Employee", icon: <BadgeRounded fontSize="small" />, component: Employee, type: "EMPLOYEE", permissionCodes: ["EMPLOYEE_VIEW"] },
+        { label: "Partner", icon: <HandshakeRounded fontSize="small" />, component: PartnerComponent, type: "PARTNER", permissionCodes: ["PARTNER_VIEW"] },
+        { label: "Vendor", icon: <StoreRounded fontSize="small" />, component: Vendor, type: "VENDOR", permissionCodes: ["VENDOR_VIEW"] },
       ].filter((tab) => hasPermissionAccess(user, tab.permissionCodes)),
     [user]
   );
@@ -61,87 +41,42 @@ const MainPersonalFile = () => {
 
   const SelectedComponent = tabs[value]?.component || (() => null);
 
+  // The CFS list layout: the header card names the screen and carries the
+  // four kinds of person as quick tabs; the list card of the chosen kind
+  // follows under it.
   return (
-    <Box
-      sx={{
-        p: { xs: 0, md: 1 },
-        // Was a fixed light-grey #f1f5f9, which stayed light in dark mode.
-        bgcolor: "background.default",
-        minHeight: "calc(100 * var(--app-vh))",
-      }}
-    >
-
-  
-      {/* Paper Card */}
-      <Paper
-        elevation={6}
-        sx={{
-          borderRadius: 0,
-          overflow: "hidden",
-        }}
+    <div className="scr-page">
+      <ScreenHeader
+        icon={navIcons.personalInformation}
+        title="Personal Information"
+        subtitle="Customers, employees, partners and vendors, with their contact and ID details."
       >
-        {/* Tabs */}
-        <Box >
-          <Tabs
-            value={value}
-            onChange={handleChange}
-            variant="fullWidth"
-            sx={{
-              "& .MuiTabs-indicator": {
-                height: 3,
-                backgroundColor: colors.indicator,
-              },
-            }}
-          >
-            {tabs.map((tab, index) => (
-              <Tab
-                key={tab.label}
-                icon={tab.icon}
-                iconPosition="start"
-                label={
-                  <Typography fontWeight={600} fontSize="0.78rem">
-                    {tab.label}
-                  </Typography>
-                }
-                sx={{
-                  py: 1.5,
-                  minHeight: 48,
-                  "& .MuiSvgIcon-root": { fontSize: "1.1rem" },
-                  color: value === index ? colors.active : colors.inactive,
-                  "&.Mui-selected": {
-                    color: colors.active,
-                  },
-                  "&:hover": {
-                    bgcolor: colors.hover,
-                  },
-                }}
-              />
-            ))}
-          </Tabs>
-        </Box>
-
-        {/* Content */}
-        <Box
-          sx={{
-            p: { xs: 1.5, md: 2 },
-            minHeight: "calc(55 * var(--app-vh))",
-          }}
+        <Tabs
+          value={value}
+          onChange={handleChange}
+          className="scr-switch"
+          variant="scrollable"
+          scrollButtons={false}
+          aria-label="Kind of person"
         >
-          {tabs[value] && (
-            <Suspense
-              fallback={
-                <Box sx={{ display: "flex", justifyContent: "center", py: 1 }}>
-                  <LoadingSpinner />
-                </Box>
-              }
-            >
-              <SelectedComponent personType={tabs[value].type} />
-            </Suspense>
-          )}
-        
-        </Box>
-      </Paper>
-    </Box>
+          {tabs.map((tab) => (
+            <Tab key={tab.label} icon={tab.icon} iconPosition="start" label={tab.label} />
+          ))}
+        </Tabs>
+      </ScreenHeader>
+
+      {tabs[value] && (
+        <Suspense
+          fallback={
+            <Box sx={{ display: "flex", justifyContent: "center", py: 1 }}>
+              <LoadingSpinner />
+            </Box>
+          }
+        >
+          <SelectedComponent personType={tabs[value].type} />
+        </Suspense>
+      )}
+    </div>
   );
 };
 

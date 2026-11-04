@@ -289,6 +289,8 @@ function CustomGridToolbar({ rows, columns, fileName, showExport, reportOptions 
  * @param {number|object} height - Table height (default: responsive DEFAULT_TABLE_HEIGHT)
  * @param {number} minHeight - Floor under `height` (default 420). Screens that stack
  *   several short tables lower it so a two-row table is not mostly blank.
+ * @param {Array} exportColumns - columns for Download / Print when they differ
+ *   from the grid's (a list that shows a summary but prints every field)
  * @param {object} period - { fromDate, toDate, label } printed on every export
  * @param {Array} reportMeta - [{ label, value }] filter lines printed on every export
  * @param {Array} totalFields - numeric fields to sum into a TOTAL row
@@ -312,6 +314,7 @@ const DataTable = ({
   pageSize = 25,
   initialState,
   showExport = true,
+  exportColumns,
   actions,
   period,
   reportMeta,
@@ -390,15 +393,19 @@ const DataTable = ({
           alignItems={{ xs: "flex-start", sm: "center" }}
           spacing={1.5}
           sx={{
-            px: 2.5,
-            py: 2,
+            px: 2,
+            py: 1.5,
             borderBottom: 1,
             borderColor: "divider",
-            background: "linear-gradient(180deg, color-mix(in srgb, var(--surface-1) 96%, transparent), color-mix(in srgb, var(--surface-2) 88%, transparent))",
+            background: "var(--surface-1)",
           }}
         >
           <Box sx={{ minWidth: 0 }}>
-            {title && <Typography variant="subtitle1">{title}</Typography>}
+            {title && (
+              <Typography variant="subtitle1" sx={{ fontSize: "0.9375rem", lineHeight: 1.3, color: "var(--text-heading)" }}>
+                {title}
+              </Typography>
+            )}
             {subtitle && (
               <Typography variant="caption" color="text.secondary" sx={{ display: "block" }}>
                 {subtitle}
@@ -406,7 +413,7 @@ const DataTable = ({
             )}
           </Box>
           <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap alignItems="center">
-            <Chip size="small" label={`${recordCount} records`} color="primary" variant="outlined" />
+            <Chip size="small" label={`${recordCount} records`} variant="outlined" sx={{ color: "text.secondary", borderColor: "divider", fontWeight: 500 }} />
             {actions}
           </Stack>
         </Stack>
@@ -452,7 +459,7 @@ const DataTable = ({
           slotProps={{
             toolbar: {
               rows: tableRows,
-              columns,
+              columns: exportColumns || columns,
               fileName: tableTitle,
               showExport,
               reportOptions,
@@ -470,45 +477,50 @@ const DataTable = ({
             backgroundColor: "transparent",
             "& .MuiDataGrid-virtualScroller": { overflowAnchor: "none" },
             // A report wider than the screen is read by scrolling sideways, so
-            // the bar has to look like one: brand thumb on a tinted track.
+            // the bar has to look like one: a grey thumb on a pale track.
             "& .MuiDataGrid-scrollbar": {
               "&::-webkit-scrollbar": { width: 14, height: 14 },
-              "&::-webkit-scrollbar-track": { backgroundColor: "var(--surface-4)", borderRadius: 999 },
+              "&::-webkit-scrollbar-track": { backgroundColor: "var(--surface-2)", borderRadius: 999 },
               "&::-webkit-scrollbar-thumb": {
-                backgroundColor: "color-mix(in srgb, var(--brand-primary) 62%, transparent)",
-                border: "3px solid var(--surface-4)",
+                backgroundColor: "var(--table-line-strong)",
+                border: "3px solid var(--surface-2)",
                 borderRadius: 999,
               },
               "&::-webkit-scrollbar-thumb:hover": {
-                backgroundColor: "var(--brand-primary)",
+                backgroundColor: "var(--text-muted)",
               },
             },
             "& .MuiDataGrid-scrollbar--horizontal": {
-              backgroundColor: "var(--surface-4)",
+              backgroundColor: "var(--surface-2)",
             },
             "& .MuiDataGrid-toolbarContainer": {
-              px: 2,
-              py: 1.25,
+              px: 1.5,
+              py: 1,
               gap: 1,
               alignItems: "center",
               justifyContent: "flex-end",
               borderBottom: "1px solid",
               borderColor: "divider",
-              background:
-                "linear-gradient(180deg, color-mix(in srgb, var(--surface-2) 90%, transparent), color-mix(in srgb, var(--surface-1) 78%, transparent))",
+              background: "var(--surface-1)",
             },
             "& .MuiDataGrid-toolbarContainer .MuiButton-root": {
-              minHeight: 34,
+              minHeight: 32,
+            },
+            // Columns / Filters / Density are tools, not actions: grey until used.
+            "& .MuiDataGrid-toolbarContainer .MuiButton-text": {
+              color: "text.secondary",
+              fontWeight: 500,
+              "&:hover": { color: "text.primary", backgroundColor: "var(--surface-3)" },
             },
             "& .MuiDataGrid-toolbarQuickFilter": {
               minWidth: { xs: "100%", sm: 260 },
               maxWidth: { xs: "100%", sm: 360 },
               marginLeft: { xs: 0, sm: "auto" },
             },
-            // Solid house-green heading band with white type, the same one the
-            // printed and exported reports carry. The colour itself lives in
-            // src/css/style.css as --table-head-*, so every report grid in the
-            // app moves together.
+            // The heading band, the same one the printed and exported reports
+            // carry. The colour itself lives in src/css/style.css as
+            // --table-head-* (Settings > Colors > Table header), so every
+            // report grid in the app moves together.
             "& .MuiDataGrid-columnHeaders, & .MuiDataGrid-columnHeader": {
               backgroundColor: headBg,
             },
@@ -519,13 +531,13 @@ const DataTable = ({
               borderColor: headDivider,
             },
             "& .MuiDataGrid-columnHeaderTitle": {
-              fontWeight: 800,
+              fontWeight: 600,
               color: headFg,
-              textTransform: "uppercase",
-              fontSize: `${0.75 * fontScale * tableScale}rem`,
+              textTransform: "none",
+              fontSize: `${0.8125 * fontScale * tableScale}rem`,
               letterSpacing: 0,
             },
-            // Sort / filter / menu affordances have to read on the green too.
+            // Sort / filter / menu affordances have to read on the band too.
             "& .MuiDataGrid-columnHeader .MuiDataGrid-sortIcon, & .MuiDataGrid-columnHeader .MuiDataGrid-filterIcon, & .MuiDataGrid-columnHeader .MuiDataGrid-menuIconButton, & .MuiDataGrid-columnHeader .MuiDataGrid-iconButtonContainer .MuiSvgIcon-root": {
               color: headFg,
             },
@@ -540,7 +552,7 @@ const DataTable = ({
               borderColor: "divider",
               display: "flex",
               alignItems: "center",
-              fontSize: `${0.8125 * fontScale * tableScale}rem`,
+              fontSize: `${0.875 * fontScale * tableScale}rem`,
             },
             ...(settings.tableStyle === "striped" && {
               "& .MuiDataGrid-row:nth-of-type(even)": {
@@ -549,53 +561,59 @@ const DataTable = ({
             }),
             // The TOTAL row reads as a summary band, not another data row.
             "& .MuiDataGrid-row.datatable-total-row": {
-              backgroundColor: "var(--surface-4)",
-              borderTop: "2px solid var(--brand-primary)",
+              backgroundColor: "var(--surface-3)",
+              borderTop: "1px solid var(--table-line-strong)",
             },
             "& .MuiDataGrid-row.datatable-total-row .MuiDataGrid-cell": {
-              fontWeight: 800,
+              fontWeight: 600,
             },
             // Hovering lights the full width of the row so the line stays
             // readable across every column. `&&` doubles the class to outrank
             // the DataGrid's own row-hover rule, which is emitted after sx at
             // equal specificity and would otherwise win.
             "&& .MuiDataGrid-row:hover": {
-              backgroundColor: "color-mix(in srgb, var(--brand-primary) 13%, var(--surface-1))",
+              backgroundColor: "var(--surface-3)",
               cursor: "pointer",
             },
             "& .MuiDataGrid-row.Mui-selected": {
-              backgroundColor: "color-mix(in srgb, var(--brand-primary) 14%, var(--surface-1))",
+              backgroundColor: "color-mix(in srgb, var(--brand-primary) 8%, var(--surface-1))",
             },
             "& .MuiDataGrid-row.Mui-selected:hover": {
-              backgroundColor: "color-mix(in srgb, var(--brand-primary) 18%, var(--surface-1))",
+              backgroundColor: "color-mix(in srgb, var(--brand-primary) 11%, var(--surface-1))",
             },
             "& .MuiDataGrid-cell:focus, & .MuiDataGrid-cell:focus-within": {
               outline: "2px solid color-mix(in srgb, var(--brand-primary) 34%, transparent)",
               outlineOffset: "-2px",
             },
+            // CFS footer: page size and count on the left, page arrows on the right.
             "& .MuiDataGrid-footerContainer": {
-              minHeight: 54,
+              minHeight: 48,
               borderTop: "1px solid",
               borderColor: "divider",
               backgroundColor: "var(--surface-1)",
-              justifyContent: "center",
-              px: 2,
+              justifyContent: "flex-start",
+              px: 1.5,
             },
             "& .MuiDataGrid-footerContainer .MuiTablePagination-root": {
               width: "100%",
+              borderTop: 0,
             },
             "& .MuiDataGrid-footerContainer .MuiTablePagination-toolbar": {
               width: "100%",
-              justifyContent: "center",
-              gap: 2,
+              justifyContent: "flex-start",
+              gap: 1.5,
               px: 0,
             },
             "& .MuiDataGrid-footerContainer .MuiTablePagination-spacer": {
               display: "none",
             },
+            "& .MuiDataGrid-footerContainer .MuiTablePagination-actions": {
+              marginLeft: "auto",
+            },
             "& .MuiDataGrid-footerContainer .MuiTablePagination-selectLabel, & .MuiDataGrid-footerContainer .MuiTablePagination-displayedRows": {
               margin: 0,
-              fontWeight: 800,
+              color: "text.secondary",
+              fontWeight: 500,
             },
             "& .MuiDataGrid-overlayWrapper": {
               minHeight: 260,
@@ -607,11 +625,11 @@ const DataTable = ({
             // without shifting the cells. Declared last so it wins over
             // striping and hover.
             "&& .MuiDataGrid-row.datatable-active-row, && .MuiDataGrid-row.datatable-active-row:hover": {
-              backgroundColor: "color-mix(in srgb, var(--brand-primary) 22%, var(--surface-1))",
+              backgroundColor: "color-mix(in srgb, var(--brand-primary) 9%, var(--surface-1))",
               boxShadow: "inset 3px 0 0 0 var(--brand-primary)",
             },
             "& .MuiDataGrid-row.datatable-active-row .MuiDataGrid-cell": {
-              fontWeight: 700,
+              fontWeight: 500,
               backgroundColor: "transparent",
             },
           }}
@@ -664,10 +682,10 @@ const DataTable = ({
                   }),
                 }}
               >
-                <Typography variant="body2" sx={{ fontWeight: 800 }}>
+                <Typography variant="body2" sx={{ fontWeight: 500, color: "text.secondary" }}>
                   {line.label} :
                 </Typography>
-                <Typography variant="body2" sx={{ fontWeight: 800, fontVariantNumeric: "tabular-nums" }}>
+                <Typography variant="body2" sx={{ fontWeight: 600, fontVariantNumeric: "tabular-nums" }}>
                   {summaryValue(line.value)}
                 </Typography>
               </Stack>

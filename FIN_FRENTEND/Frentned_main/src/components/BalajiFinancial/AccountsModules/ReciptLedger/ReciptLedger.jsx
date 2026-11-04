@@ -6,6 +6,7 @@ import { getSession } from "src/utils/session";
 import { successToast, errorToast } from "toastify";
 import { AppDatePicker, DataTable, PageHeader, useDateRange } from "src/components/ui";
 import { roundAmount } from "src/components/ui/reportExport";
+import { navIcons } from "src/lib/icons";
 
 // TOTAL row directly under these columns. Module-level so DataTable's totals memo stays stable.
 const TOTAL_FIELDS = ["amountPaid", "lateFee", "total", "totalPaid", "balance"];
@@ -85,6 +86,9 @@ const ReceiptLedger = () => {
   return (
     <Stack spacing={2.5}>
       <PageHeader
+        icon={navIcons.receiptLedger}
+        title="Receipt Ledger"
+        subtitle="Instalments received, loan by loan, for all dates or a range."
         onRefresh={() => fetchLedger()}
         loading={loading}
       />
@@ -119,7 +123,7 @@ const ReceiptLedger = () => {
               xs: 12,
               md: 3
             }}>
-            <Button fullWidth variant="contained" onClick={() => fetchLedger()} disabled={loading}>
+            <Button variant="contained" onClick={() => fetchLedger()} disabled={loading}>
               Generate
             </Button>
           </Grid>
@@ -129,7 +133,7 @@ const ReceiptLedger = () => {
         rows={ledgerData}
         columns={columns}
         loading={loading}
-        title="Receipt Ledger Details"
+        fileName="Receipt Ledger Details"
         height={580}
         totalFields={TOTAL_FIELDS}
         totalLabelCell={TOTAL_LABEL_CELL}

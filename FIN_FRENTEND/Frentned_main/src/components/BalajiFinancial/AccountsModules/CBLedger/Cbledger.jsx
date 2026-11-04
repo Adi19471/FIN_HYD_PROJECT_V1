@@ -5,6 +5,7 @@ import { API_BASE } from "lib/config";
 import { getSession } from "src/utils/session";
 import { errorToast, successToast } from "toastify";
 import { AppDatePicker, creditDebitSummary, DataTable, PageHeader, useDateRange } from "src/components/ui";
+import { navIcons } from "src/lib/icons";
 
 const Cbledger = () => {
   const [allDates, setAllDates] = useState(false);
@@ -91,6 +92,9 @@ const Cbledger = () => {
   return (
     <Stack spacing={2.5}>
       <PageHeader
+        icon={navIcons.cbLedger}
+        title="CB Ledger"
+        subtitle="Day by day credits, debits and closing balance, or the collections only."
         onRefresh={() => fetchLedgerData()}
         loading={loading}
       />
@@ -135,7 +139,7 @@ const Cbledger = () => {
               xs: 12,
               md: 2
             }}>
-            <Button fullWidth variant="contained" onClick={() => fetchLedgerData()} disabled={loading}>
+            <Button variant="contained" onClick={() => fetchLedgerData()} disabled={loading}>
               Generate
             </Button>
           </Grid>
@@ -146,8 +150,7 @@ const Cbledger = () => {
         columns={columns}
         loading={loading}
         getRowId={(row) => row.id}
-        title={collectionOnly ? "CB Collection Ledger" : "CB Ledger Details"}
-        subtitle="Consistent table format with search, filters, Excel, PDF, Word, and print."
+        fileName={collectionOnly ? "CB Collection Ledger" : "CB Ledger Details"}
         height={560}
         // Collection view has no credit/debit columns, so no ledger summary.
         summary={collectionOnly ? undefined : creditDebitSummary(rows)}

@@ -9,11 +9,13 @@ import {
   DialogTitle,
   Divider,
   Grid,
+  IconButton,
   InputAdornment,
   MenuItem,
   Paper,
   Stack,
   TextField,
+  Tooltip,
   Typography,
 } from "@mui/material";
 import { actionIcons } from "src/lib/icons";
@@ -193,20 +195,24 @@ const PersonalInfoManager = ({ personType = "CUSTOMER" }) => {
     {
       field: "actions",
       headerName: "Actions",
-      // room for View and Edit side by side at the larger text sizes too;
-      // at 170 the Edit button was cut off after its first letter
-      width: 230,
-      minWidth: 230,
+      // View and Edit as the quiet icon actions every list uses
+      width: 96,
+      minWidth: 96,
       sortable: false,
       filterable: false,
+      disableExport: true,
       renderCell: (params) => (
-        <Stack direction="row" spacing={1}>
-          <Button size="small" variant="outlined" startIcon={<VisibilityRounded />} onClick={() => openViewModal(params.row.id)}>
-            View
-          </Button>
-          <Button size="small" variant="contained" startIcon={<EditRounded />} onClick={() => openEditForm(params.row.id)}>
-            Edit
-          </Button>
+        <Stack direction="row" spacing={0.5} alignItems="center">
+          <Tooltip title="View">
+            <IconButton size="small" aria-label="View" onClick={() => openViewModal(params.row.id)}>
+              <VisibilityRounded fontSize="small" />
+            </IconButton>
+          </Tooltip>
+          <Tooltip title="Edit">
+            <IconButton size="small" aria-label="Edit" onClick={() => openEditForm(params.row.id)}>
+              <EditRounded fontSize="small" />
+            </IconButton>
+          </Tooltip>
         </Stack>
       ),
     },

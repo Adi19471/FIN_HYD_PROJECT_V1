@@ -16,6 +16,7 @@ import { API_BASE } from "lib/config";
 import { getSession } from "src/utils/session";
 import { successToast, errorToast } from "toastify";
 import { AppDatePicker, creditDebitSummary, DataTable, PageHeader, useDateRange } from "src/components/ui";
+import { navIcons } from "src/lib/icons";
 
 const formatINR = (value) => `₹ ${Number(value || 0).toLocaleString("en-IN")}`;
 
@@ -105,6 +106,9 @@ const AccountMasterLedger = () => {
   return (
     <Stack spacing={2.5}>
       <PageHeader
+        icon={navIcons.accountMasterLedger}
+        title="Account Master Ledger"
+        subtitle="One account's entries with debit, credit and running balance."
         onRefresh={fetchLedger}
         loading={loading}
       />
@@ -139,7 +143,7 @@ const AccountMasterLedger = () => {
         rows={rows}
         columns={columns}
         loading={loading}
-        title="Account Master Ledger Details"
+        fileName="Account Master Ledger Details"
         height={560}
         summary={creditDebitSummary(rows)}
       />

@@ -21,22 +21,21 @@ import {
   Autocomplete,
   IconButton,
   Fade,
-  Skeleton,
 } from "@mui/material";
-import { DataGrid, GridToolbar } from "@mui/x-data-grid";
-import { useTheme } from "@mui/material/styles";
 import axios from "axios";
 import { getSession } from "src/utils/session";
 import { fetchAllPersonalInfo } from "src/utils/personalInfoCache";
-import { FiUserPlus, FiSearch, FiCopy, FiSave, FiEdit, FiXCircle, FiEye, FiUser, FiPhone, FiMapPin, FiShield, FiUsers } from "react-icons/fi";
+import { FiUserPlus, FiCopy, FiSave, FiEdit, FiXCircle, FiUser, FiPhone, FiMapPin, FiShield, FiUsers } from "react-icons/fi";
 import { successToast, errorToast } from "toastify";
 import { API_BASE } from "lib/config";
 import LoadingSpinner from "src/LoadingSpinner";
-import { ProfilePhotoBox, DEFAULT_TABLE_HEIGHT, TableExportMenu, printReport } from "src/components/ui";
+import { DataTable, ProfilePhotoBox } from "src/components/ui";
 import { actionIcons } from "src/lib/icons";
 import { FormControlLabel, Checkbox } from "@mui/material";
 
-const PrintIcon = actionIcons.print;
+const EditIcon = actionIcons.edit;
+const RefreshIcon = actionIcons.refresh;
+const ViewIcon = actionIcons.view;
 
 /* ─── Constants ─────────────────────────────────────────────── */
 const TYPE_LABELS = {
@@ -141,21 +140,9 @@ const avatarColor = (id) => {
 
 /* ─── Main Component ─────────────────────────────────────────── */
 const Partner = ({ personType = "CUSTOMER" }) => {
-  const theme = useTheme();
-  // This grid is a raw MUI DataGrid, not the shared DataTable wrapper, so it
-  // doesn't inherit the app's --table-head-* CSS tokens automatically. It
-  // used to hardcode "grey.50" for the header band; the app's global stylesheet
-  // then force-applies white header text (var(--table-head-fg)) to every
-  // MuiDataGrid-columnHeaderTitle so themed headers stay readable - which left
-  // this screen with near-invisible white-on-near-white header text. Resolving
-  // the same primary/contrast pair every other report header uses fixes it.
-  const headerBg = theme.palette.primary.main;
-  const headerFg = theme.palette.getContrastText(headerBg);
   const [rows, setRows] = useState([]);
-  const [filteredRows, setFilteredRows] = useState([]);
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
-  const [search, setSearch] = useState("");
   const [modalOpen, setModalOpen] = useState(false);
   const [isEdit, setIsEdit] = useState(false);
 
@@ -163,7 +150,6 @@ const Partner = ({ personType = "CUSTOMER" }) => {
   const [selectedRecord, setSelectedRecord] = useState(null);
   const [form, setForm] = useState(EMPTY_FORM(personType));
   const [errors, setErrors] = useState({});
-  const [paginationModel, setPaginationModel] = useState({ page: 0, pageSize: 10 });
 
   // Manager autocomplete state
   const [managerOptions, setManagerOptions] = useState([]);
@@ -198,24 +184,6 @@ const Partner = ({ personType = "CUSTOMER" }) => {
   }, [headers, personType]);
 
   useEffect(() => { fetchData(); }, [fetchData]);
-
-  /* ── Filter rows on search ── */
-  useEffect(() => {
-    const q = search.toLowerCase();
-    setFilteredRows(
-      rows.filter(
-        (r) =>
-          (r.firstname || "").toLowerCase().includes(q) ||
-          (r.lastname || "").toLowerCase().includes(q) ||
-          (r.mobile || "").includes(q) ||
-          (r.id || "").toLowerCase().includes(q)
-      )
-    );
-  }, [rows, search]);
-
-  useEffect(() => {
-    setPaginationModel((model) => ({ ...model, page: 0 }));
-  }, [filteredRows.length]);
 
   /* ── Manager search (debounced, excludes self) ── */
   const searchManagers = useCallback(async (query = "") => {
@@ -414,129 +382,84 @@ const Partner = ({ personType = "CUSTOMER" }) => {
   /* ── Columns ── */
   const columns = useMemo(() => [
     {
-      field: "avatar",
-      headerName: "",
-      width: 56,
+      field: "actions",
+      headerName: "Actions",
+      width: 96,
       sortable: false,
       filterable: false,
+      disableExport: true,
       renderCell: (params) => (
-        <Avatar
-          sx={{
-            width: 34, height: 34,
-            bgcolor: avatarColor(params.row.id),
-            fontSize: "0.75rem", fontWeight: 700,
-          }}
-        >
-          {getInitials(params.row)}
-        </Avatar>
+        <Box sx={{ display: "flex", gap: 0.5, alignItems: "center" }}>
+          <Tooltip title="View">
+            <IconButton size="small" aria-label="View" onClick={() => openViewModal(params.row.id)}>
+              <ViewIcon fontSize="small" />
+            </IconButton>
+          </Tooltip>
+          <Tooltip title="Edit">
+            <IconButton size="small" aria-label="Edit" onClick={() => openEditForm(params.row.id)}>
+              <EditIcon fontSize="small" />
+            </IconButton>
+          </Tooltip>
+        </Box>
       ),
     },
     { field: "id", headerName: "ID", width: 160 },
     {
       field: "fullname",
       headerName: "Name",
-      width: 180,
-      renderCell: (p) => (
-        <Typography fontWeight={500}>
-          {[p.row.firstname, p.row.lastname].filter(Boolean).join(" ")}
-        </Typography>
-      ),
+      minWidth: 180,
+      flex: 1,
+      // the value the grid searches and sorts on
+      valueGetter: (_, row) => [row.firstname, row.lastname].filter(Boolean).join(" "),
+      renderCell: ({ value }) => <span className="cell-name">{value}</span>,
     },
     {
       field: "mobile",
       headerName: "Mobile",
-      width: 140,
-      renderCell: (p) => p.row.mobile
-        ? <Chip label={p.row.mobile} size="small" variant="outlined" icon={<FiPhone size={12} />} />
-        : <Typography color="text.disabled" fontSize="0.8rem">—</Typography>,
+      width: 130,
+      renderCell: ({ value }) => value || <span className="cell-empty">—</span>,
     },
     {
       field: "gender",
       headerName: "Gender",
       width: 100,
-      renderCell: (p) => p.row.gender
-        ? <Chip
-          label={p.row.gender}
-          size="small"
-          sx={STYLES.chip(p.row.gender === "Male" ? "blue" : p.row.gender === "Female" ? "pink" : "purple")}
-        />
-        : "—",
+      renderCell: ({ value }) => value || <span className="cell-empty">—</span>,
     },
     {
       field: "personalInfoManagerId",
       headerName: "Manager ID",
       width: 160,
-      renderCell: (p) => p.row.personalInfoManagerId
-        ? <Chip
-          icon={<FiUsers size={11} />}
-          label={p.row.personalInfoManagerId}
-          size="small"
-          sx={STYLES.chip("green")}
-        />
-        : <Typography color="text.disabled" fontSize="0.8rem">No Manager</Typography>,
+      renderCell: ({ value }) => value || <span className="cell-empty">No manager</span>,
     },
-    { field: "address", headerName: "Address", flex: 1 },
-
+    { field: "address", headerName: "Address", minWidth: 220, flex: 1.4 },
     {
       field: "shares",
       headerName: "Shares",
-      width: 120,
-      renderCell: (p) => p.row.shares ?? "—",
+      width: 100,
+      align: "right",
+      headerAlign: "right",
+      renderCell: ({ value }) => value ?? <span className="cell-empty">—</span>,
     },
     {
       field: "loanlimit",
       headerName: "Loan Limit",
-      width: 150,
-      renderCell: (p) =>
-        p.row.loanlimit != null
-          ? Number(p.row.loanlimit).toLocaleString()
-          : "—",
+      width: 130,
+      align: "right",
+      headerAlign: "right",
+      renderCell: ({ value }) =>
+        value != null ? Number(value).toLocaleString("en-IN") : <span className="cell-empty">—</span>,
     },
-
     {
       field: "bussinessexemption",
       headerName: "Exempted",
-      width: 120,
-      renderCell: (p) => (
+      width: 110,
+      renderCell: ({ value }) => (
         <Chip
-          label={p.row.bussinessexemption ? "Yes" : "No"}
-          color={p.row.bussinessexemption ? "success" : "default"}
+          label={value ? "Yes" : "No"}
+          color={value ? "success" : "default"}
+          variant={value ? "filled" : "outlined"}
           size="small"
         />
-      ),
-    },
-
-    {
-      field: "actions",
-      headerName: "Actions",
-      width: 210,
-      sortable: false,
-      filterable: false,
-      renderCell: (params) => (
-        <Box sx={{ display: "flex", gap: 0.75, alignItems: "center" }}>
-          <Tooltip title="View details">
-            <Button
-              size="small"
-              variant="outlined"
-              sx={{ minWidth: 0, px: 1.25, py: 0.5, borderRadius: 1.5 }}
-              onClick={() => openViewModal(params.row.id)}
-            >
-              <FiEye size={14} />
-            </Button>
-          </Tooltip>
-          <Tooltip title="Edit record">
-            <Button
-              size="small"
-              variant="outlined"
-              color="primary"
-              sx={{ minWidth: 0, px: 1.25, py: 0.5, borderRadius: 1.5 }}
-              onClick={() => openEditForm(params.row.id)}
-            >
-              <FiEdit size={14} />
-            </Button>
-          </Tooltip>
-
-        </Box>
       ),
     },
   ], [openViewModal, openEditForm]);
@@ -593,120 +516,45 @@ const Partner = ({ personType = "CUSTOMER" }) => {
     ];
   }, [rows]);
 
-  const exportOptions = useMemo(() => ({
-    title: `${label} List`,
-    meta: [
-      { label: "Records", value: String(filteredRows.length) },
-      search.trim() ? { label: "Search", value: search.trim() } : null,
-    ],
-  }), [label, filteredRows.length, search]);
+  const exportMeta = useMemo(() => [{ label: "Records", value: String(rows.length) }], [rows.length]);
 
   const exportFileName = `${label}_List`;
 
   return (
-    <Box sx={{ mt: 2 }}>
-      {/* ── Header bar ── */}
-      <Paper
-        elevation={0}
-        sx={{
-          p: 2.5, mb: 3,
-          border: "1px solid",
-          borderColor: "divider",
-          borderRadius: 2,
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "center",
-          flexWrap: "wrap",
-          gap: 2,
-          bgcolor: "background.paper",
-        }}
-      >
-        <Box>
-          <Typography variant="h5" fontWeight={700}>{label}s</Typography>
-          <Typography variant="body2" color="text.secondary">
-            {filteredRows.length} record{filteredRows.length !== 1 ? "s" : ""} found
-          </Typography>
-        </Box>
-
-        <Box sx={{ display: "flex", gap: 1.5, alignItems: "center", flexWrap: "wrap" }}>
-          <TextField
-            placeholder={`Search ${label.toLowerCase()}s…`}
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            sx={{ width: 240 }}
-            InputProps={{
-              startAdornment: (
-                <InputAdornment position="start">
-                  <FiSearch size={15} />
-                </InputAdornment>
-              ),
-            }}
-          />
-
-          <TableExportMenu
-            rows={filteredRows}
-            columns={exportColumns}
-            fileName={exportFileName}
-            reportOptions={exportOptions}
-          />
-          <Button
-            size="small"
-            variant="outlined"
-            startIcon={<PrintIcon />}
-            onClick={() => printReport(filteredRows, exportColumns, exportFileName, exportOptions)}
-            disabled={!filteredRows.length}
-          >
-            Print
-          </Button>
-
-          <Button
-            variant="contained"
-            startIcon={<FiUserPlus size={16} />}
-            onClick={openAddForm}
-            disabled={loading}
-            sx={{ borderRadius: 1.5, px: 2.5, fontWeight: 600, textTransform: "none" }}
-          >
-            Add {label}
-          </Button>
-        </Box>
-      </Paper>
-      {/* ── Data Grid ── */}
-      {loading && rows.length === 0 ? (
-        <Box>
-          {[...Array(6)].map((_, i) => (
-            <Skeleton key={i} variant="rectangular" height={52} sx={{ mb: 1, borderRadius: 1 }} />
-          ))}
-        </Box>
-      ) : (
-        <Paper sx={{ height: DEFAULT_TABLE_HEIGHT, borderRadius: 2, border: "1px solid", borderColor: "divider" }}>
-          <DataGrid
-            rows={filteredRows}
-            columns={columns}
-            getRowId={(r) => r.id}
-            loading={loading}
-            autosizeOnMount
-            autosizeOptions={{ includeHeaders: true, includeOutliers: true, expand: true }}
-            rowHeight={52}
-            pagination
-            paginationModel={paginationModel}
-            onPaginationModelChange={setPaginationModel}
-            pageSizeOptions={[10, 25, 50, 100]}
-            slots={{ toolbar: GridToolbar }}
-            sx={{
-              border: "none",
-              "& .MuiDataGrid-virtualScroller": { overflowAnchor: "none" },
-              "& .MuiDataGrid-columnHeaders, & .MuiDataGrid-columnHeader": { bgcolor: headerBg, fontWeight: 700 },
-              "& .MuiDataGrid-columnHeaderTitle": { color: headerFg },
-              "& .MuiDataGrid-columnHeader .MuiSvgIcon-root, & .MuiDataGrid-columnHeader .MuiDataGrid-sortIcon, & .MuiDataGrid-columnHeader .MuiDataGrid-menuIcon": {
-                color: headerFg,
-              },
-              "& .MuiDataGrid-row:hover": { bgcolor: "action.hover" },
-              "& .MuiDataGrid-cell:focus": { outline: "none" },
-              "& .MuiDataGrid-cell:focus-within": { outline: "none" },
-            }}
-          />
-        </Paper>
-      )}
+    <Box>
+      <DataTable
+        rows={rows}
+        columns={columns}
+        exportColumns={exportColumns}
+        getRowId={(r) => r.id}
+        loading={loading}
+        height="calc(100 * var(--app-vh) - 170px)"
+        title={`${label}s`}
+        fileName={exportFileName}
+        reportMeta={exportMeta}
+        actions={
+          <>
+            <Button
+              size="small"
+              variant="outlined"
+              startIcon={<RefreshIcon />}
+              onClick={() => fetchData(true)}
+              disabled={loading}
+            >
+              Refresh
+            </Button>
+            <Button
+              size="small"
+              variant="contained"
+              startIcon={<FiUserPlus size={16} />}
+              onClick={openAddForm}
+              disabled={loading}
+            >
+              Add {label}
+            </Button>
+          </>
+        }
+      />
       {/* ── ADD / EDIT MODAL ── */}
       <Dialog
         open={modalOpen}

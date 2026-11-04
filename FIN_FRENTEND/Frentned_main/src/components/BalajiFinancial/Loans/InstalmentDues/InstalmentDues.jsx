@@ -5,6 +5,7 @@ import { API_BASE } from "lib/config";
 import { getSession } from "src/utils/session";
 import { errorToast, successToast } from "toastify";
 import { AppDatePicker, DataTable, PageHeader, isTotalRow, useDateRange } from "src/components/ui";
+import { navIcons } from "src/lib/icons";
 
 // The report prints plain grouped figures, the way the legacy dues report did -
 // a rupee sign on every line of a two-line cell only crowds the column.
@@ -298,6 +299,9 @@ const InstalmentDues = () => {
   return (
     <Stack spacing={2.5}>
       <PageHeader
+        icon={navIcons.instalmentDues}
+        title="Instalment Dues"
+        subtitle="Instalments paid and still due on daily or monthly loans."
         onRefresh={getInstallmentDues}
         loading={loading}
       />
@@ -375,7 +379,7 @@ const InstalmentDues = () => {
               xs: 12,
               md: 3
             }}>
-            <Button fullWidth variant="contained" onClick={getInstallmentDues} disabled={loading}>
+            <Button variant="contained" onClick={getInstallmentDues} disabled={loading}>
               Generate
             </Button>
           </Grid>
@@ -385,7 +389,7 @@ const InstalmentDues = () => {
         rows={data}
         columns={columns}
         loading={loading}
-        title="Instalment Due Details"
+        fileName="Instalment Due Details"
         height={580}
         period={reportPeriod}
         reportMeta={reportMeta}

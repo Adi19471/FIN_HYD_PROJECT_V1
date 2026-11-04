@@ -19,7 +19,8 @@ import {
   TextField,
   Typography,
 } from "@mui/material";
-import { AppDatePicker, DataTable, PageHeader } from "src/components/ui";
+import { AppDatePicker, DataTable, PageHeader, ScreenHeader } from "src/components/ui";
+import { navIcons } from "src/lib/icons";
 
 const formatINR = (value) =>
   new Intl.NumberFormat("en-IN", {
@@ -68,7 +69,12 @@ export default function Loans() {
 
   return (
     <Stack spacing={2.5}>
-      <Grid container spacing={4}>
+      <ScreenHeader
+        icon={navIcons.loansMain}
+        title="Loans Main"
+        subtitle="The ledgers and loan reports of Accounts, one click away."
+      />
+      <Grid container spacing={2}>
         {modules.map((module) => {
           const Icon = module.icon;
           return (
@@ -79,14 +85,17 @@ export default function Loans() {
                 md: 6,
                 lg: 3
               }}>
-              <Paper className="enterprise-card dashboard-module" elevation={0}>
-                <Stack spacing={1.5}>
-                  <Stack direction="row" spacing={1.25} alignItems="center">
-                    <Box className="dashboard-module-icon"><Icon /></Box>
-                    <Typography variant="subtitle1">{module.title}</Typography>
-                  </Stack>
-                  <Typography variant="body2" color="text.secondary">{module.note}</Typography>
-                
+              <Paper
+                className="enterprise-card dashboard-module"
+                elevation={0}
+                component="button"
+                type="button"
+                onClick={() => navigate(module.path)}
+                sx={{ width: "100%", textAlign: "left", cursor: "pointer", font: "inherit", color: "inherit" }}
+              >
+                <Stack direction="row" spacing={1.25} alignItems="center">
+                  <Box className="dashboard-module-icon"><Icon /></Box>
+                  <Typography variant="subtitle1">{module.title}</Typography>
                 </Stack>
               </Paper>
             </Grid>
