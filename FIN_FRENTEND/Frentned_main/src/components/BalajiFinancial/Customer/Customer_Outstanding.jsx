@@ -19,6 +19,8 @@ const columns = [
   { field: "customerId", headerName: "Customer ID", width: 130 },
   { field: "customerName", headerName: "Customer Name", minWidth: 200, flex: 1 },
   { field: "noOfLoans", headerName: "Loans", width: 100, align: "center", headerAlign: "center" },
+  { field: "startDate", headerName: "Start Date", width: 100, align: "center", headerAlign: "center" },
+  { field: "endDate", headerName: "End Date", width: 100, align: "center", headerAlign: "center" },
   { field: "totalLoansAmount", headerName: "Total Loans Amount", width: 165, align: "right", headerAlign: "right", valueFormatter: (value) => formatMoney(value) },
   { field: "totalPaidAmount", headerName: "Total Paid Amount", width: 155, align: "right", headerAlign: "right", valueFormatter: (value) => formatMoney(value) },
   { field: "balanceOutstanding", headerName: "Balance Outstanding", width: 170, align: "right", headerAlign: "right", cellClassName: "cell-due", valueFormatter: (value) => formatMoney(value) },

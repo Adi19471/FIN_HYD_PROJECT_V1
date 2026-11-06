@@ -63,8 +63,15 @@ public class CustomerOutstandingService {
 			customerOutstandingView.setBalanceOutstanding(
 			        totalLoans.subtract(totalPaid)
 			);
-			
+
 			customerOutstandingView.setDueDateOutstanding(BigDecimal.ZERO);
+
+			customerOutstandingView.setStartDate(customerOutstandingProjection.getStartDate() != null
+					? customerOutstandingProjection.getStartDate().toLocalDate()
+					: null);
+			customerOutstandingView.setEndDate(customerOutstandingProjection.getEndDate() != null
+					? customerOutstandingProjection.getEndDate().toLocalDate()
+					: null);
 
 			customerOutstandingViewList.add(customerOutstandingView);
 		}

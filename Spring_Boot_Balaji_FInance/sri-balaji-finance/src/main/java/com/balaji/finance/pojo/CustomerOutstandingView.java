@@ -1,6 +1,7 @@
 package com.balaji.finance.pojo;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 
 public class CustomerOutstandingView {
 
@@ -12,6 +13,8 @@ public class CustomerOutstandingView {
 	private BigDecimal totalPaidAmount;
 	private BigDecimal balanceOutstanding;
 	private BigDecimal dueDateOutstanding;
+	private LocalDate startDate;
+	private LocalDate endDate;
 
 	public Integer getsNo() {
 		return sNo;
@@ -75,6 +78,22 @@ public class CustomerOutstandingView {
 
 	public void setDueDateOutstanding(BigDecimal dueDateOutstanding) {
 		this.dueDateOutstanding = dueDateOutstanding;
+	}
+
+	public LocalDate getStartDate() {
+		return startDate;
+	}
+
+	public void setStartDate(LocalDate startDate) {
+		this.startDate = startDate;
+	}
+
+	public LocalDate getEndDate() {
+		return endDate;
+	}
+
+	public void setEndDate(LocalDate endDate) {
+		this.endDate = endDate;
 	}
 
 }
