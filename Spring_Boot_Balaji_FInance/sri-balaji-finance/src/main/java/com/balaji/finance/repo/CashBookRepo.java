@@ -18,9 +18,11 @@ import com.balaji.finance.dto.CustomerTransactionsProjection;
 import com.balaji.finance.dto.DateWiseCashBookProjection;
 import com.balaji.finance.dto.DateWiseCollectionsProjection;
 import com.balaji.finance.dto.LoanCollectionProjection;
+import com.balaji.finance.dto.LoanCollectionWithOutInterestProjection;
 import com.balaji.finance.dto.PaidInstallmentProjection;
 import com.balaji.finance.dto.PartnerCreditSummaryProjection;
 import com.balaji.finance.dto.PartnerPerformanceReport;
+import com.balaji.finance.dto.RevenueExpenseProfitProjection;
 import com.balaji.finance.dto.RevenueExpenseProjection;
 import com.balaji.finance.dto.SumOfCreditsAndDebitsProjection;
 import com.balaji.finance.dto.SummaryByParticularsProjection;
@@ -853,25 +855,45 @@ public interface CashBookRepo extends JpaRepository<CashBook, Long> {
 			""")
 	List<CashBook> getAllDailyCollectionsByBusniesMember(@Param("memberId") String memberId);
 	
+	
+	
 	@Query(value = """
 			SELECT
-			    COALESCE(
-			        SUM(
-			            CASE
-			                WHEN cb.ACCOUNT_MASTER_TYPE = 'REVENUES'
-			                    THEN COALESCE(cb.CREDIT, 0) - COALESCE(cb.DEBIT, 0)
+			    cb.ACCOUNT_MASTER_TYPE AS type,
 
-			                WHEN cb.ACCOUNT_MASTER_TYPE = 'EXPENSES'
-			                    THEN -(COALESCE(cb.CREDIT, 0) - COALESCE(cb.DEBIT, 0))
-
-			                ELSE 0
-			            END
-			        ),
-			        0
-			    ) AS profit
+			     ABS(
+			             COALESCE(SUM(cb.CREDIT), 0) -
+			             COALESCE(SUM(cb.DEBIT), 0)
+			         ) AS amount
+			         
 			FROM cash_book cb
 			WHERE cb.TRANS_DATE <= :toDate
 			  AND cb.ACCOUNT_MASTER_TYPE IN ('REVENUES', 'EXPENSES')
+			GROUP BY cb.ACCOUNT_MASTER_TYPE
+			ORDER BY cb.ACCOUNT_MASTER_TYPE
 			""", nativeQuery = true)
-	BigDecimal getProfitByTranscDate(@Param("toDate") LocalDateTime toDate);
+	List<RevenueExpenseProfitProjection> getProfitByTranscDate(@Param("toDate") LocalDateTime toDate);
+
+	
+	@Query(value = """
+			SELECT
+			    SUM(CASE
+			        WHEN ACCOUNT_MASTER_CODE = 'DF LOAN INSTALLMENT'
+			        THEN CREDIT ELSE 0 END) AS dailyLoanInstallmentsReceived,
+
+
+			    SUM(CASE
+			        WHEN ACCOUNT_MASTER_CODE = 'MF LOAN INSTALLMENT'
+			        THEN CREDIT ELSE 0 END) AS monthlyLoanInstallmentsReceived
+
+
+			FROM cash_book
+			 WHERE
+			  ACCOUNT_MASTER_CODE IN (
+			    'DF LOAN INSTALLMENT',
+			    'MF LOAN INSTALLMENT'
+			)
+						""", nativeQuery = true)
+	LoanCollectionWithOutInterestProjection getLoanCollectionDataUptoDate(@Param("toDate") LocalDateTime toDate);
+	
 }

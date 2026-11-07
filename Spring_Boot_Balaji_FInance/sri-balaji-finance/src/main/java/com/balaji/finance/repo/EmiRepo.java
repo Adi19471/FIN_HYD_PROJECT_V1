@@ -279,11 +279,7 @@ public interface EmiRepo extends JpaRepository<EMI, Integer> {
 			
 			
 			WHERE guarantor.personalInfoId = :personInfoId
-			  AND (
-			        (:activeLoans = true AND bm.loanStatus = 'ACTIVE')
-			        OR
-			        (:activeLoans = false AND bm.loanStatus <> 'ACTIVE')
-			      )
+			  AND (:activeLoans = false OR bm.loanStatus = 'ACTIVE')
 
 			GROUP BY
 			    bm.businessMemberId,
@@ -301,7 +297,7 @@ public interface EmiRepo extends JpaRepository<EMI, Integer> {
 			    bm.duration,
 			    bm.loanType
 
-			ORDER BY bm.businessMemberId
+			ORDER BY bm.sequence
 			""")
 	List<GuarantorDuesProjection> getInstallmentDuesByGuranter(@Param("activeLoans") Boolean activeLoans,
 			@Param("personInfoId") String personInfoId);
@@ -372,10 +368,9 @@ public interface EmiRepo extends JpaRepository<EMI, Integer> {
 			LEFT JOIN bm.partnerId partner
 			
 			WHERE (
-			        (:activeLoans = true AND bm.loanStatus = 'ACTIVE')
-			        OR
-			        (:activeLoans = false AND bm.loanStatus <> 'ACTIVE')
-			      )
+			    :activeLoans = false
+			    OR bm.loanStatus = 'ACTIVE'
+			)
 
 			GROUP BY
 			    bm.businessMemberId,
@@ -394,7 +389,7 @@ public interface EmiRepo extends JpaRepository<EMI, Integer> {
 			    bm.loanType,
 			    partner.sequence
 
-			ORDER BY partner.sequence ASC, bm.businessMemberId
+			ORDER BY bm.sequence ASC
 			""")
 	List<GuarantorDuesProjection> getInstallmentDuesAllGuarenter(@Param("activeLoans") Boolean activeLoans);
 	

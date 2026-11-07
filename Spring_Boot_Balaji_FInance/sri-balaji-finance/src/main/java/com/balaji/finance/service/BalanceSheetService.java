@@ -11,6 +11,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import com.balaji.finance.dto.BalanceSheetProjection;
+import com.balaji.finance.dto.LoanCollectionWithOutInterestProjection;
+import com.balaji.finance.dto.RevenueExpenseProfitProjection;
+import com.balaji.finance.pojo.BalanceSheetDTO;
 import com.balaji.finance.repo.CashBookRepo;
 
 @Service
@@ -26,12 +29,69 @@ public class BalanceSheetService {
 		BigDecimal openingBalanceForToDatePlusOneDay = Optional.ofNullable(cashBookRepo.findOpeningBalanceForDate(toDate.plusDays(1)))
 				.orElse(BigDecimal.ZERO);
 		
-		BigDecimal profitByTranscDate = cashBookRepo.getProfitByTranscDate(to);
-		
+		List<RevenueExpenseProfitProjection> revenueExpenseProfitProjectionList = cashBookRepo.getProfitByTranscDate(to);
+
+		BigDecimal revenues = BigDecimal.ZERO;
+		BigDecimal expenses = BigDecimal.ZERO;
+
+		for (RevenueExpenseProfitProjection rep : revenueExpenseProfitProjectionList) {
+
+		    BigDecimal amount = rep.getAmount() != null
+		            ? rep.getAmount()
+		            : BigDecimal.ZERO;
+
+		    String type = rep.getType();
+
+		    if ("REVENUES".equalsIgnoreCase(type)) {
+		        revenues = revenues.add(amount);
+		    } else if ("EXPENSES".equalsIgnoreCase(type)) {
+		        expenses = expenses.add(amount);
+		    }
+		}
+
+		BigDecimal profitByTranscDate = revenues.subtract(expenses);
 		
 		
 		List<BalanceSheetProjection> balanceSheetByTrasncDate = cashBookRepo.getBalanceSheetByTrasncDate(to,
 				Arrays.asList("ASSETS", "LIABILITIES"));
+		
+		LoanCollectionWithOutInterestProjection loanCollectionWithOutInterestProjection = cashBookRepo.getLoanCollectionDataUptoDate(to);
+		
+		
+		for (int i = 0; i < balanceSheetByTrasncDate.size(); i++) {
+
+		    BalanceSheetProjection bsp = balanceSheetByTrasncDate.get(i);
+
+		    BigDecimal amount = Optional.ofNullable(bsp.getAmount())
+		            .orElse(BigDecimal.ZERO);
+
+		    if ("DF LOAN".equalsIgnoreCase(bsp.getCode())) {
+
+		        BigDecimal dailyInstallments = Optional.ofNullable(
+		                loanCollectionWithOutInterestProjection
+		                        .getDailyLoanInstallmentsReceived())
+		                .orElse(BigDecimal.ZERO);
+
+		        amount = amount.subtract(dailyInstallments);
+
+		    } else if ("MF LOAN".equalsIgnoreCase(bsp.getCode())) {
+
+		        BigDecimal monthlyInstallments = Optional.ofNullable(
+		                loanCollectionWithOutInterestProjection
+		                        .getMonthlyLoanInstallmentsReceived())
+		                .orElse(BigDecimal.ZERO);
+
+		        amount = amount.subtract(monthlyInstallments);
+		    }
+
+		    balanceSheetByTrasncDate.set(i,
+		            new BalanceSheetDTO(
+		                    bsp.getType(),
+		                    bsp.getMasterCode(),
+		                    bsp.getCode(),
+		                    amount
+		            ));
+		}
 
 		BalanceSheetProjection cashOnHandProjection = new BalanceSheetProjection() {
 

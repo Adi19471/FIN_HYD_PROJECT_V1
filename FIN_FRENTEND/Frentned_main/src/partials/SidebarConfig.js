@@ -101,7 +101,7 @@ export const sidebarGroups = [
       { label: "Business Reports", path: "/Partners/Bussiness_Reports", icon: navIcons.partnerBusinessReports },
       { label: "Group Business Details", path: "/Partners/Group_Bussiness_Details", icon: navIcons.groupBusinessDetails },
       { label: "Group Business", path: "/Partners/Group_Bussiness", icon: navIcons.groupBusiness },
-      { label: "Installment Dues", path: "/Partners/Installment_Dues", icon: navIcons.partnerInstallmentDues },
+      { label: "Installment Partner Dues", path: "/Partners/Installment_Dues", icon: navIcons.partnerInstallmentDues },
       { label: "Partner Loan Limit", path: "/Partners/Partner_Loan_Limit", icon: navIcons.partnerLoanLimit },
       { label: "Partner Settlement", path: "/Partners/Partner_Settelment", icon: navIcons.partnerSettlement },
       { label: "Partner Information", path: "/Partners/Partner_Infoamtion", icon: navIcons.partnerInformation },
