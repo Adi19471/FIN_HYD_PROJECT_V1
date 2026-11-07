@@ -14,15 +14,20 @@ import com.balaji.finance.dto.BalanceSheetProjection;
 import com.balaji.finance.dto.LoanCollectionWithOutInterestProjection;
 import com.balaji.finance.dto.RevenueExpenseProfitProjection;
 import com.balaji.finance.pojo.BalanceSheetDTO;
+import com.balaji.finance.pojo.BalanceSheetResponsePojo;
 import com.balaji.finance.repo.CashBookRepo;
+import com.balaji.finance.repo.PersonalInfoRepository;
 
 @Service
 public class BalanceSheetService {
 
 	@Autowired
 	private CashBookRepo cashBookRepo;
+	
+	@Autowired
+	private PersonalInfoRepository personalInfoRepository;
 
-	public List<BalanceSheetProjection> getBalanceSheetByTrasncDate(LocalDate toDate) {
+	public BalanceSheetResponsePojo getBalanceSheetByTrasncDate(LocalDate toDate) {
 
 		LocalDateTime to = toDate.atTime(23, 59, 59);
 
@@ -146,7 +151,11 @@ public class BalanceSheetService {
 		balanceSheetByTrasncDate.add(profit);
 
 		
-		return balanceSheetByTrasncDate;
+		BalanceSheetResponsePojo balanceSheetResponsePojo = new BalanceSheetResponsePojo();
+		balanceSheetResponsePojo.setBalanceSheetProjections(balanceSheetByTrasncDate);
+		balanceSheetResponsePojo.setTotalShares(personalInfoRepository.findTotalShares());
+		
+		return balanceSheetResponsePojo;
 	}
 
 }

@@ -149,7 +149,10 @@ public interface BusinessMemberRepository extends JpaRepository<BusinessMember, 
 			          AND e.businessMember.customerId = customer
 			          AND e.businessMember.loanType IN :loanType
 			          AND e.paymentDate <= :selectedDate
-			    ), 0) AS totalPaidAmount
+			    ), 0) AS totalPaidAmount,
+
+			    bm.startDate as startDate,
+			    bm.endDate as endDate
 
 			FROM PersonalInfo customer
 

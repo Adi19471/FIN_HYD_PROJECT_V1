@@ -19,6 +19,10 @@ const GenerateIcon = actionIcons.generate;
 const money = (value) =>
   Number(value || 0).toLocaleString("en-IN", { maximumFractionDigits: 0 });
 
+// Rupee amounts for the profit summary: ₹68,700 / ₹5,284.615
+const rupees = (value, decimals = 0) =>
+  `₹${Number(value || 0).toLocaleString("en-IN", { maximumFractionDigits: decimals })}`;
+
 const rowName = (row) =>
   row.code || row.description || row.accountName || row.name || row.accountCode || "-";
 
@@ -58,6 +62,31 @@ const buildSheet = (rows = []) =>
     return sheet;
   }, {});
 
+// The PROFIT group's total, from whichever side the service put it on.
+const profitOf = (sheet) =>
+  SECTIONS.reduce(
+    (sum, section) =>
+      sum + sheet[section].groups.filter((g) => g.name === "PROFIT").reduce((s, g) => s + g.total, 0),
+    0
+  );
+
+// The service now answers { balanceSheetProjections: [...], totalShares };
+// a bare array (the old shape) is still accepted.
+const parseResponse = (body) => {
+  const payload = body?.data && !Array.isArray(body.data) ? body.data : body;
+  const rows = Array.isArray(payload)
+    ? payload
+    : Array.isArray(payload?.balanceSheetProjections)
+      ? payload.balanceSheetProjections
+      : Array.isArray(body?.data)
+        ? body.data
+        : Array.isArray(body?.result)
+          ? body.result
+          : [];
+  const totalShares = Number(payload?.totalShares || 0);
+  return { rows, totalShares };
+};
+
 // Print and downloads follow the sheet line by line: the section band and each
 // group print bold on the tinted band (__isTotal), the accounts numbered under
 // them. Amounts stay numbers so Excel keeps them summable.
@@ -84,6 +113,7 @@ const sheetRows = (sheet) =>
 const BalanceSheet = () => {
   const [toDate, setToDate] = useState(dayjs());
   const [data, setData] = useState([]);
+  const [totalShares, setTotalShares] = useState(0);
   const [loading, setLoading] = useState(false);
   const [generatedDate, setGeneratedDate] = useState(null);
 
@@ -94,16 +124,29 @@ const BalanceSheet = () => {
   const upTo = dayjs(generatedDate || toDate).format("DD-MMM-YYYY");
   const title = `Balance Sheet Up To ${upTo}`;
 
+  // Total Profit / Total Shares = Net Profit (per share)
+  const totalProfit = useMemo(() => profitOf(sheet), [sheet]);
+  const netProfit = totalShares ? totalProfit / totalShares : null;
+  const profitSummary = [
+    { label: "Total Profit", value: rupees(totalProfit) },
+    { label: "Total Shares", value: Number(totalShares).toLocaleString("en-IN") },
+    { label: "Net Profit", value: netProfit === null ? "-" : rupees(netProfit, 3) },
+  ];
+
   const exportRows = useMemo(() => (data.length ? sheetRows(sheet) : []), [data.length, sheet]);
 
   // The sheet's own title heads every download; a difference, if the two
-  // sides do not agree, is printed under it.
+  // sides do not agree, is printed under it, then the profit summary.
   const reportOptions = useMemo(
     () => ({
       title,
-      summary: difference ? [{ label: "Difference", value: money(difference) }] : [],
+      summary: [
+        ...(difference ? [{ label: "Difference", value: money(difference) }] : []),
+        ...(data.length ? profitSummary : []),
+      ],
     }),
-    [title, difference]
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [title, difference, data.length, totalProfit, totalShares]
   );
 
   const fetchData = async () => {
@@ -127,15 +170,10 @@ const BalanceSheet = () => {
         },
       });
 
-      const rows = Array.isArray(res.data)
-        ? res.data
-        : Array.isArray(res.data?.data)
-          ? res.data.data
-          : Array.isArray(res.data?.result)
-            ? res.data.result
-            : [];
+      const { rows, totalShares: shares } = parseResponse(res.data);
 
       setData(rows);
+      setTotalShares(shares);
       setGeneratedDate(toDate);
     } catch (err) {
       console.error("Error fetching balance sheet:", err);
@@ -188,6 +226,40 @@ const BalanceSheet = () => {
     );
   };
 
+  // Bottom-right block under the sheet: Total Profit, Total Shares, then
+  // Net Profit set apart below them.
+  const renderProfitSummary = () => (
+    <Box
+      className="bs-profit-summary"
+      sx={{ display: "flex", justifyContent: "flex-end", mt: 3 }}
+    >
+      <Box
+        component="dl"
+        sx={{
+          m: 0,
+          minWidth: 260,
+          display: "grid",
+          gridTemplateColumns: "auto auto",
+          columnGap: 2,
+          rowGap: 1,
+          "& dt": { fontWeight: 600 },
+          "& dd": { m: 0, textAlign: "right", fontVariantNumeric: "tabular-nums" },
+        }}
+      >
+        {profitSummary.map(({ label, value }) => {
+          const isNet = label === "Net Profit";
+          const spacer = isNet ? { mt: 2, pt: 1, borderTop: 1, borderColor: "divider" } : {};
+          return (
+            <React.Fragment key={label}>
+              <Box component="dt" sx={spacer}>{label} :</Box>
+              <Box component="dd" sx={{ ...spacer, fontWeight: isNet ? 700 : 400 }}>{value}</Box>
+            </React.Fragment>
+          );
+        })}
+      </Box>
+    </Box>
+  );
+
   // Download / Print for this screen sit in its header (screenExport.jsx).
   useScreenExport({ rows: exportRows, columns: EXPORT_COLUMNS, fileName: "Balance_Sheet", reportOptions });
 
@@ -237,11 +309,7 @@ const BalanceSheet = () => {
             </p>
             <h2 className="bs-title">{title}</h2>
             {SECTIONS.map(renderSection)}
-            {difference !== 0 && (
-              <p className="bs-difference">
-                Assets and liabilities differ by <strong>{money(difference)}</strong>.
-              </p>
-            )}
+            {renderProfitSummary()}
           </div>
         )}
       </Paper>
