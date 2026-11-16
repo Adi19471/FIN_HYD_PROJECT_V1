@@ -1,0 +1,1 @@
+import{j as o}from"./vendor-oC9IzGTw.js";import{P as r}from"./PersonalInfoManager-CtMQKMIF.js";import"./index-OFkSNpoV.js";import"./personalInfoCache-bw65KOH2.js";import"./popover-QXNi0II-.js";import"./ProfilePhoto-D85cSyB-.js";const i=()=>o.jsx(r,{personType:"CUSTOMER"});export{i as default};

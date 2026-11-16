@@ -42,8 +42,9 @@ const defaultSettings = {
   // own canvas, a flat top bar and near-square corners.
   fontFamily: "Source Sans 3",
   fontScale: 1,
-  // "normal" | "bold" - Settings > Font > Text weight, every screen.
-  textWeight: "normal",
+  // "normal" | "bold" - Settings > Font > Text weight, every screen. Bold is
+  // the house look; Normal stays available in Settings.
+  textWeight: "bold",
   screenScale: 1,
   density: "compact",
   tableDensity: "compact",
@@ -173,6 +174,12 @@ const readSettings = () => {
         persisted[key] = defaultSettings[key];
       });
       localStorage.setItem("ui-look-cfs-v1", "1");
+    }
+    // One-time move of every browser to bold text, whatever weight was saved
+    // before. Picking Normal in Settings afterwards is kept.
+    if (localStorage.getItem("ui-text-bold-v1") !== "1") {
+      persisted.textWeight = "bold";
+      localStorage.setItem("ui-text-bold-v1", "1");
     }
     // A sidebar the user had already collapsed, from before the menu layout
     // was a setting, is the Mini layout.

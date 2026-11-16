@@ -1,0 +1,1 @@
+import{a as e}from"./vendor-oC9IzGTw.js";import{A as s}from"./index-OFkSNpoV.js";let a=null;const f=15e3;async function A(o,{force:r=!1}={}){if(!r&&a&&Date.now()-a.time<f)return a.data;const t=await e.get(`${s}/PersonalInfo/findAll`,{headers:o}),n=Array.isArray(t.data)?t.data:[];return a={data:n,time:Date.now()},n}export{A as f};

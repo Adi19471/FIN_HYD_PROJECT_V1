@@ -5,8 +5,12 @@ import dayjs from "dayjs";
 import { Alert, Box, Button, Grid, IconButton, LinearProgress, Skeleton, Tooltip as MuiTooltip, Typography } from "@mui/material";
 import {
   ArrowForwardRounded,
+  AccountBalanceRounded,
   FlagRounded,
   GroupsRounded,
+  PieChartRounded,
+  RequestQuoteRounded,
+  ShowChartRounded,
   LaunchRounded,
   PendingActionsRounded,
   PointOfSaleRounded,
@@ -18,6 +22,9 @@ import {
   BarChart,
   CartesianGrid,
   Cell,
+  Legend,
+  Pie,
+  PieChart,
   ResponsiveContainer,
   Tooltip,
   XAxis,
@@ -57,6 +64,52 @@ const shortcuts = [
   { title: "Customer Master", path: "/customer", icon: navIcons.personalInformation },
   { title: "Collection Report", path: "/Bussiness/BussinessCollectionReportsimport", icon: navIcons.collectionReports },
 ];
+
+// Loan types as the Business Share screen names them.
+const LOAN_TYPE_NAMES = { DAILY_FINANCE: "Daily Finance", MONTHLY_FINANCE: "Monthly Finance" };
+const loanTypeName = (value) => {
+  const key = String(value || "").trim().toUpperCase();
+  return LOAN_TYPE_NAMES[key] || key.replace(/_/g, " ") || "Other";
+};
+
+// Axis ticks and donut centres: ₹12.5K / ₹3.4L / ₹1.2Cr, so the axis needs
+// a narrow gutter instead of a 90px one for "Rs 1,23,45,678".
+const formatCompact = (value) => {
+  const n = Number(value || 0);
+  const abs = Math.abs(n);
+  const fmt = (v, unit) => `₹${Number(v.toFixed(v >= 100 ? 0 : 1))}${unit}`;
+  const sign = n < 0 ? "-" : "";
+  if (abs >= 1e7) return sign + fmt(abs / 1e7, "Cr");
+  if (abs >= 1e5) return sign + fmt(abs / 1e5, "L");
+  if (abs >= 1e3) return sign + fmt(abs / 1e3, "K");
+  return `${sign}₹${abs.toFixed(0)}`;
+};
+
+const CHART_H = 220;
+const DONUT_H = 168;
+
+/** Legend under a ring: colour, name, amount and share of the whole. */
+function DonutLegend({ rows }) {
+  const total = rows.reduce((sum, row) => sum + row.value, 0) || 1;
+  return (
+    <ul className="dash-legend">
+      {rows.map((row) => (
+        <li key={row.name}>
+          <span className="dash-legend-dot" style={{ background: row.color }} aria-hidden="true" />
+          <span className="dash-legend-name">{row.name}</span>
+          <span className="dash-legend-value">{formatINR(row.value)}</span>
+          <span className="dash-legend-pct">{Math.round((row.value / total) * 100)}%</span>
+        </li>
+      ))}
+    </ul>
+  );
+}
+
+const formatShares = (value) =>
+  Number(value || 0).toLocaleString("en-IN", { minimumFractionDigits: 1, maximumFractionDigits: 2 });
+
+const formatShareValue = (value) =>
+  `Rs ${Number(value || 0).toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 
 const greetingFor = (hour) => (hour < 12 ? "Good morning" : hour < 17 ? "Good afternoon" : "Good evening");
 
@@ -226,9 +279,29 @@ export default function Dashboard() {
     }
   }, [headers]);
 
+  // Business share for this month so far - the same figures as the Business
+  // Share screen. It values the whole balance sheet, so it is fetched on open
+  // and on Refresh, not on the 30s poll.
+  const [share, setShare] = useState(null);
+  const [shareLoading, setShareLoading] = useState(false);
+  const fetchShareStatement = useCallback(async () => {
+    setShareLoading(true);
+    try {
+      const start = dayjs().startOf("month").format("YYYY-MM-DD");
+      const end = dayjs().format("YYYY-MM-DD");
+      const res = await axios.get(`${API_BASE}/businessShareStatement/${start}/${end}`, { headers });
+      setShare(res.data && typeof res.data === "object" ? res.data : {});
+    } catch {
+      setShare((prev) => prev || {});
+    } finally {
+      setShareLoading(false);
+    }
+  }, [headers]);
+
   useEffect(() => {
     fetchLiveMetrics();
     fetchMemberCount();
+    fetchShareStatement();
     // Skip polling while this tab is backgrounded or the user has been idle for a
     // while - avoids piling up backend calls from tabs left open and untouched.
     const refreshTimer = window.setInterval(() => {
@@ -242,7 +315,7 @@ export default function Dashboard() {
       window.clearInterval(refreshTimer);
       document.removeEventListener("visibilitychange", handleVisibility);
     };
-  }, [fetchLiveMetrics, fetchMemberCount]);
+  }, [fetchLiveMetrics, fetchMemberCount, fetchShareStatement]);
 
   const completionRate = useMemo(() => {
     const target = Number(metrics.portfolioValue || 0);
@@ -253,7 +326,10 @@ export default function Dashboard() {
 
   const collections = useMemo(() => {
     return metrics.collectionRows.map((item) => ({
-      label: `${String(item.loanType || "").replace("_FINANCE", "")} ${item.loanStatus || ""}`.replace("_", " "),
+      label: [loanTypeName(item.loanType).replace(" Finance", ""), item.loanStatus]
+        .filter(Boolean)
+        .map((part) => String(part).replace(/_/g, " ").toLowerCase().replace(/\b\w/g, (c) => c.toUpperCase()))
+        .join(" · "),
       value: Number(item.receivedCollections || 0),
     }));
   }, [metrics.collectionRows]);
@@ -267,6 +343,42 @@ export default function Dashboard() {
     ],
     [metrics.dailyTotals.credits, metrics.dailyTotals.debits, metrics.todayCollection]
   );
+  // This month's collections as one whole: what came in against what is
+  // still to come, so the ring reads as progress toward the target.
+  const collectionSplit = useMemo(() => {
+    const received = metrics.collectionRows.reduce((sum, item) => sum + Number(item.receivedCollections || 0), 0);
+    const balance = metrics.collectionRows.reduce((sum, item) => sum + Math.max(0, Number(item.balanceCollections || 0)), 0);
+    return [
+      { name: "Received", value: received, color: theme.palette.success.main },
+      { name: "Balance", value: balance, color: theme.palette.warning.main },
+    ];
+  }, [metrics.collectionRows, theme.palette.success.main, theme.palette.warning.main]);
+  const collectionTotal = collectionSplit.reduce((sum, row) => sum + row.value, 0);
+  const collectionPct = collectionTotal ? Math.round((collectionSplit[0].value / collectionTotal) * 100) : 0;
+
+  // Per loan type from the share statement: outstanding for the ring,
+  // lent against repaid for the bars.
+  const loanTypeColors = [theme.palette.primary.main, theme.palette.secondary.main, theme.palette.info.main, theme.palette.warning.main];
+  const shareLoanRows = useMemo(
+    () =>
+      (Array.isArray(share?.loanInformation) ? share.loanInformation : []).map((row) => ({
+        name: loanTypeName(row.loanType),
+        outstanding: Math.max(0, Number(row.totalOutstanding || 0)),
+        disbursed: Number(row.sumOfLoansDisbursedAndInterestReceivable || row.loansDisbursed || 0),
+        paid: Number(row.sumOfloansPaidAndInterestPaid || row.loansPaid || 0),
+      })),
+    [share]
+  );
+  const outstandingSplit = shareLoanRows.filter((row) => row.outstanding > 0);
+  const outstandingTotal = outstandingSplit.reduce((sum, row) => sum + row.outstanding, 0);
+  const outstandingDonut = outstandingSplit.map((row, index) => ({
+    name: row.name,
+    value: row.outstanding,
+    color: loanTypeColors[index % loanTypeColors.length],
+  }));
+  const hasLendingFlow = shareLoanRows.some((row) => row.disbursed > 0 || row.paid > 0);
+  const shareFirstLoad = shareLoading && !share;
+
   const hasDailyFlow = dailyFlowRows.some((row) => row.value > 0);
   const hasCollections = collections.some((row) => row.value > 0);
 
@@ -311,7 +423,27 @@ export default function Dashboard() {
   const refresh = () => {
     fetchLiveMetrics();
     fetchMemberCount();
+    fetchShareStatement();
   };
+
+  // A ring filling its box, its headline figure in the hole; the legend
+  // with the amounts sits under it as HTML (DonutLegend), not inside the SVG.
+  const renderDonut = (data, centerValue, centerLabel) => (
+    <PieChart margin={{ top: 0, right: 0, bottom: 0, left: 0 }}>
+      <Pie data={data} dataKey="value" nameKey="name" innerRadius="66%" outerRadius="96%" paddingAngle={data.length > 1 ? 2 : 0} stroke="none" isAnimationActive={false}>
+        {data.map((row) => (
+          <Cell key={row.name} fill={row.color} />
+        ))}
+      </Pie>
+      <text x="50%" y="46%" textAnchor="middle" dominantBaseline="middle" className="dash-donut-value">
+        {centerValue}
+      </text>
+      <text x="50%" y="60%" textAnchor="middle" dominantBaseline="middle" className="dash-donut-label">
+        {centerLabel}
+      </text>
+      <Tooltip {...tooltipStyle} formatter={(value, name) => [formatINR(value), name]} />
+    </PieChart>
+  );
 
   return (
     <div className="dash">
@@ -396,34 +528,84 @@ export default function Dashboard() {
         </div>
       </section>
 
+
+      {/* ---------- business share: the figures of the Business Share screen ---------- */}
+      <Panel
+        className="dash-card-compact"
+        title="Business share"
+        subtitle={`${dayjs().startOf("month").format("DD MMM")} – ${dayjs().format("DD MMM YYYY")}`}
+        action={
+          canOpen("/Bussiness/BussinessShare") && (
+            <Button size="small" endIcon={<ArrowForwardRounded />} onClick={() => navigate("/Bussiness/BussinessShare")}>
+              Business Share
+            </Button>
+          )
+        }
+      >
+        <div className="dash-share-strip">
+          {[
+            { icon: PieChartRounded, tone: "primary", label: "Total shares", value: formatShares(share?.totalShares) },
+            { icon: ShowChartRounded, tone: "success", label: "Value per share", value: formatShareValue(share?.valuePerShare) },
+            { icon: AccountBalanceRounded, tone: "info", label: "Net business value", value: formatINR(share?.netBusinessValue) },
+            { icon: RequestQuoteRounded, tone: "warning", label: "Loans outstanding", value: formatINR(share?.loansOutstanding) },
+          ].map(({ icon: Icon, tone, label, value }) => (
+            <div key={label} className={`dash-share-item dash-tone-${tone}`}>
+              <span className="dash-kpi-icon" aria-hidden="true">
+                <Icon />
+              </span>
+              <div className="dash-share-text">
+                <span>{label}</span>
+                <strong>{shareFirstLoad ? <Skeleton width={90} /> : value}</strong>
+              </div>
+            </div>
+          ))}
+        </div>
+      </Panel>
+
       <Grid container spacing={2}>
-        {/* Collections this month, and today's credit/debit. Credit/debit keep
-            the same green-in / red-out convention as every status chip elsewhere
-            in the app; the collections bars take the theme accent since they
-            carry no win/loss meaning of their own. */}
-        <Grid size={{ xs: 12, lg: 7 }}>
-          <Panel title="Collections this month" subtitle="By loan type and status">
-            <ChartCard height={260} loading={loading && !collections.length} empty={!hasCollections} emptyLabel="No collections recorded for this month yet.">
-              <BarChart data={collections} margin={{ top: 8, right: 12, left: 0, bottom: 8 }}>
+        {/* ---------- this month's collections: by type, and as a whole ---------- */}
+        <Grid size={{ xs: 12, lg: 6 }}>
+          <Panel title="Collections this month" subtitle="Received, by loan type and status">
+            <ChartCard height={CHART_H} loading={loading && !collections.length} empty={!hasCollections} emptyLabel="No collections recorded for this month yet.">
+              <BarChart data={collections} margin={{ top: 4, right: 4, left: 0, bottom: 0 }}>
                 <CartesianGrid strokeDasharray="3 3" stroke={theme.palette.divider} vertical={false} />
-                <XAxis dataKey="label" tick={{ fontSize: 11, fill: theme.palette.text.secondary }} interval={0} angle={-20} textAnchor="end" height={54} />
-                <YAxis tick={{ fontSize: 11, fill: theme.palette.text.secondary }} tickFormatter={(value) => formatINR(value)} width={90} />
-                <Tooltip {...tooltipStyle} />
-                <Bar dataKey="value" name="Received" fill={theme.palette.primary.main} radius={[4, 4, 0, 0]} maxBarSize={48} />
+                <XAxis dataKey="label" tick={{ fontSize: 11, fill: theme.palette.text.secondary }} interval={0} tickLine={false} />
+                <YAxis tick={{ fontSize: 11, fill: theme.palette.text.secondary }} tickFormatter={formatCompact} width={48} axisLine={false} tickLine={false} />
+                <Tooltip {...tooltipStyle} cursor={{ fill: theme.palette.action.hover }} />
+                <Bar dataKey="value" name="Received" fill={theme.palette.primary.main} radius={[4, 4, 0, 0]} maxBarSize={44} />
               </BarChart>
             </ChartCard>
           </Panel>
         </Grid>
 
-        <Grid size={{ xs: 12, lg: 5 }}>
-          <Panel title="Today's cash flow" subtitle={dayjs().format("DD-MMM-YYYY")}>
-            <ChartCard height={260} loading={loading && !hasDailyFlow} empty={!hasDailyFlow} emptyLabel="No credit or debit posted for today yet.">
-              <BarChart data={dailyFlowRows} margin={{ top: 8, right: 12, left: 0, bottom: 8 }}>
+        <Grid size={{ xs: 12, sm: 6, lg: 3 }}>
+          <Panel title="Collection status" subtitle="Received vs balance">
+            <ChartCard height={DONUT_H} loading={firstLoad} empty={!collectionTotal} emptyLabel="No collections due this month yet.">
+              {renderDonut(collectionSplit, `${collectionPct}%`, "collected")}
+            </ChartCard>
+            {!!collectionTotal && <DonutLegend rows={collectionSplit} />}
+          </Panel>
+        </Grid>
+
+        <Grid size={{ xs: 12, sm: 6, lg: 3 }}>
+          <Panel title="Outstanding" subtitle="By loan type">
+            <ChartCard height={DONUT_H} loading={shareFirstLoad} empty={!outstandingTotal} emptyLabel="No loans outstanding.">
+              {renderDonut(outstandingDonut, formatCompact(outstandingTotal), "total")}
+            </ChartCard>
+            {!!outstandingTotal && <DonutLegend rows={outstandingDonut} />}
+          </Panel>
+        </Grid>
+
+        {/* ---------- money in and out: today, and lending this month ---------- */}
+        <Grid size={{ xs: 12, md: 6, lg: 4 }}>
+          <Panel title="Today's cash flow" subtitle={dayjs().format("DD MMM YYYY")}>
+            <ChartCard height={CHART_H} loading={loading && !hasDailyFlow} empty={!hasDailyFlow} emptyLabel="No credit or debit posted for today yet.">
+              <BarChart data={dailyFlowRows} margin={{ top: 4, right: 4, left: 0, bottom: 0 }}>
                 <CartesianGrid strokeDasharray="3 3" stroke={theme.palette.divider} vertical={false} />
-                <XAxis dataKey="name" tick={{ fontSize: 12, fill: theme.palette.text.secondary }} />
-                <YAxis tick={{ fontSize: 11, fill: theme.palette.text.secondary }} tickFormatter={(value) => formatINR(value)} width={90} />
-                <Tooltip {...tooltipStyle} />
-                <Bar dataKey="value" radius={[4, 4, 0, 0]} maxBarSize={72}>
+                <XAxis dataKey="name" tick={{ fontSize: 12, fill: theme.palette.text.secondary }} tickLine={false} />
+                <YAxis tick={{ fontSize: 11, fill: theme.palette.text.secondary }} tickFormatter={formatCompact} width={48} axisLine={false} tickLine={false} />
+                <Tooltip {...tooltipStyle} cursor={{ fill: theme.palette.action.hover }} />
+                <Bar dataKey="value" radius={[4, 4, 0, 0]} maxBarSize={56}>
                   {dailyFlowRows.map((row) => (
                     <Cell key={row.name} fill={row.name === "Credit" ? theme.palette.success.main : theme.palette.error.main} />
                   ))}
@@ -433,38 +615,24 @@ export default function Dashboard() {
           </Panel>
         </Grid>
 
-        <Grid size={{ xs: 12, lg: 8 }}>
-          <Panel
-            title="Recent transactions"
-            subtitle="Today's postings from the daily book"
-            className="dash-card-flush"
-            action={
-              canOpen("/AccountsModules/DailyBook") && (
-                <Button size="small" endIcon={<ArrowForwardRounded />} onClick={() => navigate("/AccountsModules/DailyBook")}>
-                  Daily Book
-                </Button>
-              )
-            }
-          >
-            {metrics.transactionRows.length === 0 && !loading ? (
-              <div className="dash-empty" style={{ height: 200 }}>
-                No transactions posted today yet.
-              </div>
-            ) : (
-              <DataTable
-                rows={metrics.transactionRows}
-                columns={transactionColumns}
-                loading={loading && metrics.transactionRows.length === 0}
-                height={360}
-                pageSize={5}
-                disableRowSelectionOnClick
-              />
-            )}
+        <Grid size={{ xs: 12, md: 6, lg: 4 }}>
+          <Panel title="Lent vs repaid" subtitle="This month, principal + interest">
+            <ChartCard height={CHART_H} loading={shareFirstLoad} empty={!hasLendingFlow} emptyLabel="Nothing lent or repaid this month yet.">
+              <BarChart data={shareLoanRows} margin={{ top: 4, right: 4, left: 0, bottom: 0 }} barGap={4}>
+                <CartesianGrid strokeDasharray="3 3" stroke={theme.palette.divider} vertical={false} />
+                <XAxis dataKey="name" tick={{ fontSize: 12, fill: theme.palette.text.secondary }} tickLine={false} />
+                <YAxis tick={{ fontSize: 11, fill: theme.palette.text.secondary }} tickFormatter={formatCompact} width={48} axisLine={false} tickLine={false} />
+                <Tooltip {...tooltipStyle} cursor={{ fill: theme.palette.action.hover }} formatter={(value, name) => [formatINR(value), name]} />
+                <Legend verticalAlign="top" align="right" height={22} iconType="circle" iconSize={8} wrapperStyle={{ fontSize: 12 }} />
+                <Bar dataKey="disbursed" name="Lent" fill={theme.palette.primary.main} radius={[4, 4, 0, 0]} maxBarSize={36} />
+                <Bar dataKey="paid" name="Repaid" fill={theme.palette.success.main} radius={[4, 4, 0, 0]} maxBarSize={36} />
+              </BarChart>
+            </ChartCard>
           </Panel>
         </Grid>
 
         <Grid size={{ xs: 12, lg: 4 }}>
-          <Panel title="Shortcuts" subtitle="Open a screen here, or in a new tab">
+          <Panel title="Shortcuts" subtitle="Open here, or in a new tab">
             <ul className="dash-links">
               {visibleShortcuts.map((item) => {
                 const Icon = item.icon;
@@ -490,6 +658,36 @@ export default function Dashboard() {
               <Typography variant="body2" color="text.secondary">
                 No shortcuts are available for your account.
               </Typography>
+            )}
+          </Panel>
+        </Grid>
+
+        <Grid size={12}>
+          <Panel
+            title="Recent transactions"
+            subtitle="Today's postings from the daily book"
+            className="dash-card-flush"
+            action={
+              canOpen("/AccountsModules/DailyBook") && (
+                <Button size="small" endIcon={<ArrowForwardRounded />} onClick={() => navigate("/AccountsModules/DailyBook")}>
+                  Daily Book
+                </Button>
+              )
+            }
+          >
+            {metrics.transactionRows.length === 0 && !loading ? (
+              <div className="dash-empty" style={{ height: 120 }}>
+                No transactions posted today yet.
+              </div>
+            ) : (
+              <DataTable
+                rows={metrics.transactionRows}
+                columns={transactionColumns}
+                loading={loading && metrics.transactionRows.length === 0}
+                height={340}
+                pageSize={5}
+                disableRowSelectionOnClick
+              />
             )}
           </Panel>
         </Grid>

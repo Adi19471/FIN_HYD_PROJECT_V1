@@ -734,13 +734,19 @@ const viewerStyles = () => {
   .sheet{width:var(--sheet-w);height:var(--sheet-h);padding:10mm;box-sizing:border-box;
     background:#fff;box-shadow:0 6px 20px rgba(0,0,0,.45);position:relative;overflow:hidden}
   .sheet-foot{position:absolute;left:10mm;right:10mm;bottom:4mm;text-align:right;
-    font-size:10px;color:#475569}
+    font-size:10px;line-height:14px;color:#475569}
+  /* Off-screen copy of one printed page that the script fills to find out
+     what fits. It has the print geometry below - no padding, the footer in
+     the flow, every margin counted inside it. */
+  .sheet.measure{position:absolute;left:-10000px;top:0;visibility:hidden;
+    height:auto;padding:0;overflow:visible;box-shadow:none;display:flow-root}
+  .sheet.measure .sheet-foot{position:static;margin-top:6px}
   @media print{
     body{display:block;height:auto;background:#fff}
     .toolbar{display:none}
     .viewport{overflow:visible;padding:0}
     #sheets{display:block;zoom:1 !important}
-    .sheet{width:auto;height:auto;padding:0;box-shadow:none;overflow:visible;
+    .sheet{width:auto;height:auto;padding:0;box-shadow:none;overflow:visible;display:flow-root;
       page-break-after:always;break-after:page}
     .sheet:last-child{page-break-after:auto;break-after:auto}
     .sheet-foot{position:static;margin-top:6px}
@@ -800,8 +806,38 @@ const viewerScript = `
     var zoomLabel=document.getElementById('zoomLabel');
     var prev=document.getElementById('prev'),next=document.getElementById('next');
 
-    // Lay the report out on the given paper: resize the sheets, measure how
-    // much fits, then rebuild the pages. Called again whenever paper changes.
+    // Fill one page into el: banner, the detail block on the first page only,
+    // the grid with the given rows (none for a summary-only page) and the
+    // footer. Used both for the off-screen measuring copy and the real sheets.
+    function fillSheet(el,pageNo,indexes,withSummary){
+      el.innerHTML='';
+      el.appendChild(head.cloneNode(true));
+      // A statement's detail block belongs to the first page only; the pages
+      // after it carry the company banner and the schedule's own headings.
+      if(details&&pageNo===0)el.appendChild(details.cloneNode(true));
+      var body=null;
+      if(indexes){
+        var t=table.cloneNode(false);
+        var colgroup=table.querySelector('colgroup');
+        if(colgroup)t.appendChild(colgroup.cloneNode(true));
+        t.appendChild(table.querySelector('thead').cloneNode(true));
+        body=document.createElement('tbody');
+        for(var i=0;i<indexes.length;i++){body.appendChild(srcRows[indexes[i]].cloneNode(true));}
+        t.appendChild(body);
+        el.appendChild(t);
+      }
+      if(withSummary)el.appendChild(summary.cloneNode(true));
+      var foot=document.createElement('div');foot.className='sheet-foot';
+      foot.textContent='Page 1 of 1';
+      el.appendChild(foot);
+      return body;
+    }
+
+    function range(from,count){var out=[];for(var i=0;i<count;i++){out.push(from+i);}return out;}
+
+    // Lay the report out on the given paper: resize the sheets, work out what
+    // fits on each printed page, then rebuild the pages. Called again whenever
+    // the paper changes.
     function layout(orientation){
       var size=SIZES[orientation];
       document.documentElement.style.setProperty('--sheet-w',size.w+'mm');
@@ -809,68 +845,76 @@ const viewerScript = `
       pageRule.textContent='@page{size:A4 '+orientation+';margin:10mm}';
       sheets.innerHTML='';
 
-      var probe=document.createElement('div');
-      probe.className='sheet';
-      probe.style.position='absolute';probe.style.left='-10000px';probe.style.visibility='hidden';
-      var headProbe=head.cloneNode(true), tableProbe=table.cloneNode(true);
-      var detailsProbe=details?details.cloneNode(true):null;
-      probe.appendChild(headProbe);
-      if(detailsProbe)probe.appendChild(detailsProbe);
-      probe.appendChild(tableProbe);
-      document.body.appendChild(probe);
-      var cs=getComputedStyle(probe);
-      var usable=probe.clientHeight-parseFloat(cs.paddingTop)-parseFloat(cs.paddingBottom)-24;
-      var headH=headProbe.getBoundingClientRect().height;
-      var detailsH=detailsProbe?detailsProbe.getBoundingClientRect().height:0;
-      var theadH=tableProbe.querySelector('thead').getBoundingClientRect().height;
-      var probeRows=tableProbe.querySelectorAll('tbody tr');
-      var heights=[];
-      for(var i=0;i<probeRows.length;i++){heights.push(probeRows[i].getBoundingClientRect().height);}
-      document.body.removeChild(probe);
+      // Pages are filled on an off-screen copy of one printed page - A4 less
+      // the 10mm margins, footer in the flow - and every page is checked
+      // there before it is kept. The old row-height sum left out the
+      // banner's bottom margin and the footer line, and Windows display
+      // scaling makes rows measure shorter on screen than they print (at
+      // 125% a row came out 1.4px short), so pages took too many rows and
+      // every printed sheet pushed its last row and footer onto a page of
+      // their own. Zooming the copy by 1/devicePixelRatio lays it out one CSS
+      // pixel to one device pixel, the way the page prints; RESERVE absorbs
+      // what is left of the screen / print difference.
+      var MM=96/25.4, RESERVE=4*MM;
+      var areaW=(size.w-20)*MM, limit=(size.h-20)*MM-RESERVE;
+      var meas=document.createElement('div');
+      meas.className='sheet measure';
+      meas.style.width=areaW+'px';
+      meas.style.zoom=String(1/(window.devicePixelRatio||1));
+      document.body.appendChild(meas);
+      var scale=meas.getBoundingClientRect().width/areaW||1;
+      function measured(){return meas.getBoundingClientRect().height/scale;}
 
-      var pages=[],current=[],used=headH+detailsH+theadH;
-      for(var j=0;j<heights.length;j++){
-        if(current.length&&used+heights[j]>usable){pages.push(current);current=[];used=headH+theadH;}
-        current.push(j);used+=heights[j];
+      // Row heights from one pass over the whole grid give each page a first
+      // guess; the guess is then corrected against the real page.
+      var n=srcRows.length, rowH=[];
+      var allBody=fillSheet(meas,1,range(0,n),false);
+      for(var r=0;r<n;r++){rowH.push(allBody.rows[r].getBoundingClientRect().height/scale);}
+      fillSheet(meas,0,[],false);
+      var base0=measured();
+      fillSheet(meas,1,[],false);
+      var base1=measured();
+
+      var pages=[],start=0;
+      while(start<n){
+        var pageNo=pages.length,k=0,used=pageNo===0?base0:base1;
+        while(start+k<n&&(k===0||used+rowH[start+k]<=limit)){used+=rowH[start+k];k++;}
+        var mBody=fillSheet(meas,pageNo,range(start,k),false);
+        // Too tall: hand rows on to the next page (a page always keeps one).
+        while(k>1&&measured()>limit){mBody.removeChild(mBody.lastElementChild);k--;}
+        // Room left: take further rows while they still fit.
+        while(start+k<n){
+          mBody.appendChild(srcRows[start+k].cloneNode(true));
+          if(measured()>limit){mBody.removeChild(mBody.lastElementChild);break;}
+          k++;
+        }
+        pages.push(range(start,k));
+        start+=k;
       }
-      if(current.length)pages.push(current);
       if(!pages.length)pages.push([]);
-
-      pages.forEach(function(indexes,pageNo){
-        var sheet=document.createElement('div');sheet.className='sheet';
-        sheet.appendChild(head.cloneNode(true));
-        // A statement's detail block belongs to the first page only; the pages
-        // after it carry the company banner and the schedule's own headings.
-        if(details&&pageNo===0)sheet.appendChild(details.cloneNode(true));
-        var t=table.cloneNode(true);
-        var body=t.querySelector('tbody');body.innerHTML='';
-        indexes.forEach(function(i){body.appendChild(srcRows[i].cloneNode(true));});
-        sheet.appendChild(t);
-        var foot=document.createElement('div');foot.className='sheet-foot';
-        foot.textContent='Page '+(pageNo+1)+' of '+pages.length;
-        sheet.appendChild(foot);
-        sheets.appendChild(sheet);
-      });
 
       // The Credits / Debits / Balance block belongs under the last page's
       // table; if it no longer fits there it gets a continuation page.
+      var lastNo=pages.length-1, summaryPage=false;
       if(summary){
-        var last=sheets.lastElementChild;
-        var foot=last.querySelector('.sheet-foot');
-        last.insertBefore(summary.cloneNode(true),foot);
-        if(last.scrollHeight>last.clientHeight){
-          last.removeChild(last.querySelector('table.report-summary'));
-          var extra=document.createElement('div');extra.className='sheet';
-          extra.appendChild(head.cloneNode(true));
-          extra.appendChild(summary.cloneNode(true));
-          var extraFoot=document.createElement('div');extraFoot.className='sheet-foot';
-          extra.appendChild(extraFoot);
-          sheets.appendChild(extra);
-          // Renumber now that a page was added.
-          var feet=sheets.querySelectorAll('.sheet-foot');
-          for(var f=0;f<feet.length;f++){feet[f].textContent='Page '+(f+1)+' of '+feet.length;}
-        }
+        fillSheet(meas,lastNo,pages[lastNo],true);
+        summaryPage=measured()>limit;
       }
+      document.body.removeChild(meas);
+
+      var count=pages.length+(summaryPage?1:0);
+      pages.forEach(function(indexes,pageNo){
+        var sheet=document.createElement('div');sheet.className='sheet';
+        fillSheet(sheet,pageNo,indexes,!!summary&&!summaryPage&&pageNo===lastNo);
+        sheets.appendChild(sheet);
+      });
+      if(summaryPage){
+        var extra=document.createElement('div');extra.className='sheet';
+        fillSheet(extra,count-1,null,true);
+        sheets.appendChild(extra);
+      }
+      var feet=sheets.querySelectorAll('.sheet-foot');
+      for(var f=0;f<feet.length;f++){feet[f].textContent='Page '+(f+1)+' of '+feet.length;}
 
       sheetEls=sheets.querySelectorAll('.sheet');
       total=sheetEls.length;
