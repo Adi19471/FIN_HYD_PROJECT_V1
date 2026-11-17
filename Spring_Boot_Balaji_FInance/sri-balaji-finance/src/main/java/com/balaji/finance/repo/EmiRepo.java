@@ -132,15 +132,17 @@ public interface EmiRepo extends JpaRepository<EMI, Integer> {
 			    ) AS paidInstallments,
 
 
-			    COALESCE(
-			         (
-			           SELECT SUM(e4.totalAmount - e4.paidAmount)
-                       FROM EMI e4
-                       WHERE e4.businessMember = bm
-                        AND  e4.status IN ('PENDING', 'PARTIAL')
-                      ),
-			        0
-			    ) AS dueAmount,
+			     COALESCE(
+		            SUM(
+		                CASE
+		                    WHEN e.status IN ('PENDING', 'PARTIAL')
+		                    THEN e.totalAmount - e.paidAmount
+		                    ELSE 0
+		                END
+		            ),
+		            0
+		        ) AS dueAmount,
+
 
 			    (
 			        SELECT COUNT(e5.emiId)
