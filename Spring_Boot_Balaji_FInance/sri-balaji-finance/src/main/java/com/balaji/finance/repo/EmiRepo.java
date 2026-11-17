@@ -259,7 +259,8 @@ public interface EmiRepo extends JpaRepository<EMI, Integer> {
 			        ),
 			        0
 			    ) AS dueAmount,
-
+			    
+			
 			   customer.mobile AS customerMobile,
 			   TRIM(CONCAT(COALESCE(partner.firstName, ''), ' ', COALESCE(partner.lastName, ''))) AS partnerName,
 
@@ -402,7 +403,7 @@ public interface EmiRepo extends JpaRepository<EMI, Integer> {
 		    FROM EMI e
 		    JOIN e.businessMember bm
 		    WHERE e.dueDate BETWEEN :fromDate AND :toDate
-		      AND bm.loanStatus = 'ACTIVE'
+		      AND  bm.endDate >= :toDate
 		    GROUP BY bm.loanType
 		    """)
 		List<TargetCollections> getTargetCollectionOfActiveLoans(
@@ -417,7 +418,7 @@ public interface EmiRepo extends JpaRepository<EMI, Integer> {
 		    FROM EMI e
 		    JOIN e.businessMember bm
 		    WHERE e.dueDate BETWEEN :fromDate AND :toDate
-		      AND bm.loanStatus = 'COMPLETED'
+		      AND bm.endDate <= :toDate
 		    GROUP BY bm.loanType
 		    """)
 		List<TargetCollections> getTargetCollectionOfMaturedLoans(

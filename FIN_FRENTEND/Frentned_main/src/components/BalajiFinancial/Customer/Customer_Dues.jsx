@@ -52,7 +52,7 @@ const Customer_Dues = () => {
     async (query = "") => {
       setLoadingSearch(true);
       try {
-        const res = await axios.get(`${API_BASE}/PersonalInfo/autocomplete`, {
+        const res = await axios.get(`${API_BASE}/PersonalInfo/personInfoAutoCompleteByCategory/CUSTOMER`, {
           headers,
           params: { q: query.trim() },
         });
