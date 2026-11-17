@@ -86,8 +86,8 @@ public class GroupBusinessDetailsService {
 			paidInterestForPartnerList = cashBookRepo.getInstallmentsPaidAganistEveryPartnerDaterange(
 					Arrays.asList("DF INTEREST", "MF INTEREST"), new ArrayList<>(personIdItsDetail.keySet()), from, to);
 
-			dueAmountForPartnerList = emiRepo
-					.getDueAmountOfEveryPartnerDateRange(new ArrayList<>(personIdItsDetail.keySet()), from, to);
+			dueAmountForPartnerList = 
+					emiRepo.getDueAmountOfEveryPartner(new ArrayList<>(personIdItsDetail.keySet()));
 
 		} else {
 

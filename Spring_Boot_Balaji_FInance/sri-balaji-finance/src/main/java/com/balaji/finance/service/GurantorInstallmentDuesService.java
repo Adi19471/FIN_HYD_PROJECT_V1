@@ -66,7 +66,7 @@ public class GurantorInstallmentDuesService {
 					projection.getNoOfInstallmentsPending() != null ? projection.getNoOfInstallmentsPending().intValue()
 							: 0);
 
-			response.setBalanceAmount(projection.getDueAmount() != null ? projection.getDueAmount() : BigDecimal.ZERO);
+			response.setBalanceAmount(projection.getBalanceAmount() != null ? projection.getBalanceAmount() : BigDecimal.ZERO);
 
 			response.setInstallmentDue(projection.getDueAmount() != null ? projection.getDueAmount() : BigDecimal.ZERO);
 

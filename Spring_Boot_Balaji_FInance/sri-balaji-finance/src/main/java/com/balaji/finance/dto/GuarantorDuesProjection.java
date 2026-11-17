@@ -26,6 +26,8 @@ public interface GuarantorDuesProjection {
 
 	Long getNoOfInstallmentsPending();
 
+	BigDecimal getBalanceAmount();
+	
 	BigDecimal getDueAmount();
 
 	String getCustomerMobile();

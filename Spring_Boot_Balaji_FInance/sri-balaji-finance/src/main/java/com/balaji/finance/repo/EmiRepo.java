@@ -85,6 +85,7 @@ public interface EmiRepo extends JpaRepository<EMI, Integer> {
 			JOIN e.businessMember bm
 
 			WHERE bm.partnerId.personalInfoId IN :personalInfoIds
+			AND e.dueDate <= CURRENT_DATE
 
 			GROUP BY bm.partnerId.personalInfoId
 			""")
@@ -133,15 +134,15 @@ public interface EmiRepo extends JpaRepository<EMI, Integer> {
 
 
 			     COALESCE(
-		            SUM(
-		                CASE
-		                    WHEN e.status IN ('PENDING', 'PARTIAL')
-		                    THEN e.totalAmount - e.paidAmount
-		                    ELSE 0
-		                END
-		            ),
-		            0
-		        ) AS dueAmount,
+			           SUM(
+			               CASE
+			                   WHEN e.status IN ('PENDING', 'PARTIAL')
+			                   THEN e.totalAmount - e.paidAmount
+			                   ELSE 0
+			               END
+			           ),
+			           0
+			       ) AS dueAmount,
 
 
 			    (
@@ -258,9 +259,22 @@ public interface EmiRepo extends JpaRepository<EMI, Integer> {
 			            END
 			        ),
 			        0
+			    ) AS balanceAmount,
+
+			    COALESCE(
+			        (
+			            SELECT SUM(
+			                e6.totalAmount - COALESCE(e6.paidAmount, 0)
+			            )
+			            FROM EMI e6
+			            WHERE e6.businessMember = bm
+			              AND e6.status IN ('PENDING', 'PARTIAL')
+			              AND e6.dueDate <= CURRENT_DATE
+			        ),
+			        0
 			    ) AS dueAmount,
-			    
-			
+
+
 			   customer.mobile AS customerMobile,
 			   TRIM(CONCAT(COALESCE(partner.firstName, ''), ' ', COALESCE(partner.lastName, ''))) AS partnerName,
 
@@ -279,8 +293,8 @@ public interface EmiRepo extends JpaRepository<EMI, Integer> {
 			LEFT JOIN bm.guarantor1 guarantor
 			LEFT JOIN bm.customerId customer
 			LEFT JOIN bm.partnerId partner
-			
-			
+
+
 			WHERE guarantor.personalInfoId = :personInfoId
 			  AND (:activeLoans = false OR bm.loanStatus = 'ACTIVE')
 
@@ -308,8 +322,19 @@ public interface EmiRepo extends JpaRepository<EMI, Integer> {
 	@Query("""
 			SELECT
 			    bm.businessMemberId AS loanId,
-			    TRIM(CONCAT(COALESCE(customer.firstName, ''), ' ', COALESCE(customer.lastName, ''))) AS customerName,
-			    TRIM(CONCAT(COALESCE(guarantor.firstName, ''), ' ', COALESCE(guarantor.lastName, ''))) AS guarantorName,
+
+			    TRIM(CONCAT(
+			        COALESCE(customer.firstName, ''),
+			        ' ',
+			        COALESCE(customer.lastName, '')
+			    )) AS customerName,
+
+			    TRIM(CONCAT(
+			        COALESCE(guarantor.firstName, ''),
+			        ' ',
+			        COALESCE(guarantor.lastName, '')
+			    )) AS guarantorName,
+
 			    bm.startDate AS startDate,
 			    bm.endDate AS endDate,
 			    bm.amount AS loanAmount,
@@ -349,10 +374,28 @@ public interface EmiRepo extends JpaRepository<EMI, Integer> {
 			            END
 			        ),
 			        0
+			    ) AS balanceAmount,
+
+			    COALESCE(
+			        (
+			            SELECT SUM(
+			                e6.totalAmount - COALESCE(e6.paidAmount, 0)
+			            )
+			            FROM EMI e6
+			            WHERE e6.businessMember = bm
+			              AND e6.status IN ('PENDING', 'PARTIAL')
+			              AND e6.dueDate <= CURRENT_DATE
+			        ),
+			        0
 			    ) AS dueAmount,
 
-			   customer.mobile AS customerMobile,
-			   TRIM(CONCAT(COALESCE(partner.firstName, ''), ' ', COALESCE(partner.lastName, ''))) AS partnerName,
+			    customer.mobile AS customerMobile,
+
+			    TRIM(CONCAT(
+			        COALESCE(partner.firstName, ''),
+			        ' ',
+			        COALESCE(partner.lastName, '')
+			    )) AS partnerName,
 
 			    MIN(
 			        CASE
@@ -365,11 +408,13 @@ public interface EmiRepo extends JpaRepository<EMI, Integer> {
 			    bm.loanType AS loanType
 
 			FROM EMI e
+
 			JOIN e.businessMember bm
+
 			LEFT JOIN bm.guarantor1 guarantor
 			LEFT JOIN bm.customerId customer
 			LEFT JOIN bm.partnerId partner
-			
+
 			WHERE (
 			    :activeLoans = false
 			    OR bm.loanStatus = 'ACTIVE'
@@ -377,54 +422,49 @@ public interface EmiRepo extends JpaRepository<EMI, Integer> {
 
 			GROUP BY
 			    bm.businessMemberId,
-			    bm.customerId.firstName,
-			    bm.customerId.lastName,
-			    bm.customerId.mobile,
-			    bm.partnerId.firstName,
-			    bm.partnerId.lastName,
-			    bm.guarantor1.firstName,
-			    bm.guarantor1.lastName,
+			    customer.firstName,
+			    customer.lastName,
+			    customer.mobile,
+			    partner.firstName,
+			    partner.lastName,
+			    guarantor.firstName,
+			    guarantor.lastName,
 			    bm.startDate,
 			    bm.endDate,
 			    bm.amount,
 			    bm.installment,
 			    bm.duration,
 			    bm.loanType,
-			    partner.sequence
+			    bm.sequence
 
 			ORDER BY bm.sequence ASC
-			""")
+						""")
 	List<GuarantorDuesProjection> getInstallmentDuesAllGuarenter(@Param("activeLoans") Boolean activeLoans);
-	
+
 	@Query("""
-		    SELECT
-		        bm.loanType AS loanType,
-		        COALESCE(SUM(e.totalAmount), 0) AS loansDisbursed
-		    FROM EMI e
-		    JOIN e.businessMember bm
-		    WHERE e.dueDate BETWEEN :fromDate AND :toDate
-		      AND  bm.endDate >= :toDate
-		    GROUP BY bm.loanType
-		    """)
-		List<TargetCollections> getTargetCollectionOfActiveLoans(
-		        @Param("fromDate") LocalDateTime fromDate,
-		        @Param("toDate") LocalDateTime toDate
-		);
-	
+			SELECT
+			    bm.loanType AS loanType,
+			    COALESCE(SUM(e.totalAmount), 0) AS loansDisbursed
+			FROM EMI e
+			JOIN e.businessMember bm
+			WHERE e.dueDate BETWEEN :fromDate AND :toDate
+			  AND  bm.endDate >= CURRENT_DATE
+			GROUP BY bm.loanType
+			""")
+	List<TargetCollections> getTargetCollectionOfActiveLoans(@Param("fromDate") LocalDateTime fromDate,
+			@Param("toDate") LocalDateTime toDate);
+
 	@Query("""
-		    SELECT
-		        bm.loanType AS loanType,
-		        COALESCE(SUM(e.totalAmount), 0) AS loansDisbursed
-		    FROM EMI e
-		    JOIN e.businessMember bm
-		    WHERE e.dueDate BETWEEN :fromDate AND :toDate
-		      AND bm.endDate <= :toDate
-		    GROUP BY bm.loanType
-		    """)
-		List<TargetCollections> getTargetCollectionOfMaturedLoans(
-		        @Param("fromDate") LocalDateTime fromDate,
-		        @Param("toDate") LocalDateTime toDate
-		);
-	
-	
+			SELECT
+			    bm.loanType AS loanType,
+			    COALESCE(SUM(e.totalAmount), 0) AS loansDisbursed
+			FROM EMI e
+			JOIN e.businessMember bm
+			WHERE e.dueDate BETWEEN :fromDate AND :toDate
+			  AND bm.endDate <= CURRENT_DATE
+			GROUP BY bm.loanType
+			""")
+	List<TargetCollections> getTargetCollectionOfMaturedLoans(@Param("fromDate") LocalDateTime fromDate,
+			@Param("toDate") LocalDateTime toDate);
+
 }
