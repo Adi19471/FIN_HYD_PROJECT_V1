@@ -19,6 +19,7 @@ import com.balaji.finance.dto.DateWiseCashBookProjection;
 import com.balaji.finance.dto.DateWiseCollectionsProjection;
 import com.balaji.finance.dto.LoanCollectionProjection;
 import com.balaji.finance.dto.LoanCollectionWithOutInterestProjection;
+import com.balaji.finance.dto.LoanPaymentProjection;
 import com.balaji.finance.dto.PaidInstallmentProjection;
 import com.balaji.finance.dto.PartnerCreditSummaryProjection;
 import com.balaji.finance.dto.PartnerPerformanceReport;
@@ -896,4 +897,34 @@ public interface CashBookRepo extends JpaRepository<CashBook, Long> {
 						""", nativeQuery = true)
 	LoanCollectionWithOutInterestProjection getLoanCollectionDataUptoDate(@Param("toDate") LocalDateTime toDate);
 	
+
+	// Business collections report: amount paid per loan BEFORE :fromDate
+	@Query("""
+			SELECT
+			    bm.businessMemberId AS businessMemberId,
+			    SUM(cb.credit) AS paidAmount
+			FROM CashBook cb
+			JOIN cb.businessMember bm
+			WHERE cb.accountMasterCode IN :accountCodes
+			  AND cb.transDate < :fromDate
+			GROUP BY bm.businessMemberId
+			""")
+	List<LoanPaymentProjection> getLoanPaymentsBefore(@Param("accountCodes") List<String> accountCodes,
+			@Param("fromDate") LocalDateTime fromDate);
+
+	// Business collections report: amount paid per loan BETWEEN :fromDate and :toDate
+	@Query("""
+			SELECT
+			    bm.businessMemberId AS businessMemberId,
+			    SUM(cb.credit) AS paidAmount
+			FROM CashBook cb
+			JOIN cb.businessMember bm
+			WHERE cb.accountMasterCode IN :accountCodes
+			  AND cb.transDate >= :fromDate
+			  AND cb.transDate < :toDate
+			GROUP BY bm.businessMemberId
+			""")
+	List<LoanPaymentProjection> getLoanPaymentsBetween(@Param("accountCodes") List<String> accountCodes,
+			@Param("fromDate") LocalDateTime fromDate, @Param("toDate") LocalDateTime toDate);
+
 }

@@ -12,7 +12,7 @@ import com.balaji.finance.dto.GuarantorDuesProjection;
 import com.balaji.finance.dto.InstallmentDueProjection;
 import com.balaji.finance.dto.LoanTypeInterestProjection;
 import com.balaji.finance.dto.PartnerDueAmountProjection;
-import com.balaji.finance.dto.TargetCollections;
+import com.balaji.finance.dto.LoanDueProjection;
 import com.balaji.finance.entity.BusinessMember;
 import com.balaji.finance.entity.EMI;
 
@@ -441,30 +441,19 @@ public interface EmiRepo extends JpaRepository<EMI, Integer> {
 						""")
 	List<GuarantorDuesProjection> getInstallmentDuesAllGuarenter(@Param("activeLoans") Boolean activeLoans);
 
-	@Query("""
-			SELECT
-			    bm.loanType AS loanType,
-			    COALESCE(SUM(e.totalAmount), 0) AS loansDisbursed
-			FROM EMI e
-			JOIN e.businessMember bm
-			WHERE e.dueDate BETWEEN :fromDate AND :toDate
-			  AND  bm.endDate >= CURRENT_DATE
-			GROUP BY bm.loanType
-			""")
-	List<TargetCollections> getTargetCollectionOfActiveLoans(@Param("fromDate") LocalDateTime fromDate,
-			@Param("toDate") LocalDateTime toDate);
 
+	// Business collections report: total EMI amount due per loan before :toDate
 	@Query("""
 			SELECT
+			    bm.businessMemberId AS businessMemberId,
 			    bm.loanType AS loanType,
-			    COALESCE(SUM(e.totalAmount), 0) AS loansDisbursed
+			    bm.endDate AS endDate,
+			    SUM(e.totalAmount) AS dueAmount
 			FROM EMI e
 			JOIN e.businessMember bm
-			WHERE e.dueDate BETWEEN :fromDate AND :toDate
-			  AND bm.endDate <= CURRENT_DATE
-			GROUP BY bm.loanType
+			WHERE e.dueDate < :toDate
+			GROUP BY bm.businessMemberId, bm.loanType, bm.endDate
 			""")
-	List<TargetCollections> getTargetCollectionOfMaturedLoans(@Param("fromDate") LocalDateTime fromDate,
-			@Param("toDate") LocalDateTime toDate);
+	List<LoanDueProjection> getLoanDuesBefore(@Param("toDate") LocalDateTime toDate);
 
 }
