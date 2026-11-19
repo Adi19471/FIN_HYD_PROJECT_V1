@@ -176,6 +176,8 @@ const InstalmentDues = () => {
   // Remarks column the office fills in by hand. renderCell draws the two lines;
   // valueFormatter is what the Word / Excel / printed report reads, so each
   // exported cell carries both figures on one line.
+  const showReceivedColumn = Boolean(appliedFilters?.showReceivedDues);
+
   const columns = [
     { field: "sno", headerName: "S.No", width: 70, align: "center", headerAlign: "center" },
     { field: "loanId", headerName: "Loan ID", width: 118 },
@@ -253,6 +255,23 @@ const InstalmentDues = () => {
           <TwoLine align="right" top={money(params.value)} bottom={dash(paidCount(params.row))} />
         ),
     },
+    // Amount received inside the selected period (currentMonthPaidAmount).
+    // Shown only when the loaded report was run with "Show Received Dues"
+    // ticked; it follows appliedFilters, not the live checkbox, so the columns
+    // always match the rows on screen and the exported file.
+    showReceivedColumn && {
+      field: "currentMonthPaidAmount",
+      headerName: "Received",
+      renderHeader: () => <TwoLineHeader top="Received" bottom="" align="right" />,
+      width: 120,
+      align: "right",
+      headerAlign: "right",
+      valueFormatter: (value) => money(value),
+      renderCell: (params) =>
+        isTotalRow(params.row) ? money(params.value) : (
+          <TwoLine align="right" tone="success.main" top={money(params.value)} bottom="" />
+        ),
+    },
     {
       field: "installmentDue",
       headerName: "Inst. Dues",
@@ -294,7 +313,7 @@ const InstalmentDues = () => {
     // the Word / Excel / printed report as an empty column for the client to
     // fill in by hand, the way the legacy report's Remarks column worked.
     { field: "remarks", headerName: "Remarks", width: 170, sortable: false },
-  ];
+  ].filter(Boolean);
 
   return (
     <Stack spacing={2.5}>
@@ -393,7 +412,11 @@ const InstalmentDues = () => {
         height={580}
         period={reportPeriod}
         reportMeta={reportMeta}
-        totalFields={["amount", "amountPaid", "installmentDue", "lateFee"]}
+        totalFields={
+          showReceivedColumn
+            ? ["amount", "amountPaid", "currentMonthPaidAmount", "installmentDue", "lateFee"]
+            : ["amount", "amountPaid", "installmentDue", "lateFee"]
+        }
         totalLabelCell={{ customerName: "TOTAL" }}
         // Two figures per cell need the taller row and the two-line headings
         // the legacy report used.

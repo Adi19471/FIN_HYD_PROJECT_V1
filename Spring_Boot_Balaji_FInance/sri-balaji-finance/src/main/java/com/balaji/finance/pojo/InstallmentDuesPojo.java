@@ -24,6 +24,8 @@ public class InstallmentDuesPojo {
 	private BigDecimal lateFee;
 	private String remarks;
 
+	private BigDecimal currentMonthPaidAmount;
+
 	public int getSno() {
 		return sno;
 	}
@@ -158,6 +160,14 @@ public class InstallmentDuesPojo {
 
 	public void setLateFee(BigDecimal lateFee) {
 		this.lateFee = lateFee;
+	}
+
+	public BigDecimal getCurrentMonthPaidAmount() {
+		return currentMonthPaidAmount;
+	}
+
+	public void setCurrentMonthPaidAmount(BigDecimal currentMonthPaidAmount) {
+		this.currentMonthPaidAmount = currentMonthPaidAmount;
 	}
 
 }

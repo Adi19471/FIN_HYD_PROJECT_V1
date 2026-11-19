@@ -1,0 +1,39 @@
+package com.balaji.finance.dto;
+
+import java.math.BigDecimal;
+import java.time.LocalDateTime;
+
+public interface ReceivedInstallmentDueProjection {
+
+    String getLoanId();
+
+    String getCustomerName();
+
+    String getCustomerMobile();
+
+    String getPartnerName();
+
+    String getGuarantorName();
+
+    LocalDateTime getStartDate();
+
+    LocalDateTime getEndDate();
+
+    BigDecimal getLoanAmount();
+
+    BigDecimal getInstallmentAmount();
+
+    LocalDateTime getDueDate();
+
+    BigDecimal getPaidAmount();
+
+    Long getPaidInstallments();
+
+    BigDecimal getDueAmount();
+
+    Long getPendingCount();
+
+    Long getTotalNoOfInstallments();
+
+    BigDecimal getCurrentMonthPaidAmount();
+}

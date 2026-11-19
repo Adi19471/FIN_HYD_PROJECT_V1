@@ -409,7 +409,7 @@ const MonthlyFinance = () => {
       const l = res.data;
 
       setFormData({
-        id: l.id,
+        id: null, // real account number is assigned by the server on save
         customerId: null,
         guarantor1: null,
         guarantor2: null,
@@ -531,6 +531,7 @@ const MonthlyFinance = () => {
       setLoading(true); // 🔥 START LOADING
 
 
+      let saved = false;
       try {
         const response = await axios.post(
           `${API_BASE}/BusinessMember/update/${LOAN_TYPE.MONTHLY_FINANCE}`,
@@ -539,6 +540,8 @@ const MonthlyFinance = () => {
         );
 
         successToast(response.data || "Loan updated successfully!");
+
+        saved = true;
 
       } catch (error) {
 
@@ -550,11 +553,15 @@ const MonthlyFinance = () => {
         errorToast(message);
       }
 
+      // On error keep the dialog open with what was typed; nothing was created.
+      if (!saved) return;
+
       handleClose();
       fetchData();
-      console.log("fetchData", fetchData);
     } catch (err) {
       errorToast(err.response?.data?.message || "Save failed");
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -808,7 +815,9 @@ const MonthlyFinance = () => {
 
         <DialogContent dividers sx={{ bgcolor: "var(--surface-2)" }}>
           <Typography variant="subtitle2" color="text.secondary" gutterBottom>
-            {`Account No: ${currentLoanId}`}
+            {isEditMode
+              ? `Account No: ${currentLoanId}`
+              : `Account No: ${currentLoanId || "-"} (assigned on save)`}
           </Typography>
 
           {/* Customer & Dates */}

@@ -93,8 +93,34 @@ public class BusinessMemberService {
 		return generatedId;
 	}
 
-	// Creating Loan Account
+	// Preview of the next account number for the "New Loan" form.
+	// Nothing is written: the loan row and its number are created only on save
+	// (see updateInformation), so opening the form and closing it without
+	// saving no longer leaves an empty loan behind.
 	public BusinessMemberDto createLoanObject(String type) {
+
+		int year = LocalDate.now().getYear();
+
+		String previewId;
+		switch (type) {
+		case "DAILY_FINANCE":
+			previewId = dfNumberService.peekNextDfNumber(year);
+			break;
+		case "MONTHLY_FINANCE":
+			previewId = mfNumberService.peekNextMfNumber(year);
+			break;
+		default:
+			throw new IllegalArgumentException("Unknown type: " + type);
+		}
+
+		BusinessMemberDto businessMemberDto = new BusinessMemberDto();
+		businessMemberDto.setId(previewId);
+
+		return businessMemberDto;
+	}
+
+	// Allocates the real account number and builds the (not yet saved) loan row.
+	private BusinessMember newLoanAccount(String type) {
 
 		int year = LocalDate.now().getYear();
 
@@ -105,16 +131,28 @@ public class BusinessMemberService {
 		businessMember.setSequence(Integer.valueOf(split[1]));
 		businessMember.setYear(year);
 
-		businessMemberRepository.save(businessMember);
-
-		BusinessMemberDto businessMemberDto = new BusinessMemberDto();
-		businessMemberDto.setId(businessMember.getBusinessMemberId());
-
-		return businessMemberDto;
+		return businessMember;
 	}
 
 	@Transactional
 	public String updateInformation(BusinessMemberDto businessMemberDto, String type) {
+
+		// New loan: no id yet. Create the account number and row now, in the same
+		// transaction as the rest of the save, so a failed save leaves nothing.
+		if (businessMemberDto.getId() == null || businessMemberDto.getId().isBlank()) {
+
+			if (businessMemberDto.getCustomerId() == null || businessMemberDto.getCustomerId().isBlank()) {
+				throw new ApiException("Customer is required", HttpStatus.BAD_REQUEST);
+			}
+			if (businessMemberDto.getAmount() == null
+					|| businessMemberDto.getAmount().compareTo(BigDecimal.ZERO) <= 0) {
+				throw new ApiException("Loan amount is required", HttpStatus.BAD_REQUEST);
+			}
+
+			BusinessMember businessMember = newLoanAccount(type);
+			saveBusinessMember(businessMemberDto, businessMember, type);
+			return "New loan " + businessMember.getBusinessMemberId() + " created successfully!";
+		}
 
 		Optional<BusinessMember> businessMemberInDb = businessMemberRepository.findById(businessMemberDto.getId());
 

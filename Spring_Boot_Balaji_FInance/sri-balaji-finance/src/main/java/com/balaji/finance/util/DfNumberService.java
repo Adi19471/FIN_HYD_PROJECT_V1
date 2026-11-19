@@ -26,4 +26,15 @@ public class DfNumberService {
 		// Step 3: Format
 		return String.format("DF%d-%02d", year, sequence);
 	}
+
+	/**
+	 * Read-only preview of the number the next saved loan will most likely get.
+	 * Does not consume the sequence, so opening and cancelling a "New Loan" form
+	 * leaves no gap and no empty row. The real number is assigned on save.
+	 */
+	@Transactional(readOnly = true)
+	public String peekNextDfNumber(int year) {
+		int next = repo.findById(year).map(s -> s.getLastNumber() == null ? 0 : s.getLastNumber()).orElse(0) + 1;
+		return String.format("DF%d-%02d", year, next);
+	}
 }
