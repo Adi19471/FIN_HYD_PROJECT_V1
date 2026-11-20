@@ -288,7 +288,105 @@ public class DailyLoanInstallmentPaymentService {
 			cashBookRepo.save(lateCb);
 		}
 
+		allocatePayment(bm, allEMIs, paidAmount, paymentRefId, transDate);
+
+	}
+
+	@Transactional
+	public void saveDFLoanInstallmentFromQuickCashBook(String loanId, QuickCashBookRow quickRow,
+			LocalDateTime transactionDate) {
+
+		Optional<BusinessMember> opt = businessMemberRepository.findById(loanId);
+
+		if (opt.isEmpty())
+			return;
+
+		BusinessMember bm = opt.get();
+		String currentUser = SecurityContextHolder.getContext().getAuthentication().getName();
+
+		BigDecimal paidAmount = quickRow.getPaidAmount() != null ? quickRow.getPaidAmount() : BigDecimal.ZERO;
+
+		List<EMI> allEMIs = emiRepo.findByBusinessMember(bm);
+		BigDecimal totalRemaining = allEMIs.stream().map(EMI::getRemainingAmount).reduce(BigDecimal.ZERO,
+				BigDecimal::add);
+
+		if (totalRemaining.compareTo(BigDecimal.ZERO) <= 0 && paidAmount.compareTo(BigDecimal.ZERO) > 0) {
+			throw new IllegalArgumentException("Loan is already fully paid. Cannot accept more payment.");
+		}
+
+		if (paidAmount.compareTo(totalRemaining) > 0) {
+			throw new IllegalArgumentException(
+					"trying to paying excess amount , Remaining Balance : " + totalRemaining);
+		}
+
+		// Same reference on the cash book rows and the EMI allocations, as in
+		// saveDFLoanInstallments, so reports can tell when each EMI was paid.
+		String paymentRefId = System.currentTimeMillis() + "-" + UUID.randomUUID();
+
+		if (paidAmount.compareTo(BigDecimal.ZERO) > 0) {
+			
+			AccountMaster accountMaster = accountMasterRepo.findAccountMasterByMasterCodeAndCode("DF LOAN INSTALLMENT", "DF LOAN INSTALLMENT");
+
+
+
+			CashBook cb = new CashBook();
+			cb.setBusinessMember(bm);
+			cb.setCredit(paidAmount);
+			cb.setDebit(BigDecimal.ZERO);
+			
+			cb.setAccountMastertype(accountMaster.getType());
+			cb.setAccountMasterMasterCode(accountMaster.getMasterCode());
+			cb.setAccountMasterCode(accountMaster.getCode());
+			
+			cb.setLineNo(1);
+			cb.setUser(currentUser);
+			cb.setTransDate(transactionDate);
+			cb.setPersonalInfo(bm.getCustomerId());
+			cb.setPaymentRefId(paymentRefId);
+
+			cashBookRepo.save(cb);
+		}
+
+		BigDecimal lateFee = quickRow.getLateFee() != null ? quickRow.getLateFee() : BigDecimal.ZERO;
+		if (lateFee.compareTo(BigDecimal.ZERO) > 0) {
+			
+			AccountMaster accountMaster = accountMasterRepo.findAccountMasterByMasterCodeAndCode("LATE FEE", "DF LATE FEE");
+
+
+			CashBook lateCb = new CashBook();
+			lateCb.setBusinessMember(bm);
+			lateCb.setCredit(lateFee);
+			lateCb.setDebit(BigDecimal.ZERO);
+			
+			lateCb.setAccountMastertype(accountMaster.getType());
+			lateCb.setAccountMasterMasterCode(accountMaster.getMasterCode());
+			lateCb.setAccountMasterCode(accountMaster.getCode());
+			
+			lateCb.setLineNo(2);
+			lateCb.setUser(currentUser);
+			lateCb.setTransDate(transactionDate);
+			lateCb.setPersonalInfo(bm.getCustomerId());
+			lateCb.setPaymentRefId(paymentRefId);
+
+			cashBookRepo.save(lateCb);
+		}
+
+		allocatePayment(bm, allEMIs, paidAmount, paymentRefId, transactionDate);
+
+	}
+
+	/**
+	 * Spreads a payment over the loan's unpaid EMIs, oldest first: records a
+	 * PAYMENT_ALLOCATION per EMI (linked to the cash book by paymentRefId),
+	 * updates each EMI's paid amount / status, and marks the loan COMPLETED once
+	 * every EMI is paid.
+	 */
+	private void allocatePayment(BusinessMember bm, List<EMI> allEMIs, BigDecimal paidAmount, String paymentRefId,
+			LocalDateTime transDate) {
+
 		List<EMI> pendingEMIs = allEMIs.stream().filter(emi -> !emi.getStatus().equalsIgnoreCase("PAID"))
+				.sorted(Comparator.comparing(EMI::getDueDate, Comparator.nullsLast(Comparator.naturalOrder()))
+						.thenComparingInt(EMI::getInstallmentNumber))
 				.collect(Collectors.toList());
 
 		BigDecimal remainingPayment = paidAmount;
@@ -333,122 +431,5 @@ public class DailyLoanInstallmentPaymentService {
 			bm.setLoanStatus(LoanStatus.COMPLETED.toString());
 			businessMemberRepository.save(bm);
 		}
-
-	}
-
-	@Transactional
-	public void saveDFLoanInstallmentFromQuickCashBook(String loanId, QuickCashBookRow quickRow,
-			LocalDateTime transactionDate) {
-
-		Optional<BusinessMember> opt = businessMemberRepository.findById(loanId);
-
-		if (opt.isEmpty())
-			return;
-
-		BusinessMember bm = opt.get();
-		String currentUser = SecurityContextHolder.getContext().getAuthentication().getName();
-
-		BigDecimal paidAmount = quickRow.getPaidAmount() != null ? quickRow.getPaidAmount() : BigDecimal.ZERO;
-
-		List<EMI> allEMIs = emiRepo.findByBusinessMember(bm);
-		BigDecimal totalRemaining = allEMIs.stream().map(EMI::getRemainingAmount).reduce(BigDecimal.ZERO,
-				BigDecimal::add);
-
-		if (totalRemaining.compareTo(BigDecimal.ZERO) <= 0 && paidAmount.compareTo(BigDecimal.ZERO) > 0) {
-			throw new IllegalArgumentException("Loan is already fully paid. Cannot accept more payment.");
-		}
-
-		if (paidAmount.compareTo(totalRemaining) > 0) {
-			throw new IllegalArgumentException(
-					"trying to paying excess amount , Remaining Balance : " + totalRemaining);
-		}
-
-		if (paidAmount.compareTo(BigDecimal.ZERO) > 0) {
-			
-			AccountMaster accountMaster = accountMasterRepo.findAccountMasterByMasterCodeAndCode("DF LOAN INSTALLMENT", "DF LOAN INSTALLMENT");
-
-
-
-			CashBook cb = new CashBook();
-			cb.setBusinessMember(bm);
-			cb.setCredit(paidAmount);
-			cb.setDebit(BigDecimal.ZERO);
-			
-			cb.setAccountMastertype(accountMaster.getType());
-			cb.setAccountMasterMasterCode(accountMaster.getMasterCode());
-			cb.setAccountMasterCode(accountMaster.getCode());
-			
-			cb.setLineNo(1);
-			cb.setUser(currentUser);
-			cb.setTransDate(transactionDate);
-			cb.setPersonalInfo(bm.getCustomerId());
-
-			cashBookRepo.save(cb);
-		}
-
-		BigDecimal lateFee = quickRow.getLateFee() != null ? quickRow.getLateFee() : BigDecimal.ZERO;
-		if (lateFee.compareTo(BigDecimal.ZERO) > 0) {
-			
-			AccountMaster accountMaster = accountMasterRepo.findAccountMasterByMasterCodeAndCode("LATE FEE", "DF LATE FEE");
-
-
-			CashBook lateCb = new CashBook();
-			lateCb.setBusinessMember(bm);
-			lateCb.setCredit(lateFee);
-			lateCb.setDebit(BigDecimal.ZERO);
-			
-			lateCb.setAccountMastertype(accountMaster.getType());
-			lateCb.setAccountMasterMasterCode(accountMaster.getMasterCode());
-			lateCb.setAccountMasterCode(accountMaster.getCode());
-			
-			lateCb.setLineNo(2);
-			lateCb.setUser(currentUser);
-			lateCb.setTransDate(transactionDate);
-			lateCb.setPersonalInfo(bm.getCustomerId());
-
-			cashBookRepo.save(lateCb);
-		}
-
-		List<EMI> pendingEMIs = allEMIs.stream().filter(emi -> !emi.getStatus().equalsIgnoreCase("PAID"))
-				.collect(Collectors.toList());
-
-		BigDecimal remainingPayment = paidAmount;
-		for (EMI emi : pendingEMIs) {
-
-			BigDecimal emiRemaining = emi.getRemainingAmount();
-
-			if (remainingPayment.compareTo(emiRemaining) < 0) {
-				// Partial payment → update paid & remaining
-				emi.setPaidAmount(emi.getPaidAmount().add(remainingPayment));
-				emi.setPaymentDate(transactionDate);
-
-				remainingPayment = BigDecimal.ZERO;
-
-				break; // no more payment left
-
-			} else {
-
-				// Full or excess payment → mark as paid
-				emi.setPaidAmount(emi.getPaidAmount().add(emiRemaining));
-				emi.setPaymentDate(transactionDate);
-				emi.setStatus("PAID");
-
-				remainingPayment = remainingPayment.subtract(emiRemaining);
-
-				// continue to next EMI if excess remains
-			}
-
-			emiRepo.save(emi);
-		}
-
-		// Check if all EMIs are paid → mark BusinessMember as PAID
-		boolean allPaid = pendingEMIs.stream()
-				.allMatch(emi -> emi.getRemainingAmount().compareTo(BigDecimal.ZERO) == 0);
-
-		if (allPaid) {
-			bm.setLoanStatus(LoanStatus.COMPLETED.toString());
-			businessMemberRepository.save(bm);
-		}
-
 	}
 }

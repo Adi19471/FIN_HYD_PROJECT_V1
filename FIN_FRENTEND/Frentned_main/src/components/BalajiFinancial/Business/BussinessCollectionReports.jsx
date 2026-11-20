@@ -25,13 +25,33 @@ const GenerateIcon = actionIcons.generate;
 const money = (value) => Number(value || 0).toLocaleString("en-IN");
 
 const emptyStatus = {
+  targetCollectionsofCurrentMonth: 0,
+  targetCollectionsofPreviousMonths: 0,
   targetCollections: 0,
   receivedCollections: 0,
   balanceCollections: 0,
 };
 
+// The service splits the target into this month's dues and the arrears still
+// open from previous months. An older response with a single
+// targetCollections is read as this month's target. Target Collections is
+// the two added together.
+const normalize = (item) => {
+  const current = Number(item.targetCollectionsofCurrentMonth ?? item.targetCollections ?? 0);
+  const previous = Number(item.targetCollectionsofPreviousMonths ?? 0);
+  return {
+    ...item,
+    targetCollectionsofCurrentMonth: current,
+    targetCollectionsofPreviousMonths: previous,
+    targetCollections: current + previous,
+    receivedCollections: Number(item.receivedCollections ?? 0),
+    balanceCollections: Number(item.balanceCollections ?? 0),
+  };
+};
+
 // The old report prints one block per loan type, DF first, then MF - both
-// always, even when a type has nothing in the period.
+// always, even when a type has nothing in the period (no rows for a type,
+// e.g. no Daily Finance loans yet, shows that block with zeros).
 const LOAN_TYPES = [
   { key: "DAILY_FINANCE", code: "DF", name: "Daily Finance" },
   { key: "MONTHLY_FINANCE", code: "MF", name: "Monthly Finance" },
@@ -44,8 +64,10 @@ const statusKey = (status) => {
 };
 
 const FIGURES = [
-  { field: "targetCollections", label: "Target Collections" },
-  { field: "receivedCollections", label: "Received Collections" },
+  { field: "targetCollectionsofCurrentMonth", label: "Current Month Target" },
+  { field: "targetCollectionsofPreviousMonths", label: "Previous Months Target" },
+  { field: "targetCollections", label: "Target Collections", subtotal: true, labelColor: "primary.main" },
+  { field: "receivedCollections", label: "Received Collections", labelColor: "success.main" },
   { field: "balanceCollections", label: "Collections Balance" },
 ];
 
@@ -67,7 +89,7 @@ const FigureGroup = ({ title, figures }) => (
     <Typography variant="subtitle2" sx={{ fontWeight: 800, mb: 0.5 }}>
       {title} :
     </Typography>
-    {FIGURES.map(({ field, label }) => {
+    {FIGURES.map(({ field, label, subtotal, labelColor }) => {
       const isBalance = field === "balanceCollections";
       return (
         <Stack
@@ -78,7 +100,11 @@ const FigureGroup = ({ title, figures }) => (
           spacing={2}
           sx={{ pl: { xs: 1.5, sm: 4 }, py: 0.4 }}
         >
-          <Typography variant="body2" color="text.secondary">
+          <Typography
+            variant="body2"
+            color={labelColor || "text.secondary"}
+            sx={labelColor ? { fontWeight: 700 } : undefined}
+          >
             {label}
           </Typography>
           <Typography
@@ -88,8 +114,8 @@ const FigureGroup = ({ title, figures }) => (
               flexShrink: 0,
               textAlign: "right",
               fontVariantNumeric: "tabular-nums",
-              fontWeight: isBalance ? 800 : 600,
-              ...(isBalance && { borderTop: "1px solid", borderColor: "text.secondary", pt: 0.4 }),
+              fontWeight: isBalance || subtotal ? 800 : 600,
+              ...((isBalance || subtotal) && { borderTop: "1px solid", borderColor: "text.secondary", pt: 0.4 }),
             }}
           >
             {money(figures[field])}
@@ -182,7 +208,7 @@ const BussinessCollectionReports = () => {
 
     reportData.forEach((item) => {
       if (!result[item.loanType]) result[item.loanType] = {};
-      result[item.loanType][statusKey(item.loanStatus)] = item;
+      result[item.loanType][statusKey(item.loanStatus)] = normalize(item);
     });
 
     return result;
@@ -219,6 +245,8 @@ const BussinessCollectionReports = () => {
 
   const screenExportColumns = [
     { field: "section", headerName: "Particulars", width: 220 },
+    amountColumn("targetCollectionsofCurrentMonth", "Current Month Target"),
+    amountColumn("targetCollectionsofPreviousMonths", "Previous Months Target"),
     amountColumn("targetCollections", "Target Collections"),
     amountColumn("receivedCollections", "Received Collections"),
     amountColumn("balanceCollections", "Collections Balance"),

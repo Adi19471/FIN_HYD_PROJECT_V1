@@ -8,9 +8,9 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
+import com.balaji.finance.dto.BusniessCollectionProjection;
 import com.balaji.finance.dto.GuarantorDuesProjection;
 import com.balaji.finance.dto.InstallmentDueProjection;
-import com.balaji.finance.dto.LoanDueProjection;
 import com.balaji.finance.dto.LoanTypeInterestProjection;
 import com.balaji.finance.dto.PartnerDueAmountProjection;
 import com.balaji.finance.dto.ReceivedInstallmentDueProjection;
@@ -239,7 +239,6 @@ public interface EmiRepo extends JpaRepository<EMI, Integer> {
 		        @Param("toDate") LocalDateTime toDate,
 		        @Param("activeLoans") Boolean activeLoans);
 	
-	
 		@Query("""
 				SELECT
 				    bm.businessMemberId AS loanId,
@@ -273,10 +272,11 @@ public interface EmiRepo extends JpaRepository<EMI, Integer> {
 
 				    COALESCE(
 				        (
-				            SELECT SUM(e3.paidAmount)
+				            SELECT SUM(COALESCE(e3.paidAmount, 0))
 				            FROM EMI e3
 				            WHERE e3.businessMember = bm
-				              AND e3.status NOT IN ('PENDING')
+				              AND e3.status IN ('PARTIAL', 'PAID')
+				              AND e3.dueDate < :toDate
 				        ), 0
 				    ) AS paidAmount,
 
@@ -285,7 +285,8 @@ public interface EmiRepo extends JpaRepository<EMI, Integer> {
 				            SELECT COUNT(e4.emiId)
 				            FROM EMI e4
 				            WHERE e4.businessMember = bm
-				              AND e4.status NOT IN ('PENDING', 'PARTIAL')
+				              AND e4.status = 'PAID'
+				              AND e4.dueDate < :toDate
 				        ), 0
 				    ) AS paidInstallments,
 
@@ -293,7 +294,7 @@ public interface EmiRepo extends JpaRepository<EMI, Integer> {
 				        SUM(
 				            CASE
 				                WHEN e.status IN ('PENDING', 'PARTIAL')
-				                THEN e.totalAmount - e.paidAmount
+				                THEN e.totalAmount - COALESCE(e.paidAmount, 0)
 				                ELSE 0
 				            END
 				        ), 0
@@ -304,30 +305,33 @@ public interface EmiRepo extends JpaRepository<EMI, Integer> {
 				        FROM EMI e5
 				        WHERE e5.businessMember = bm
 				          AND e5.status IN ('PENDING', 'PARTIAL')
-				          AND e5.dueDate <= :toDate
+				          AND e5.dueDate < :toDate
 				    ) AS pendingCount,
 
 				    bm.duration AS totalNoOfInstallments,
 
 				    COALESCE(
 				        (
-				            SELECT SUM(e6.paidAmount)
-				            FROM EMI e6
-				            WHERE e6.businessMember = bm
-				              AND e6.status NOT IN ('PENDING')
-				              AND e6.paymentDate >= :fromDate
-				              AND e6.paymentDate <= :toDate
+				            SELECT SUM(COALESCE(c.credit, 0))
+				            FROM CashBook c
+				            WHERE c.businessMember = bm
+				              AND c.transDate >= :fromDate
+				              AND c.transDate < :toDate
+				              AND c.accountMasterCode IN (
+				                  'DF LOAN INSTALLMENT',
+				                  'MF LOAN INSTALLMENT',
+				                  'MF INTEREST'
+				              )
 				        ), 0
 				    ) AS currentMonthPaidAmount
 
 				FROM EMI e
+
 				JOIN e.businessMember bm
 
 				WHERE bm.businessMemberId LIKE CONCAT(:startsWithString, '%')
 
-				  AND e.dueDate <= :toDate
-
-				  AND e.status NOT IN ('PENDING', 'PARTIAL')
+				  AND e.dueDate < :toDate
 
 				  AND (
 				        (:activeLoans = true AND bm.loanStatus = 'ACTIVE')
@@ -603,19 +607,147 @@ public interface EmiRepo extends JpaRepository<EMI, Integer> {
 						""")
 	List<GuarantorDuesProjection> getInstallmentDuesAllGuarenter(@Param("activeLoans") Boolean activeLoans);
 
+	// ==========================================
+	// Business collections report - target
+	// ==========================================
+	// Unpaid amount of each EMI as it stood on :fromDate, so a report run later
+	// gives the same figures and target - received matches the Installment Dues
+	// screen for the same To date:
+	//   current  = EMIs falling due inside the period
+	//   previous = EMIs due before the period (arrears)
+	// "Paid before :fromDate" = PAYMENT_ALLOCATION rows whose cash book entry
+	// (by PAYMENT_REF_ID) is dated before :fromDate. EMIs paid through a path that
+	// wrote no allocation (older / quick cash book DF payments) fall back to
+	// paidAmount when their paymentDate is before :fromDate.
+	// ACTIVE  = no end date, or the loan ends on/after the period end
+	// MATURED = the loan ended before the period end
+	// :toDate is exclusive (the day after the report's To date, 00:00).
 
-	// Business collections report: total EMI amount due per loan before :toDate
 	@Query("""
-			SELECT
-			    bm.businessMemberId AS businessMemberId,
-			    bm.loanType AS loanType,
-			    bm.endDate AS endDate,
-			    SUM(e.totalAmount) AS dueAmount
-			FROM EMI e
-			JOIN e.businessMember bm
-			WHERE e.dueDate < :toDate
-			GROUP BY bm.businessMemberId, bm.loanType, bm.endDate
-			""")
-	List<LoanDueProjection> getLoanDuesBefore(@Param("toDate") LocalDateTime toDate);
+		    SELECT
+		        bm.loanType AS loanType,
+		        COALESCE(SUM(
+		            e.totalAmount - CASE
+		                WHEN EXISTS (SELECT 1 FROM PaymentAllocation p2 WHERE p2.emi = e)
+		                THEN COALESCE((
+		                    SELECT SUM(pa.allocatedAmount)
+		                    FROM PaymentAllocation pa
+		                    WHERE pa.emi = e
+		                      AND EXISTS (
+		                          SELECT 1
+		                          FROM CashBook c
+		                          WHERE c.paymentRefId = pa.paymentRefId
+		                            AND c.transDate < :fromDate
+		                      )
+		                ), 0)
+		                WHEN e.paymentDate < :fromDate THEN COALESCE(e.paidAmount, 0)
+		                ELSE 0
+		            END
+		        ), 0) AS amount
+		    FROM EMI e
+		    JOIN e.businessMember bm
+		    WHERE e.dueDate >= :fromDate
+		      AND e.dueDate < :toDate
+		      AND bm.endDate < :toDate
+		    GROUP BY bm.loanType
+		""")
+	List<BusniessCollectionProjection> getTargetCollectionsOfMaturedLoans(@Param("fromDate") LocalDateTime fromDate,
+			@Param("toDate") LocalDateTime toDate);
 
+	@Query("""
+		    SELECT
+		        bm.loanType AS loanType,
+		        COALESCE(SUM(
+		            e.totalAmount - CASE
+		                WHEN EXISTS (SELECT 1 FROM PaymentAllocation p2 WHERE p2.emi = e)
+		                THEN COALESCE((
+		                    SELECT SUM(pa.allocatedAmount)
+		                    FROM PaymentAllocation pa
+		                    WHERE pa.emi = e
+		                      AND EXISTS (
+		                          SELECT 1
+		                          FROM CashBook c
+		                          WHERE c.paymentRefId = pa.paymentRefId
+		                            AND c.transDate < :fromDate
+		                      )
+		                ), 0)
+		                WHEN e.paymentDate < :fromDate THEN COALESCE(e.paidAmount, 0)
+		                ELSE 0
+		            END
+		        ), 0) AS amount
+		    FROM EMI e
+		    JOIN e.businessMember bm
+		    WHERE e.dueDate < :fromDate
+		      AND bm.endDate < :toDate
+		    GROUP BY bm.loanType
+		""")
+	List<BusniessCollectionProjection> getPreviousPendingCollectionsOfMaturedLoans(@Param("fromDate") LocalDateTime fromDate,
+			@Param("toDate") LocalDateTime toDate);
+
+	@Query("""
+		    SELECT
+		        bm.loanType AS loanType,
+		        COALESCE(SUM(
+		            e.totalAmount - CASE
+		                WHEN EXISTS (SELECT 1 FROM PaymentAllocation p2 WHERE p2.emi = e)
+		                THEN COALESCE((
+		                    SELECT SUM(pa.allocatedAmount)
+		                    FROM PaymentAllocation pa
+		                    WHERE pa.emi = e
+		                      AND EXISTS (
+		                          SELECT 1
+		                          FROM CashBook c
+		                          WHERE c.paymentRefId = pa.paymentRefId
+		                            AND c.transDate < :fromDate
+		                      )
+		                ), 0)
+		                WHEN e.paymentDate < :fromDate THEN COALESCE(e.paidAmount, 0)
+		                ELSE 0
+		            END
+		        ), 0) AS amount
+		    FROM EMI e
+		    JOIN e.businessMember bm
+		    WHERE e.dueDate >= :fromDate
+		      AND e.dueDate < :toDate
+		      AND (
+		          bm.endDate IS NULL
+		          OR bm.endDate >= :toDate
+		      )
+		    GROUP BY bm.loanType
+		""")
+	List<BusniessCollectionProjection> getTargetCollectionsOfActiveLoans(@Param("fromDate") LocalDateTime fromDate,
+			@Param("toDate") LocalDateTime toDate);
+
+	@Query("""
+		    SELECT
+		        bm.loanType AS loanType,
+		        COALESCE(SUM(
+		            e.totalAmount - CASE
+		                WHEN EXISTS (SELECT 1 FROM PaymentAllocation p2 WHERE p2.emi = e)
+		                THEN COALESCE((
+		                    SELECT SUM(pa.allocatedAmount)
+		                    FROM PaymentAllocation pa
+		                    WHERE pa.emi = e
+		                      AND EXISTS (
+		                          SELECT 1
+		                          FROM CashBook c
+		                          WHERE c.paymentRefId = pa.paymentRefId
+		                            AND c.transDate < :fromDate
+		                      )
+		                ), 0)
+		                WHEN e.paymentDate < :fromDate THEN COALESCE(e.paidAmount, 0)
+		                ELSE 0
+		            END
+		        ), 0) AS amount
+		    FROM EMI e
+		    JOIN e.businessMember bm
+		    WHERE e.dueDate < :fromDate
+		      AND (
+		          bm.endDate IS NULL
+		          OR bm.endDate >= :toDate
+		      )
+		    GROUP BY bm.loanType
+		""")
+	List<BusniessCollectionProjection> getPreviousPendingCollectionsOfActiveLoans(@Param("fromDate") LocalDateTime fromDate,
+			@Param("toDate") LocalDateTime toDate);
 }

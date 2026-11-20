@@ -24,6 +24,7 @@ import org.springframework.stereotype.Service;
 
 import com.balaji.finance.dto.DateWiseCashBookProjection;
 import com.balaji.finance.dto.DateWiseCollectionsProjection;
+import com.balaji.finance.dto.ReceiptsLedgerProjection;
 import com.balaji.finance.dto.SummaryByParticularsProjection;
 import com.balaji.finance.entity.BusinessMember;
 import com.balaji.finance.entity.CashBook;
@@ -626,97 +627,41 @@ public class CashBookService {
 
 	public List<ReceiptsLedgerPojo> getReceiptsLedger(LocalDate fromDate, LocalDate toDate) {
 
-		List<CashBook> reportRows;
-
-		if (fromDate == null && toDate == null) {
-
-			reportRows = cashBookRepo.findByDateRangeAndBusinessNotNull();
-
-		} else {
-
-			LocalDateTime from = fromDate.atStartOfDay();
-			LocalDateTime to = toDate.atTime(23, 59, 59);
-
-			reportRows = cashBookRepo.findByDateRangeAndBusinessNotNull(from, to);
-		}
-
-		List<CashBook> allReceiptRows = cashBookRepo.findByDateRangeAndBusinessNotNull();
-
-		Map<String, List<CashBook>> paymentGroups = reportRows.stream().collect(Collectors.groupingBy(c -> {
-			String paymentRefId = c.getPaymentRefId();
-
-			if (paymentRefId != null && !paymentRefId.trim().isEmpty()) {
-				return paymentRefId.trim();
-			}
-
-			return "CASHBOOK_" + c.getCashBookId();
-		}, LinkedHashMap::new, Collectors.toList()));
-
-		Map<String, List<CashBook>> memberCashBooks = allReceiptRows.stream().filter(c -> c.getBusinessMember() != null)
-				.collect(Collectors.groupingBy(c -> c.getBusinessMember().getBusinessMemberId()));
+		// No dates = the whole ledger
+		LocalDateTime from = fromDate != null ? fromDate.atStartOfDay() : LocalDateTime.of(1900, 1, 1, 0, 0);
+		LocalDateTime to = toDate != null ? toDate.atTime(23, 59, 59) : LocalDateTime.of(9999, 12, 31, 23, 59, 59);
 
 		List<ReceiptsLedgerPojo> result = new ArrayList<>();
 
 		int sno = 1;
 
-		for (Map.Entry<String, List<CashBook>> entry : paymentGroups.entrySet()) {
+		for (ReceiptsLedgerProjection row : cashBookRepo.getReceiptsLedger(from, to)) {
 
-			List<CashBook> paymentRows = entry.getValue();
+			BigDecimal currentPaymentAmount = zeroIfNull(row.getAmountPaid());
+			BigDecimal totalPaid = zeroIfNull(row.getTotalPaid());
 
-			if (paymentRows == null || paymentRows.isEmpty()) {
-				continue;
-			}
+			BigDecimal totalPayable = zeroIfNull(row.getLoanAmount()).add(zeroIfNull(row.getInterest()));
+			BigDecimal balance = totalPayable.subtract(totalPaid).max(BigDecimal.ZERO);
 
-			CashBook firstRow = paymentRows.get(0);
-
-			BusinessMember businessMember = firstRow.getBusinessMember();
-
-			if (businessMember == null) {
-				continue;
-			}
-
-			String businessMemberId = businessMember.getBusinessMemberId();
-
-			LocalDateTime transactionDate = firstRow.getTransDate();
-
-			BigDecimal currentPaymentAmount = paymentRows.stream().map(CashBook::getCredit).filter(Objects::nonNull)
-					.reduce(BigDecimal.ZERO, BigDecimal::add);
-
-			List<CashBook> memberPayments = memberCashBooks.getOrDefault(businessMemberId, Collections.emptyList());
-
-			BigDecimal totalPaid = memberPayments.stream().filter(c -> c.getTransDate() != null)
-					.filter(c -> !c.getTransDate().isAfter(transactionDate)).map(CashBook::getCredit)
-					.filter(Objects::nonNull).reduce(BigDecimal.ZERO, BigDecimal::add);
-
-			BigDecimal totalPayable = businessMember.getAmount().add(businessMember.getInterest());
-			BigDecimal balance = totalPayable.subtract(totalPaid);
-
-			if (balance.compareTo(BigDecimal.ZERO) < 0) {
-				balance = BigDecimal.ZERO;
-			}
-
-			BigDecimal installmentAmount = businessMember.getInstallment();
+			BigDecimal installmentAmount = row.getInstallment();
 
 			int paidInstallments = 0;
 
 			if (installmentAmount != null && installmentAmount.compareTo(BigDecimal.ZERO) > 0) {
-
 				paidInstallments = totalPaid.divide(installmentAmount, 0, RoundingMode.FLOOR).intValue();
 			}
 
-			int totalInstallments = businessMember.getDuration();
+			int totalInstallments = row.getDuration() != null ? row.getDuration() : 0;
 			int pendingInstallments = Math.max(totalInstallments - paidInstallments, 0);
 
 			ReceiptsLedgerPojo cashBookLedger = new ReceiptsLedgerPojo();
 
 			cashBookLedger.setSno(sno++);
-			cashBookLedger.setDate(transactionDate != null ? transactionDate.toLocalDate() : null);
-			cashBookLedger.setTransId(firstRow.getCashBookId());
-			cashBookLedger.setLoanId(businessMemberId);
-			cashBookLedger.setLoanDate(
-					businessMember.getStartDate() != null ? businessMember.getStartDate().toLocalDate() : null);
-			cashBookLedger.setCustomerName(
-					firstRow.getPersonalInfo() != null ? PersonNames.fullName(firstRow.getPersonalInfo()) : null);
+			cashBookLedger.setDate(row.getTransDate() != null ? row.getTransDate().toLocalDate() : null);
+			cashBookLedger.setTransId(row.getTransId());
+			cashBookLedger.setLoanId(row.getLoanId());
+			cashBookLedger.setLoanDate(row.getLoanDate() != null ? row.getLoanDate().toLocalDate() : null);
+			cashBookLedger.setCustomerName(PersonNames.fullName(row.getFirstName(), row.getLastName()));
 			cashBookLedger.setAmountPaid(currentPaymentAmount);
 			cashBookLedger.setLateFee(BigDecimal.ZERO);
 			cashBookLedger.setTotal(currentPaymentAmount);
@@ -724,12 +669,15 @@ public class CashBookService {
 			cashBookLedger.setBalance(balance);
 			cashBookLedger.setCurrentInstallmentNumber(paidInstallments);
 			cashBookLedger.setBalanceInstallmentNumber(pendingInstallments);
-			// cashBookLedger.setParticulars(firstRow.getAccountMasterCode());
 
 			result.add(cashBookLedger);
 		}
 
 		return result;
+	}
+
+	private static BigDecimal zeroIfNull(BigDecimal value) {
+		return value == null ? BigDecimal.ZERO : value;
 	}
 
 }

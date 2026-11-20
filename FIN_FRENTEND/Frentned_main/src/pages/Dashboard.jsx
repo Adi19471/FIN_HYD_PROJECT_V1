@@ -221,7 +221,14 @@ export default function Dashboard() {
       const dailySummary = dailySummaryRes.status === "fulfilled" ? dailySummaryRes.value.data || {} : {};
       const dailyRows = Array.isArray(dailySummary.cashBookSumaryViewPojoList) ? dailySummary.cashBookSumaryViewPojoList : [];
 
-      const target = collectionRows.reduce((sum, item) => sum + Number(item.targetCollections || 0), 0);
+      // Target = this month's dues plus the arrears carried from previous months.
+      const target = collectionRows.reduce(
+        (sum, item) =>
+          sum +
+          Number(item.targetCollectionsofCurrentMonth ?? item.targetCollections ?? 0) +
+          Number(item.targetCollectionsofPreviousMonths || 0),
+        0
+      );
       const received = collectionRows.reduce((sum, item) => sum + Number(item.receivedCollections || 0), 0);
       const balance = collectionRows.reduce((sum, item) => sum + Number(item.balanceCollections || 0), 0);
       const todayCollection = dailyRows.reduce(

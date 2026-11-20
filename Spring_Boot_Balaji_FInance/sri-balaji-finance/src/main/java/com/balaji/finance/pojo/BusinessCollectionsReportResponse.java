@@ -6,7 +6,8 @@ public class BusinessCollectionsReportResponse {
 
 	private String loanType;
 	private String loanStatus;
-	private BigDecimal targetCollections;
+	private BigDecimal targetCollectionsofCurrentMonth;
+	private BigDecimal targetCollectionsofPreviousMonths;
 	private BigDecimal receivedCollections;
 	private BigDecimal balanceCollections;
 
@@ -26,12 +27,20 @@ public class BusinessCollectionsReportResponse {
 		this.loanStatus = loanStatus;
 	}
 
-	public BigDecimal getTargetCollections() {
-		return targetCollections;
+	public BigDecimal getTargetCollectionsofCurrentMonth() {
+		return targetCollectionsofCurrentMonth;
 	}
 
-	public void setTargetCollections(BigDecimal targetCollections) {
-		this.targetCollections = targetCollections;
+	public void setTargetCollectionsofCurrentMonth(BigDecimal targetCollectionsofCurrentMonth) {
+		this.targetCollectionsofCurrentMonth = targetCollectionsofCurrentMonth;
+	}
+
+	public BigDecimal getTargetCollectionsofPreviousMonths() {
+		return targetCollectionsofPreviousMonths;
+	}
+
+	public void setTargetCollectionsofPreviousMonths(BigDecimal targetCollectionsofPreviousMonths) {
+		this.targetCollectionsofPreviousMonths = targetCollectionsofPreviousMonths;
 	}
 
 	public BigDecimal getReceivedCollections() {

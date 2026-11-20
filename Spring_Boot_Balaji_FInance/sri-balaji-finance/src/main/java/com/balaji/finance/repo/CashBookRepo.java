@@ -12,6 +12,7 @@ import org.springframework.data.repository.query.Param;
 
 import com.balaji.finance.dto.BalanceSheetProjection;
 import com.balaji.finance.dto.BusinessOverviewProjection;
+import com.balaji.finance.dto.BusniessCollectionProjection;
 import com.balaji.finance.dto.CashBookProjection;
 import com.balaji.finance.dto.CustomerReportProjection;
 import com.balaji.finance.dto.CustomerTransactionsProjection;
@@ -19,10 +20,10 @@ import com.balaji.finance.dto.DateWiseCashBookProjection;
 import com.balaji.finance.dto.DateWiseCollectionsProjection;
 import com.balaji.finance.dto.LoanCollectionProjection;
 import com.balaji.finance.dto.LoanCollectionWithOutInterestProjection;
-import com.balaji.finance.dto.LoanPaymentProjection;
 import com.balaji.finance.dto.PaidInstallmentProjection;
 import com.balaji.finance.dto.PartnerCreditSummaryProjection;
 import com.balaji.finance.dto.PartnerPerformanceReport;
+import com.balaji.finance.dto.ReceiptsLedgerProjection;
 import com.balaji.finance.dto.RevenueExpenseProfitProjection;
 import com.balaji.finance.dto.RevenueExpenseProjection;
 import com.balaji.finance.dto.SumOfCreditsAndDebitsProjection;
@@ -232,6 +233,54 @@ public interface CashBookRepo extends JpaRepository<CashBook, Long> {
 			  AND c.accountMasterCode IN ('DF LOAN INSTALLMENT','MF LOAN INSTALLMENT','MF INTEREST')
 			""")
 	List<CashBook> findByDateRangeAndBusinessNotNull();
+
+	// Receipt Ledger in one query: each payment in the range (cash book rows of a
+	// loan sharing a PAYMENT_REF_ID, or a single row without one) with the loan's
+	// running total paid up to that payment's date, computed with a window
+	// function over the loan's installment rows instead of loading them all.
+	@Query(value = """
+			WITH in_range AS (
+			    SELECT c.cash_book_id, c.business_member_id, c.credit, c.trans_date, c.personal_info_id,
+			           COALESCE(NULLIF(TRIM(c.payment_ref_id), ''), CONCAT('CASHBOOK_', c.cash_book_id)) AS payment_group
+			    FROM cash_book c
+			    WHERE c.business_member_id IS NOT NULL
+			      AND c.account_master_code IN ('DF LOAN INSTALLMENT', 'MF LOAN INSTALLMENT', 'MF INTEREST')
+			      AND c.trans_date BETWEEN :fromDate AND :toDate
+			),
+			payments AS (
+			    SELECT MIN(cash_book_id) AS first_id, SUM(credit) AS amount
+			    FROM in_range
+			    GROUP BY payment_group
+			),
+			running AS (
+			    SELECT c.cash_book_id,
+			           SUM(c.credit) OVER (PARTITION BY c.business_member_id ORDER BY c.trans_date) AS total_paid
+			    FROM cash_book c
+			    WHERE c.account_master_code IN ('DF LOAN INSTALLMENT', 'MF LOAN INSTALLMENT', 'MF INTEREST')
+			      AND c.trans_date IS NOT NULL
+			      AND c.business_member_id IN (SELECT DISTINCT business_member_id FROM in_range)
+			)
+			SELECT f.cash_book_id AS transId,
+			       f.trans_date AS transDate,
+			       f.business_member_id AS loanId,
+			       bm.start_date AS loanDate,
+			       pi.first_name AS firstName,
+			       pi.last_name AS lastName,
+			       p.amount AS amountPaid,
+			       r.total_paid AS totalPaid,
+			       bm.amount AS loanAmount,
+			       bm.interest AS interest,
+			       bm.installment AS installment,
+			       bm.duration AS duration
+			FROM payments p
+			JOIN in_range f ON f.cash_book_id = p.first_id
+			JOIN running r ON r.cash_book_id = f.cash_book_id
+			JOIN business_member bm ON bm.business_member_id = f.business_member_id
+			LEFT JOIN personal_info pi ON pi.personal_info_id = f.personal_info_id
+			ORDER BY f.cash_book_id
+			""", nativeQuery = true)
+	List<ReceiptsLedgerProjection> getReceiptsLedger(@Param("fromDate") LocalDateTime fromDate,
+			@Param("toDate") LocalDateTime toDate);
 
 	@Query("""
 			SELECT COALESCE(SUM(c.credit),0) FROM CashBook c
@@ -896,35 +945,59 @@ public interface CashBookRepo extends JpaRepository<CashBook, Long> {
 			)
 						""", nativeQuery = true)
 	LoanCollectionWithOutInterestProjection getLoanCollectionDataUptoDate(@Param("toDate") LocalDateTime toDate);
+
 	
-
-	// Business collections report: amount paid per loan BEFORE :fromDate
+	
+	
+	
+	
+	// Business collections report - received: installment receipts in the period
+	// (:toDate exclusive), same ACTIVE / MATURED split as the target queries in EmiRepo.
 	@Query("""
-			SELECT
-			    bm.businessMemberId AS businessMemberId,
-			    SUM(cb.credit) AS paidAmount
-			FROM CashBook cb
-			JOIN cb.businessMember bm
-			WHERE cb.accountMasterCode IN :accountCodes
-			  AND cb.transDate < :fromDate
-			GROUP BY bm.businessMemberId
-			""")
-	List<LoanPaymentProjection> getLoanPaymentsBefore(@Param("accountCodes") List<String> accountCodes,
-			@Param("fromDate") LocalDateTime fromDate);
+		    SELECT
+		        bm.loanType AS loanType,
+		        COALESCE(SUM(c.credit), 0) AS amount
+		    FROM CashBook c
+		    JOIN c.businessMember bm
+		    WHERE c.transDate >= :fromDate
+		      AND c.transDate < :toDate
+		      AND c.accountMasterCode IN (
+		          'DF LOAN INSTALLMENT',
+		          'MF LOAN INSTALLMENT',
+		          'MF INTEREST'
+		      )
+		      AND (
+		          bm.endDate IS NULL
+		          OR bm.endDate >= :toDate
+		      )
+		    GROUP BY bm.loanType
+		""")
+		List<BusniessCollectionProjection> getReceivedCollectionsOfActiveLoans(
+		        @Param("fromDate") LocalDateTime fromDate,
+		        @Param("toDate") LocalDateTime toDate
+		);
 
-	// Business collections report: amount paid per loan BETWEEN :fromDate and :toDate
-	@Query("""
-			SELECT
-			    bm.businessMemberId AS businessMemberId,
-			    SUM(cb.credit) AS paidAmount
-			FROM CashBook cb
-			JOIN cb.businessMember bm
-			WHERE cb.accountMasterCode IN :accountCodes
-			  AND cb.transDate >= :fromDate
-			  AND cb.transDate < :toDate
-			GROUP BY bm.businessMemberId
-			""")
-	List<LoanPaymentProjection> getLoanPaymentsBetween(@Param("accountCodes") List<String> accountCodes,
-			@Param("fromDate") LocalDateTime fromDate, @Param("toDate") LocalDateTime toDate);
+
+
+		@Query("""
+		    SELECT
+		        bm.loanType AS loanType,
+		        COALESCE(SUM(c.credit), 0) AS amount
+		    FROM CashBook c
+		    JOIN c.businessMember bm
+		    WHERE c.transDate >= :fromDate
+		      AND c.transDate < :toDate
+		      AND c.accountMasterCode IN (
+		          'DF LOAN INSTALLMENT',
+		          'MF LOAN INSTALLMENT',
+		          'MF INTEREST'
+		      )
+		      AND bm.endDate < :toDate
+		    GROUP BY bm.loanType
+		""")
+		List<BusniessCollectionProjection> getReceivedCollectionsOfMaturedLoans(
+		        @Param("fromDate") LocalDateTime fromDate,
+		        @Param("toDate") LocalDateTime toDate
+		);
 
 }
