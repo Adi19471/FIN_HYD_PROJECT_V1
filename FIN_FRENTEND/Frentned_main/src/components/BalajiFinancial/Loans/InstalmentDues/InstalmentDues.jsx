@@ -81,9 +81,10 @@ const TwoLineHeader = ({ top, bottom, align = "left" }) => (
   </Box>
 );
 
+// Monthly first: it is the book the office works most.
 const loanTypes = [
-  { label: "Daily Finance", value: "DAILY_FINANCE" },
   { label: "Monthly Finance", value: "MONTHLY_FINANCE" },
+  { label: "Daily Finance", value: "DAILY_FINANCE" },
 ];
 
 const orderByOptions = [
@@ -98,7 +99,7 @@ const labelOf = (options, value) => options.find((option) => option.value === va
 
 const InstalmentDues = () => {
   const [data, setData] = useState([]);
-  const [loanType, setLoanType] = useState("");
+  const [loanType, setLoanType] = useState("MONTHLY_FINANCE");
   const { fromDate, toDate, setFromDate, setToDate, toDateMin, toDateMax } = useDateRange("", "");
   const [loading, setLoading] = useState(false);
   const [orderBy, setOrderBy] = useState("INSTALLMENT_DATE");
@@ -187,6 +188,10 @@ const InstalmentDues = () => {
       renderHeader: () => <TwoLineHeader top="Customer Name" bottom="Mobile Number" />,
       minWidth: 210,
       flex: 1.2,
+      exportParts: [
+        { header: "Customer Name", value: (row) => row.customerName || "-" },
+        { header: "Mobile Number", value: (row) => row.customerMobile || "-", nowrap: true },
+      ],
       valueFormatter: (value, row) =>
         isTotalRow(row) ? value : [value, row.customerMobile].filter(Boolean).join(" / ") || "-",
       renderCell: (params) =>
@@ -201,6 +206,10 @@ const InstalmentDues = () => {
       minWidth: 210,
       flex: 1.2,
       sortable: false,
+      exportParts: [
+        { header: "Guarantor Name", value: (row) => row.guarentorName || "-" },
+        { header: "Partner Name", value: (row) => row.partnerName || "-" },
+      ],
       // Both names are POJO fields the dues API does not fill in yet - the
       // column is wired to them so it lights up the moment the service does.
       valueFormatter: (value, row) =>
@@ -215,6 +224,12 @@ const InstalmentDues = () => {
       headerName: "Start/End Date",
       renderHeader: () => <TwoLineHeader top="Start/End" bottom="Date" />,
       width: 128,
+      // Print: start date over end date, each kept on one line.
+      // Excel / CSV: separate Start Date and End Date columns.
+      exportParts: [
+        { header: "Start Date", value: (row) => row.startDate || "-", nowrap: true },
+        { header: "End Date", value: (row) => row.endDate || "-", nowrap: true },
+      ],
       valueFormatter: (value, row) =>
         isTotalRow(row) ? "" : [value, row.endDate].filter(Boolean).join(" / ") || "-",
       renderCell: (params) =>
@@ -229,6 +244,17 @@ const InstalmentDues = () => {
       width: 140,
       align: "right",
       headerAlign: "right",
+      exportParts: [
+        { header: "Amount", value: (row) => row.amount, format: (value) => money(value), nowrap: true },
+        // Excel / CSV only; in print the duration shares the line below.
+        { header: "Duration", value: (row) => row.totalNoOfInstallments, print: false },
+        {
+          header: "Installment Amount",
+          value: (row) => row.installmentAmount,
+          format: (_, row) => `${dash(row.totalNoOfInstallments)}/${money(row.installmentAmount)}`,
+          nowrap: true,
+        },
+      ],
       valueFormatter: (value, row) =>
         isTotalRow(row)
           ? money(value)
@@ -248,6 +274,10 @@ const InstalmentDues = () => {
       width: 120,
       align: "right",
       headerAlign: "right",
+      exportParts: [
+        { header: "Inst. Paid", value: (row) => row.amountPaid, format: (value) => money(value), nowrap: true },
+        { header: "Inst. Paid (No.)", value: (row) => paidCount(row), format: (value) => dash(value) },
+      ],
       valueFormatter: (value, row) =>
         isTotalRow(row) ? money(value) : `${money(value)} (${dash(paidCount(row))})`,
       renderCell: (params) =>
@@ -278,6 +308,10 @@ const InstalmentDues = () => {
       width: 120,
       align: "right",
       headerAlign: "right",
+      exportParts: [
+        { header: "Inst. Dues", value: (row) => row.installmentDue, format: (value) => money(value), nowrap: true },
+        { header: "Inst. Pending (No.)", value: (row) => row.noOfInstallmentsPending, format: (value) => dash(value) },
+      ],
       valueFormatter: (value, row) =>
         isTotalRow(row) ? money(value) : `${money(value)} (${dash(row.noOfInstallmentsPending)})`,
       renderCell: (params) =>
@@ -296,6 +330,14 @@ const InstalmentDues = () => {
       width: 108,
       align: "right",
       headerAlign: "right",
+      exportParts: [
+        { header: "Late Fee", value: (row) => row.lateFee, format: (value) => money(value), nowrap: true },
+        {
+          header: "Delayed Days",
+          value: (row) => row.delayedDays ?? "",
+          format: (value) => (value === "" ? "" : `(${value})`),
+        },
+      ],
       valueFormatter: (value, row) =>
         isTotalRow(row) || row.delayedDays == null
           ? money(value)

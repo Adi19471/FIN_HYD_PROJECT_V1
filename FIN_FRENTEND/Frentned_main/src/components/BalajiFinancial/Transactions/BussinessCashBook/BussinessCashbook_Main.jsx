@@ -7,9 +7,10 @@ import { ScreenHeader } from "src/components/ui";
 import BussinessDailyFinance from "./Bussiness_DailyFinance/BussinessDailyFinance";
 import BussinessMonthlyFinance from "./Bussiness_MonthlyFinance/Bussiness_MonthlyFinance";
 
+// Monthly first. Panels are picked by key below, so the order is display only.
 const tabs = [
-  { label: "Daily", icon: <TodayRounded fontSize="small" /> },
-  { label: "Monthly", icon: <CalendarMonthRounded fontSize="small" /> },
+  { key: "MONTHLY", label: "Monthly", icon: <CalendarMonthRounded fontSize="small" /> },
+  { key: "DAILY", label: "Daily", icon: <TodayRounded fontSize="small" /> },
 ];
 
 const BussinessCashbook_Main = () => {
@@ -30,8 +31,8 @@ const BussinessCashbook_Main = () => {
         </Tabs>
       </ScreenHeader>
 
-      {value === 0 && <BussinessDailyFinance />}
-      {value === 1 && <BussinessMonthlyFinance />}
+      {tabs[value]?.key === "DAILY" && <BussinessDailyFinance />}
+      {tabs[value]?.key === "MONTHLY" && <BussinessMonthlyFinance />}
     </div>
   );
 };

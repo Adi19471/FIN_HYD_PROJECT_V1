@@ -151,13 +151,29 @@ const TwoLine = ({ top, bottom, align = "left" }) => (
  * values; `top` and `bottom` build the two printed lines. The TOTAL row has no
  * companion figure, so it renders the top line only.
  */
-const pairedColumn = ({ field, headerName, width, align = "right", top, bottom }) => ({
+const pairedColumn = ({ field, headerName, width, align = "right", top, bottom, parts }) => ({
   field,
   headerName,
   width,
   align,
   headerAlign: align,
   sortable: false,
+  // Print / Word / PDF: `top` on the first line, `bottom` on the line under it
+  // (dates kept whole). Excel / CSV: one column per entry in `parts`, so the
+  // two dates or figures land in their own cells instead of "a / b". Parts
+  // between the first and last are Excel/CSV only.
+  exportParts: parts?.length
+    ? parts.map((part, index) => ({
+        header: part.header,
+        value: part.value,
+        nowrap: true,
+        ...(index === 0
+          ? { format: (_, row) => top(row) }
+          : index === parts.length - 1
+            ? { format: (_, row) => bottom(row) }
+            : { print: false }),
+      }))
+    : undefined,
   // the two stacked lines, so the column is fitted to the longer one (useFitColumns)
   fitLines: (row) => [top(row), bottom(row)],
   // PDF / Word / CSV / print read valueGetter, so they get "top / bottom" in
@@ -263,6 +279,10 @@ const Installment_Dues = () => {
       align: "left",
       top: (row) => formatDate(row.startDate),
       bottom: (row) => formatDate(row.endDate),
+      parts: [
+        { header: "Start Date", value: (row) => formatDate(row.startDate) },
+        { header: "End Date", value: (row) => formatDate(row.endDate) },
+      ],
     }),
     pairedColumn({
       field: "amount",
@@ -270,6 +290,11 @@ const Installment_Dues = () => {
       width: 150,
       top: (row) => formatAmount(row.amount),
       bottom: (row) => `${row.duration || 0}/${formatAmount(row.installmentAmount)}`,
+      parts: [
+        { header: "Amount", value: (row) => row.amount },
+        { header: "Duration", value: (row) => row.duration || 0 },
+        { header: "Installment Amount", value: (row) => row.installmentAmount },
+      ],
     }),
     pairedColumn({
       field: "totalAmountPaid",
@@ -277,6 +302,10 @@ const Installment_Dues = () => {
       width: 130,
       top: (row) => formatAmount(row.totalAmountPaid),
       bottom: (row) => `${row.noOfInstallmentsPaid || 0}`,
+      parts: [
+        { header: "Inst. Paid", value: (row) => row.totalAmountPaid },
+        { header: "Inst. Paid (No.)", value: (row) => row.noOfInstallmentsPaid || 0 },
+      ],
     }),
     pairedColumn({
       field: "balanceAmount",
@@ -284,6 +313,10 @@ const Installment_Dues = () => {
       width: 130,
       top: (row) => formatAmount(row.balanceAmount),
       bottom: (row) => `${row.noOfInstallmentsPending || 0}`,
+      parts: [
+        { header: "Inst. Bal", value: (row) => row.balanceAmount },
+        { header: "Inst. Pending (No.)", value: (row) => row.noOfInstallmentsPending || 0 },
+      ],
     }),
     pairedColumn({
       field: "installmentDue",
@@ -291,6 +324,10 @@ const Installment_Dues = () => {
       width: 130,
       top: (row) => formatAmount(row.installmentDue),
       bottom: (row) => `${duesCount(row)}`,
+      parts: [
+        { header: "Inst. Dues", value: (row) => row.installmentDue },
+        { header: "Inst. Dues (No.)", value: (row) => duesCount(row) },
+      ],
     }),
     pairedColumn({
       field: "dueDate",
@@ -299,6 +336,10 @@ const Installment_Dues = () => {
       align: "left",
       top: (row) => formatDate(row.dueDate),
       bottom: (row) => `(${daysOverdue(row.dueDate)})`,
+      parts: [
+        { header: "Due Date", value: (row) => formatDate(row.dueDate) },
+        { header: "Days Overdue", value: (row) => daysOverdue(row.dueDate) },
+      ],
     }),
     {
       field: "lateFee",

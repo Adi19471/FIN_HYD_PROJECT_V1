@@ -188,15 +188,21 @@ const Partner_Settelment = () => {
       headerName: "Start Date",
       flex: 1,
       minWidth: 130,
+      nowrap: true,
       renderCell: ({ row }) => (isTotalRow(row) ? "" : formatDate(row.startDate)),
+      // Print / PDF / Word / Excel / CSV read valueFormatter, not renderCell -
+      // without it they printed the raw "2026-01-13".
+      valueFormatter: (value, row) => (isTotalRow(row) ? "" : formatDate(value)),
     },
     {
       field: "endDate",
       headerName: "End Date",
       flex: 1,
       minWidth: 130,
+      nowrap: true,
       // The TOTAL row lends this cell to its caption.
       renderCell: ({ row }) => (isTotalRow(row) ? row.endDate : formatDate(row.endDate)),
+      valueFormatter: (value, row) => (isTotalRow(row) ? value : formatDate(value)),
     },
     {
       field: "amount",

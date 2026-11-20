@@ -20,8 +20,8 @@ import { AppDatePicker, DataTable, ScreenHeader, useDateRange, DROPDOWN_MENU_PRO
 const RefreshRounded = actionIcons.refresh;
 
 const loanTypes = [
-  { label: "Daily Finance", value: "DAILY_FINANCE" },
   { label: "Monthly Finance", value: "MONTHLY_FINANCE" },
+  { label: "Daily Finance", value: "DAILY_FINANCE" },
 ];
 
 const money = (value) => Number(value || 0).toLocaleString("en-IN");

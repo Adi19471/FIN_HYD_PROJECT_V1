@@ -19,8 +19,8 @@ const FinanceTabs = () => {
   const tabs = useMemo(
     () =>
       [
-        { label: "Daily", icon: <TodayRounded fontSize="small" />, component: DailyFinance, permissionCodes: ["LOAN_MAIN_VIEW", "DAILY_FINANCE_VIEW"] },
         { label: "Monthly", icon: <CalendarMonthRounded fontSize="small" />, component: MonthlyFinance, permissionCodes: ["LOAN_MAIN_VIEW", "MONTHLY_FINANCE_VIEW"] },
+        { label: "Daily", icon: <TodayRounded fontSize="small" />, component: DailyFinance, permissionCodes: ["LOAN_MAIN_VIEW", "DAILY_FINANCE_VIEW"] },
       ].filter((tab) => hasPermissionAccess(user, tab.permissionCodes)),
     [user]
   );

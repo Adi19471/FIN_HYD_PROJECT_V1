@@ -81,7 +81,71 @@ const fieldOf = (column) => (typeof column === "string" ? column : column.field)
 
 // Raw, unformatted cell content - Excel keeps numbers numeric so the columns
 // right-align and stay summable instead of landing as left-aligned text.
-export const rawValue = (row, column) => row[fieldOf(column)];
+export const rawValue = (row, column) =>
+  typeof column !== "string" && typeof column.exportRaw === "function"
+    ? column.exportRaw(row)
+    : row[fieldOf(column)];
+
+/**
+ * Stacked cells. A column may declare `exportParts: [{ header, value(row) }]`
+ * for a cell that shows two figures one over the other (Start over End date,
+ * Customer over Mobile). Print, Word and PDF then put each part on its own line
+ * inside the one cell, and Excel / CSV give each part its own column with its
+ * own heading, so the sheet stays sortable and the dates are not glued
+ * together with a "/". Columns without exportParts are untouched.
+ */
+const partsOf = (column) =>
+  typeof column !== "string" && Array.isArray(column.exportParts) && column.exportParts.length
+    ? column.exportParts
+    : null;
+
+const partText = (value) => {
+  if (value == null) return "";
+  return typeof value === "number" ? String(roundAmount(value)) : String(value);
+};
+
+// The printed lines of a stacked cell as [{ text, nowrap }], or null for an
+// ordinary column. A part marked `print: false` is an Excel/CSV-only column
+// (its figure is already inside another part's `format`). A total row prints
+// the column's own formatted value on a single line.
+const stackedLines = (row, column) => {
+  const parts = partsOf(column);
+  if (!parts || isTotalRow(row)) return null;
+  return parts
+    .filter((part) => part.print !== false)
+    .map((part) => {
+      let text = "";
+      try {
+        text = part.format ? String(part.format(part.value(row), row) ?? "") : partText(part.value(row));
+      } catch {
+        text = "";
+      }
+      return { text, nowrap: Boolean(part.nowrap) };
+    });
+};
+
+// Excel / CSV: one sheet column per part.
+const flattenParts = (cols) =>
+  cols.flatMap((column) => {
+    const parts = partsOf(column);
+    if (!parts) return [column];
+    return parts.map((part, index) => ({
+      field: `${column.field}__part${index}`,
+      headerName: part.header,
+      width: part.width || Math.max(90, Math.round(columnWidth(column) / parts.length)),
+      align: part.align,
+      exportRaw: (row) => {
+        // The total row has no per-part figures except the column's own sum,
+        // which goes under the first part.
+        if (isTotalRow(row)) return index === 0 ? row[column.field] ?? "" : "";
+        try {
+          return part.value(row) ?? "";
+        } catch {
+          return "";
+        }
+      },
+    }));
+  });
 
 // Resolve a single cell's display value, honouring valueGetter / valueFormatter.
 export const cellValue = (row, column) => {
@@ -255,10 +319,15 @@ const escapeHtml = (value) =>
     .replace(/>/g, "&gt;");
 
 const matrix = (rows, columns) =>
-  rows.map((row) => columns.map((column) => String(cellValue(row, column) ?? "")));
+  rows.map((row) =>
+    columns.map((column) => {
+      const lines = stackedLines(row, column);
+      return lines ? lines.map((line) => line.text).join("\n") : String(cellValue(row, column) ?? "");
+    })
+  );
 
 export const exportExcel = (rows = [], columns = [], fileName = "report", options = {}) => {
-  const cols = exportableColumns(columns);
+  const cols = flattenParts(exportableColumns(columns));
   if (!rows.length) return;
   const lines = metaLines(options);
 
@@ -335,7 +404,7 @@ export const exportExcel = (rows = [], columns = [], fileName = "report", option
 };
 
 export const exportCsv = (rows = [], columns = [], fileName = "report", options = {}) => {
-  const cols = exportableColumns(columns);
+  const cols = flattenParts(exportableColumns(columns));
   if (!rows.length) return;
   const escape = (value) => {
     const str = String(value ?? "");
@@ -431,7 +500,9 @@ export const exportPdf = (rows = [], columns = [], fileName = "report", options 
     // clipping it against the first data row.
     headStyles: {
       fillColor: palette.headerBgRgb,
-      textColor: 255,
+      // Same ink as the printed header. A fixed white vanished on a light
+      // header band (the default light-blue one).
+      textColor: palette.headerTextRgb,
       fontStyle: "bold",
       halign: "center",
       valign: "middle",
@@ -568,10 +639,21 @@ const reportHtml = (rows, cols, fileName, options) => {
   const body = rows
     .map((row) => {
       const cells = cols
-        .map(
-          (column, index) =>
-            `<td style="text-align:${aligns[index]}">${escapeHtml(cellValue(row, column))}</td>`
-        )
+        .map((column, index) => {
+          const lines = stackedLines(row, column);
+          // A part flagged nowrap (a date) never breaks at its hyphens.
+          const content = lines
+            ? lines
+                .map((line, i) => {
+                  const cls = [i > 0 ? "sub" : "", line.nowrap ? "nw" : ""].filter(Boolean).join(" ");
+                  return cls ? `<span class="${cls}">${escapeHtml(line.text)}</span>` : escapeHtml(line.text);
+                })
+                .join("<br>")
+            : typeof column !== "string" && column.nowrap && !isTotalRow(row)
+              ? `<span class="nw">${escapeHtml(cellValue(row, column))}</span>`
+              : escapeHtml(cellValue(row, column));
+          return `<td style="text-align:${aligns[index]}">${content}</td>`;
+        })
         .join("");
       return `<tr${isTotalRow(row) ? ' class="total-row"' : ""}>${cells}</tr>`;
     })
@@ -642,6 +724,10 @@ const tableStyles = (orientation, columnCount = 0) => {
   /* Cells may wrap, but only between words - break-word on its own was
      splitting names mid-letter ("guaranto r") once a column got narrow. */
   td{overflow-wrap:break-word;word-break:normal;hyphens:none}
+  /* Stacked cells: the second line is the companion figure, set a shade
+     lighter; .nw keeps a date whole instead of breaking at its hyphens. */
+  td .sub{color:#475569}
+  td .nw{white-space:nowrap}
   /* A heading never breaks inside a word: it wraps at spaces or not at all,
      which is what keeps "Installment Pending" readable in a tight column. */
   th{background:${palette.headerBg};color:${palette.headerText};border-bottom:2px solid ${palette.headerRule};

@@ -243,18 +243,40 @@ export const readTableHeadTokens = (tokens = readThemeTokens()) => {
     divider: tokens.divider,
     rule: tokens.primaryDark,
   };
-  if (typeof document === "undefined") return accentBand;
+  if (typeof document === "undefined" || !document.body) return accentBand;
 
-  // Only an explicit choice is written inline on <html>.
-  const inline = document.documentElement.style;
-  const read = (cssVar) => inline.getPropertyValue(cssVar).trim();
-  if (!read(TABLE_HEAD_VARS.bg)) return accentBand;
-
+  // Resolve the band exactly as the on-screen grid paints it. The grid uses
+  // var(--table-head-*) from style.css (accent by default, or what Settings >
+  // Colors > Table header wrote inline), so a hidden probe styled with the same
+  // variables gives the same colours, already as rgb() whatever form the
+  // variable was written in. This used to read only the inline override and
+  // otherwise guess from the accent, so the printed header could differ from
+  // the screen's.
   const band = { ...accentBand };
-  Object.entries(TABLE_HEAD_VARS).forEach(([key, cssVar]) => {
-    const value = read(cssVar);
-    if (value) band[key] = value;
-  });
+  try {
+    const probe = document.createElement("span");
+    probe.setAttribute("aria-hidden", "true");
+    probe.style.cssText = "position:absolute;left:-9999px;top:0;visibility:hidden;border:1px solid;";
+    Object.entries(TABLE_HEAD_VARS).forEach(([key, cssVar]) => {
+      probe.style.setProperty(`--probe-${key}`, `var(${cssVar}, ${accentBand[key]})`);
+    });
+    probe.style.backgroundColor = "var(--probe-bg)";
+    probe.style.color = "var(--probe-fg)";
+    probe.style.borderTopColor = "var(--probe-rule)";
+    probe.style.borderRightColor = "var(--probe-hover)";
+    probe.style.borderBottomColor = "var(--probe-divider)";
+    document.body.appendChild(probe);
+    const computed = getComputedStyle(probe);
+    const usable = (value) => value && value !== "rgba(0, 0, 0, 0)" && value !== "transparent";
+    if (usable(computed.backgroundColor)) band.bg = computed.backgroundColor;
+    if (usable(computed.color)) band.fg = computed.color;
+    if (usable(computed.borderTopColor)) band.rule = computed.borderTopColor;
+    if (usable(computed.borderRightColor)) band.hover = computed.borderRightColor;
+    if (usable(computed.borderBottomColor)) band.divider = computed.borderBottomColor;
+    document.body.removeChild(probe);
+  } catch {
+    return accentBand;
+  }
   return band;
 };
 
