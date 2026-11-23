@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo, useCallback } from "react";
-import { Alert, Autocomplete, Button, CircularProgress, TextField } from "@mui/material";
+import { Alert, Autocomplete, Button, Checkbox, CircularProgress, FormControlLabel, TextField } from "@mui/material";
 import axios from "axios";
 import dayjs from "dayjs";
 import { API_BASE } from "lib/config";
@@ -49,7 +49,11 @@ const Customer_Report = () => {
     dayjs().format("YYYY-MM-DD")
   );
   const [applied, setApplied] = useState(null);
-  const datesValid = Boolean(fromDate && toDate) && !dayjs(toDate).isBefore(dayjs(fromDate), "day");
+  // "All Dates" ticked: every transaction on the account head, the From / To
+  // pickers are ignored (and disabled). Unticked: date-wise, From to To.
+  const [allDates, setAllDates] = useState(false);
+  const datesValid =
+    allDates || (Boolean(fromDate && toDate) && !dayjs(toDate).isBefore(dayjs(fromDate), "day"));
 
   const token = getSession()?.token || getSession("token") || "";
   const headers = useMemo(() => ({ Authorization: `Bearer ${token}` }), [token]);
@@ -88,12 +92,10 @@ const Customer_Report = () => {
     setReportData([]); // Clear immediately to avoid old data flash
 
     try {
-      const res = await axios.get(
-        `${API_BASE}/customerReportController/${encodeURIComponent(accountCode)}/${fromDate}/${toDate}`,
-        { headers }
-      );
+      const base = `${API_BASE}/customerReportController/${encodeURIComponent(accountCode)}`;
+      const res = await axios.get(allDates ? base : `${base}/${fromDate}/${toDate}`, { headers });
       setReportData(Array.isArray(res.data) ? res.data : []);
-      setApplied({ fromDate, toDate });
+      setApplied(allDates ? { allDates: true } : { fromDate, toDate });
     } catch (err) {
       console.error("Report fetch error:", err);
       setError("Failed to load report. Please try again.");
@@ -101,7 +103,7 @@ const Customer_Report = () => {
     } finally {
       setLoadingReport(false);
     }
-  }, [headers, fromDate, toDate, datesValid]);
+  }, [headers, fromDate, toDate, datesValid, allDates]);
 
   useEffect(() => {
     fetchMasterCodes();
@@ -141,14 +143,26 @@ const Customer_Report = () => {
   );
 
   const reportMeta = useMemo(
-    () => (selectedAccount?.label ? [{ label: "Account Head", value: selectedAccount.label }] : []),
-    [selectedAccount]
+    () => [
+      ...(selectedAccount?.label ? [{ label: "Account Head", value: selectedAccount.label }] : []),
+      ...(applied?.allDates ? [{ label: "Customer Report Period", value: "All Dates" }] : []),
+    ],
+    [selectedAccount, applied]
   );
 
   const period = useMemo(
-    () => (applied ? { label: "Customer Report Period", fromDate: applied.fromDate, toDate: applied.toDate } : undefined),
+    () =>
+      applied && !applied.allDates
+        ? { label: "Customer Report Period", fromDate: applied.fromDate, toDate: applied.toDate }
+        : undefined,
     [applied]
   );
+
+  const periodText = !applied
+    ? ""
+    : applied.allDates
+      ? " / All Dates"
+      : ` / ${formatReportDate(applied.fromDate)} to ${formatReportDate(applied.toDate)}`;
 
   return (
     <div className="scr-page">
@@ -188,8 +202,12 @@ const Customer_Report = () => {
               )}
             />
           </div>
+          <FormControlLabel
+            control={<Checkbox checked={allDates} onChange={(event) => setAllDates(event.target.checked)} />}
+            label="All Dates"
+          />
           <div className="scr-toolbar-date">
-            <AppDatePicker label="From" value={fromDate} onChange={setFromDate} />
+            <AppDatePicker label="From" value={fromDate} onChange={setFromDate} disabled={allDates} />
           </div>
           <div className="scr-toolbar-date">
             <AppDatePicker
@@ -198,6 +216,7 @@ const Customer_Report = () => {
               onChange={setToDate}
               minDate={toDateMin}
               maxDate={toDateMax}
+              disabled={allDates}
             />
           </div>
           <Button
@@ -217,7 +236,7 @@ const Customer_Report = () => {
       {selectedAccount ? (
         <DataTable
           title="Customer Report"
-          subtitle={`Account Head: ${selectedAccount.label}${applied ? ` / ${formatReportDate(applied.fromDate)} to ${formatReportDate(applied.toDate)}` : ""}`}
+          subtitle={`Account Head: ${selectedAccount.label}${periodText}`}
           fileName="Customer_Report"
           rows={rows}
           columns={columns}

@@ -59,7 +59,7 @@ const Customer_Dues = () => {
 
         const list = (Array.isArray(res.data) ? res.data : []).map((item) => ({
           id: item.id,
-          label: `${item.id || ""} ${item.firstname || ""} ${item.lastname || ""} - ${item.mobile || "No Mobile"}`,
+          label: `${item.id || ""} ${item.firstname || ""} ${item.lastname || ""}`,
           original: item,
         }));
 

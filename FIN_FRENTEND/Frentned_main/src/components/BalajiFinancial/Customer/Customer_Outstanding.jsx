@@ -31,7 +31,8 @@ const TOTAL_FIELDS = ["noOfLoans", "totalLoansAmount", "totalPaidAmount", "balan
 const TOTAL_LABEL_CELL = { customerName: "TOTAL" };
 
 const CustomerOutstanding = () => {
-  const [selectedDate, setSelectedDate] = useState(dayjs("2026-04-08"));
+  // Opens as on today; the picker still lets the user look at any other date.
+  const [selectedDate, setSelectedDate] = useState(() => dayjs().startOf("day"));
   const [mfChecked, setMfChecked] = useState(true);
   const [dfChecked, setDfChecked] = useState(true);
   const [data, setData] = useState([]);

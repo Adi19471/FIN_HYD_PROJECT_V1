@@ -19,6 +19,17 @@ public class CustomerReportController {
 	@Autowired
 	private CustomerReportService customerReportService;
 
+	// "All Dates": every transaction on the account head, no period filter.
+	@GetMapping("/customerReportController/{accountCode}")
+	public ResponseEntity<List<CustomerReportResponse>> loadCustomerReportAllDates(@PathVariable String accountCode) {
+
+		List<CustomerReportResponse> customerReportOnAccountCode = customerReportService
+				.getCustomerReportOnAccountCode(accountCode, null, null);
+
+		return ResponseEntity.ok().body(customerReportOnAccountCode);
+	}
+
+	// Date-wise: only transactions from fromDate to toDate (both inclusive).
 	@GetMapping("/customerReportController/{accountCode}/{fromDate}/{toDate}")
 	public ResponseEntity<List<CustomerReportResponse>> loadCustomerReport(@PathVariable String accountCode,
 			@PathVariable String fromDate, @PathVariable String toDate) {

@@ -37,19 +37,21 @@ public interface EmiRepo extends JpaRepository<EMI, Integer> {
 			    JOIN e.businessMember bm
 			    WHERE bm.partnerId.personalInfoId IN :personalInfoId
 			      AND e.dueDate BETWEEN :fromDate AND :toDate
+			      AND e.dueDate <= CURRENT_DATE
 			""")
 	BigDecimal getDueAmountOfManagerDateRange(@Param("personalInfoId") List<String> personalInfoId,
 			@Param("fromDate") LocalDateTime from, @Param("toDate") LocalDateTime to);
 
 	@Query("""
-			    SELECT
-			        COALESCE(
-			            SUM(e.totalAmount - COALESCE(e.paidAmount, 0)),
-			            0
-			        ) AS dueAmount
-			    FROM EMI e
-			    JOIN e.businessMember bm
-			    WHERE bm.partnerId.personalInfoId IN :personalInfoId
+			SELECT
+			    COALESCE(
+			        SUM(e.totalAmount - COALESCE(e.paidAmount, 0)),
+			        0
+			    ) AS dueAmount
+			FROM EMI e
+			JOIN e.businessMember bm
+			WHERE bm.partnerId.personalInfoId IN :personalInfoId
+			  AND e.dueDate <= CURRENT_DATE
 			""")
 	BigDecimal getDueAmountOfManager(@Param("personalInfoId") List<String> personalInfoId);
 

@@ -7,6 +7,7 @@ import {
 import { DeleteForever as DeleteIcon } from "@mui/icons-material";
 import { actionIcons, navIcons } from "src/lib/icons";
 import axios from 'axios';
+import dayjs from 'dayjs';
 import { API_BASE } from 'lib/config';
 import { getSession } from 'src/utils/session';
 import { AppDatePicker, EmptyState, ScreenHeader, useScreenExport } from 'src/components/ui';
@@ -15,7 +16,8 @@ const SearchIcon = actionIcons.search;
 const RefreshIcon = actionIcons.refresh;
 
 const DeleteTransactions = () => {
-  const [date, setDate] = useState('2026-01-07');
+  // Opens on today's transactions; the picker still reaches any other day.
+  const [date, setDate] = useState(() => dayjs().format('YYYY-MM-DD'));
   const [showDeleted, setShowDeleted] = useState(false);
   const [search, setSearch] = useState('');
   const [selectedGroups, setSelectedGroups] = useState(new Set());
