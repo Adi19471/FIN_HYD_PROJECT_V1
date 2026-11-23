@@ -33,6 +33,17 @@ pipeline {
                     fingerprint: true
             }
         }
+
+        stage('Copy to Singile-125') {
+            steps {
+                bat '''
+                if not exist "C:\\Adi\\2026\\FIN_HYD_PROJECT_V1\\Singile-125" mkdir "C:\\Adi\\2026\\FIN_HYD_PROJECT_V1\\Singile-125"
+                copy /Y Spring_Boot_Balaji_FInance\\sri-balaji-finance\\target\\*.jar "C:\\Adi\\2026\\FIN_HYD_PROJECT_V1\\Singile-125\\"
+                if exist "C:\\Adi\\2026\\FIN_HYD_PROJECT_V1\\Singile-125\\dist" rmdir /S /Q "C:\\Adi\\2026\\FIN_HYD_PROJECT_V1\\Singile-125\\dist"
+                xcopy /E /I /Y FIN_FRENTEND\\Frentned_main\\dist "C:\\Adi\\2026\\FIN_HYD_PROJECT_V1\\Singile-125\\dist"
+                '''
+            }
+        }
     }
 
     post {
