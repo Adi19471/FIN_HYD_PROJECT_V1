@@ -6,6 +6,7 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -121,7 +122,8 @@ public class GroupBusinessService {
 
 			response.setCapital(capitalAmount);
 
-			response.setPaidAmount(paidAmount);
+			response.setPaidAmount(Optional.ofNullable(paidAmount).orElse(BigDecimal.ZERO)
+					.add(Optional.ofNullable(paidInterest).orElse(BigDecimal.ZERO)));
 
 			response.setBalanceOutStandingWithInterest(
 					disbursedAmountWithInterest.subtract(paidAmount.add(paidInterest)));
