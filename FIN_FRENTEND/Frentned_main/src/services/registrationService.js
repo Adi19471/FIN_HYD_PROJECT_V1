@@ -28,7 +28,13 @@ export const registrationService = {
       name: user.name ?? user.username ?? user.email ?? "-",
       role: user.role || "-",
       permissionIds: normalizePermissionIds(user.permissionIds),
+      branchCodes: Array.isArray(user.branchCodes) ? user.branchCodes : [],
     }));
+  },
+
+  async loadBranches() {
+    const res = await registrationApi.loadBranches();
+    return listFromResponse(res.data, ["data", "branches"]);
   },
 
   async loadPermissions() {
@@ -57,6 +63,8 @@ export const registrationService = {
       password: form.password?.trim() || null,
       role: form.role?.trim() || null,
       permissionIds: normalizePermissionIds(form.permissionIds),
+      // The branches the user may work in (at least one).
+      branchCodes: form.branchCodes || [],
     };
 
     if (form.id && !payload.password) {
@@ -74,6 +82,8 @@ export const registrationService = {
       password: form.password?.trim() || null,
       role: form.role?.trim() || null,
       permissionIds: normalizePermissionIds(form.permissionIds),
+      // The branches the user may work in (at least one).
+      branchCodes: form.branchCodes || [],
     };
 
     if (form.id && !payload.password) {

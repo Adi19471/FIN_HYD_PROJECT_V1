@@ -29,6 +29,7 @@ const SaveIcon = actionIcons.save;
 const AddIcon = actionIcons.add;
 const DeleteIcon = actionIcons.delete;
 import { Autocomplete as MuiAutocomplete } from "@mui/material";
+import { printBoldCss } from "src/components/ui/reportExport";
 
 const blankRow = (accountNo = "") => ({
   id: Date.now() + Math.random(),
@@ -309,6 +310,7 @@ const QuickCashBook = () => {
       body{font-family:Arial;padding:20px;color:#111827} h1{margin:0} p{color:#475569}
       table{width:100%;border-collapse:collapse} th,td{border:1px solid #cbd5e1;padding:8px;font-size:12px;text-align:left}
       th{background:${qcbPalette.headerBg};color:${qcbPalette.headerText}}
+      ${printBoldCss()}
       </style></head><body><h1>${COMPANY_NAME}</h1><p>${COMPANY_ADDRESS}</p><h2>Quick Cash Book - ${dayjs(transactionDate).format("DD-MMM-YYYY")}</h2>${tableHtml()}</body></html>`;
     const blob = new Blob(["\ufeff", html], { type: "application/msword" });
     const url = URL.createObjectURL(blob);
@@ -328,6 +330,7 @@ const QuickCashBook = () => {
       body{font-family:Arial;padding:20px;color:#111827} h1{text-align:center;margin:0} p{text-align:center;color:#475569}
       table{width:100%;border-collapse:collapse} th,td{border:1px solid #cbd5e1;padding:8px;font-size:12px;text-align:left}
       th{background:${qcbPalette.headerBg};color:${qcbPalette.headerText}}
+    ${printBoldCss()}
     </style></head><body><h1>${COMPANY_NAME}</h1><p>${COMPANY_ADDRESS}</p><h2>Quick Cash Book - ${dayjs(transactionDate).format("DD-MMM-YYYY")}</h2>${tableHtml()}</body></html>`);
     printWindow.document.close();
     printWindow.focus();

@@ -7,6 +7,7 @@ import { successToast, errorToast } from "toastify";
 import { API_BASE } from "lib/config";
 import { getSession } from "src/utils/session";
 import { AppDatePicker, DataTable, EmptyState, Fact, FactGrid, SectionCard, StatTile } from "src/components/ui";
+import { printBoldCss } from "src/components/ui/reportExport";
 
 const money = (value) => Number(value || 0).toLocaleString("en-IN");
 const rupees = (value) => `Rs ${money(value)}`;
@@ -124,6 +125,7 @@ export default function BusinessFinancePayment({
       h1{margin:0 0 6px;text-align:center;font-size:22px} p{text-align:center;margin:4px 0 20px;color:#475569}
       table{width:100%;border-collapse:collapse;margin-top:14px} td{padding:10px;border-bottom:1px solid #e5e7eb}
       td:last-child{text-align:right;font-weight:700}.total td{font-size:18px;border-top:2px solid #111827}
+      ${printBoldCss()}
       </style></head><body><div class="box">
       <h1>SRI BALAJI ENTERPRISES</h1><p>Amerpeta, Hyderabad.</p>
       <h2>${heading}</h2><table>

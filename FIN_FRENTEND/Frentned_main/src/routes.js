@@ -80,6 +80,7 @@ const Registraion_creation = lazy(() =>
     "./components/BalajiFinancial/AccountMasterSetup/Registraion_creation"
   )
 );
+const Branch_Master = lazy(() => import("./components/BalajiFinancial/AccountMasterSetup/Branch_Master"));
 
 const LoansMainpage = lazy(() =>
   import(
@@ -224,6 +225,7 @@ const routes = [
   // Account Master Setup
   { path: "/AccountMasterSetup/Account_Master_Setup", element: Account_Master_Setup, title: "Account Master Setup" },
   { path: "/AccountMasterSetup/Registraion_creation", element: Registraion_creation, title: "Registration Creation" },
+  { path: "/AccountMasterSetup/Branch_Master", element: Branch_Master, title: "Branch Master" },
 
 
   // Bussiness views

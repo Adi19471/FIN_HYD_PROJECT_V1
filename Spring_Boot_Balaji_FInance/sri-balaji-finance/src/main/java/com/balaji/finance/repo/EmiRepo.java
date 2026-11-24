@@ -35,7 +35,7 @@ public interface EmiRepo extends JpaRepository<EMI, Integer> {
 			        ) AS dueAmount
 			    FROM EMI e
 			    JOIN e.businessMember bm
-			    WHERE bm.partnerId.personalInfoId IN :personalInfoId
+			    WHERE (:#{T(com.balaji.finance.config.util.BranchContext).filter()} = 'ALL' OR bm.branchCode = :#{T(com.balaji.finance.config.util.BranchContext).filter()}) AND bm.partnerId.personalInfoId IN :personalInfoId
 			      AND e.dueDate BETWEEN :fromDate AND :toDate
 			      AND e.dueDate <= CURRENT_DATE
 			""")
@@ -50,7 +50,7 @@ public interface EmiRepo extends JpaRepository<EMI, Integer> {
 			    ) AS dueAmount
 			FROM EMI e
 			JOIN e.businessMember bm
-			WHERE bm.partnerId.personalInfoId IN :personalInfoId
+			WHERE (:#{T(com.balaji.finance.config.util.BranchContext).filter()} = 'ALL' OR bm.branchCode = :#{T(com.balaji.finance.config.util.BranchContext).filter()}) AND bm.partnerId.personalInfoId IN :personalInfoId
 			  AND e.dueDate <= CURRENT_DATE
 			""")
 	BigDecimal getDueAmountOfManager(@Param("personalInfoId") List<String> personalInfoId);
@@ -67,7 +67,7 @@ public interface EmiRepo extends JpaRepository<EMI, Integer> {
 			      FROM EMI e
 			      JOIN e.businessMember bm
 
-			      WHERE bm.partnerId.personalInfoId IN :personalInfoIds
+			      WHERE (:#{T(com.balaji.finance.config.util.BranchContext).filter()} = 'ALL' OR bm.branchCode = :#{T(com.balaji.finance.config.util.BranchContext).filter()}) AND bm.partnerId.personalInfoId IN :personalInfoIds
 			AND e.dueDate BETWEEN :fromDate AND :toDate
 			      GROUP BY bm.partnerId.personalInfoId
 			      """)
@@ -87,7 +87,7 @@ public interface EmiRepo extends JpaRepository<EMI, Integer> {
 			FROM EMI e
 			JOIN e.businessMember bm
 
-			WHERE bm.partnerId.personalInfoId IN :personalInfoIds
+			WHERE (:#{T(com.balaji.finance.config.util.BranchContext).filter()} = 'ALL' OR bm.branchCode = :#{T(com.balaji.finance.config.util.BranchContext).filter()}) AND bm.partnerId.personalInfoId IN :personalInfoIds
 			AND e.dueDate <= CURRENT_DATE
 
 			GROUP BY bm.partnerId.personalInfoId
@@ -210,7 +210,7 @@ public interface EmiRepo extends JpaRepository<EMI, Integer> {
 		    FROM EMI e
 		    JOIN e.businessMember bm
 
-		    WHERE bm.businessMemberId LIKE CONCAT(:startsWithString, '%')
+		    WHERE (:#{T(com.balaji.finance.config.util.BranchContext).filter()} = 'ALL' OR bm.branchCode = :#{T(com.balaji.finance.config.util.BranchContext).filter()}) AND bm.businessMemberId LIKE CONCAT(:startsWithString, '%')
 		      AND e.dueDate <= :toDate
 		      AND e.status IN ('PENDING', 'PARTIAL')
 		      AND (
@@ -331,7 +331,7 @@ public interface EmiRepo extends JpaRepository<EMI, Integer> {
 
 				JOIN e.businessMember bm
 
-				WHERE bm.businessMemberId LIKE CONCAT(:startsWithString, '%')
+				WHERE (:#{T(com.balaji.finance.config.util.BranchContext).filter()} = 'ALL' OR bm.branchCode = :#{T(com.balaji.finance.config.util.BranchContext).filter()}) AND bm.businessMemberId LIKE CONCAT(:startsWithString, '%')
 
 				  AND e.dueDate < :toDate
 
@@ -376,7 +376,7 @@ public interface EmiRepo extends JpaRepository<EMI, Integer> {
 			        COALESCE(SUM(e.interestAmount), 0) AS interestAmount
 			    FROM EMI e
 			    JOIN e.businessMember bm
-			    WHERE e.dueDate >= :fromDate
+			    WHERE (:#{T(com.balaji.finance.config.util.BranchContext).filter()} = 'ALL' OR bm.branchCode = :#{T(com.balaji.finance.config.util.BranchContext).filter()}) AND e.dueDate >= :fromDate
 			      AND e.dueDate < :toDate
 			    GROUP BY bm.loanType
 			""")
@@ -463,7 +463,7 @@ public interface EmiRepo extends JpaRepository<EMI, Integer> {
 			LEFT JOIN bm.partnerId partner
 
 
-			WHERE guarantor.personalInfoId = :personInfoId
+			WHERE (:#{T(com.balaji.finance.config.util.BranchContext).filter()} = 'ALL' OR bm.branchCode = :#{T(com.balaji.finance.config.util.BranchContext).filter()}) AND guarantor.personalInfoId = :personInfoId
 			  AND (:activeLoans = false OR bm.loanStatus = 'ACTIVE')
 
 			GROUP BY
@@ -583,7 +583,7 @@ public interface EmiRepo extends JpaRepository<EMI, Integer> {
 			LEFT JOIN bm.customerId customer
 			LEFT JOIN bm.partnerId partner
 
-			WHERE (
+			WHERE (:#{T(com.balaji.finance.config.util.BranchContext).filter()} = 'ALL' OR bm.branchCode = :#{T(com.balaji.finance.config.util.BranchContext).filter()}) AND (
 			    :activeLoans = false
 			    OR bm.loanStatus = 'ACTIVE'
 			)
@@ -648,7 +648,7 @@ public interface EmiRepo extends JpaRepository<EMI, Integer> {
 		        ), 0) AS amount
 		    FROM EMI e
 		    JOIN e.businessMember bm
-		    WHERE e.dueDate >= :fromDate
+		    WHERE (:#{T(com.balaji.finance.config.util.BranchContext).filter()} = 'ALL' OR bm.branchCode = :#{T(com.balaji.finance.config.util.BranchContext).filter()}) AND e.dueDate >= :fromDate
 		      AND e.dueDate < :toDate
 		      AND bm.endDate < :toDate
 		    GROUP BY bm.loanType
@@ -679,7 +679,7 @@ public interface EmiRepo extends JpaRepository<EMI, Integer> {
 		        ), 0) AS amount
 		    FROM EMI e
 		    JOIN e.businessMember bm
-		    WHERE e.dueDate < :fromDate
+		    WHERE (:#{T(com.balaji.finance.config.util.BranchContext).filter()} = 'ALL' OR bm.branchCode = :#{T(com.balaji.finance.config.util.BranchContext).filter()}) AND e.dueDate < :fromDate
 		      AND bm.endDate < :toDate
 		    GROUP BY bm.loanType
 		""")
@@ -709,7 +709,7 @@ public interface EmiRepo extends JpaRepository<EMI, Integer> {
 		        ), 0) AS amount
 		    FROM EMI e
 		    JOIN e.businessMember bm
-		    WHERE e.dueDate >= :fromDate
+		    WHERE (:#{T(com.balaji.finance.config.util.BranchContext).filter()} = 'ALL' OR bm.branchCode = :#{T(com.balaji.finance.config.util.BranchContext).filter()}) AND e.dueDate >= :fromDate
 		      AND e.dueDate < :toDate
 		      AND (
 		          bm.endDate IS NULL
@@ -743,7 +743,7 @@ public interface EmiRepo extends JpaRepository<EMI, Integer> {
 		        ), 0) AS amount
 		    FROM EMI e
 		    JOIN e.businessMember bm
-		    WHERE e.dueDate < :fromDate
+		    WHERE (:#{T(com.balaji.finance.config.util.BranchContext).filter()} = 'ALL' OR bm.branchCode = :#{T(com.balaji.finance.config.util.BranchContext).filter()}) AND e.dueDate < :fromDate
 		      AND (
 		          bm.endDate IS NULL
 		          OR bm.endDate >= :toDate

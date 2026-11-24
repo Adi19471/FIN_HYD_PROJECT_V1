@@ -1,5 +1,7 @@
 package com.balaji.finance.controller;
 
+import com.balaji.finance.service.BranchService;
+
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -35,6 +37,9 @@ import com.balaji.finance.service.RefreshTokenService;
 public class LoginController {
 
 	@Autowired
+	private BranchService branchService;
+
+	@Autowired
 	private AuthenticationManager authenticationManager;
 
 	@Autowired
@@ -67,6 +72,12 @@ public class LoginController {
 
 			LoginResponse response = new LoginResponse("Login success", token, refreshToken.getToken(),
 					userDetails.getUsername(), roles);
+			// A user with no open branch has nothing to work in.
+			if (!withBranches(response, userDetails.getUser())) {
+				refreshTokenRepo.deleteByToken(refreshToken.getToken());
+				return ResponseEntity.status(HttpStatus.FORBIDDEN).body(
+						new ErrorResponse("No branch is assigned to this user. Please contact the administrator."));
+			}
 
 			return ResponseEntity.ok(response);
 
@@ -104,8 +115,15 @@ public class LoginController {
 
 		LoginResponse response = new LoginResponse("Token refreshed", newAccessToken, rotated.getToken(),
 				user.getName(), roles);
+		withBranches(response, user);
 
 		return ResponseEntity.ok(response);
+	}
+
+	/** Adds the user's open branches; false when there are none. */
+	private boolean withBranches(LoginResponse response, Users user) {
+		response.setBranches(branchService.accessibleBranches(user));
+		return !response.getBranches().isEmpty();
 	}
 
 	@PostMapping("/logout")

@@ -26,7 +26,7 @@ public interface BusinessMemberRepository extends JpaRepository<BusinessMember, 
 
 	@Query("""
 			    SELECT u FROM BusinessMember u
-			    WHERE
+			    WHERE (:#{T(com.balaji.finance.config.util.BranchContext).filter()} = 'ALL' OR u.branchCode = :#{T(com.balaji.finance.config.util.BranchContext).filter()}) AND
 			             u.businessMemberId LIKE CONCAT(:starWithString, '%')
 			        AND
 			            (u.businessMemberId LIKE CONCAT('%', :keyword, '%')
@@ -38,7 +38,7 @@ public interface BusinessMemberRepository extends JpaRepository<BusinessMember, 
 
 	@Query("""
 			SELECT u FROM BusinessMember u
-			          WHERE
+			          WHERE (:#{T(com.balaji.finance.config.util.BranchContext).filter()} = 'ALL' OR u.branchCode = :#{T(com.balaji.finance.config.util.BranchContext).filter()}) AND
 			              u.businessMemberId LIKE CONCAT(:starWithString, '%')
 			          ORDER BY u.year desc , u.sequence desc
 			  """)
@@ -46,14 +46,21 @@ public interface BusinessMemberRepository extends JpaRepository<BusinessMember, 
 
 	@Query("""
 			        SELECT u FROM BusinessMember u
-			    WHERE
+			    WHERE (:#{T(com.balaji.finance.config.util.BranchContext).filter()} = 'ALL' OR u.branchCode = :#{T(com.balaji.finance.config.util.BranchContext).filter()}) AND
 			        u.businessMemberId LIKE CONCAT('%', :keyword, '%')
 			""")
 	List<BusinessMember> allbusinessMemberAutoComplete(@Param("keyword") String keyword);
 
+	/** Every loan of the current branch (all branches in the All view). */
+	@Query("""
+			SELECT u FROM BusinessMember u
+			WHERE (:#{T(com.balaji.finance.config.util.BranchContext).filter()} = 'ALL' OR u.branchCode = :#{T(com.balaji.finance.config.util.BranchContext).filter()})
+			""")
+	List<BusinessMember> findAllInBranch();
+
 	@Query("""
 			        SELECT u.businessMemberId FROM BusinessMember u
-			    WHERE
+			    WHERE (:#{T(com.balaji.finance.config.util.BranchContext).filter()} = 'ALL' OR u.branchCode = :#{T(com.balaji.finance.config.util.BranchContext).filter()}) AND
 			        u.businessMemberId LIKE CONCAT('%', :keyword, '%')
 			""")
 	List<String> allLoanIdsAutoComplete(@Param("keyword") String keyword);
@@ -61,7 +68,7 @@ public interface BusinessMemberRepository extends JpaRepository<BusinessMember, 
 	@Query("""
 			SELECT c
 			FROM BusinessMember c
-			WHERE c.startDate BETWEEN :fromDate AND :toDate
+			WHERE (:#{T(com.balaji.finance.config.util.BranchContext).filter()} = 'ALL' OR c.branchCode = :#{T(com.balaji.finance.config.util.BranchContext).filter()}) AND c.startDate BETWEEN :fromDate AND :toDate
 			""")
 	List<BusinessMember> findByDateRange(@Param("fromDate") LocalDateTime fromDate,
 			@Param("toDate") LocalDateTime toDate);
@@ -70,7 +77,7 @@ public interface BusinessMemberRepository extends JpaRepository<BusinessMember, 
 	
 	@Query("""
 			SELECT u FROM BusinessMember u
-			          WHERE
+			          WHERE (:#{T(com.balaji.finance.config.util.BranchContext).filter()} = 'ALL' OR u.branchCode = :#{T(com.balaji.finance.config.util.BranchContext).filter()}) AND
 			              u.businessMemberId LIKE CONCAT(:starWithString, '%')
 			              and u.startDate BETWEEN :fromDate AND :toDate
 			  """)
@@ -87,7 +94,7 @@ public interface BusinessMemberRepository extends JpaRepository<BusinessMember, 
 
 	@Query("""
 			SELECT u FROM BusinessMember u
-			          WHERE
+			          WHERE (:#{T(com.balaji.finance.config.util.BranchContext).filter()} = 'ALL' OR u.branchCode = :#{T(com.balaji.finance.config.util.BranchContext).filter()}) AND
 			              u.businessMemberId LIKE CONCAT(:starWithString, '%')
 			              and u.endDate BETWEEN :fromDate AND :toDate
 			              and u.loanStatus=:loanStatus
@@ -101,7 +108,7 @@ public interface BusinessMemberRepository extends JpaRepository<BusinessMember, 
 			    SUM(amount) AS loansDisbursed,
 			    SUM(interest) AS interestReceivable
 			FROM BusinessMember
-			WHERE startDate BETWEEN :fromDate AND :toDate
+			WHERE (:#{T(com.balaji.finance.config.util.BranchContext).filter()} = 'ALL' OR branchCode = :#{T(com.balaji.finance.config.util.BranchContext).filter()}) AND startDate BETWEEN :fromDate AND :toDate
 			GROUP BY loanType
 						  """)
 	List<LoanSummaryProjection> findAllLoansDisbursedByDateRange(@Param("fromDate") LocalDateTime fromDate,
@@ -118,7 +125,7 @@ public interface BusinessMemberRepository extends JpaRepository<BusinessMember, 
 			    SUM(amount) AS loansDisbursed,
 			    SUM(interest) AS interestReceivable
 			FROM BusinessMember
-			WHERE startDate <= :toDate
+			WHERE (:#{T(com.balaji.finance.config.util.BranchContext).filter()} = 'ALL' OR branchCode = :#{T(com.balaji.finance.config.util.BranchContext).filter()}) AND startDate <= :toDate
 			GROUP BY loanType
 						  """)
 	List<LoanSummaryProjection> findAllLoansDisbursedUpTo(@Param("toDate") LocalDateTime toDate);
@@ -129,6 +136,7 @@ public interface BusinessMemberRepository extends JpaRepository<BusinessMember, 
 			    SUM(amount) AS loansDisbursed,
 			    SUM(interest) AS interestReceivable
 			FROM BusinessMember
+			WHERE (:#{T(com.balaji.finance.config.util.BranchContext).filter()} = 'ALL' OR branchCode = :#{T(com.balaji.finance.config.util.BranchContext).filter()})
 			GROUP BY loanType
 						  """)
 	List<LoanSummaryProjection> findAllLoansDisbursed();
@@ -159,8 +167,10 @@ public interface BusinessMemberRepository extends JpaRepository<BusinessMember, 
 			LEFT JOIN BusinessMember bm
 			    ON bm.customerId = customer
 			    AND bm.loanType IN :loanType
-			    
-			WHERE customer.category = 'CUSTOMER'    
+			    AND (:#{T(com.balaji.finance.config.util.BranchContext).filter()} = 'ALL' OR bm.branchCode = :#{T(com.balaji.finance.config.util.BranchContext).filter()})
+
+			WHERE customer.category = 'CUSTOMER'
+			  AND (:#{T(com.balaji.finance.config.util.BranchContext).filter()} = 'ALL' OR customer.branchCode = :#{T(com.balaji.finance.config.util.BranchContext).filter()})
 
 			GROUP BY
 			    customer.personalInfoId,
@@ -209,7 +219,7 @@ public interface BusinessMemberRepository extends JpaRepository<BusinessMember, 
 			   LEFT JOIN bm.guarantor1 guarentor
 			   LEFT JOIN bm.partnerId partner
 
-			   WHERE customer.personalInfoId=:personInfoId
+			   WHERE (:#{T(com.balaji.finance.config.util.BranchContext).filter()} = 'ALL' OR bm.branchCode = :#{T(com.balaji.finance.config.util.BranchContext).filter()}) AND customer.personalInfoId=:personInfoId
 			   ORDER BY bm.sequence asc
 			""")
 	List<CustomerDuesProjection> getAllLoansOnCustomer(@Param("personInfoId") String personInfoId);
@@ -220,7 +230,7 @@ public interface BusinessMemberRepository extends JpaRepository<BusinessMember, 
 		        SUM(COALESCE(bm.amount, 0) + COALESCE(bm.interest, 0))
 		            AS loansDisbursed
 		    FROM BusinessMember bm
-		    WHERE bm.startDate BETWEEN :fromDate AND :toDate
+		    WHERE (:#{T(com.balaji.finance.config.util.BranchContext).filter()} = 'ALL' OR bm.branchCode = :#{T(com.balaji.finance.config.util.BranchContext).filter()}) AND bm.startDate BETWEEN :fromDate AND :toDate
 		      AND bm.loanStatus = 'ACTIVE'
 		    GROUP BY bm.loanType
 		    """)
@@ -234,7 +244,7 @@ public interface BusinessMemberRepository extends JpaRepository<BusinessMember, 
 		        SUM(COALESCE(bm.amount, 0) + COALESCE(bm.interest, 0))
 		            AS loansDisbursed
 		    FROM BusinessMember bm
-		    WHERE bm.startDate BETWEEN :fromDate AND :toDate
+		    WHERE (:#{T(com.balaji.finance.config.util.BranchContext).filter()} = 'ALL' OR bm.branchCode = :#{T(com.balaji.finance.config.util.BranchContext).filter()}) AND bm.startDate BETWEEN :fromDate AND :toDate
 		      AND bm.loanStatus = 'COMPLETED'
 		    GROUP BY bm.loanType
 		    """)
@@ -276,7 +286,7 @@ public interface BusinessMemberRepository extends JpaRepository<BusinessMember, 
 			   LEFT JOIN bm.guarantor1 guarentor
 			   LEFT JOIN bm.partnerId partner
 
-			   WHERE guarentor.personalInfoId=:personInfoId
+			   WHERE (:#{T(com.balaji.finance.config.util.BranchContext).filter()} = 'ALL' OR bm.branchCode = :#{T(com.balaji.finance.config.util.BranchContext).filter()}) AND guarentor.personalInfoId=:personInfoId
 			   AND loanStatus=:loanStatus
 			   ORDER BY bm.sequence asc
 			""")
@@ -316,7 +326,7 @@ public interface BusinessMemberRepository extends JpaRepository<BusinessMember, 
 			   LEFT JOIN bm.customerId customer
 			   LEFT JOIN bm.guarantor1 guarentor
 			   LEFT JOIN bm.partnerId partner
-			   WHERE loanStatus=:loanStatus
+			   WHERE (:#{T(com.balaji.finance.config.util.BranchContext).filter()} = 'ALL' OR bm.branchCode = :#{T(com.balaji.finance.config.util.BranchContext).filter()}) AND loanStatus=:loanStatus
 			   ORDER BY bm.sequence asc
 			""")
 	List<GuarantorDuesProjection> getAllLoansOnGuarantor(@Param("loanStatus") String loanStatus);
@@ -331,7 +341,7 @@ public interface BusinessMemberRepository extends JpaRepository<BusinessMember, 
 		            AS disbursedAmountWithInterest
 
 		    FROM BusinessMember bm
-		    WHERE bm.partnerId.personalInfoId IN :personalInfoId
+		    WHERE (:#{T(com.balaji.finance.config.util.BranchContext).filter()} = 'ALL' OR bm.branchCode = :#{T(com.balaji.finance.config.util.BranchContext).filter()}) AND bm.partnerId.personalInfoId IN :personalInfoId
 		      AND bm.startDate BETWEEN :fromDate AND :toDate
 		""")
 		LoanSummaryOfManagerProjection getLoanSummaryOfManagerDaterange(
@@ -349,7 +359,7 @@ public interface BusinessMemberRepository extends JpaRepository<BusinessMember, 
 		            AS disbursedAmountWithInterest
 
 		    FROM BusinessMember bm
-		    WHERE bm.partnerId.personalInfoId IN :personalInfoId
+		    WHERE (:#{T(com.balaji.finance.config.util.BranchContext).filter()} = 'ALL' OR bm.branchCode = :#{T(com.balaji.finance.config.util.BranchContext).filter()}) AND bm.partnerId.personalInfoId IN :personalInfoId
 		""")
 		LoanSummaryOfManagerProjection getLoanSummaryOfManager(
 		        @Param("personalInfoId") List<String> personalInfoId);
@@ -369,7 +379,7 @@ public interface BusinessMemberRepository extends JpaRepository<BusinessMember, 
 
 	        FROM BusinessMember bm
 
-	        WHERE bm.partnerId.personalInfoId IN :personalInfoIds
+	        WHERE (:#{T(com.balaji.finance.config.util.BranchContext).filter()} = 'ALL' OR bm.branchCode = :#{T(com.balaji.finance.config.util.BranchContext).filter()}) AND bm.partnerId.personalInfoId IN :personalInfoIds
               AND bm.startDate BETWEEN :fromDate AND :toDate
 	        GROUP BY
 	            bm.partnerId.personalInfoId
@@ -392,7 +402,7 @@ public interface BusinessMemberRepository extends JpaRepository<BusinessMember, 
 
 	        FROM BusinessMember bm
 
-	        WHERE bm.partnerId.personalInfoId IN :personalInfoIds
+	        WHERE (:#{T(com.balaji.finance.config.util.BranchContext).filter()} = 'ALL' OR bm.branchCode = :#{T(com.balaji.finance.config.util.BranchContext).filter()}) AND bm.partnerId.personalInfoId IN :personalInfoIds
 
 	        GROUP BY
 	            bm.partnerId.personalInfoId
@@ -451,7 +461,7 @@ public interface BusinessMemberRepository extends JpaRepository<BusinessMember, 
 		       LEFT JOIN bm.guarantor1 guarentor
 		       LEFT JOIN bm.partnerId partner
 
-		       WHERE partner.personalInfoId = :partnerInfoId
+		       WHERE (:#{T(com.balaji.finance.config.util.BranchContext).filter()} = 'ALL' OR bm.branchCode = :#{T(com.balaji.finance.config.util.BranchContext).filter()}) AND partner.personalInfoId = :partnerInfoId
 		       ORDER BY bm.sequence asc
 		    """)
 		List<PartnerLoanDetailsProjection> getAllLoanDetailsByPartner(
@@ -497,7 +507,7 @@ public interface BusinessMemberRepository extends JpaRepository<BusinessMember, 
 
 		    FROM BusinessMember bm
 
-		    WHERE bm.partnerId.personalInfoId IN :personalInfoIds
+		    WHERE (:#{T(com.balaji.finance.config.util.BranchContext).filter()} = 'ALL' OR bm.branchCode = :#{T(com.balaji.finance.config.util.BranchContext).filter()}) AND bm.partnerId.personalInfoId IN :personalInfoIds
 		      AND bm.startDate BETWEEN :fromDate AND :toDate
 
 		    GROUP BY bm.partnerId.personalInfoId

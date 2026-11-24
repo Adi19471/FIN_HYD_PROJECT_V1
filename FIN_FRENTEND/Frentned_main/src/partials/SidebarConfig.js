@@ -65,6 +65,7 @@ export const sidebarGroups = [
     items: [
       { label: "Account Setup", path: "/AccountMasterSetup/Account_Master_Setup", icon: navIcons.accountSetup },
       { label: "User Registration", path: "/AccountMasterSetup/Registraion_creation", icon: navIcons.userRegistration },
+      { label: "Branch Master", path: "/AccountMasterSetup/Branch_Master", icon: navIcons.branchMaster },
     ],
   },
   {

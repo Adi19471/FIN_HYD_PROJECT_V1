@@ -10,6 +10,9 @@ public class UserSaveReq {
 	private String role;
 	private List<Long> permissionIds;
 
+	// The branches the user may work in (Branch.code).
+	private List<String> branchCodes;
+
 	public Integer getId() {
 		return id;
 	}
@@ -50,4 +53,12 @@ public class UserSaveReq {
 		this.permissionIds = permissionIds;
 	}
 
+
+	public List<String> getBranchCodes() {
+		return branchCodes;
+	}
+
+	public void setBranchCodes(List<String> branchCodes) {
+		this.branchCodes = branchCodes;
+	}
 }

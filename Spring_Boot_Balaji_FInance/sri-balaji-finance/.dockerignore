@@ -1,0 +1,8 @@
+target
+logs
+bin
+db
+.idea
+.vscode
+*.iml
+*.log

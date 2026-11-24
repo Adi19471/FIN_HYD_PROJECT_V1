@@ -742,3 +742,398 @@
     text-align: center;
   }
 }
+
+/* ============================================================
+   Card layout (.auth-page.is-card)
+
+   The sign-in sits in one rounded card on a soft canvas: the form on the
+   left, Sri Venkateswara Swamy in an arched frame on the right with the
+   company's line under him. Fields and the button are pills. Colours still
+   come from the theme tokens, so Light / Dark and the accent carry over.
+   ============================================================ */
+.auth-page.is-card {
+  --auth-pill: 999px;
+  --card-canvas: color-mix(in srgb, var(--brand-primary) 5%, var(--canvas, #eef1f7));
+  grid-template-columns: 1fr;
+  place-items: center;
+  padding: clamp(12px, 3vh, 32px) clamp(16px, 4vw, 48px);
+  background: var(--card-canvas);
+}
+
+.dark .auth-page.is-card {
+  --card-canvas: var(--surface-0, #0b1020);
+}
+
+.auth-page.is-card > .auth-form-col,
+.auth-page.is-card > .auth-art {
+  min-height: 0;
+}
+
+/* The card itself: the two halves share one rounded, shadowed frame. */
+.auth-page.is-card {
+  grid-template-areas: "card";
+}
+
+.auth-page.is-card > .auth-form-col,
+.auth-page.is-card > .auth-art {
+  grid-area: card;
+}
+
+.auth-page.is-card::before {
+  content: "";
+  grid-area: card;
+  align-self: stretch;
+  justify-self: stretch;
+  border-radius: 28px;
+  background: var(--surface-1);
+  box-shadow: 0 30px 80px -30px rgba(15, 23, 42, 0.28), 0 2px 6px rgba(15, 23, 42, 0.05);
+}
+
+.auth-page.is-card > .auth-form-col {
+  justify-self: start;
+  width: min(1240px, 100%) ;
+  max-width: 50%;
+  padding: clamp(28px, 4vw, 56px) clamp(24px, 4.5vw, 72px) 28px;
+  z-index: 1;
+}
+
+.auth-page.is-card > .auth-art {
+  justify-self: end;
+  align-self: stretch;
+  width: 50%;
+  margin: 0;
+  padding: clamp(28px, 4vw, 56px);
+  border-radius: 0 28px 28px 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: clamp(12px, 2vh, 22px);
+  text-align: center;
+  color: var(--text-strong);
+  background:
+    radial-gradient(60% 45% at 50% 32%, color-mix(in srgb, #f5c542 22%, transparent), transparent 70%),
+    radial-gradient(50% 40% at 70% 60%, color-mix(in srgb, var(--brand-primary) 14%, transparent), transparent 70%),
+    color-mix(in srgb, var(--brand-primary) 4%, var(--surface-2, #f6f7fb));
+  overflow: hidden;
+  z-index: 1;
+}
+
+/* Card size: the two halves are laid over one cell, so pin the card width. */
+@media (min-width: 901px) {
+  .auth-page.is-card {
+    grid-template-columns: min(1240px, 100%);
+    justify-content: center;
+  }
+  .auth-page.is-card > .auth-form-col,
+  .auth-page.is-card > .auth-art {
+    min-height: min(720px, calc(100 * var(--app-vh) - 64px));
+  }
+}
+
+/* ---- form side ---- */
+.auth-page.is-card .auth-form-wrap {
+  max-width: 440px;
+}
+
+.auth-page.is-card .auth-title {
+  font-size: clamp(1.7rem, 2.4vw, 2.2rem);
+  line-height: 1.18;
+  letter-spacing: -0.02em;
+}
+
+.auth-page.is-card .auth-lead {
+  color: var(--text-muted);
+}
+
+.auth-page.is-card .auth-input input {
+  border-radius: var(--auth-pill);
+  min-height: 50px;
+  padding-left: 46px;
+}
+
+.auth-page.is-card .auth-input-icon {
+  left: 18px;
+}
+
+.auth-page.is-card .auth-input-action {
+  right: 10px;
+  border-radius: var(--auth-pill);
+}
+
+.auth-page.is-card .auth-submit {
+  border-radius: var(--auth-pill);
+  min-height: 50px;
+  margin-top: 6px;
+}
+
+.auth-page.is-card .auth-secure {
+  justify-content: center;
+}
+
+.auth-page.is-card .auth-foot {
+  text-align: center;
+}
+
+/* ---- picture side ---- */
+.auth-page.is-card .auth-art-glow {
+  opacity: 0.55;
+}
+
+.auth-deity {
+  position: relative;
+  margin: 0;
+  /* follows the window height too, so the card never needs a scrollbar */
+  width: clamp(140px, min(17vw, 30vh), 250px);
+  aspect-ratio: 3 / 4.2;
+  animation: auth-rise 0.6s ease both;
+}
+
+/* Soft golden halo behind the arch. */
+.auth-deity-halo {
+  position: absolute;
+  inset: -14% -18% auto;
+  height: 70%;
+  border-radius: 50%;
+  background: radial-gradient(closest-side, rgba(245, 197, 66, 0.55), rgba(245, 197, 66, 0) 75%);
+  filter: blur(6px);
+}
+
+.auth-deity img {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center top;
+  /* temple arch: round top, square foot */
+  border-radius: 999px 999px 22px 22px;
+  border: 4px solid #e9c46a;
+  box-shadow: 0 0 0 6px color-mix(in srgb, #e9c46a 28%, transparent), 0 24px 50px -18px rgba(60, 30, 0, 0.55);
+}
+
+.auth-page.is-card .auth-art-copy {
+  position: relative;
+  max-width: 460px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  animation: auth-rise 0.6s 0.08s ease both;
+}
+
+.auth-page.is-card .auth-eyebrow {
+  color: #b7791f;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  font-size: 0.72rem;
+  font-weight: 800;
+}
+
+.auth-page.is-card .auth-eyebrow::before {
+  display: none;
+}
+
+.auth-page.is-card .auth-headline {
+  margin: 0;
+  color: var(--brand-primary);
+  font-size: clamp(1.45rem, 2.2vw, 2rem);
+  line-height: 1.2;
+  letter-spacing: -0.01em;
+}
+
+.auth-page.is-card .auth-art-lead {
+  margin: 0;
+  color: var(--text-muted);
+  line-height: 1.55;
+}
+
+.auth-offices {
+  list-style: none;
+  margin: 6px 0 0;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 8px;
+}
+
+.auth-office {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border-radius: 999px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--text-strong);
+  background: var(--surface-1);
+  border: 1px solid var(--auth-line);
+  animation: auth-rise 0.5s calc(0.15s + var(--i) * 0.06s) ease both;
+}
+
+.auth-office svg {
+  color: var(--brand-primary);
+}
+
+.dark .auth-deity img {
+  border-color: #c9a227;
+}
+
+/* ---- narrow screens: one column, picture above the form ---- */
+@media (max-width: 900px) {
+  .auth-page.is-card {
+    grid-template-areas: "art" "card";
+    grid-template-columns: 1fr;
+    gap: 0;
+    padding: 0;
+    background: var(--surface-1);
+  }
+  .auth-page.is-card::before {
+    display: none;
+  }
+  .auth-page.is-card > .auth-art {
+    grid-area: art;
+    width: 100%;
+    border-radius: 0 0 28px 28px;
+    padding: 28px 16px 24px;
+    gap: 14px;
+  }
+  .auth-page.is-card > .auth-form-col {
+    grid-area: card;
+    width: 100%;
+    max-width: 100%;
+    padding: 24px 16px;
+  }
+  .auth-deity {
+    width: 150px;
+  }
+  .auth-page.is-card .auth-art-lead,
+  .auth-offices {
+    display: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .auth-deity,
+  .auth-page.is-card .auth-art-copy,
+  .auth-office {
+    animation: none;
+  }
+}
+
+/* ---- step 2: choose your branch ---- */
+.auth-branches {
+  display: grid;
+  gap: 10px;
+  max-height: min(46vh, 360px);
+  overflow-y: auto;
+  padding: 2px;
+}
+
+.auth-branch {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  padding: 12px 16px;
+  text-align: left;
+  font: inherit;
+  color: var(--text-strong);
+  background: var(--surface-1);
+  border: 1.5px solid var(--auth-line);
+  border-radius: 16px;
+  cursor: pointer;
+  transition: border-color 140ms ease, background 140ms ease, box-shadow 140ms ease;
+}
+
+.auth-branch:hover {
+  border-color: color-mix(in srgb, var(--brand-primary) 55%, transparent);
+}
+
+.auth-branch:focus-visible {
+  outline: 2px solid var(--brand-primary);
+  outline-offset: 2px;
+}
+
+.auth-branch.is-selected {
+  border-color: var(--brand-primary);
+  background: color-mix(in srgb, var(--brand-primary) 8%, var(--surface-1));
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--brand-primary) 16%, transparent);
+}
+
+.auth-branch-icon {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  color: var(--brand-primary);
+  background: color-mix(in srgb, var(--brand-primary) 12%, transparent);
+}
+
+.auth-branch-text {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  flex: 1;
+}
+
+.auth-branch-text strong {
+  font-size: 0.95rem;
+}
+
+.auth-branch-text span {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+}
+
+.auth-branch-tag {
+  flex: none;
+  padding: 2px 10px;
+  border-radius: 999px;
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: var(--brand-primary);
+  background: color-mix(in srgb, var(--brand-primary) 12%, transparent);
+}
+
+.auth-link {
+  align-self: center;
+  margin-top: 4px;
+  padding: 6px 10px;
+  font: inherit;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--brand-primary);
+  background: none;
+  border: 0;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.auth-link:hover {
+  text-decoration: underline;
+}
+
+/* ---- branch popup (MUI Dialog paper reuses the page tokens) ---- */
+.auth-branch-dialog.auth-page.is-card {
+  display: block;
+  min-height: 0;
+  padding: 8px 4px 4px;
+  border-radius: 24px;
+  background: var(--surface-1);
+}
+
+.auth-branch-dialog.auth-page.is-card::before {
+  display: none;
+}
+
+.auth-branch-dialog .auth-title {
+  font-size: 1.5rem;
+  margin: 0 0 6px;
+}
+
+.auth-branch-dialog .auth-lead {
+  margin: 0 0 16px;
+}

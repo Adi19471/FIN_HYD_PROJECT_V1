@@ -59,6 +59,7 @@ public class PermissionDataLoader implements CommandLineRunner {
         // Account Master Setup
         save("Account Master Setup", null, "Account Master Setup", "ACCOUNT_MASTER_SETUP_VIEW");
         save("Account Master Setup", null, "Registration Creation", "REGISTRATION_CREATION_VIEW");
+        save("Account Master Setup", null, "Branch Master", "BRANCH_MASTER_VIEW");
 
         // Business
         save("Business", "Reports", "Revenue Expense Statement", "REVENUE_EXPENSE_VIEW");

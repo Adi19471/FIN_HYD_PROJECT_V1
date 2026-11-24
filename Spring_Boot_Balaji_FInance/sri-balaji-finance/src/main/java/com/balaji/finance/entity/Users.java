@@ -1,5 +1,13 @@
 package com.balaji.finance.entity;
 
+
+import java.util.LinkedHashSet;
+import java.util.Set;
+
+import jakarta.persistence.CollectionTable;
+import jakarta.persistence.ElementCollection;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.JoinColumn;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
 
@@ -20,6 +28,13 @@ public class Users {
 	private String password;
 
 	private String role;
+
+	// The branches this user may work in (Branch.code), one at a time. With
+	// more than one, the user picks a branch after signing in.
+	@ElementCollection(fetch = FetchType.EAGER)
+	@CollectionTable(name = "user_branch", joinColumns = @JoinColumn(name = "user_id"))
+	@Column(name = "branch_code", length = 30)
+	private Set<String> branchCodes = new LinkedHashSet<>();
 
 
 	public Integer getId() {
@@ -52,5 +67,14 @@ public class Users {
 
 	public void setRole(String role) {
 		this.role = role;
+	}
+
+
+	public Set<String> getBranchCodes() {
+		return branchCodes;
+	}
+
+	public void setBranchCodes(Set<String> branchCodes) {
+		this.branchCodes = branchCodes == null ? new LinkedHashSet<>() : branchCodes;
 	}
 }

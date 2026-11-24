@@ -74,6 +74,7 @@ import {
   PaymentsRounded,
   PendingActionsRounded,
   PersonAddAlt1Rounded,
+  ApartmentRounded,
   PersonSearchRounded,
   PieChartRounded,
   PointOfSaleRounded,
@@ -192,6 +193,7 @@ export const navIcons = {
   // Account Master
   accountSetup: ManageAccountsRounded,
   userRegistration: PersonAddAlt1Rounded,
+  branchMaster: ApartmentRounded,
 
   // Business
   revenueExpenseStatement: AssessmentRounded,

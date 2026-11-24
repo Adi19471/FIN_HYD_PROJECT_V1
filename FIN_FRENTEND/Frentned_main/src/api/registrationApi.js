@@ -31,6 +31,11 @@ export const registrationApi = {
   deleteUser(id) {
     return axios.delete(`${API_BASE}/users/${id}`, getAuthHeaders());
   },
+
+  // Every office, for the user's Branch field.
+  loadBranches() {
+    return axios.get(`${API_BASE}/branches`, getAuthHeaders());
+  },
 };
 
 export default registrationApi;

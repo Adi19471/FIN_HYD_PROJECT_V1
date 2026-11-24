@@ -495,6 +495,8 @@ export const exportPdf = (rows = [], columns = [], fileName = "report", options 
       valign: "middle",
       // Wrap headings and long values between words, never mid-word.
       minCellWidth: 12,
+      // Text weight Bold (Settings > Font) prints every cell bold too.
+      fontStyle: reportTextBold() ? "bold" : "normal",
     },
     // A deeper head band gives a two-line heading room to breathe instead of
     // clipping it against the first data row.
@@ -698,6 +700,30 @@ const summaryHtml = (options) => {
 // `size` is filled per call so a wide grid prints landscape instead of
 // spilling columns off the right edge of the sheet. `columnCount` steps the
 // grid's type down as columns are added, keeping it inside the 8-10px band.
+/**
+ * Settings > Font > Text weight carried onto paper. With Bold chosen, every
+ * printed / PDF / Word line is bold too - not only the screens - so a report
+ * reads the same weight as the screen it came from.
+ */
+export const reportTextBold = () =>
+  typeof document !== "undefined" && document.documentElement.dataset.textWeight === "bold";
+
+/**
+ * The same bold rule for screens that build their own print page (receipt,
+ * Quick Cash Book): append it inside their <style>. Empty when Normal.
+ */
+export const printBoldCss = () =>
+  reportTextBold() ? "body,p,td,div,span{font-weight:700} th,h1,h2,h3,strong,b{font-weight:800}" : "";
+
+// Extra rules for bold printing: body text 700 (a true bold on every printer
+// font), headings and totals 800.
+const boldPrintStyles = () =>
+  reportTextBold()
+    ? `
+  body,p,td,p.meta,.detail-table .dl,.sheet-foot{font-weight:700}
+  th,h1,h2,p.meta strong,tr.total-row td,.detail-table .dv,table.report-summary th,table.report-summary td{font-weight:800}`
+    : "";
+
 const tableStyles = (orientation, columnCount = 0) => {
   const fontSize = printFontSize(columnCount);
   // Accent comes from the live theme; the paper stays white with dark ink so a
@@ -762,7 +788,7 @@ const tableStyles = (orientation, columnCount = 0) => {
   tr{page-break-inside:avoid;break-inside:avoid}
   @media print{body{padding:0} tr.total-row td{background:#e2e8f0 !important;-webkit-print-color-adjust:exact;print-color-adjust:exact}
     th{background:${palette.headerBg} !important;-webkit-print-color-adjust:exact;print-color-adjust:exact}
-    p.detail-title{-webkit-print-color-adjust:exact;print-color-adjust:exact}}`;
+    p.detail-title{-webkit-print-color-adjust:exact;print-color-adjust:exact}}${boldPrintStyles()}`;
 };
 
 export const exportWord = (rows = [], columns = [], fileName = "report", options = {}) => {

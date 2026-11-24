@@ -1,5 +1,7 @@
 package com.balaji.finance.entity;
 
+
+import com.balaji.finance.config.util.BranchStampListener;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
@@ -30,8 +32,8 @@ import jakarta.persistence.Table;
 		@Index(name = "idx_cb_person_code", columnList = "PERSONAL_INFO_ID, ACCOUNT_MASTER_CODE"),
 		@Index(name = "idx_cb_user_date", columnList = "ENTRY_USER, TRANS_DATE"),
 		@Index(name = "idx_cb_payment_ref", columnList = "PAYMENT_REF_ID") })
-@EntityListeners(AuditingEntityListener.class)
-public class CashBook {
+@EntityListeners({ AuditingEntityListener.class, BranchStampListener.class })
+public class CashBook implements BranchStampListener.BranchOwned {
 
 	@Id
 	@Column(name = "CASH_BOOK_ID")
@@ -250,5 +252,29 @@ public class CashBook {
 		this.paymentRefId = paymentRefId;
 	}
 
-	
+	// Office this record belongs to (Branch.code). Set on insert from the
+	// signed-in user's working branch; records from before branches existed
+	// are moved to the head office at start-up.
+	@Column(name = "branch_code", length = 30)
+	private String branchCode;
+
+	@Override
+	public String getBranchCode() {
+		return branchCode;
+	}
+
+	@Override
+	public void setBranchCode(String branchCode) {
+		this.branchCode = branchCode;
+	}
+
+	// A cash book line goes to its loan's branch; a line with no loan (capital,
+	// expenses, other payments) goes to the branch it was entered in.
+	@Override
+	public String parentBranchCode() {
+		if (businessMember != null && businessMember.getBranchCode() != null) {
+			return businessMember.getBranchCode();
+		}
+		return null;
+	}
 }

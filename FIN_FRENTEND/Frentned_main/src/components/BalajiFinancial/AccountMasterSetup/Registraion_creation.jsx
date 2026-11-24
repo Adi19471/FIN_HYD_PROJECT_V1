@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo, useState } from "react";
 import {
+  Autocomplete,
   Box,
   Button,
   Checkbox,
@@ -48,13 +49,28 @@ const emptyForm = {
   password: "",
   role: "",
   permissionIds: [],
+  branchCodes: [],
 };
+
+// Edit form values for a user row, branches included, so a save from either
+// dialog never drops the user's branches.
+const formFromRow = (row) => ({
+  id: row.id ?? "",
+  name: row.name ?? "",
+  password: "",
+  role: normalizeRole(row.role),
+  permissionIds: row.permissionIds || [],
+  branchCodes: row.branchCodes || [],
+});
 
 const normalizeRole = (role) => (role && role !== "-" ? role : "");
 
 const Registration_creation = () => {
   const [rows, setRows] = useState([]);
   const [permissions, setPermissions] = useState([]);
+  const [branches, setBranches] = useState([]);
+  const branchName = (code) => branches.find((branch) => branch.code === code)?.name || code || "";
+
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [modalOpen, setModalOpen] = useState(false);
@@ -67,13 +83,15 @@ const Registration_creation = () => {
   const loadUsers = async () => {
     setLoading(true);
     try {
-      const [userRows, permissionRows] = await Promise.all([
+      const [userRows, permissionRows, branchRows] = await Promise.all([
         registrationService.loadUsers(),
         registrationService.loadPermissions(),
+        registrationService.loadBranches().catch(() => []),
       ]);
 
       setRows(userRows);
       setPermissions(permissionRows);
+      setBranches(branchRows);
     } catch (err) {
       console.error("Load users failed:", err);
       toast.error(err?.response?.data?.message || "Failed to load users");
@@ -91,26 +109,16 @@ const Registration_creation = () => {
     if (!term) return rows;
 
     return rows.filter((row) =>
-      [row.id, row.name, row.role]
+      [row.id, row.name, row.role, ...(row.branchCodes || []).map(branchName)]
         .filter(Boolean)
         .some((value) => value.toString().toLowerCase().includes(term))
     );
-  }, [rows, search]);
+  }, [rows, search, branches]);
 
   const selectedRoleTitle = form.name ? `Assigned Roles of ${form.name}` : "Assigned Roles";
 
   const handleOpen = (row = null) => {
-    setForm(
-      row
-        ? {
-          id: row.id ?? "",
-          name: row.name ?? "",
-          password: "",
-          role: normalizeRole(row.role),
-          permissionIds: row.permissionIds || [],
-        }
-        : emptyForm
-    );
+    setForm(row ? formFromRow(row) : emptyForm);
     setModalOpen(true);
   };
 
@@ -120,13 +128,7 @@ const Registration_creation = () => {
   };
 
   const handlePermissionsOpen = (row) => {
-    setForm({
-      id: row.id ?? "",
-      name: row.name ?? "",
-      password: "",
-      role: normalizeRole(row.role),
-      permissionIds: row.permissionIds || [],
-    });
+    setForm(formFromRow(row));
     setPermissionSearch("");
     setPermissionsOpen(true);
   };
@@ -176,6 +178,11 @@ const Registration_creation = () => {
 
     if (!form.id && !form.password?.trim()) {
       toast.warning("Password is required for new users");
+      return;
+    }
+
+    if (!form.branchCodes?.length) {
+      toast.warning("Assign at least one branch");
       return;
     }
 
@@ -306,6 +313,25 @@ const Registration_creation = () => {
       },
     },
     {
+      field: "branchCodes",
+      headerName: "Branches",
+      flex: 1,
+      minWidth: 180,
+      sortable: false,
+      headerClassName: "header-cell",
+      valueFormatter: (value) => (value || []).map(branchName).join(", ") || "-",
+      renderCell: (params) =>
+        params.value?.length ? (
+          <Box sx={{ display: "flex", gap: 0.5, flexWrap: "wrap", py: 0.5 }}>
+            {params.value.map((code) => (
+              <Chip key={code} size="small" variant="outlined" label={branchName(code)} sx={{ fontWeight: 600 }} />
+            ))}
+          </Box>
+        ) : (
+          <Chip size="small" color="warning" variant="outlined" label="No branch" />
+        ),
+    },
+    {
       field: "permissionIds",
       headerName: "Permissions",
       width: 140,
@@ -330,7 +356,7 @@ const Registration_creation = () => {
       <ScreenHeader
         icon={navIcons.userRegistration}
         title="User Registration"
-        subtitle="Who can sign in, their role and the menus they may open."
+        subtitle="Who can sign in, their branch, role and the menus they may open."
       >
         <TextField
           className="scr-head-search"
@@ -435,6 +461,33 @@ const Registration_creation = () => {
                   ),
                 }}
                 placeholder="e.g. ADMIN, USER"
+              />
+            </Grid>
+
+            {/* The branches this user works in, one at a time. With more than
+                one, the user picks a branch in a popup after signing in.
+                Which menus they see stays with the shield action. */}
+            <Grid size={12}>
+              <Autocomplete
+                multiple
+                disableCloseOnSelect
+                options={branches.filter(
+                  (branch) => branch.active || (form.branchCodes || []).includes(branch.code)
+                )}
+                getOptionLabel={(branch) => branch.name || branch.code}
+                getOptionDisabled={(branch) => !branch.active}
+                isOptionEqualToValue={(option, value) => option.code === value.code}
+                value={branches.filter((branch) => (form.branchCodes || []).includes(branch.code))}
+                onChange={(_, value) => setForm({ ...form, branchCodes: value.map((branch) => branch.code) })}
+                renderInput={(params) => (
+                  <TextField
+                    {...params}
+                    required
+                    label="Branches"
+                    placeholder={form.branchCodes?.length ? "Add branch" : "Select branches"}
+                    helperText="At least one. With several, the user chooses one after signing in."
+                  />
+                )}
               />
             </Grid>
           </Grid>

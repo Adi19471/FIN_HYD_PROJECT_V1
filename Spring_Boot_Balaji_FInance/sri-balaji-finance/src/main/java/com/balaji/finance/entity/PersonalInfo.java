@@ -1,5 +1,7 @@
 package com.balaji.finance.entity;
 
+
+import com.balaji.finance.config.util.BranchStampListener;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
@@ -24,8 +26,8 @@ import jakarta.persistence.Table;
 @Entity
 @Table(name = "PERSONAL_INFO", indexes = {
 		@Index(name = "idx_pi_category_disable", columnList = "CATEGORY, DISABLE") })
-@EntityListeners(AuditingEntityListener.class)
-public class PersonalInfo {
+@EntityListeners({ AuditingEntityListener.class, BranchStampListener.class })
+public class PersonalInfo implements BranchStampListener.BranchOwned {
 
 	@Id
 	@Column(name = "PERSONAL_INFO_ID")
@@ -407,4 +409,19 @@ public class PersonalInfo {
 		this.profilePic = profilePic;
 	}
 
+	// Office this record belongs to (Branch.code). Set on insert from the
+	// signed-in user's working branch; records from before branches existed
+	// are moved to the head office at start-up.
+	@Column(name = "branch_code", length = 30)
+	private String branchCode;
+
+	@Override
+	public String getBranchCode() {
+		return branchCode;
+	}
+
+	@Override
+	public void setBranchCode(String branchCode) {
+		this.branchCode = branchCode;
+	}
 }

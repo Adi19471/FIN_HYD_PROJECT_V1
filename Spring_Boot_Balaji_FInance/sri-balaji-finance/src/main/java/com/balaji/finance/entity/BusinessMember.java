@@ -1,5 +1,7 @@
 package com.balaji.finance.entity;
 
+
+import com.balaji.finance.config.util.BranchStampListener;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
@@ -41,8 +43,8 @@ import jakarta.persistence.Table;
 	        )
 	    }
 	)
-@EntityListeners(AuditingEntityListener.class)
-public class BusinessMember {
+@EntityListeners({ AuditingEntityListener.class, BranchStampListener.class })
+public class BusinessMember implements BranchStampListener.BranchOwned {
 
 	@Id
 	@Column(name = "BUSINESS_MEMBER_ID", length = 255, nullable = false)
@@ -394,4 +396,25 @@ public class BusinessMember {
 		this.modifiedBy = modifiedBy;
 	}
 
+	// Office this record belongs to (Branch.code). Set on insert from the
+	// signed-in user's working branch; records from before branches existed
+	// are moved to the head office at start-up.
+	@Column(name = "branch_code", length = 30)
+	private String branchCode;
+
+	@Override
+	public String getBranchCode() {
+		return branchCode;
+	}
+
+	@Override
+	public void setBranchCode(String branchCode) {
+		this.branchCode = branchCode;
+	}
+
+	// A loan goes to its customer's branch.
+	@Override
+	public String parentBranchCode() {
+		return customerId != null ? customerId.getBranchCode() : null;
+	}
 }

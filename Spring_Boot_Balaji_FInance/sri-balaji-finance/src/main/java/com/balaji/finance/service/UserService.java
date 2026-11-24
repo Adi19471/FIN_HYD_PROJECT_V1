@@ -39,6 +39,9 @@ public class UserService {
 	@Autowired
 	private RefreshTokenRepo refreshTokenRepo;
 
+	@Autowired
+	private BranchService branchService;
+
 	public void saveUser(UserSaveReq userSaveReq) {
 
 		validateUserRequest(userSaveReq, false);
@@ -52,6 +55,7 @@ public class UserService {
 		user.setName(userSaveReq.getName().trim());
 		user.setPassword(passwordEncoder.encode(userSaveReq.getPassword()));
 		user.setRole(userSaveReq.getRole());
+		applyBranch(user, userSaveReq);
 
 		userRepo.save(user);
 
@@ -87,6 +91,8 @@ public class UserService {
 
 		user.setName(userSaveReq.getName().trim());
 		user.setRole(userSaveReq.getRole());
+
+		applyBranch(user, userSaveReq);
 
 		// Update password only if provided
 		if (StringUtils.hasText(userSaveReq.getPassword())) {
@@ -127,6 +133,28 @@ public class UserService {
 		userPermissionRepo.deleteByUser(user);
 		refreshTokenRepo.deleteByUser(user);
 		userRepo.delete(user);
+	}
+
+	// The user's branches: each must exist, and there must be at least one.
+	private void applyBranch(Users user, UserSaveReq req) {
+		// A save that sends no branch list (an older client, or the menu
+		// permissions dialog) leaves the user's branches as they were.
+		if (req.getBranchCodes() == null) {
+			return;
+		}
+		java.util.Set<String> assigned = new java.util.LinkedHashSet<>();
+		for (String code : req.getBranchCodes()) {
+			if (StringUtils.hasText(code)) {
+				branchService.requireBranch(code.trim());
+				assigned.add(code.trim());
+			}
+		}
+		if (assigned.isEmpty()) {
+			throw new com.balaji.finance.exception.ApiException("Assign at least one branch to the user",
+					org.springframework.http.HttpStatus.BAD_REQUEST);
+		}
+		user.getBranchCodes().clear();
+		user.getBranchCodes().addAll(assigned);
 	}
 
 	private void validateUserRequest(UserSaveReq userSaveReq, boolean isUpdate) {
@@ -170,7 +198,10 @@ public class UserService {
 	    Map<Integer, List<Long>> permissionMap = permissions.stream()
 	            .collect(Collectors.groupingBy(
 	                    p -> p.getUser().getId(),
-	                    Collectors.mapping(UserPermission::getId, Collectors.toList())
+	                    // The permission's own id, not the USER_PERMISSION link row's
+	                    // id: the screen sends these back on save, and a link id was
+	                    // then looked up as a permission ("Permission not found: 43").
+	                    Collectors.mapping(p -> p.getPermission().getId(), Collectors.toList())
 	            ));
 
 	    // Convert Users -> DTO
@@ -181,6 +212,7 @@ public class UserService {
 	        dto.setId(user.getId());
 	        dto.setName(user.getName());
 	        dto.setRole(user.getRole());
+	        dto.setBranchCodes(new java.util.ArrayList<>(user.getBranchCodes()));
 
 	        // Set permission IDs
 	        dto.setPermissionIds(

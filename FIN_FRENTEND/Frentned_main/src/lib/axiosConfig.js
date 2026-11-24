@@ -7,6 +7,7 @@ import {
   setRefreshToken,
 } from "src/utils/authToken";
 import { removeSession, setSession } from "src/utils/session";
+import { clearBranch, getCurrentBranch, resetToFirstBranch, saveBranchInfo } from "src/utils/branch";
 
 axios.interceptors.request.use((config) => {
   const authorization = getAuthorizationHeader();
@@ -14,6 +15,14 @@ axios.interceptors.request.use((config) => {
   if (authorization) {
     config.headers = config.headers || {};
     config.headers.Authorization = authorization;
+  }
+
+  // The office this request is for. The server checks it against the user,
+  // so this only chooses among the branches they are allowed.
+  const branch = getCurrentBranch();
+  if (branch) {
+    config.headers = config.headers || {};
+    config.headers["X-Branch"] = branch;
   }
 
   return config;
@@ -46,6 +55,7 @@ const redirectToLogin = () => {
   removeSession("refreshToken");
   setSession("isAuthenticated", "false");
   removeSession("lastActivity");
+  clearBranch();
   window.location.href = "/login";
 };
 
@@ -72,6 +82,8 @@ const refreshAccessToken = async () => {
   const data = await resp.json();
   setAuthToken(data.token);
   setRefreshToken(data.refreshToken);
+  // Picks up a branch change made by the admin since this user signed in.
+  if (Array.isArray(data.branches)) saveBranchInfo(data);
   return data.token;
 };
 
@@ -79,6 +91,14 @@ axios.interceptors.response.use(
   (response) => response,
   (error) => {
     const { config, response } = error;
+
+    // The stored branch is no longer allowed (user moved to another office,
+    // or a branch was closed): go back to the user's own office and reload.
+    if (response?.status === 403 && response.data?.code === "BRANCH_FORBIDDEN" && !config?._branchReset) {
+      resetToFirstBranch();
+      window.location.reload();
+      return Promise.reject(error);
+    }
 
     if (!response || response.status !== 401 || !config || isAuthExempt(config.url)) {
       return Promise.reject(error);

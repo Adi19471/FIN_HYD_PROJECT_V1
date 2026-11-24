@@ -18,6 +18,7 @@ import Help from "../components/DropdownHelp";
 import UserMenu from "../components/DropdownProfile";
 import EnterpriseThemePanel from "../components/EnterpriseThemePanel";
 import ThemeToggle from "../components/ThemeToggle";
+import BranchSwitcher from "../components/BranchSwitcher";
 import { useBranding, useThemeProvider } from "../utils/ThemeContext";
 import { breadcrumbsFor } from "src/lib/breadcrumbs";
 
@@ -119,6 +120,7 @@ function Header({ sidebarOpen, setSidebarOpen }) {
         />
 
         <Stack direction="row" alignItems="center" spacing={0.75} sx={{ ml: "auto" }}>
+          <BranchSwitcher />
           <Tooltip title="Search">
             <IconButton onClick={() => setSearchModalOpen(true)} aria-label="Open command search">
               <SearchRounded />

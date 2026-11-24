@@ -40,10 +40,21 @@ public interface CashBookRepo extends JpaRepository<CashBook, Long> {
 
 	Optional<CashBook> findByBusinessMemberAndAccountMasterCode(BusinessMember businessMember, String masterCode);
 
-	List<CashBook> findByAccountMasterCode(String accountMasterCode);
+	@Query("""
+			SELECT c FROM CashBook c
+			WHERE c.accountMasterCode = :accountMasterCode
+			  AND (:#{T(com.balaji.finance.config.util.BranchContext).filter()} = 'ALL' OR c.branchCode = :#{T(com.balaji.finance.config.util.BranchContext).filter()})
+			""")
+	List<CashBook> findByAccountMasterCode(@Param("accountMasterCode") String accountMasterCode);
 
-	List<CashBook> findByAccountMasterCodeAndTransDateBetween(String accountMasterCode, LocalDateTime fromDate,
-			LocalDateTime toDate);
+	@Query("""
+			SELECT c FROM CashBook c
+			WHERE c.accountMasterCode = :accountMasterCode
+			  AND c.transDate BETWEEN :fromDate AND :toDate
+			  AND (:#{T(com.balaji.finance.config.util.BranchContext).filter()} = 'ALL' OR c.branchCode = :#{T(com.balaji.finance.config.util.BranchContext).filter()})
+			""")
+	List<CashBook> findByAccountMasterCodeAndTransDateBetween(@Param("accountMasterCode") String accountMasterCode,
+			@Param("fromDate") LocalDateTime fromDate, @Param("toDate") LocalDateTime toDate);
 
 	@Query("""
 			SELECT COALESCE(SUM(cb.credit), 0)
@@ -64,7 +75,7 @@ public interface CashBookRepo extends JpaRepository<CashBook, Long> {
 	@Query("""
 			SELECT c
 			FROM CashBook c
-			WHERE c.transDate >= :startDate
+			WHERE (:#{T(com.balaji.finance.config.util.BranchContext).filter()} = 'ALL' OR c.branchCode = :#{T(com.balaji.finance.config.util.BranchContext).filter()}) AND c.transDate >= :startDate
 			AND c.transDate < :endDate
 			""")
 	List<CashBook> findByTransactionDate(@Param("startDate") LocalDateTime startDate,
@@ -73,7 +84,7 @@ public interface CashBookRepo extends JpaRepository<CashBook, Long> {
 	@Query("""
 			SELECT c
 			FROM CashBook c
-			WHERE c.transDate >= :startDate
+			WHERE (:#{T(com.balaji.finance.config.util.BranchContext).filter()} = 'ALL' OR c.branchCode = :#{T(com.balaji.finance.config.util.BranchContext).filter()}) AND c.transDate >= :startDate
 			AND c.transDate < :endDate
 			AND c.accountMasterCode NOT IN ('MF LOAN','MF DOC CHARGES','DF LOAN','DF INTEREST','DF DOC CHARGES')
 			""")
@@ -85,7 +96,7 @@ public interface CashBookRepo extends JpaRepository<CashBook, Long> {
 			 COALESCE(SUM(c.CREDIT),0) as credits,
 			 COALESCE(SUM(c.DEBIT),0) as debits
 			FROM cash_book c
-			WHERE c.TRANS_DATE < :endDate
+			WHERE (:#{T(com.balaji.finance.config.util.BranchContext).filter()} = 'ALL' OR c.branch_code = :#{T(com.balaji.finance.config.util.BranchContext).filter()}) AND c.TRANS_DATE < :endDate
 			""", nativeQuery = true)
 	SumOfCreditsAndDebitsProjection findAllSumOfCreditsAndDebitsTransactionDate(
 			@Param("endDate") LocalDateTime endDate);
@@ -93,7 +104,7 @@ public interface CashBookRepo extends JpaRepository<CashBook, Long> {
 	@Query(value = """
 			SELECT COALESCE(SUM(CREDIT),0) - COALESCE(SUM(DEBIT),0)
 			FROM cash_book
-			WHERE TRANS_DATE < :givenDate
+			WHERE (:#{T(com.balaji.finance.config.util.BranchContext).filter()} = 'ALL' OR branch_code = :#{T(com.balaji.finance.config.util.BranchContext).filter()}) AND TRANS_DATE < :givenDate
 			""", nativeQuery = true)
 	BigDecimal findOpeningBalanceForDate(@Param("givenDate") LocalDate givenDate);
 
@@ -104,7 +115,7 @@ public interface CashBookRepo extends JpaRepository<CashBook, Long> {
 			    COALESCE(SUM(DEBIT), 0) AS debit,
 			    COALESCE(SUM(CREDIT), 0) - COALESCE(SUM(DEBIT), 0) AS balance
 			FROM cash_book
-			WHERE TRANS_DATE BETWEEN :fromDate AND :toDate
+			WHERE (:#{T(com.balaji.finance.config.util.BranchContext).filter()} = 'ALL' OR branch_code = :#{T(com.balaji.finance.config.util.BranchContext).filter()}) AND TRANS_DATE BETWEEN :fromDate AND :toDate
 			GROUP BY DATE(TRANS_DATE)
 			ORDER BY DATE(TRANS_DATE)
 			""", nativeQuery = true)
@@ -118,6 +129,7 @@ public interface CashBookRepo extends JpaRepository<CashBook, Long> {
 			    COALESCE(SUM(DEBIT), 0) AS debit,
 			    COALESCE(SUM(CREDIT), 0) - COALESCE(SUM(DEBIT), 0) AS balance
 			FROM cash_book
+			WHERE (:#{T(com.balaji.finance.config.util.BranchContext).filter()} = 'ALL' OR branch_code = :#{T(com.balaji.finance.config.util.BranchContext).filter()})
 			GROUP BY DATE(TRANS_DATE)
 			ORDER BY DATE(TRANS_DATE)
 			""", nativeQuery = true)
@@ -133,7 +145,7 @@ public interface CashBookRepo extends JpaRepository<CashBook, Long> {
 			        ('MF LOAN INSTALLMENT','MF INTEREST','MF LATE FEE')
 			        THEN CREDIT ELSE 0 END) AS monthlyTotal
 			FROM cash_book
-			WHERE TRANS_DATE BETWEEN :fromDate AND :toDate
+			WHERE (:#{T(com.balaji.finance.config.util.BranchContext).filter()} = 'ALL' OR branch_code = :#{T(com.balaji.finance.config.util.BranchContext).filter()}) AND TRANS_DATE BETWEEN :fromDate AND :toDate
 			GROUP BY DATE(TRANS_DATE)
 			ORDER BY DATE(TRANS_DATE)
 			""", nativeQuery = true)
@@ -150,6 +162,7 @@ public interface CashBookRepo extends JpaRepository<CashBook, Long> {
 			        ('MF LOAN INSTALLMENT','MF INTEREST','MF LATE FEE')
 			        THEN CREDIT ELSE 0 END) AS monthlyTotal
 			FROM cash_book
+			WHERE (:#{T(com.balaji.finance.config.util.BranchContext).filter()} = 'ALL' OR branch_code = :#{T(com.balaji.finance.config.util.BranchContext).filter()})
 			GROUP BY DATE(TRANS_DATE)
 			ORDER BY DATE(TRANS_DATE)
 			""", nativeQuery = true)
@@ -165,7 +178,7 @@ public interface CashBookRepo extends JpaRepository<CashBook, Long> {
 			        ('MF LOAN INSTALLMENT','MF INTEREST','MF LATE FEE','MF DOC CHARGES')
 			        THEN CREDIT ELSE 0 END) AS monthlyTotal
 			FROM cash_book
-			WHERE TRANS_DATE BETWEEN :fromDate AND :toDate
+			WHERE (:#{T(com.balaji.finance.config.util.BranchContext).filter()} = 'ALL' OR branch_code = :#{T(com.balaji.finance.config.util.BranchContext).filter()}) AND TRANS_DATE BETWEEN :fromDate AND :toDate
 			AND ENTRY_USER = :user
 			GROUP BY DATE(TRANS_DATE)
 			ORDER BY DATE(TRANS_DATE)
@@ -184,7 +197,7 @@ public interface CashBookRepo extends JpaRepository<CashBook, Long> {
 			        ('MF LOAN INSTALLMENT')
 			        THEN CREDIT ELSE 0 END) AS monthlyTotal
 			FROM cash_book
-			WHERE ENTRY_USER = :user
+			WHERE (:#{T(com.balaji.finance.config.util.BranchContext).filter()} = 'ALL' OR branch_code = :#{T(com.balaji.finance.config.util.BranchContext).filter()}) AND ENTRY_USER = :user
 			GROUP BY DATE(TRANS_DATE)
 			ORDER BY DATE(TRANS_DATE)
 			""", nativeQuery = true)
@@ -197,7 +210,7 @@ public interface CashBookRepo extends JpaRepository<CashBook, Long> {
 			    COALESCE(SUM(CREDIT), 0) - COALESCE(SUM(DEBIT), 0) AS balance,
 			    ACCOUNT_MASTER_MASTER_CODE AS particulars
 			FROM cash_book
-			WHERE TRANS_DATE BETWEEN :fromDate AND :toDate
+			WHERE (:#{T(com.balaji.finance.config.util.BranchContext).filter()} = 'ALL' OR branch_code = :#{T(com.balaji.finance.config.util.BranchContext).filter()}) AND TRANS_DATE BETWEEN :fromDate AND :toDate
 			GROUP BY ACCOUNT_MASTER_MASTER_CODE
 			ORDER BY ACCOUNT_MASTER_MASTER_CODE
 			""", nativeQuery = true)
@@ -211,6 +224,7 @@ public interface CashBookRepo extends JpaRepository<CashBook, Long> {
 			    COALESCE(SUM(CREDIT), 0) - COALESCE(SUM(DEBIT), 0) AS balance,
 			    ACCOUNT_MASTER_MASTER_CODE AS particulars
 			FROM cash_book
+			WHERE (:#{T(com.balaji.finance.config.util.BranchContext).filter()} = 'ALL' OR branch_code = :#{T(com.balaji.finance.config.util.BranchContext).filter()})
 			GROUP BY ACCOUNT_MASTER_MASTER_CODE
 			ORDER BY ACCOUNT_MASTER_MASTER_CODE
 			""", nativeQuery = true)
@@ -219,7 +233,7 @@ public interface CashBookRepo extends JpaRepository<CashBook, Long> {
 	@Query("""
 			SELECT c
 			FROM CashBook c
-			WHERE c.transDate BETWEEN :fromDate AND :toDate
+			WHERE (:#{T(com.balaji.finance.config.util.BranchContext).filter()} = 'ALL' OR c.branchCode = :#{T(com.balaji.finance.config.util.BranchContext).filter()}) AND c.transDate BETWEEN :fromDate AND :toDate
 			AND c.businessMember.businessMemberId IS NOT NULL
 			AND c.accountMasterCode IN ('DF LOAN INSTALLMENT','MF LOAN INSTALLMENT','MF INTEREST')
 			""")
@@ -229,7 +243,7 @@ public interface CashBookRepo extends JpaRepository<CashBook, Long> {
 	@Query("""
 			SELECT c
 			FROM CashBook c
-			WHERE c.businessMember.businessMemberId IS NOT NULL
+			WHERE (:#{T(com.balaji.finance.config.util.BranchContext).filter()} = 'ALL' OR c.branchCode = :#{T(com.balaji.finance.config.util.BranchContext).filter()}) AND c.businessMember.businessMemberId IS NOT NULL
 			  AND c.accountMasterCode IN ('DF LOAN INSTALLMENT','MF LOAN INSTALLMENT','MF INTEREST')
 			""")
 	List<CashBook> findByDateRangeAndBusinessNotNull();
@@ -246,6 +260,7 @@ public interface CashBookRepo extends JpaRepository<CashBook, Long> {
 			    WHERE c.business_member_id IS NOT NULL
 			      AND c.account_master_code IN ('DF LOAN INSTALLMENT', 'MF LOAN INSTALLMENT', 'MF INTEREST')
 			      AND c.trans_date BETWEEN :fromDate AND :toDate
+			      AND (:#{T(com.balaji.finance.config.util.BranchContext).filter()} = 'ALL' OR c.branch_code = :#{T(com.balaji.finance.config.util.BranchContext).filter()})
 			),
 			payments AS (
 			    SELECT MIN(cash_book_id) AS first_id, SUM(credit) AS amount
@@ -298,7 +313,7 @@ public interface CashBookRepo extends JpaRepository<CashBook, Long> {
 			             COALESCE(SUM(cb.DEBIT), 0)
 			         ) AS amount
 			FROM cash_book cb
-			WHERE cb.TRANS_DATE BETWEEN :fromDate AND :toDate
+			WHERE (:#{T(com.balaji.finance.config.util.BranchContext).filter()} = 'ALL' OR cb.branch_code = :#{T(com.balaji.finance.config.util.BranchContext).filter()}) AND cb.TRANS_DATE BETWEEN :fromDate AND :toDate
 			  AND cb.ACCOUNT_MASTER_TYPE IN :accountType
 			GROUP BY cb.ACCOUNT_MASTER_TYPE, cb.ACCOUNT_MASTER_CODE
 			ORDER BY cb.ACCOUNT_MASTER_TYPE, cb.ACCOUNT_MASTER_CODE
@@ -315,7 +330,7 @@ public interface CashBookRepo extends JpaRepository<CashBook, Long> {
 			             COALESCE(SUM(cb.DEBIT), 0)
 			         ) AS amount
 			FROM cash_book cb
-			  Where cb.ACCOUNT_MASTER_TYPE IN :accountType
+			  Where (:#{T(com.balaji.finance.config.util.BranchContext).filter()} = 'ALL' OR cb.branch_code = :#{T(com.balaji.finance.config.util.BranchContext).filter()}) AND cb.ACCOUNT_MASTER_TYPE IN :accountType
 			GROUP BY cb.ACCOUNT_MASTER_TYPE, cb.ACCOUNT_MASTER_CODE
 			ORDER BY cb.ACCOUNT_MASTER_TYPE, cb.ACCOUNT_MASTER_CODE
 			""", nativeQuery = true)
@@ -330,7 +345,7 @@ public interface CashBookRepo extends JpaRepository<CashBook, Long> {
                       COALESCE(SUM(cb.CREDIT), 0) - COALESCE(SUM(cb.DEBIT), 0)
                     ) AS amount
 			FROM cash_book cb
-			WHERE cb.TRANS_DATE < :toDate
+			WHERE (:#{T(com.balaji.finance.config.util.BranchContext).filter()} = 'ALL' OR cb.branch_code = :#{T(com.balaji.finance.config.util.BranchContext).filter()}) AND cb.TRANS_DATE < :toDate
 			  and cb.ACCOUNT_MASTER_TYPE IN (:typeList)
 			GROUP BY cb.ACCOUNT_MASTER_TYPE, cb.ACCOUNT_MASTER_MASTER_CODE , cb.ACCOUNT_MASTER_CODE
 			ORDER BY cb.ACCOUNT_MASTER_TYPE, cb.ACCOUNT_MASTER_CODE
@@ -357,7 +372,7 @@ public interface CashBookRepo extends JpaRepository<CashBook, Long> {
 			        THEN CREDIT ELSE 0 END) AS monthlyLoanInterestReceived
 
 			FROM cash_book
-			WHERE TRANS_DATE BETWEEN :fromDate AND :toDate
+			WHERE (:#{T(com.balaji.finance.config.util.BranchContext).filter()} = 'ALL' OR branch_code = :#{T(com.balaji.finance.config.util.BranchContext).filter()}) AND TRANS_DATE BETWEEN :fromDate AND :toDate
 			AND ACCOUNT_MASTER_CODE IN (
 			    'DF LOAN INSTALLMENT',
 			    'DF INTEREST',
@@ -393,7 +408,7 @@ public interface CashBookRepo extends JpaRepository<CashBook, Long> {
 			        THEN CREDIT ELSE 0 END) AS monthlyLoanInterestReceived
 
 			FROM cash_book
-			WHERE TRANS_DATE <= :toDate
+			WHERE (:#{T(com.balaji.finance.config.util.BranchContext).filter()} = 'ALL' OR branch_code = :#{T(com.balaji.finance.config.util.BranchContext).filter()}) AND TRANS_DATE <= :toDate
 			AND ACCOUNT_MASTER_CODE IN (
 			    'DF LOAN INSTALLMENT',
 			    'DF INTEREST',
@@ -422,7 +437,7 @@ public interface CashBookRepo extends JpaRepository<CashBook, Long> {
 			        THEN CREDIT ELSE 0 END) AS monthlyLoanInterestReceived
 
 			FROM cash_book
-			 WHERE
+			 WHERE (:#{T(com.balaji.finance.config.util.BranchContext).filter()} = 'ALL' OR branch_code = :#{T(com.balaji.finance.config.util.BranchContext).filter()}) AND
 			  ACCOUNT_MASTER_CODE IN (
 			    'DF LOAN INSTALLMENT',
 			    'DF INTEREST',
@@ -439,7 +454,7 @@ public interface CashBookRepo extends JpaRepository<CashBook, Long> {
 			    cb.ACCOUNT_MASTER_MASTER_CODE as masterCode,
 			    COALESCE(SUM(cb.CREDIT),0) - COALESCE(SUM(cb.DEBIT),0) AS amount
 			FROM cash_book cb
-			WHERE cb.TRANS_DATE BETWEEN :fromDate AND :toDate
+			WHERE (:#{T(com.balaji.finance.config.util.BranchContext).filter()} = 'ALL' OR cb.branch_code = :#{T(com.balaji.finance.config.util.BranchContext).filter()}) AND cb.TRANS_DATE BETWEEN :fromDate AND :toDate
 			  and cb.ACCOUNT_MASTER_TYPE IN (:typeList)
 			GROUP BY cb.ACCOUNT_MASTER_TYPE,cb.ACCOUNT_MASTER_MASTER_CODE, cb.ACCOUNT_MASTER_CODE
 			ORDER BY cb.ACCOUNT_MASTER_TYPE, cb.ACCOUNT_MASTER_CODE
@@ -454,7 +469,7 @@ public interface CashBookRepo extends JpaRepository<CashBook, Long> {
 			    cb.ACCOUNT_MASTER_MASTER_CODE as masterCode,
 			    COALESCE(SUM(cb.CREDIT),0) - COALESCE(SUM(cb.DEBIT),0) AS amount
 			FROM cash_book cb
-			 Where cb.ACCOUNT_MASTER_TYPE IN (:typeList)
+			 Where (:#{T(com.balaji.finance.config.util.BranchContext).filter()} = 'ALL' OR cb.branch_code = :#{T(com.balaji.finance.config.util.BranchContext).filter()}) AND cb.ACCOUNT_MASTER_TYPE IN (:typeList)
 			GROUP BY cb.ACCOUNT_MASTER_TYPE, cb.ACCOUNT_MASTER_MASTER_CODE, cb.ACCOUNT_MASTER_CODE
 			ORDER BY cb.ACCOUNT_MASTER_TYPE, cb.ACCOUNT_MASTER_CODE
 			""", nativeQuery = true)
@@ -468,7 +483,7 @@ public interface CashBookRepo extends JpaRepository<CashBook, Long> {
 			         COALESCE(SUM(cb.debit), 0) AS debits
 			    FROM CashBook cb
 			    LEFT JOIN cb.personalInfo customer
-			    WHERE cb.accountMasterCode = :accountMasterCode
+			    WHERE (:#{T(com.balaji.finance.config.util.BranchContext).filter()} = 'ALL' OR cb.branchCode = :#{T(com.balaji.finance.config.util.BranchContext).filter()}) AND cb.accountMasterCode = :accountMasterCode
 			    GROUP BY customer.personalInfoId, customer.firstName, customer.lastName, customer.sequence
 			    ORDER BY customer.sequence ASC, customer.personalInfoId ASC
 			""")
@@ -483,7 +498,7 @@ public interface CashBookRepo extends JpaRepository<CashBook, Long> {
 		         COALESCE(SUM(cb.debit), 0) AS debits
 		    FROM CashBook cb
 		    LEFT JOIN cb.personalInfo customer
-		    WHERE cb.accountMasterCode = :accountMasterCode
+		    WHERE (:#{T(com.balaji.finance.config.util.BranchContext).filter()} = 'ALL' OR cb.branchCode = :#{T(com.balaji.finance.config.util.BranchContext).filter()}) AND cb.accountMasterCode = :accountMasterCode
 		      AND cb.transDate BETWEEN :fromDate AND :toDate
 			    GROUP BY customer.personalInfoId, customer.firstName, customer.lastName, customer.sequence
 			    ORDER BY customer.sequence ASC, customer.personalInfoId ASC
@@ -503,7 +518,7 @@ public interface CashBookRepo extends JpaRepository<CashBook, Long> {
 			    FROM CashBook cb
 			    LEFT JOIN cb.personalInfo customer
 			    LEFT JOIN cb.businessMember businessMember
-			    WHERE cb.accountMasterCode = :accountMasterCode
+			    WHERE (:#{T(com.balaji.finance.config.util.BranchContext).filter()} = 'ALL' OR cb.branchCode = :#{T(com.balaji.finance.config.util.BranchContext).filter()}) AND cb.accountMasterCode = :accountMasterCode
 			      and customer.personalInfoId= :customerId
 			    ORDER BY cb.cashBookId desc
 			""")
@@ -522,7 +537,7 @@ public interface CashBookRepo extends JpaRepository<CashBook, Long> {
 			    FROM CashBook cb
 			    LEFT JOIN cb.personalInfo customer
 			    LEFT JOIN cb.businessMember businessMember
-			    WHERE cb.accountMasterCode = :accountMasterCode
+			    WHERE (:#{T(com.balaji.finance.config.util.BranchContext).filter()} = 'ALL' OR cb.branchCode = :#{T(com.balaji.finance.config.util.BranchContext).filter()}) AND cb.accountMasterCode = :accountMasterCode
 			      and customer.personalInfoId= :customerId
 			      and cb.transDate BETWEEN :fromDate AND :toDate
 			    ORDER BY cb.cashBookId desc
@@ -548,7 +563,7 @@ public interface CashBookRepo extends JpaRepository<CashBook, Long> {
 			        COALESCE(SUM(cb.credit), 0) AS credit
 			    FROM CashBook cb
 			        LEFT JOIN cb.businessMember businessMember
-			    WHERE cb.accountMasterCode IN :accountMasterCode
+			    WHERE (:#{T(com.balaji.finance.config.util.BranchContext).filter()} = 'ALL' OR cb.branchCode = :#{T(com.balaji.finance.config.util.BranchContext).filter()}) AND cb.accountMasterCode IN :accountMasterCode
 			      AND cb.transDate BETWEEN :fromDate AND :toDate
 			      And businessMember.loanStatus=:loanStatus
 			    GROUP BY cb.accountMasterCode
@@ -562,7 +577,7 @@ public interface CashBookRepo extends JpaRepository<CashBook, Long> {
 			        COALESCE(SUM(cb.credit), 0)
 			    FROM CashBook cb
 			         JOIN cb.personalInfo personalInfo
-			    WHERE cb.accountMasterCode IN :accountMasterCode
+			    WHERE (:#{T(com.balaji.finance.config.util.BranchContext).filter()} = 'ALL' OR cb.branchCode = :#{T(com.balaji.finance.config.util.BranchContext).filter()}) AND cb.accountMasterCode IN :accountMasterCode
 			      AND cb.transDate BETWEEN :fromDate AND :toDate
 			      AND personalInfo.personalInfoId IN :personalInfoId
 			""")
@@ -575,7 +590,7 @@ public interface CashBookRepo extends JpaRepository<CashBook, Long> {
 			        COALESCE(SUM(cb.credit), 0)
 			    FROM CashBook cb
 			         JOIN cb.personalInfo personalInfo
-			    WHERE cb.accountMasterCode IN :accountMasterCode
+			    WHERE (:#{T(com.balaji.finance.config.util.BranchContext).filter()} = 'ALL' OR cb.branchCode = :#{T(com.balaji.finance.config.util.BranchContext).filter()}) AND cb.accountMasterCode IN :accountMasterCode
 			      AND personalInfo.personalInfoId IN :personalInfoId
 			""")
 	BigDecimal getCapitalOfParntner(@Param("accountMasterCode") List<String> accountMasterCode,
@@ -588,7 +603,7 @@ public interface CashBookRepo extends JpaRepository<CashBook, Long> {
 		    FROM CashBook cb
 		          JOIN cb.businessMember bm
 			      JOIN bm.partnerId partnerInfo
-		    WHERE cb.accountMasterCode IN :accountMasterCode
+		    WHERE (:#{T(com.balaji.finance.config.util.BranchContext).filter()} = 'ALL' OR cb.branchCode = :#{T(com.balaji.finance.config.util.BranchContext).filter()}) AND cb.accountMasterCode IN :accountMasterCode
 		      AND cb.transDate BETWEEN :fromDate AND :toDate
 		      AND partnerInfo.personalInfoId IN :personalInfoId
 		""")
@@ -604,7 +619,7 @@ public interface CashBookRepo extends JpaRepository<CashBook, Long> {
 			    FROM CashBook cb
 			         JOIN cb.businessMember bm
 			         JOIN bm.partnerId partnerInfo
-			    WHERE cb.accountMasterCode IN :accountMasterCode
+			    WHERE (:#{T(com.balaji.finance.config.util.BranchContext).filter()} = 'ALL' OR cb.branchCode = :#{T(com.balaji.finance.config.util.BranchContext).filter()}) AND cb.accountMasterCode IN :accountMasterCode
 			      AND partnerInfo.personalInfoId IN :personalInfoId
 			""")
 	BigDecimal getCreditOfAccountCodeAganistPartner(@Param("accountMasterCode") List<String> accountMasterCode,
@@ -624,7 +639,7 @@ public interface CashBookRepo extends JpaRepository<CashBook, Long> {
 			      FROM CashBook cb
 			           JOIN cb.personalInfo personalInfo
 
-			      WHERE cb.accountMasterCode IN :accountMasterCodes
+			      WHERE (:#{T(com.balaji.finance.config.util.BranchContext).filter()} = 'ALL' OR cb.branchCode = :#{T(com.balaji.finance.config.util.BranchContext).filter()}) AND cb.accountMasterCode IN :accountMasterCodes
 			        AND cb.transDate BETWEEN :fromDate AND :toDate
 			        AND personalInfo.personalInfoId IN :personalInfoIds
 
@@ -644,7 +659,7 @@ public interface CashBookRepo extends JpaRepository<CashBook, Long> {
 			FROM CashBook cb
 			     JOIN cb.personalInfo personalInfo
 
-			WHERE cb.accountMasterCode IN :accountMasterCodes
+			WHERE (:#{T(com.balaji.finance.config.util.BranchContext).filter()} = 'ALL' OR cb.branchCode = :#{T(com.balaji.finance.config.util.BranchContext).filter()}) AND cb.accountMasterCode IN :accountMasterCodes
 			  AND personalInfo.personalInfoId IN :personalInfoIds
 
 			GROUP BY personalInfo.personalInfoId
@@ -665,7 +680,7 @@ public interface CashBookRepo extends JpaRepository<CashBook, Long> {
 			            JOIN bm.partnerId as partnerInfo
 
 
-			      WHERE cb.accountMasterCode IN :accountMasterCodes
+			      WHERE (:#{T(com.balaji.finance.config.util.BranchContext).filter()} = 'ALL' OR cb.branchCode = :#{T(com.balaji.finance.config.util.BranchContext).filter()}) AND cb.accountMasterCode IN :accountMasterCodes
 			        AND cb.transDate BETWEEN :fromDate AND :toDate
 			        AND partnerInfo.personalInfoId IN :personalInfoIds
 
@@ -687,7 +702,7 @@ public interface CashBookRepo extends JpaRepository<CashBook, Long> {
 			     JOIN cb.businessMember bm
 			     JOIN bm.partnerId as partnerInfo
 
-			WHERE cb.accountMasterCode IN :accountMasterCodes
+			WHERE (:#{T(com.balaji.finance.config.util.BranchContext).filter()} = 'ALL' OR cb.branchCode = :#{T(com.balaji.finance.config.util.BranchContext).filter()}) AND cb.accountMasterCode IN :accountMasterCodes
 			  AND partnerInfo.personalInfoId IN :personalInfoIds
 
 			GROUP BY partnerInfo.personalInfoId
@@ -752,6 +767,7 @@ public interface CashBookRepo extends JpaRepository<CashBook, Long> {
 
 			LEFT JOIN business_member bm
 			    ON bm.PARTNER_ID = partner.PERSONAL_INFO_ID
+			    AND (:#{T(com.balaji.finance.config.util.BranchContext).filter()} = 'ALL' OR bm.branch_code = :#{T(com.balaji.finance.config.util.BranchContext).filter()})
 
 			LEFT JOIN cash_book cb
 			    ON cb.BUSINESS_MEMBER_ID = bm.BUSINESS_MEMBER_ID
@@ -826,6 +842,7 @@ public interface CashBookRepo extends JpaRepository<CashBook, Long> {
 
 			LEFT JOIN business_member bm
 			    ON bm.PARTNER_ID = partner.PERSONAL_INFO_ID
+			    AND (:#{T(com.balaji.finance.config.util.BranchContext).filter()} = 'ALL' OR bm.branch_code = :#{T(com.balaji.finance.config.util.BranchContext).filter()})
 
 			LEFT JOIN cash_book cb
 			    ON cb.BUSINESS_MEMBER_ID = bm.BUSINESS_MEMBER_ID
@@ -917,7 +934,7 @@ public interface CashBookRepo extends JpaRepository<CashBook, Long> {
 			         ) AS amount
 			         
 			FROM cash_book cb
-			WHERE cb.TRANS_DATE <= :toDate
+			WHERE (:#{T(com.balaji.finance.config.util.BranchContext).filter()} = 'ALL' OR cb.branch_code = :#{T(com.balaji.finance.config.util.BranchContext).filter()}) AND cb.TRANS_DATE <= :toDate
 			  AND cb.ACCOUNT_MASTER_TYPE IN ('REVENUES', 'EXPENSES')
 			GROUP BY cb.ACCOUNT_MASTER_TYPE
 			ORDER BY cb.ACCOUNT_MASTER_TYPE
@@ -938,7 +955,7 @@ public interface CashBookRepo extends JpaRepository<CashBook, Long> {
 
 
 			FROM cash_book
-			 WHERE
+			 WHERE (:#{T(com.balaji.finance.config.util.BranchContext).filter()} = 'ALL' OR branch_code = :#{T(com.balaji.finance.config.util.BranchContext).filter()}) AND
 			  ACCOUNT_MASTER_CODE IN (
 			    'DF LOAN INSTALLMENT',
 			    'MF LOAN INSTALLMENT'
@@ -959,7 +976,7 @@ public interface CashBookRepo extends JpaRepository<CashBook, Long> {
 		        COALESCE(SUM(c.credit), 0) AS amount
 		    FROM CashBook c
 		    JOIN c.businessMember bm
-		    WHERE c.transDate >= :fromDate
+		    WHERE (:#{T(com.balaji.finance.config.util.BranchContext).filter()} = 'ALL' OR c.branchCode = :#{T(com.balaji.finance.config.util.BranchContext).filter()}) AND c.transDate >= :fromDate
 		      AND c.transDate < :toDate
 		      AND c.accountMasterCode IN (
 		          'DF LOAN INSTALLMENT',
@@ -985,7 +1002,7 @@ public interface CashBookRepo extends JpaRepository<CashBook, Long> {
 		        COALESCE(SUM(c.credit), 0) AS amount
 		    FROM CashBook c
 		    JOIN c.businessMember bm
-		    WHERE c.transDate >= :fromDate
+		    WHERE (:#{T(com.balaji.finance.config.util.BranchContext).filter()} = 'ALL' OR c.branchCode = :#{T(com.balaji.finance.config.util.BranchContext).filter()}) AND c.transDate >= :fromDate
 		      AND c.transDate < :toDate
 		      AND c.accountMasterCode IN (
 		          'DF LOAN INSTALLMENT',

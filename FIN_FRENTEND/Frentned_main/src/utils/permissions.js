@@ -27,6 +27,7 @@ export const PATH_PERMISSION_CODES = {
   "/Loans/Maturity": ["MATURITY_VIEW"],
   "/AccountMasterSetup/Account_Master_Setup": ["ACCOUNT_MASTER_SETUP_VIEW"],
   "/AccountMasterSetup/Registraion_creation": ["REGISTRATION_CREATION_VIEW"],
+  "/AccountMasterSetup/Branch_Master": ["BRANCH_MASTER_VIEW"],
   "/Bussiness/RevenueExpenseStatment": ["REVENUE_EXPENSE_VIEW"],
   "/Bussiness/BalanceSheetimport": ["BALANCE_SHEET_VIEW"],
   "/Bussiness/BussinessOverviewimport": ["BUSINESS_OVERVIEW_VIEW"],

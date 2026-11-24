@@ -9,8 +9,12 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
+import com.balaji.finance.config.util.BranchContext;
+import com.balaji.finance.config.util.CustomUserDetails;
 import com.balaji.finance.config.util.JwtUtil;
 import com.balaji.finance.config.util.MyOwnUserDetails;
+import com.balaji.finance.exception.ApiException;
+import com.balaji.finance.service.BranchService;
 
 import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.JwtException;
@@ -27,6 +31,9 @@ public class JwtFilter extends OncePerRequestFilter {
 
 	@Autowired
 	private MyOwnUserDetails userDetailsService;
+
+	@Autowired
+	private BranchService branchService;
 
 	@Override
 	protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
@@ -48,6 +55,13 @@ public class JwtFilter extends OncePerRequestFilter {
 							null, userDetails.getAuthorities());
 
 					SecurityContextHolder.getContext().setAuthentication(auth);
+
+					// The branch this request works in. X-Branch is what the
+					// app sends; a branch that is not on the user's list is
+					// refused here, before any controller runs.
+					if (userDetails instanceof CustomUserDetails custom) {
+						BranchContext.set(branchService.resolve(custom.getUser(), request.getHeader("X-Branch")));
+					}
 				}
 			}
 
@@ -58,6 +72,13 @@ public class JwtFilter extends OncePerRequestFilter {
 			response.getWriter().write("{\"message\": \"Token expired\", \"code\": \"TOKEN_EXPIRED\"}");
 			return;
 
+		} catch (ApiException ex) {
+			BranchContext.clear();
+			response.setStatus(HttpServletResponse.SC_FORBIDDEN);
+			response.setContentType("application/json");
+			response.getWriter().write("{\"message\": \"" + ex.getMessage().replace("\"", "'")
+					+ "\", \"code\": \"BRANCH_FORBIDDEN\"}");
+			return;
 		} catch (JwtException ex) {
 			
 			response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
@@ -66,6 +87,11 @@ public class JwtFilter extends OncePerRequestFilter {
 			return;
 		}
 
-		filterChain.doFilter(request, response);
+		try {
+			filterChain.doFilter(request, response);
+		} finally {
+			// Threads are pooled: never let one request's branch leak into the next.
+			BranchContext.clear();
+		}
 	}
 }

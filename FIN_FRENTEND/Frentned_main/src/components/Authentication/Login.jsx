@@ -1,13 +1,28 @@
 import React, { useEffect, useState } from "react";
 import { useAuth } from "../../utils/authStore";
 import { useNavigate } from "react-router-dom";
-import { IconButton } from "@mui/material";
-import { ArrowForwardRounded, LockRounded, PersonRounded, VerifiedUserRounded } from "@mui/icons-material";
-import { actionIcons, navIcons } from "src/lib/icons";
+import { Dialog, DialogContent, IconButton } from "@mui/material";
+import {
+  ApartmentRounded,
+  ArrowForwardRounded,
+  LockRounded,
+  PersonRounded,
+  StorefrontRounded,
+  VerifiedUserRounded,
+} from "@mui/icons-material";
+import { actionIcons } from "src/lib/icons";
 import { successToast, errorToast } from "toastify";
 import { API_BASE } from "lib/config";
-import { setSession } from "src/utils/session";
+import { removeSession, setSession } from "src/utils/session";
 import { setAuthToken, setRefreshToken } from "src/utils/authToken";
+import {
+  branchLabel,
+  clearBranch,
+  getCurrentBranch,
+  hasBranchChoice,
+  saveBranchInfo,
+  setCurrentBranch,
+} from "src/utils/branch";
 import { getDefaultAuthorizedPath, normalizePermissionCodes, normalizeRoles } from "src/utils/permissions";
 import ThemeToggle from "../ThemeToggle";
 import EnterpriseThemePanel from "../EnterpriseThemePanel";
@@ -25,17 +40,13 @@ const SettingsIcon = actionIcons.settings;
 const DEITY_IMAGE = "/images/venkateswara.jpg";
 
 /**
- * What is inside, shown on the picture side. These are the application's own
- * sections, with the icons the menu gives them (src/lib/icons.js) - names
- * only: what a user may open is decided after sign-in, by their permissions.
+ * What the sign-in leads into, shown on the picture side. Generic on purpose:
+ * branch names are kept on Branch Master and only known after sign-in.
  */
-const MODULES = [
-  { label: "Cash Book", note: "Receipts & payments", icon: navIcons.businessCashBook },
-  { label: "Daily Book", note: "Each day's postings", icon: navIcons.dailyBook },
-  { label: "Ledgers", note: "Accounts & receipts", icon: navIcons.accountLedger },
-  { label: "Loans", note: "Monthly and daily", icon: navIcons.loan },
-  { label: "Instalment Dues", note: "Due and overdue", icon: navIcons.instalmentDues },
-  { label: "Reports", note: "Customers & partners", icon: navIcons.collectionReports },
+const OFFICES = [
+  { label: "Multiple branches", icon: StorefrontRounded },
+  { label: "Branch-wise data", icon: ApartmentRounded },
+  { label: "Secure access", icon: VerifiedUserRounded },
 ];
 
 const Login = () => {
@@ -57,6 +68,10 @@ const Login = () => {
   // Hidden entirely if the picture has not been added yet, so the panel never
   // shows a broken image.
   const [deityImage, setDeityImage] = useState(true);
+  // Step 2 of sign-in, for a user with more than one branch: a popup asking
+  // which branch to work in. Holds the signed-in user until one is chosen.
+  const [branchStep, setBranchStep] = useState(null);
+  const [chosenBranch, setChosenBranch] = useState("");
 
   // Prefill a previously remembered username.
   useEffect(() => {
@@ -104,6 +119,8 @@ const Login = () => {
         const token = setAuthToken(data.token);
         setRefreshToken(data.refreshToken);
         const name = data.name || data.username || formData.username;
+        // The branches this user may work in (see src/utils/branch.js).
+        const branch = saveBranchInfo(data);
         const user = {
           name,
           token,
@@ -114,9 +131,14 @@ const Login = () => {
         setSession("username", name);
         if (rememberMe) localStorage.setItem("remembered-user", formData.username.trim());
         else localStorage.removeItem("remembered-user");
-        login(user);
-        successToast("Login successful");
-        navigate(getDefaultAuthorizedPath(user), { replace: true });
+
+        if (hasBranchChoice(branch)) {
+          // Several branches: ask which one before opening the app.
+          setChosenBranch(getCurrentBranch() || branch.branches[0]?.code || "");
+          setBranchStep({ user, info: branch });
+        } else {
+          enterApp(user);
+        }
       } else {
         errorToast(data.message || "Invalid credentials");
       }
@@ -128,6 +150,31 @@ const Login = () => {
     }
   };
 
+  // Open the app in the branch now stored (see src/utils/branch.js).
+  const enterApp = (user) => {
+    login(user);
+    successToast(`Welcome. Working in ${branchLabel() || "your branch"}`);
+    navigate(getDefaultAuthorizedPath(user), { replace: true });
+  };
+
+  const confirmBranch = (event) => {
+    event.preventDefault();
+    if (!branchStep || !chosenBranch) return;
+    setCurrentBranch(chosenBranch);
+    enterApp(branchStep.user);
+  };
+
+  // Back to the password form as someone else: drop what step 1 stored.
+  const useAnotherAccount = () => {
+    removeSession("token");
+    removeSession("refreshToken");
+    clearBranch();
+    setBranchStep(null);
+    setFormData((prev) => ({ ...prev, password: "" }));
+  };
+
+  const branchOptions = branchStep ? branchStep.info.branches : [];
+
   const passwordMessage = errors.password
     ? { tone: "is-error", text: errors.password }
     : capsLock
@@ -135,7 +182,7 @@ const Login = () => {
     : null;
 
   return (
-    <div className="auth-page">
+    <div className="auth-page is-card">
       {/* ---------------- Sign-in side ---------------- */}
       <main className="auth-form-col">
         <header className="auth-top">
@@ -164,8 +211,15 @@ const Login = () => {
         </header>
 
         <section className="auth-form-wrap">
-          <h1 className="auth-title">Sign in</h1>
-          <p className="auth-lead">Welcome back. Enter your username and password to open the workspace.</p>
+          <h1 className="auth-title">
+            Welcome back,
+            <br />
+            sign in to your branch
+          </h1>
+          <p className="auth-lead">
+            Use your username and password. If you work in more than one branch, you will be asked which
+            branch to open.
+          </p>
 
           <form onSubmit={handleSubmit} noValidate className="auth-form">
             <div className={`auth-field ${errors.username ? "has-error" : ""}`}>
@@ -244,6 +298,7 @@ const Login = () => {
             </button>
           </form>
 
+
           <p className="auth-secure">
             <VerifiedUserRounded aria-hidden="true" />
             Authorised users only. Sign-ins may be recorded for audit.
@@ -255,44 +310,102 @@ const Login = () => {
         </footer>
       </main>
 
-      {/* ---------------- Picture side ---------------- */}
-      <aside className={`auth-art ${deityImage ? "has-portrait" : ""}`} aria-label="About the workspace">
-        <span className="auth-art-grid" aria-hidden="true" />
+      {/* ---------------- Picture side ----------------
+          Sri Venkateswara Swamy in an arched frame, the company's promise
+          under it, and the office structure the sign-in leads into. */}
+      <aside className={`auth-art ${deityImage ? "has-portrait" : ""}`} aria-label="About Sri Balaji Finance">
         <span className="auth-art-glow one" aria-hidden="true" />
         <span className="auth-art-glow two" aria-hidden="true" />
 
+        {deityImage && (
+          <figure className="auth-deity">
+            <span className="auth-deity-halo" aria-hidden="true" />
+            <img src={DEITY_IMAGE} alt="Sri Venkateswara Swamy" onError={() => setDeityImage(false)} />
+          </figure>
+        )}
+
         <div className="auth-art-copy">
-          <span className="auth-eyebrow">{COMPANY_NAME}</span>
-          <h2 className="auth-headline">Loans, ledgers and collections in one workspace.</h2>
+          <span className="auth-eyebrow">Om Namo Venkatesaya</span>
+          <h2 className="auth-headline">
+            One finance house,
+            <br />
+            every branch in step.
+          </h2>
           <p className="auth-art-lead">
-            Cash books, daily and monthly finance, instalment dues and partner reports, kept together from the
-            first receipt to the final statement.
+            {COMPANY_NAME}: every branch keeps its own customers, loans, cash book and collections. Sign in
+            and work in the branch you choose.
           </p>
 
-          <ul className="auth-tiles">
-            {MODULES.map((module, index) => {
-              const Icon = module.icon;
+          <ul className="auth-offices" aria-label="Offices">
+            {OFFICES.map((office, index) => {
+              const Icon = office.icon;
               return (
-                <li key={module.label} className="auth-tile" style={{ "--i": index }}>
-                  <span className="auth-tile-icon" aria-hidden="true">
-                    <Icon fontSize="small" />
-                  </span>
-                  <span className="auth-tile-text">
-                    <strong>{module.label}</strong>
-                    <span>{module.note}</span>
-                  </span>
+                <li key={office.label} className="auth-office" style={{ "--i": index }}>
+                  <Icon fontSize="small" aria-hidden="true" />
+                  <span>{office.label}</span>
                 </li>
               );
             })}
           </ul>
         </div>
-
-        {deityImage && (
-          <div className="auth-portrait" aria-hidden="true">
-            <img src={DEITY_IMAGE} alt="" onError={() => setDeityImage(false)} />
-          </div>
-        )}
       </aside>
+
+
+      {/* Step 2: a user with several branches picks one before entering. */}
+      <Dialog
+        open={Boolean(branchStep)}
+        onClose={useAnotherAccount}
+        maxWidth="xs"
+        fullWidth
+        aria-labelledby="auth-branch-title"
+        PaperProps={{ className: "auth-page is-card auth-branch-dialog" }}
+      >
+        <DialogContent>
+          {branchStep && (
+                <>
+                  <h2 className="auth-title" id="auth-branch-title">Choose your branch</h2>
+                  <p className="auth-lead">
+                    Signed in as <strong>{branchStep.user.name}</strong>. Pick the branch to work in; you can switch
+                    later from the top bar.
+                  </p>
+
+                  <form onSubmit={confirmBranch} className="auth-form">
+                    <div className="auth-branches" role="radiogroup" aria-label="Branch">
+                      {branchOptions.map((branch) => {
+                        const selected = chosenBranch === branch.code;
+                        return (
+                          <button
+                            key={branch.code}
+                            type="button"
+                            role="radio"
+                            aria-checked={selected}
+                            className={`auth-branch ${selected ? "is-selected" : ""}`}
+                            onClick={() => setChosenBranch(branch.code)}
+                          >
+                            <span className="auth-branch-icon" aria-hidden="true">
+                              <ApartmentRounded fontSize="small" />
+                            </span>
+                            <span className="auth-branch-text">
+                              <strong>{branch.name}</strong>
+                              {branch.location && <span>{branch.location}</span>}
+                            </span>
+                          </button>
+                        );
+                      })}
+                    </div>
+
+                    <button type="submit" className="auth-submit" disabled={!chosenBranch}>
+                      Continue
+                      <ArrowForwardRounded fontSize="small" aria-hidden="true" />
+                    </button>
+                    <button type="button" className="auth-link" onClick={useAnotherAccount}>
+                      Use a different account
+                    </button>
+                  </form>
+                </>
+          )}
+        </DialogContent>
+      </Dialog>
 
       <EnterpriseThemePanel open={settingsOpen} onClose={() => setSettingsOpen(false)} />
     </div>

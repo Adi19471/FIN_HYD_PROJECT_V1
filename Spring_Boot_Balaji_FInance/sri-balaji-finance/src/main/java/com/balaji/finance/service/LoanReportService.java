@@ -47,7 +47,7 @@ public class LoanReportService {
 	        loansList = businessMemberRepository.findByDateRange(from, to);
 
 	    } else {
-	        loansList = businessMemberRepository.findAll();
+	        loansList = businessMemberRepository.findAllInBranch();
 	    }
 
 	    List<LoanReportDTO> returnList = new ArrayList<>();

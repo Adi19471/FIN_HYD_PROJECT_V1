@@ -1,0 +1,25 @@
+# Render Blueprint: the Spring Boot backend as a free Docker web service.
+# Render > New > Blueprint > pick this repository. Values marked
+# `sync: false` are NOT stored here - Render asks for them when the
+# Blueprint is created (see DEPLOY.md for what to enter).
+services:
+  - type: web
+    name: sri-balaji-finance-api
+    runtime: docker
+    plan: free
+    rootDir: Spring_Boot_Balaji_FInance/sri-balaji-finance
+    dockerfilePath: ./Dockerfile
+    autoDeploy: true
+    envVars:
+      - key: SPRING_PROFILES_ACTIVE
+        value: cloud
+      - key: DB_URL
+        sync: false
+      - key: DB_USERNAME
+        sync: false
+      - key: DB_PASSWORD
+        sync: false
+      - key: CORS_ORIGIN
+        sync: false
+      - key: JWT_SECRET
+        sync: false

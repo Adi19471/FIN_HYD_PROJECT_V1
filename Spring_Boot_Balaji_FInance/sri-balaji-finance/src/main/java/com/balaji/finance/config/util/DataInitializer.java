@@ -29,6 +29,8 @@ public class DataInitializer implements CommandLineRunner {
             user.setName("admin");
             user.setPassword(passwordEncoder.encode("admin"));
             user.setRole("ADMIN");
+            // Works in Ameerpet; more branches are given on User Registration.
+            user.getBranchCodes().add(com.balaji.finance.entity.Branch.DEFAULT_CODE);
 
             userRepository.save(user);
 

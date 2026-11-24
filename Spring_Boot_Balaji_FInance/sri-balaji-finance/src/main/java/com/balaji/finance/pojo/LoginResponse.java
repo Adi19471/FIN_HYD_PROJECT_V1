@@ -10,6 +10,10 @@ public class LoginResponse {
 	private String username;
 	private List<String> roles;
 
+	// The branches the signed-in user may work in. One is opened directly;
+	// with several, the app asks which one.
+	private List<BranchDto> branches;
+
 	public LoginResponse() {
 	}
 
@@ -61,4 +65,12 @@ public class LoginResponse {
 		this.roles = roles;
 	}
 
+
+	public List<BranchDto> getBranches() {
+		return branches;
+	}
+
+	public void setBranches(List<BranchDto> branches) {
+		this.branches = branches;
+	}
 }
