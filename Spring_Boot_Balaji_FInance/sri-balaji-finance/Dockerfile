@@ -19,6 +19,9 @@ FROM eclipse-temurin:21-jre
 WORKDIR /app
 RUN useradd --system --uid 1001 app
 COPY --from=build /app/target/*.jar app.jar
+# logback-spring.xml writes logs/ next to the jar; the non-root user must own it,
+# or logging fails at start-up and the app exits before Spring runs.
+RUN mkdir -p /app/logs && chown -R app:app /app
 USER app
 
 ENV SPRING_PROFILES_ACTIVE=cloud
