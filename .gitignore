@@ -20,3 +20,11 @@ node_modules/
 
 # Jenkins build output
 Singile-125/
+
+# Database backups - real customer data, never into this public repo
+finance_db_*.sql
+backup_*.sql
+*_backup*.sql
+
+# Firebase CLI local cache
+.firebase/

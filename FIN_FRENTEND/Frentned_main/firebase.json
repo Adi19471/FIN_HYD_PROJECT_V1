@@ -1,7 +1,8 @@
 {
   "hosting": {
+    "target": "finance",
     "public": "dist",
-    "ignore": ["firebase.json", "**/.*", "**/node_modules/**"],
+    "ignore": ["firebase.json", "**/.*", "**/node_modules/**", "stats.html"],
     "rewrites": [{ "source": "**", "destination": "/index.html" }],
     "headers": [
       {

@@ -1,0 +1,12 @@
+{
+  "projects": {
+    "default": "test-521ab"
+  },
+  "targets": {
+    "test-521ab": {
+      "hosting": {
+        "finance": ["sri-balaji-finance-hyd"]
+      }
+    }
+  }
+}

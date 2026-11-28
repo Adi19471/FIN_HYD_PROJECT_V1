@@ -72,6 +72,12 @@ Keep `finance_db_backup.sql` safe — it is also your restore point.
 
 ## Step 4 — Frontend: Firebase Hosting
 
+> **Done (live):** https://sri-balaji-finance-hyd.web.app — a separate site
+> inside the existing Firebase project `test-521ab` (account akumatha@gmail.com
+> had reached its project limit). `.firebaserc` pins every deploy to that site
+> through the `finance` target, so the project's other site is never touched.
+> Always deploy with `--only hosting:finance`.
+
 1. Create a project at **console.firebase.google.com** (Analytics not needed).
 2. In `FIN_FRENTEND/Frentned_main`, copy `.env.production.example` to `.env.production` and set your Render URL:
    ```
@@ -91,7 +97,7 @@ Keep `finance_db_backup.sql` safe — it is also your restore point.
    npm run build
    ```
    ```powershell
-   firebase deploy --only hosting
+   firebase deploy --only hosting:finance
    ```
 4. Note the site addresses: `https://<project-id>.web.app` and `https://<project-id>.firebaseapp.com`.
 
@@ -101,6 +107,12 @@ In Render → your service → **Environment**, set:
 
 ```
 CORS_ORIGIN=https://<project-id>.web.app,https://<project-id>.firebaseapp.com
+```
+
+For the live site that is:
+
+```
+CORS_ORIGIN=https://sri-balaji-finance-hyd.web.app,https://sri-balaji-finance-hyd.firebaseapp.com
 ```
 
 Save — Render redeploys by itself.
@@ -114,7 +126,7 @@ Save — Render redeploys by itself.
 
 ## Day-to-day notes
 
-- **Updating:** push to GitHub → Render rebuilds the backend automatically. For the frontend run `npm run build` and `firebase deploy --only hosting` again.
+- **Updating:** push to GitHub → Render rebuilds the backend automatically. For the frontend run `npm run build` and `firebase deploy --only hosting:finance --account akumatha@gmail.com` again.
 - **Sleeping backend:** on the free plan the first request after 15 idle minutes is slow (~1 min). That is normal.
 - **Backups:** TiDB Starter has no free automatic backup you can download — export regularly:
   ```powershell
